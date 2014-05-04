@@ -76,15 +76,16 @@ struct Process {
     int in_syscall;
 };
 
-struct Process processes[16];
+struct Process **processes;
+size_t processes_size;
 
 struct Process *trace_find_process(pid_t pid)
 {
     size_t i;
-    for(i = 0; i < 16; ++i)
+    for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i].attached && processes[i].pid == pid)
-            return &processes[i];
+        if(processes[i]->attached && processes[i]->pid == pid)
+            return processes[i];
     }
     return NULL;
 }
@@ -92,12 +93,27 @@ struct Process *trace_find_process(pid_t pid)
 struct Process *trace_get_empty_process()
 {
     size_t i;
-    for(i = 0; i < 16; ++i)
+    for(i = 0; i < processes_size; ++i)
     {
-        if(!processes[i].attached)
-            return &processes[i];
+        if(!processes[i]->attached)
+            return processes[i];
     }
-    return NULL;
+
+    /* Allocate more! */
+    {
+        struct Process *pool, *ret;
+        processes_size *= 2;
+        pool = malloc((processes_size - i) * sizeof(*pool));
+        processes = realloc(processes, processes_size);
+        ret = processes[i];
+        for(; i < processes_size; ++i)
+        {
+            processes[i] = pool++;
+            processes[i]->attached = 0;
+            processes[i]->in_syscall = 0;
+        }
+        return ret;
+    }
 }
 
 void handle_syscall(struct Process *process, int syscall, size_t *params)
@@ -240,11 +256,16 @@ void trace()
 void trace_init(void)
 {
     size_t i;
+    struct Process *pool;
     signal(SIGCHLD, SIG_DFL);
-    for(i = 0; i < 16; ++i)
+    processes_size = 16;
+    processes = malloc(processes_size * sizeof(*processes));
+    pool = malloc(processes_size * sizeof(*pool));
+    for(i = 0; i < processes_size; ++i)
     {
-        processes[i].attached = 0;
-        processes[i].in_syscall = 0;
+        processes[i] = pool++;
+        processes[i]->attached = 0;
+        processes[i]->in_syscall = 0;
     }
 }
 
