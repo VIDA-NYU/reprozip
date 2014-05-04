@@ -22,6 +22,8 @@
 #   endif
 #endif
 
+#define DEBUG
+
 
 /* *************************************
  * Tracee-manipulating functions
@@ -71,6 +73,7 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
 struct Process {
     pid_t pid;
     int attached;
+    int in_syscall;
 };
 
 struct Process processes[16];
@@ -97,23 +100,106 @@ struct Process *trace_get_empty_process()
     return NULL;
 }
 
-void trace(pid_t pid)
+void handle_syscall(struct Process *process, int syscall, size_t *params)
 {
-    int status;
+    pid_t pid = process->pid;
+#ifdef DEBUG
+    fprintf(stderr, "syscall=%u, in_syscall=%u\n", syscall, process->in_syscall);
+#endif
+    /* DEBUG */
+    if(!process->in_syscall && syscall == SYS_open)
+    {
+        size_t pathname_addr = params[0];
+        size_t pathname_size = tracee_strlen(pid, pathname_addr);
+        char *pathname = malloc(pathname_size + 1);
+        tracee_read(pid, pathname, pathname_addr, pathname_size);
+        pathname[pathname_size] = '\0';
+        fprintf(stderr, "open(%s)\n", pathname);
+        free(pathname);
+    }
+    /* DEBUG */
+    if(!process->in_syscall && syscall == SYS_execve)
+    {
+        size_t pathname_addr = params[0];
+        size_t pathname_size = tracee_strlen(pid, pathname_addr);
+        char *pathname = malloc(pathname_size + 1);
+        tracee_read(pid, pathname, pathname_addr, pathname_size);
+        pathname[pathname_size] = '\0';
+        fprintf(stderr, "execve(%s)\n", pathname);
+        free(pathname);
+    }
+    /* TODO : handle fork, vfork, clone */
+    else if(syscall == SYS_fork || syscall == SYS_vfork)
+    {
 
-    /* Check process status */
-    waitpid(pid, &status, 0);
-    ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
+    }
 
+    /* Run to next syscall */
+    process->in_syscall = 1 - process->in_syscall;
+    ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+}
+
+void trace()
+{
+    int nprocs = 0;
     for(;;)
     {
-        /* Run to next syscall */
-        ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+        int status;
+        pid_t pid;
+        struct Process *process;
 
-        /* Check process status */
-        waitpid(pid, &status, 0);
+        /* Wait for a process */
+        pid = waitpid(-1, &status, 0);
+#ifdef DEBUG
+        fprintf(stderr, "\npid=%d, status=%u\n", pid, status);
+#endif
         if(WIFEXITED(status))
-            break;
+        {
+            fprintf(stderr, "process %d exited, %d processes remain\n",
+                    pid, nprocs-1);
+            process = trace_find_process(pid);
+            if(process != NULL)
+                process->attached = 0;
+            --nprocs;
+            if(nprocs <= 0)
+                break;
+            continue;
+        }
+
+        process = trace_find_process(pid);
+        if(process == NULL)
+        {
+#ifdef DEBUG
+            fprintf(stderr, "Allocating Process for %d\n", pid);
+#endif
+            process = trace_get_empty_process();
+            process->attached = 1;
+            process->pid = pid;
+
+            fprintf(stderr, "Process %d attached\n", pid);
+            ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
+            ++nprocs;
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            continue;
+        }
+#ifdef DEBUG
+        else
+            fprintf(stderr, "Process %d is known (process=%p)\n", pid, process);
+#endif
+
+#ifdef DEBUG
+        if(WIFSTOPPED(status))
+        {
+            if(WSTOPSIG(status) & 0x80)
+                fprintf(stderr, "Process %d stopped because of syscall "
+                        "tracing\n", pid);
+            else
+                fprintf(stderr, "Process %d stopped elsewhere (WSTOPSIG=%u)\n",
+                        pid, WSTOPSIG(status));
+        }
+        else
+            fprintf(stderr, "Process %d is NOT stopped\n", pid);
+#endif
 
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
         {
@@ -138,15 +224,15 @@ void trace(pid_t pid)
             params[4] = regs.r8;
             params[5] = regs.r9;
 #endif
-            if(syscall == SYS_open)
-            {
-                size_t pathname_addr = params[0];
-                size_t pathname_size = tracee_strlen(pid, pathname_addr);
-                char *pathname = malloc(pathname_size + 1);
-                tracee_read(pid, pathname, pathname_addr, pathname_size);
-                printf("open(%s)\n", pathname);
-                free(pathname);
-            }
+            handle_syscall(process, syscall, params);
+        }
+        /* Continue on SIGTRAP */
+        else if(WIFSTOPPED(status) && ((WSTOPSIG(status) & ~0x80) == SIGTRAP))
+        {
+#ifdef DEBUG
+            fprintf(stderr, "Resuming on SIGTRAP\n");
+#endif
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
         }
     }
 }
@@ -156,7 +242,10 @@ void trace_init(void)
     size_t i;
     signal(SIGCHLD, SIG_DFL);
     for(i = 0; i < 16; ++i)
+    {
         processes[i].attached = 0;
+        processes[i].in_syscall = 0;
+    }
 }
 
 
@@ -172,6 +261,11 @@ int main(int argc, char **argv)
 
     child = fork();
 
+#ifdef DEBUG
+    if(child != 0)
+        fprintf(stderr, "Child created, pid=%d\n", child);
+#endif
+
     if(child == 0)
     {
         char **args = malloc(argc * sizeof(char*));
@@ -185,7 +279,7 @@ int main(int argc, char **argv)
         execvp(args[0], args);
     }
 
-    trace(child);
+    trace();
 
     return 0;
 }
