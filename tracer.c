@@ -144,11 +144,6 @@ void handle_syscall(struct Process *process, int syscall, size_t *params)
         fprintf(stderr, "execve(%s)\n", pathname);
         free(pathname);
     }
-    /* TODO : handle fork, vfork, clone */
-    else if(syscall == SYS_fork || syscall == SYS_vfork)
-    {
-
-    }
 
     /* Run to next syscall */
     process->in_syscall = 1 - process->in_syscall;
@@ -193,8 +188,13 @@ void trace()
             process->pid = pid;
 
             fprintf(stderr, "Process %d attached\n", pid);
-            ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
             ++nprocs;
+            ptrace(PTRACE_SETOPTIONS, pid, 0,
+                   PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
+                                             * if paused because of syscall */
+                   PTRACE_O_TRACECLONE |
+                   PTRACE_O_TRACEFORK |
+                   PTRACE_O_TRACEVFORK);
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
             continue;
         }
@@ -243,10 +243,10 @@ void trace()
             handle_syscall(process, syscall, params);
         }
         /* Continue on SIGTRAP */
-        else if(WIFSTOPPED(status) && ((WSTOPSIG(status) & ~0x80) == SIGTRAP))
+        else if(WIFSTOPPED(status))
         {
 #ifdef DEBUG
-            fprintf(stderr, "Resuming on SIGTRAP\n");
+            fprintf(stderr, "Resuming on signal\n");
 #endif
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
         }
