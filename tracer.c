@@ -68,6 +68,35 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
  * Tracer
  */
 
+struct Process {
+    pid_t pid;
+    int attached;
+};
+
+struct Process processes[16];
+
+struct Process *trace_find_process(pid_t pid)
+{
+    size_t i;
+    for(i = 0; i < 16; ++i)
+    {
+        if(processes[i].attached && processes[i].pid == pid)
+            return &processes[i];
+    }
+    return NULL;
+}
+
+struct Process *trace_get_empty_process()
+{
+    size_t i;
+    for(i = 0; i < 16; ++i)
+    {
+        if(!processes[i].attached)
+            return &processes[i];
+    }
+    return NULL;
+}
+
 void trace(pid_t pid)
 {
     int status;
@@ -122,6 +151,14 @@ void trace(pid_t pid)
     }
 }
 
+void trace_init(void)
+{
+    size_t i;
+    signal(SIGCHLD, SIG_DFL);
+    for(i = 0; i < 16; ++i)
+        processes[i].attached = 0;
+}
+
 
 /* *************************************
  * Entry point
@@ -130,7 +167,9 @@ void trace(pid_t pid)
 int main(int argc, char **argv)
 {
     pid_t child;
-    signal(SIGCHLD, SIG_DFL);
+
+    trace_init();
+
     child = fork();
 
     if(child == 0)
