@@ -1,28 +1,17 @@
-#include <sys/types.h>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
-#include <sys/reg.h>
-#include <sys/syscall.h>
-#include <sys/user.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <sys/ptrace.h>
+#include <sys/reg.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/user.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
-#define WORD_SIZE sizeof(int)
-
-#if !defined(X86) && !defined(X86_64)
-#   if defined(__x86_64__) || defined(__x86_64)
-#       define X86_64
-#   elif defined(__i386__) || defined(__i386) || defined(_M_I86) || defined(_M_IX86)
-#       define I386
-#   else
-#       error Unrecognized architecture!
-#   endif
-#endif
-
-#define DEBUG
+#include "config.h"
 
 
 /* *************************************
@@ -116,7 +105,7 @@ struct Process *trace_get_empty_process()
     }
 }
 
-void handle_syscall(struct Process *process, int syscall, size_t *params)
+void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 {
     pid_t pid = process->pid;
 #ifdef DEBUG
@@ -240,7 +229,7 @@ void trace()
             params[4] = regs.r8;
             params[5] = regs.r9;
 #endif
-            handle_syscall(process, syscall, params);
+            trace_handle_syscall(process, syscall, params);
         }
         /* Continue on SIGTRAP */
         else if(WIFSTOPPED(status))
