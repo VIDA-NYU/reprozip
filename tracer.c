@@ -66,11 +66,18 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
 #define PROCESS_ALLOCATED   1
 #define PROCESS_ATTACHED    2
 
+struct Syscall {
+    int n;
+    char *path;
+    int mode;
+};
+
 struct Process {
     unsigned int identifier;
     pid_t pid;
     int status;
     int in_syscall;
+    struct Syscall current_syscall;
 };
 
 struct Process **processes;
@@ -109,6 +116,7 @@ struct Process *trace_get_empty_process()
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
             processes[i]->in_syscall = 0;
+            processes[i]->current_syscall.n = -1;
         }
         return ret;
     }
@@ -120,7 +128,8 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 #ifdef DEBUG
     fprintf(stderr, "syscall=%u, in_syscall=%u\n", syscall, process->in_syscall);
 #endif
-    if(!process->in_syscall && (syscall == SYS_open || syscall == SYS_execve) )
+    if(!process->in_syscall
+     && (syscall == SYS_open || syscall == SYS_execve) )
     {
         size_t pathname_addr = params[0];
         int flags = (int)params[1];
@@ -128,8 +137,10 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
         char *pathname = malloc(pathname_size + 1);
         tracee_read(pid, pathname, pathname_addr, pathname_size);
         pathname[pathname_size] = '\0';
+        process->current_syscall.n = syscall;
+        process->current_syscall.path = pathname;
         if(syscall == SYS_execve)
-            db_add_file_open(process->identifier, pathname, FILE_EXEC);
+           process->current_syscall.mode = FILE_EXEC;
         else
         {
             unsigned int mode = 0;
@@ -138,14 +149,26 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
                         "O_RDONLY|O_WRONLY\n", process->pid);
                 /* Carry on anyway */
             if(flags & O_RDONLY)
-                flags |= FILE_READ;
+                mode |= FILE_READ;
             if(flags & O_WRONLY)
-                flags |= FILE_WRITE;
+                mode |= FILE_WRITE;
             if(flags & O_RDWR)
-                flags |= FILE_READ | FILE_WRITE;
-            db_add_file_open(process->identifier, pathname, mode);
+                mode |= FILE_READ | FILE_WRITE;
+            if(mode == 0)
+                fprintf(stderr, "mode=0! flags=%d\n", flags);
+            process->current_syscall.mode = mode;
         }
-        free(pathname);
+    }
+    else if(process->in_syscall
+          && (syscall == SYS_open || syscall == SYS_execve) )
+    {
+        int ret = params[0];
+        if(ret >= 0)
+            db_add_file_open(process->identifier,
+                             process->current_syscall.path,
+                             process->current_syscall.mode);
+        free(process->current_syscall.path);
+        process->current_syscall.n = -1;
     }
 
     /* Run to next syscall */
@@ -271,6 +294,7 @@ void trace_init(void)
         processes[i] = pool++;
         processes[i]->status = PROCESS_FREE;
         processes[i]->in_syscall = 0;
+        processes[i]->current_syscall.n = -1;
     }
 }
 
