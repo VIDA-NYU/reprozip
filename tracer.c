@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "database.h"
 
 
 /* *************************************
@@ -287,9 +288,20 @@ int main(int argc, char **argv)
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(args[0], args);
+        perror("Couldn't execute the target command (execvp returned)");
+        return 1;
     }
+
+#ifdef DEBUG
+    fprintf(stderr, "Debug mode, using database on disk\n");
+    if(db_init("./database.sqlite3") != 0)
+        return 1;
+#else
+    if(db_init("") != 0)
+        return 1;
+#endif
 
     trace();
 
-    return 0;
+    return db_close();
 }
