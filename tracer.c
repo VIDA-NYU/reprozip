@@ -302,11 +302,13 @@ int main(int argc, char **argv)
 #ifdef DEBUG
     fprintf(stderr, "Debug mode, using database on disk\n");
     if(db_init("./database.sqlite3") != 0)
-        return 1;
 #else
     if(db_init("") != 0)
-        return 1;
 #endif
+    {
+        kill(child, SIGKILL);
+        return 1;
+    }
 
     trace();
 
