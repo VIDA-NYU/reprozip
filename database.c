@@ -1,6 +1,9 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
 #include <sqlite3.h>
 
 #define count(x) (sizeof((x))/sizeof(*(x)))
@@ -38,15 +41,15 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO processes(id, parent, binary, commandline)"
-                "VALUES(?, ?, ?, ?)";
+                "INSERT INTO processes(id, parent, timestamp)"
+                "VALUES(?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
     }
 
     {
         const char *sql = ""
                 "INSERT INTO opened_files(name, timestamp, mode, process)"
-                "VALUES(?, datetime(), ?, ?)";
+                "VALUES(?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
 
@@ -125,9 +128,23 @@ int db_add_first_process(unsigned int id, const char *binary,
 
 int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
 {
+    struct timespec now;
+    if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
+    {
+        perror("Getting time failed (clock_gettime)");
+        return 1;
+    }
     check(sqlite3_bind_text(stmt_insert_file, 1, name, -1, SQLITE_TRANSIENT));
-    check(sqlite3_bind_int(stmt_insert_file, 2, mode));
-    check(sqlite3_bind_int(stmt_insert_file, 3, process));
+    {
+        /* This assumes that we won't go over 2^32 seconds (~135 years) */
+        sqlite3_uint64 timestamp;
+        timestamp = now.tv_sec;
+        timestamp *= 1000000000;
+        timestamp += now.tv_nsec;
+        check(sqlite3_bind_int64(stmt_insert_file, 2, timestamp));
+    }
+    check(sqlite3_bind_int(stmt_insert_file, 3, mode));
+    check(sqlite3_bind_int(stmt_insert_file, 4, process));
 
     if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
         goto sqlerror;

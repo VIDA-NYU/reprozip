@@ -9,10 +9,10 @@ OBJS=tracer.o database.o
 all: tracer
 
 clean:
-	rm $(OBJS)
+	rm -f $(OBJS)
 
 tracer: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -lsqlite3
+	$(CC) $(CFLAGS) -o $@ $(OBJS) -lsqlite3 -lrt
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
