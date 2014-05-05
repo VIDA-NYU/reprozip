@@ -2,7 +2,7 @@ CC=gcc
 LIBS=
 CFLAGS=-W -Wall -Wextra -pedantic
 
-OBJS=tracer.o database.o
+OBJS=tracer.o database.o cmdline.o
 
 .PHONY: all clean
 

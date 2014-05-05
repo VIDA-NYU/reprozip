@@ -353,7 +353,7 @@ void trace_init(void)
  * Entry point
  */
 
-int main(int argc, char **argv)
+int fork_and_trace(int argc, char **argv, const char *database_path)
 {
     pid_t child;
 
@@ -369,8 +369,8 @@ int main(int argc, char **argv)
     if(child == 0)
     {
         char **args = malloc(argc * sizeof(char*));
-        memcpy(args, argv + 1, (argc - 1) * sizeof(char*));
-        args[argc - 1] = NULL;
+        memcpy(args, argv, argc * sizeof(char*));
+        args[argc] = NULL;
         /* Trace this process */
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
         /* Stop this once so tracer can set options */
@@ -381,13 +381,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-#ifdef DEBUG
-    fprintf(stderr, "Debug mode, using database on disk\n");
-    unlink("./database.sqlite3");
-    if(db_init("./database.sqlite3") != 0)
-#else
-    if(db_init("") != 0)
-#endif
+    if(db_init(database_path) != 0)
     {
         kill(child, SIGKILL);
         return 1;

@@ -13,6 +13,4 @@
 #   endif
 #endif
 
-#define DEBUG
-
 #endif
