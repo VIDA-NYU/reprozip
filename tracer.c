@@ -275,27 +275,29 @@ void trace()
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
         {
             int syscall;
-            size_t params[6];
+            size_t params[7];
             struct user_regs_struct regs;
             ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 #if defined(I386)
             syscall = regs.orig_eax;
-            params[0] = regs.ebx;
-            params[1] = regs.ecx;
-            params[2] = regs.edx;
-            params[3] = regs.esi;
-            params[4] = regs.edi;
-            params[5] = regs.ebp;
+            params[0] = regs.eax;
+            params[1] = regs.ebx;
+            params[2] = regs.ecx;
+            params[3] = regs.edx;
+            params[4] = regs.esi;
+            params[5] = regs.edi;
+            params[6] = regs.ebp;
 #elif defined(X86_64)
             syscall = regs.orig_rax;
-            params[0] = regs.rdi;
-            params[1] = regs.rsi;
-            params[2] = regs.rdx;
-            params[3] = regs.r10;
-            params[4] = regs.r8;
-            params[5] = regs.r9;
+            params[0] = regs.rax;
+            params[1] = regs.rdi;
+            params[2] = regs.rsi;
+            params[3] = regs.rdx;
+            params[4] = regs.r10;
+            params[5] = regs.r8;
+            params[6] = regs.r9;
 #endif
-            trace_handle_syscall(process, syscall, params);
+            trace_handle_syscall(process, syscall, params + 1);
         }
         /* Continue on SIGTRAP */
         else if(WIFSTOPPED(status))
