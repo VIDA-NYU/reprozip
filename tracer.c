@@ -191,6 +191,27 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
         free(process->current_syscall.path);
         process->current_syscall.n = -1;
     }
+    else if(process->in_syscall
+          && (syscall == SYS_fork || syscall == SYS_vfork
+            || syscall == SYS_clone) )
+    {
+        if(params[-1] > 0)
+        {
+            pid_t new_pid = params[-1];
+            struct Process *new_process;
+            fprintf(stderr, "Process %d created by %d via %s\n",
+                    new_pid, process->pid,
+                    (syscall == SYS_fork)?"fork()":
+                    (syscall == SYS_vfork)?"vfork()":
+                    "clone()");
+            new_process = trace_get_empty_process();
+            new_process->identifier = next_identifier++;
+            new_process->status = PROCESS_ALLOCATED;
+            new_process->pid = new_pid;
+            new_process->in_syscall = 0;
+            db_add_process(new_process->identifier, process->identifier);
+        }
+    }
 
     /* Run to next syscall */
     process->in_syscall = 1 - process->in_syscall;
