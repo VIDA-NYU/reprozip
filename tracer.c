@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <fcntl.h>
 #include <sys/ptrace.h>
 #include <sys/reg.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -118,25 +120,31 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 #ifdef DEBUG
     fprintf(stderr, "syscall=%u, in_syscall=%u\n", syscall, process->in_syscall);
 #endif
-    if(!process->in_syscall && syscall == SYS_open)
+    if(!process->in_syscall && (syscall == SYS_open || syscall == SYS_execve) )
     {
         size_t pathname_addr = params[0];
+        int flags = (int)params[1];
         size_t pathname_size = tracee_strlen(pid, pathname_addr);
         char *pathname = malloc(pathname_size + 1);
         tracee_read(pid, pathname, pathname_addr, pathname_size);
         pathname[pathname_size] = '\0';
-        fprintf(stderr, "open(%s)\n", pathname);
-        free(pathname);
-    }
-    /* DEBUG */
-    if(!process->in_syscall && syscall == SYS_execve)
-    {
-        size_t pathname_addr = params[0];
-        size_t pathname_size = tracee_strlen(pid, pathname_addr);
-        char *pathname = malloc(pathname_size + 1);
-        tracee_read(pid, pathname, pathname_addr, pathname_size);
-        pathname[pathname_size] = '\0';
-        fprintf(stderr, "execve(%s)\n", pathname);
+        if(syscall == SYS_execve)
+            db_add_file_open(process->identifier, pathname, FILE_EXEC);
+        else
+        {
+            unsigned int mode = 0;
+            if( (flags & (O_RDONLY | O_WRONLY)) == (O_RDONLY | O_WRONLY) )
+                fprintf(stderr, "Error: process %d used open() flags "
+                        "O_RDONLY|O_WRONLY\n", process->pid);
+                /* Carry on anyway */
+            if(flags & O_RDONLY)
+                flags |= FILE_READ;
+            if(flags & O_WRONLY)
+                flags |= FILE_WRITE;
+            if(flags & O_RDWR)
+                flags |= FILE_READ | FILE_WRITE;
+            db_add_file_open(process->identifier, pathname, mode);
+        }
         free(pathname);
     }
 
