@@ -65,6 +65,7 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
 #define PROCESS_ATTACHED    2
 
 struct Process {
+    unsigned int identifier;
     pid_t pid;
     int status;
     int in_syscall;
@@ -72,6 +73,7 @@ struct Process {
 
 struct Process **processes;
 size_t processes_size;
+unsigned int next_identifier = 0;
 
 struct Process *trace_find_process(pid_t pid)
 {
@@ -116,7 +118,6 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 #ifdef DEBUG
     fprintf(stderr, "syscall=%u, in_syscall=%u\n", syscall, process->in_syscall);
 #endif
-    /* DEBUG */
     if(!process->in_syscall && syscall == SYS_open)
     {
         size_t pathname_addr = params[0];
@@ -178,10 +179,12 @@ void trace()
             fprintf(stderr, "Allocating Process for %d\n", pid);
 #endif
             process = trace_get_empty_process();
+            process->identifier = next_identifier++;
             process->status = PROCESS_ATTACHED;
             process->pid = pid;
 
             fprintf(stderr, "Process %d attached\n", pid);
+            db_add_first_process(process->identifier, "unknown", 0, NULL);
             ++nprocs;
             ptrace(PTRACE_SETOPTIONS, pid, 0,
                    PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
