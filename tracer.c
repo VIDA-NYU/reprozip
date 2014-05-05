@@ -309,6 +309,7 @@ int main(int argc, char **argv)
 
 #ifdef DEBUG
     fprintf(stderr, "Debug mode, using database on disk\n");
+    unlink("./database.sqlite3");
     if(db_init("./database.sqlite3") != 0)
 #else
     if(db_init("") != 0)
