@@ -60,9 +60,13 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
  * Tracer
  */
 
+#define PROCESS_FREE        0
+#define PROCESS_ALLOCATED   1
+#define PROCESS_ATTACHED    2
+
 struct Process {
     pid_t pid;
-    int attached;
+    int status;
     int in_syscall;
 };
 
@@ -74,7 +78,7 @@ struct Process *trace_find_process(pid_t pid)
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i]->attached && processes[i]->pid == pid)
+        if(processes[i]->status != PROCESS_FREE && processes[i]->pid == pid)
             return processes[i];
     }
     return NULL;
@@ -85,7 +89,7 @@ struct Process *trace_get_empty_process()
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
-        if(!processes[i]->attached)
+        if(processes[i]->status == PROCESS_FREE)
             return processes[i];
     }
 
@@ -99,7 +103,7 @@ struct Process *trace_get_empty_process()
         for(; i < processes_size; ++i)
         {
             processes[i] = pool++;
-            processes[i]->attached = 0;
+            processes[i]->status = PROCESS_FREE;
             processes[i]->in_syscall = 0;
         }
         return ret;
@@ -160,7 +164,7 @@ void trace()
                     pid, nprocs-1);
             process = trace_find_process(pid);
             if(process != NULL)
-                process->attached = 0;
+                process->status = PROCESS_FREE;
             --nprocs;
             if(nprocs <= 0)
                 break;
@@ -174,7 +178,7 @@ void trace()
             fprintf(stderr, "Allocating Process for %d\n", pid);
 #endif
             process = trace_get_empty_process();
-            process->attached = 1;
+            process->status = PROCESS_ATTACHED;
             process->pid = pid;
 
             fprintf(stderr, "Process %d attached\n", pid);
@@ -254,7 +258,7 @@ void trace_init(void)
     for(i = 0; i < processes_size; ++i)
     {
         processes[i] = pool++;
-        processes[i]->attached = 0;
+        processes[i]->status = PROCESS_FREE;
         processes[i]->in_syscall = 0;
     }
 }
