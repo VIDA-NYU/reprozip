@@ -22,8 +22,7 @@ int db_init(const char *filename)
             "CREATE TABLE processes("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    parent INTEGER,"
-            "    binary TEXT NOT NULL,"
-            "    commandline TEXT NOT NULL"
+            "    timestamp INTEGER NOT NULL"
             "    );",
 
             "CREATE TABLE opened_files("
@@ -75,10 +74,14 @@ sqlerror:
 
 #define DB_NO_PARENT ((unsigned int)-2)
 
-int db_add_process(unsigned int id, unsigned int parent_id,
-                   const char *binary,
-                   size_t argc, const char **argv)
+int db_add_process(unsigned int id, unsigned int parent_id)
 {
+    struct timespec now;
+    if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
+    {
+        perror("Getting time failed (clock_gettime)");
+        return 1;
+    }
     check(sqlite3_bind_int(stmt_insert_process, 1, id));
     if(parent_id == DB_NO_PARENT)
     {
@@ -88,24 +91,13 @@ int db_add_process(unsigned int id, unsigned int parent_id,
     {
         check(sqlite3_bind_int(stmt_insert_process, 2, parent_id));
     }
-    check(sqlite3_bind_text(stmt_insert_process, 3, binary, -1,
-                            SQLITE_TRANSIENT));
     {
-        size_t commandline_size = 0;
-        size_t i, j = 0;
-        char *commandline;
-        for(i = 0; i < argc; ++i)
-            commandline_size += strlen(argv[i]) + 1;
-        commandline = malloc(commandline_size);
-        for(i = 0; i < argc; ++i)
-        {
-            const char *arg = argv[i];
-            while(*arg)
-                commandline[j++] = *arg++;
-            commandline[j++] = '\t';
-        }
-        commandline[(j>0)?j-1:0] = '\0';
-        check(sqlite3_bind_text(stmt_insert_process, 4, commandline, -1, free));
+        /* This assumes that we won't go over 2^32 seconds (~135 years) */
+        sqlite3_uint64 timestamp;
+        timestamp = now.tv_sec;
+        timestamp *= 1000000000;
+        timestamp += now.tv_nsec;
+        check(sqlite3_bind_int64(stmt_insert_process, 3, timestamp));
     }
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
@@ -120,10 +112,9 @@ sqlerror:
     return 1;
 }
 
-int db_add_first_process(unsigned int id, const char *binary,
-                         size_t argc, const char **argv)
+int db_add_first_process(unsigned int id)
 {
-    return db_add_process(id, DB_NO_PARENT, binary, argc, argv);
+    return db_add_process(id, DB_NO_PARENT);
 }
 
 int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
