@@ -213,7 +213,7 @@ void trace()
 #endif
         if(WIFEXITED(status))
         {
-            fprintf(stderr, "process %d exited, %d processes remain\n",
+            fprintf(stderr, "Process %d exited, %d processes remain\n",
                     pid, nprocs-1);
             process = trace_find_process(pid);
             if(process != NULL)
@@ -227,16 +227,22 @@ void trace()
         process = trace_find_process(pid);
         if(process == NULL)
         {
+            fprintf(stderr, "Warning: found unexpected process %d\n", pid);
+            process = trace_get_empty_process();
+            process->identifier = next_identifier++;
+            process->status = PROCESS_ALLOCATED;
+            process->pid = pid;
+            process->in_syscall = 0;
+            db_add_first_process(process->identifier);
+        }
+        if(process->status != PROCESS_ATTACHED)
+        {
 #ifdef DEBUG
             fprintf(stderr, "Allocating Process for %d\n", pid);
 #endif
-            process = trace_get_empty_process();
-            process->identifier = next_identifier++;
             process->status = PROCESS_ATTACHED;
-            process->pid = pid;
 
             fprintf(stderr, "Process %d attached\n", pid);
-            db_add_first_process(process->identifier, "unknown", 0, NULL);
             ++nprocs;
             ptrace(PTRACE_SETOPTIONS, pid, 0,
                    PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
@@ -362,6 +368,18 @@ int main(int argc, char **argv)
     {
         kill(child, SIGKILL);
         return 1;
+    }
+
+    /* Creates entry for first process */
+    {
+        struct Process *process = trace_get_empty_process();
+        process->identifier = next_identifier++;
+        process->status = PROCESS_ALLOCATED; /* Not yet attached... */
+        process->pid = child;
+        process->in_syscall = 0;
+
+        fprintf(stderr, "Process %d created by initial fork()\n", child);
+        db_add_first_process(process->identifier);
     }
 
     trace();
