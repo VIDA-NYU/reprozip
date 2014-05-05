@@ -122,6 +122,43 @@ struct Process *trace_get_empty_process()
     }
 }
 
+static unsigned int flags2mode(int flags)
+{
+    unsigned int mode = 0;
+    if(!O_RDONLY)
+    {
+        if(flags & O_WRONLY)
+            mode |= FILE_WRITE;
+        else if(flags & O_RDWR)
+            mode |= FILE_READ | FILE_WRITE;
+        else
+            mode |= FILE_READ;
+    }
+    else if(!O_WRONLY)
+    {
+        if(flags & O_RDONLY)
+            mode |= FILE_READ;
+        else if(flags & O_RDWR)
+            mode |= FILE_READ | FILE_WRITE;
+        else
+            mode |= FILE_WRITE;
+    }
+    else
+    {
+        if( (flags & (O_RDONLY | O_WRONLY)) == (O_RDONLY | O_WRONLY) )
+            fprintf(stderr, "Error: encountered bogus open() flags "
+                    "O_RDONLY|O_WRONLY\n");
+            /* Carry on anyway */
+        if(flags & O_RDONLY)
+            mode |= FILE_READ;
+        if(flags & O_WRONLY)
+            mode |= FILE_WRITE;
+        if(flags & O_RDWR)
+            mode |= FILE_READ | FILE_WRITE;
+    }
+    return mode;
+}
+
 void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 {
     pid_t pid = process->pid;
@@ -132,7 +169,6 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
      && (syscall == SYS_open || syscall == SYS_execve) )
     {
         size_t pathname_addr = params[0];
-        int flags = (int)params[1];
         size_t pathname_size = tracee_strlen(pid, pathname_addr);
         char *pathname = malloc(pathname_size + 1);
         tracee_read(pid, pathname, pathname_addr, pathname_size);
@@ -142,22 +178,7 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
         if(syscall == SYS_execve)
            process->current_syscall.mode = FILE_EXEC;
         else
-        {
-            unsigned int mode = 0;
-            if( (flags & (O_RDONLY | O_WRONLY)) == (O_RDONLY | O_WRONLY) )
-                fprintf(stderr, "Error: process %d used open() flags "
-                        "O_RDONLY|O_WRONLY\n", process->pid);
-                /* Carry on anyway */
-            if(flags & O_RDONLY)
-                mode |= FILE_READ;
-            if(flags & O_WRONLY)
-                mode |= FILE_WRITE;
-            if(flags & O_RDWR)
-                mode |= FILE_READ | FILE_WRITE;
-            if(mode == 0)
-                fprintf(stderr, "mode=0! flags=%d\n", flags);
-            process->current_syscall.mode = mode;
-        }
+            process->current_syscall.mode = flags2mode((int)params[1]);
     }
     else if(process->in_syscall
           && (syscall == SYS_open || syscall == SYS_execve) )
