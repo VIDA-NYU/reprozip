@@ -95,7 +95,7 @@ struct Process *trace_find_process(pid_t pid)
     return NULL;
 }
 
-struct Process *trace_get_empty_process()
+struct Process *trace_get_empty_process(void)
 {
     size_t i;
     for(i = 0; i < processes_size; ++i)
@@ -218,7 +218,7 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
     ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 }
 
-void trace()
+void trace(void)
 {
     int nprocs = 0;
     for(;;)
@@ -378,7 +378,7 @@ int fork_and_trace(int argc, char **argv, const char *database_path)
         /* Execute the target */
         execvp(args[0], args);
         perror("Couldn't execute the target command (execvp returned)");
-        return 1;
+        exit(1);
     }
 
     if(db_init(database_path) != 0)

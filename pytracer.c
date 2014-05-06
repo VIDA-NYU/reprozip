@@ -1,5 +1,7 @@
 #include <Python.h>
 
+#include "tracer.h"
+
 
 PyObject *Err_Base;
 
@@ -44,7 +46,7 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
             {
                 PyObject *pyutf8 = PyUnicode_AsUTF8String(arg);
                 argv[i] = strdup(PyString_AsString(pyutf8));
-                /* Py_DECREF(pyutf8) */
+                Py_DECREF(pyutf8);
             }
             else
                 argv[i] = strdup(PyString_AsString(arg));

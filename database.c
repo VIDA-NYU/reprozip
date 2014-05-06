@@ -60,7 +60,7 @@ sqlerror:
     return 1;
 }
 
-int db_close()
+int db_close(void)
 {
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_insert_file));
