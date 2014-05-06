@@ -27,6 +27,9 @@ setup(name='reprozip',
       version='0.0',
       ext_modules=[pytracer],
       packages=['reprozip'],
+      entry_points={
+        'console_scripts': [
+          'reprozip = reprozip.main:main']},
       description='Reprozip -- TODO',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',
