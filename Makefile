@@ -1,3 +1,7 @@
+# Note that this file is used to build the standalone version of the tracer,
+# NOT the Python package! (which is built via the standard setup.py script,
+# using setuptools)
+
 CC=gcc
 LIBS=
 CFLAGS=-W -Wall -Wextra -pedantic
