@@ -3,6 +3,7 @@
 
 #include "config.h"
 
-int fork_and_trace(int argc, char **argv, const char *database_path);
+int fork_and_trace(const char *binary, int argc, char **argv,
+                   const char *database_path);
 
 #endif

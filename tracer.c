@@ -353,7 +353,8 @@ void trace_init(void)
  * Entry point
  */
 
-int fork_and_trace(int argc, char **argv, const char *database_path)
+int fork_and_trace(const char *binary, int argc, char **argv,
+                   const char *database_path)
 {
     pid_t child;
 
@@ -376,7 +377,7 @@ int fork_and_trace(int argc, char **argv, const char *database_path)
         /* Stop this once so tracer can set options */
         kill(getpid(), SIGSTOP);
         /* Execute the target */
-        execvp(args[0], args);
+        execvp(binary, args);
         perror("Couldn't execute the target command (execvp returned)");
         exit(1);
     }

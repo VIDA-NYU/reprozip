@@ -54,7 +54,7 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
         argv[argv_len] = NULL;
     }
 
-    if(fork_and_trace(argv_len, argv, databasepath) == 0)
+    if(fork_and_trace(binary, argv_len, argv, databasepath) == 0)
     {
         Py_INCREF(Py_None);
         ret = Py_None;
