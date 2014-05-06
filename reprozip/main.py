@@ -98,7 +98,7 @@ def trace(args):
         argv = [args.arg0] + args.cmdline[1:]
     else:
         argv = args.cmdline
-    reprozip.tracer.trace(args.cmdline[0], argv)
+    reprozip.tracer.trace(args.cmdline[0], argv, args.dir, args.append)
 
 
 def main():
@@ -136,6 +136,9 @@ def main():
             '-a',
             dest='arg0',
             help="argument 0 to program, if different from program path")
+    parser_trace.add_argument(
+            '-c', '--continue', action='store_true', dest='append',
+            help="add to the previous run instead of replacing it")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_trace.set_defaults(func=trace)
 
