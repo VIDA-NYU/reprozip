@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import argparse
 import codecs
 import locale
@@ -19,10 +21,10 @@ def print_db(database):
             SELECT id, parent, timestamp
             FROM processes;
             ''')
-    print(u"\nProcesses:")
-    header = u"+------+--------+--------------------+"
+    print("\nProcesses:")
+    header = "+------+--------+--------------------+"
     print(header)
-    print(u"|  id  | parent |      timestamp     |")
+    print("|  id  | parent |      timestamp     |")
     print(header)
     for proc in processes:
         f_id = "{: 5d} ".format(proc['id'])
@@ -31,7 +33,7 @@ def print_db(database):
         else:
             f_parent = "        "
         f_timestamp = "{: 19d} ".format(proc['timestamp'])
-        print(u'|'.join(('', f_id, f_parent, f_timestamp, '')))
+        print('|'.join(('', f_id, f_parent, f_timestamp, '')))
         print(header)
     cur.close()
 
@@ -40,12 +42,12 @@ def print_db(database):
             SELECT id, name, timestamp, mode, process
             FROM opened_files;
             ''')
-    print(u"\nFiles:")
-    header = (u"+--------+--------------------+---------+------+--------------"
-              u"----------------+")
+    print("\nFiles:")
+    header = ("+--------+--------------------+---------+------+---------------"
+              "---------------+")
     print(header)
-    print(u"|   id   |      timestamp     | process | mode | name          "
-          u"               |")
+    print("|   id   |      timestamp     | process | mode | name              "
+          "           |")
     print(header)
     for proc in processes:
         f_id = "{: 7d} ".format(proc['id'])
@@ -53,7 +55,7 @@ def print_db(database):
         f_proc = "{: 8d} ".format(proc['process'])
         f_mode = "{: 5d} ".format(proc['mode'])
         f_name = " {: <29s}".format(proc['name'])
-        print(u'|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
+        print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()
 
@@ -70,8 +72,8 @@ def testrun(args):
             argv = args.cmdline
         print(args.cmdline[0], argv, database)
         _pytracer.execute(args.cmdline[0], argv, database)
-        print(u"\n\n----------------------------------------------------------"
-              u"---------------------")
+        print("\n\n-----------------------------------------------------------"
+              "--------------------")
         print_db(database)
     finally:
         os.remove(database)
@@ -99,35 +101,36 @@ def main():
 
     # General options
     parser = argparse.ArgumentParser(
-            description=u"Reproducible experiments tool.",
-            epilog=u"Please report issues to remi.rampin@nyu.edu")
+            description="Reproducible experiments tool.",
+            epilog="Please report issues to remi.rampin@nyu.edu")
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help=u"augments verbosity level")
-    parser.add_argument('-d', '--dir',
-                        help=u"where to store database and configuration file "
-                        u"(default: ./.reprozip)")
+                        dest='verbosity',
+                        help="augments verbosity level")
+    parser.add_argument('-d', '--dir', default='.reprozip',
+                        help="where to store database and configuration file "
+                        "(default: ./.reprozip)")
     subparsers = parser.add_subparsers(title="commands", metavar='')
 
     # trace command
     parser_trace = subparsers.add_parser(
             'trace',
-            help=u"Runs the program and writes out database and configuration "
-            u"file")
+            help="Runs the program and writes out database and configuration "
+            "file")
     parser_trace.add_argument(
             '-a',
             dest='arg0',
-            help=u"argument 0 to program, if different from program path")
+            help="argument 0 to program, if different from program path")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_trace.set_defaults(func=trace)
 
     # testrun command
     parser_testrun = subparsers.add_parser(
             'testrun',
-            help=u"Runs the program and writes out the database contents")
+            help="Runs the program and writes out the database contents")
     parser_testrun.add_argument(
             '-a',
             dest='arg0',
-            help=u"argument 0 to program, if different from program path")
+            help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
 
