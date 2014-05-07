@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import argparse
 import codecs
 import locale
+import logging
 import os
 import sqlite3
 import sys
@@ -13,6 +14,8 @@ from reprozip import _pytracer
 
 
 def print_db(database):
+    """Prints out database content.
+    """
     conn = sqlite3.connect(database)
     conn.row_factory = sqlite3.Row
 
@@ -63,6 +66,13 @@ def print_db(database):
 
 
 def testrun(args):
+    """testrun subcommand.
+
+    Runs the command with the tracer using a temporary sqlite3 database, then
+    reads it and dumps it out.
+
+    Not really useful, except for debugging.
+    """
     fd, database = tempfile.mkstemp(prefix='reprozip_', suffix='.sqlite3')
     os.close(fd)
     try:
@@ -80,6 +90,10 @@ def testrun(args):
 
 
 def trace(args):
+    """trace subcommand.
+
+    Simply calls reprozip.tracer.trace() with the arguments from argparse.
+    """
     if args.arg0 is not None:
         argv = [args.arg0] + args.cmdline[1:]
     else:
@@ -88,6 +102,8 @@ def trace(args):
 
 
 def main():
+    """Entry point when called on the command line.
+    """
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 
@@ -135,5 +151,7 @@ def main():
     parser_testrun.set_defaults(func=testrun)
 
     args = parser.parse_args()
+    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
+    logging.basicConfig(level=levels[min(args.verbosity, 2)])
     args.func(args)
     sys.exit(0)
