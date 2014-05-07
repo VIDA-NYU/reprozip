@@ -53,25 +53,25 @@ class DpkgManager(object):
         p = subprocess.Popen(['dpkg', '-S', filename], stdout=subprocess.PIPE)
         try:
             for l in p.stdout:
-                pkgname, f = l.split(': ', 1)
-                f = f.strip()
+                pkgname, f = l.split(b': ', 1)
+                pkgname, f = pkgname.decode('ascii'), f.strip().decode('ascii')
                 self.package_files[f] = pkgname
                 if f == filename:
                     return pkgname
         finally:
             p.wait()
-        assert p.returncode == 0
+        return None
 
     def _create_package(self, pkgname, files):
         p = subprocess.Popen(['dpkg', '-l', pkgname], stdout=subprocess.PIPE)
         try:
             version = None
             for l in p.stdout:
-                if not l.startswith('ii'):
+                if not l.startswith(b'ii'):
                     continue
                 fields = l.split()
-                if fields[1] == pkgname:
-                    version = fields[2]
+                if fields[1].decode('ascii') == pkgname:
+                    version = str(fields[2])
                     break
         finally:
             p.wait()
