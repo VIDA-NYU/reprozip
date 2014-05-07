@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "shell",
     inline: <<SCRIPT
-aptitude update
-aptitude install -y make gcc libsqlite3-dev python2.7-dev python-virtualenv
+aptitude update -y
+aptitude install -y make gcc sqlite3 libsqlite3-dev python2.7-dev python-virtualenv
 SCRIPT
 end
