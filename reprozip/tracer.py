@@ -22,11 +22,12 @@ class File(object):
     def __init__(self, path):
         self.path = path
         self.what = None
-        stat = os.stat(path)
-        if stat is not None:
-            self.size = stat.st_size
-        else:
+        try:
+            stat = os.stat(path)
+        except OSError:
             self.size = None
+        else:
+            self.size = stat.st_size
 
     #                               read
     #                              +------+
