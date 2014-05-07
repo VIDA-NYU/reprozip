@@ -107,12 +107,10 @@ def get_files(database):
             elif r_mode & (_pytracer.FILE_READ | _pytracer.FILE_EXEC):
                 f.read()
             else:
-                print "dropping %s, mode=%s" % (r_name, r_mode)
                 continue
             files.append(f)
     cur.close()
     conn.close()
-    print files
     return [f for f in files if f.what != File.WRITTEN]
 
 
