@@ -53,7 +53,11 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
                     break;
                 }
                 fprintf(stderr, "\n");
+#if PY_MAJOR_VERSION >= 3
+                str = PyBytes_AsString(pyutf8);
+#else
                 str = PyString_AsString(pyutf8);
+#endif
                 if(str == NULL)
                 {
                     bad = 1;
@@ -64,7 +68,12 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
             }
             else
             {
-                const char *str = PyString_AsString(arg);
+                const char *str;
+#if PY_MAJOR_VERSION >= 3
+                str = PyBytes_AsString(arg);
+#else
+                str = PyString_AsString(arg);
+#endif
                 if(str == NULL)
                 {
                     bad = 1;
@@ -115,15 +124,47 @@ static PyMethodDef methods[] = {
      "writes\nthe captured events to SQLite3 database databasepath."},
 };
 
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "reprozip._pytracer",       /* m_name */
+    "C interface to tracer",    /* m_doc */
+    -1,                         /* m_size */
+    methods,                    /* m_methods */
+    NULL,                       /* m_reload */
+    NULL,                       /* m_traverse */
+    NULL,                       /* m_clear */
+    NULL,                       /* m_free */
+};
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit__pytracer(void)
+#else
 PyMODINIT_FUNC init_pytracer(void)
+#endif
 {
     PyObject *mod;
 
+#if PY_MAJOR_VERSION >= 3
+    mod = PyModule_Create(&moduledef);
+#else
     mod = Py_InitModule("reprozip._pytracer", methods);
+#endif
     if(mod == NULL)
+    {
+#if PY_MAJOR_VERSION >= 3
+        return NULL;
+#else
         return;
+#endif
+    }
 
     Err_Base = PyErr_NewException("_pytracer.Error", NULL, NULL);
     Py_INCREF(Err_Base);
     PyModule_AddObject(mod, "Error", Err_Base);
+
+#if PY_MAJOR_VERSION >= 3
+    return mod;
+#endif
 }

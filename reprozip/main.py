@@ -29,13 +29,13 @@ def print_db(database):
     print(header)
     print("|  id  | parent |      timestamp     |")
     print(header)
-    for proc in processes:
-        f_id = "{: 5d} ".format(proc['id'])
-        if proc['parent'] is not None:
-            f_parent = "{: 7d} ".format(proc['parent'])
+    for r_id, r_parent, r_timestamp in processes:
+        f_id = "{: 5d} ".format(r_id)
+        if r_parent is not None:
+            f_parent = "{: 7d} ".format(r_parent)
         else:
             f_parent = "        "
-        f_timestamp = "{: 19d} ".format(proc['timestamp'])
+        f_timestamp = "{: 19d} ".format(r_timestamp)
         print('|'.join(('', f_id, f_parent, f_timestamp, '')))
         print(header)
     cur.close()
@@ -52,12 +52,12 @@ def print_db(database):
     print("|   id   |      timestamp     | process | mode | name              "
           "           |")
     print(header)
-    for proc in processes:
-        f_id = "{: 7d} ".format(proc['id'])
-        f_timestamp = "{: 19d} ".format(proc['timestamp'])
-        f_proc = "{: 8d} ".format(proc['process'])
-        f_mode = "{: 5d} ".format(proc['mode'])
-        f_name = " {: <29s}".format(proc['name'])
+    for r_id, r_name, r_timestamp, r_mode, r_process in processes:
+        f_id = "{: 7d} ".format(r_id)
+        f_timestamp = "{: 19d} ".format(r_timestamp)
+        f_proc = "{: 8d} ".format(r_process)
+        f_mode = "{: 5d} ".format(r_mode)
+        f_name = " {: <29s}".format(r_name)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()
