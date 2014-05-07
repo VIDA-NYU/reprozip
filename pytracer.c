@@ -1,5 +1,6 @@
 #include <Python.h>
 
+#include "database.h"
 #include "tracer.h"
 
 
@@ -163,6 +164,10 @@ PyMODINIT_FUNC init_pytracer(void)
     Err_Base = PyErr_NewException("_pytracer.Error", NULL, NULL);
     Py_INCREF(Err_Base);
     PyModule_AddObject(mod, "Error", Err_Base);
+
+    PyModule_AddIntMacro(mod, FILE_READ);
+    PyModule_AddIntMacro(mod, FILE_WRITE);
+    PyModule_AddIntMacro(mod, FILE_EXEC);
 
 #if PY_MAJOR_VERSION >= 3
     return mod;
