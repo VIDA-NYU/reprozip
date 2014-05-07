@@ -139,7 +139,8 @@ def main():
     parser_trace.add_argument(
             '-c', '--continue', action='store_true', dest='append',
             help="add to the previous run instead of replacing it")
-    parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER)
+    parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER,
+                              help="command-line to run under trace")
     parser_trace.set_defaults(func=trace)
 
     # testrun command
@@ -156,5 +157,7 @@ def main():
     args = parser.parse_args()
     levels = [logging.WARNING, logging.INFO, logging.DEBUG]
     logging.basicConfig(level=levels[min(args.verbosity, 2)])
+    if 'cmdline' in args and not args.cmdline:
+        parser.error("missing command-line")
     args.func(args)
     sys.exit(0)
