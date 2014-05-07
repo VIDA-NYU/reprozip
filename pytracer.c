@@ -38,18 +38,48 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
     {
         argv_len = PyList_Size(py_argv);
         size_t i;
+        int bad = 0;
         argv = malloc((argv_len + 1) * sizeof(char*));
         for(i = 0; i < argv_len; ++i)
         {
             PyObject *arg = PyList_GetItem(py_argv, i);
             if(PyUnicode_Check(arg))
             {
+                const char *str;
                 PyObject *pyutf8 = PyUnicode_AsUTF8String(arg);
-                argv[i] = strdup(PyString_AsString(pyutf8));
+                if(pyutf8 == NULL)
+                {
+                    bad = 1;
+                    break;
+                }
+                fprintf(stderr, "\n");
+                str = PyString_AsString(pyutf8);
+                if(str == NULL)
+                {
+                    bad = 1;
+                    break;
+                }
+                argv[i] = strdup(str);
                 Py_DECREF(pyutf8);
             }
             else
-                argv[i] = strdup(PyString_AsString(arg));
+            {
+                const char *str = PyString_AsString(arg);
+                if(str == NULL)
+                {
+                    bad = 1;
+                    break;
+                }
+                argv[i] = strdup(str);
+            }
+        }
+        if(bad)
+        {
+            size_t j;
+            for(j = 0; j < i; ++j)
+                free(argv[j]);
+            free(argv);
+            return NULL;
         }
         argv[argv_len] = NULL;
     }
