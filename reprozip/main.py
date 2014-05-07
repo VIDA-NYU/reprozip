@@ -57,7 +57,7 @@ def print_db(database):
         f_timestamp = "{: 19d} ".format(r_timestamp)
         f_proc = "{: 8d} ".format(r_process)
         f_mode = "{: 5d} ".format(r_mode)
-        f_name = " {: <29s}".format(r_name)
+        f_name = " {: <28s} ".format(r_name)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()
