@@ -17,16 +17,16 @@ class Package(CommonEqualityMixin, Serializable):
         self.files.append(filename)
 
     def serialize(self, fp, lvl=0):
-        fp.write(b"Package(name='%s'%s, packfiles=%s, files=[\n" % (
+        fp.write("Package(name=%s%s, packfiles=%s, files=[\n" % (
                  self.string(self.name),
-                 b", version='%s'" % self.string(self.version)
+                 ", version=%s" % self.string(self.version)
                  if self.version is not None else '',
-                 b'True' if self.packfiles else b'False'))
+                 'True' if self.packfiles else 'False'))
         for f in self.files:
-            fp.write(b'    ' * (lvl + 1))
+            fp.write('    ' * (lvl + 1))
             f.serialize(fp, lvl + 1)
-            fp.write(b', # %s\n' % f.hsize())
-        fp.write(b'    ' * lvl + '])')
+            fp.write(', # %s\n' % f.hsize())
+        fp.write('    ' * lvl + '])')
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
@@ -89,7 +89,7 @@ class DpkgManager(object):
                     continue
                 fields = l.split()
                 if fields[1].decode('ascii') == pkgname:
-                    version = str(fields[2])
+                    version = fields[2].decode('ascii')
                     break
         finally:
             p.wait()

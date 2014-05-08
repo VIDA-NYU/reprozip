@@ -15,12 +15,10 @@ class Serializable(object):
 
     @staticmethod
     def string(s):
-        if isinstance(s, bytes):
-            return s.replace(b'\\', b'\\\\').replace(b"'", b"\\'")
-        else:
-            return s.replace('\\', '\\\\').replace("'", "\\'").encode(
-                    'ascii',
-                    'backslashreplace')
+        s = repr(s)
+        if s[0] == 'u' or s[0] == 'b':
+            return s[1:]
+        return s
 
     def serialize(self, fp, lvl=0):
         raise NotImplementedError
