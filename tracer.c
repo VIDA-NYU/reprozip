@@ -205,7 +205,7 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
             if(db_add_file_open(process->identifier,
                                 process->current_syscall.path,
                                 process->current_syscall.mode) != 0)
-                return 1;
+                return -1;
         }
         else
         {
@@ -238,7 +238,7 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
             new_process->in_syscall = 0;
             if(db_add_process(new_process->identifier,
                               process->identifier) != 0)
-                return 1;
+                return -1;
         }
     }
 
@@ -283,7 +283,7 @@ int trace(void)
             process->pid = pid;
             process->in_syscall = 0;
             if(db_add_first_process(process->identifier) != 0)
-                return 1;
+                return -1;
         }
         if(process->status != PROCESS_ATTACHED)
         {
@@ -400,7 +400,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         /* Execute the target */
         execvp(binary, args);
         perror("Couldn't execute the target command (execvp returned)");
-        exit(1);
+        return 1;
     }
 
     if(db_init(database_path) != 0)
@@ -427,5 +427,8 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     trace();
 
-    return db_close();
+    if(db_close() != 0)
+        return 1;
+
+    return 0;
 }

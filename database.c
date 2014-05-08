@@ -46,7 +46,7 @@ int db_init(const char *filename)
         {
         wrongschema:
             fprintf(stderr, "Database schema is wrong\n");
-            return 1;
+            return -1;
         }
         sqlite3_finalize(stmt_get_tables);
         if(ret != SQLITE_DONE)
@@ -94,7 +94,7 @@ int db_init(const char *filename)
 sqlerror:
     fprintf(stderr, "sqlite3 error creating database: %s\n",
             sqlite3_errmsg(db));
-    return 1;
+    return -1;
 }
 
 int db_close(void)
@@ -106,7 +106,7 @@ int db_close(void)
 
 sqlerror:
     fprintf(stderr, "sqlite3 error on exit: %s\n", sqlite3_errmsg(db));
-    return 1;
+    return -1;
 }
 
 #define DB_NO_PARENT ((unsigned int)-2)
@@ -117,7 +117,7 @@ int db_add_process(unsigned int id, unsigned int parent_id)
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
     {
         perror("Getting time failed (clock_gettime)");
-        return 1;
+        return -1;
     }
     check(sqlite3_bind_int(stmt_insert_process, 1, id));
     if(parent_id == DB_NO_PARENT)
@@ -146,7 +146,7 @@ int db_add_process(unsigned int id, unsigned int parent_id)
 sqlerror:
     fprintf(stderr, "sqlite3 error inserting process: %s\n",
             sqlite3_errmsg(db));
-    return 1;
+    return -1;
 }
 
 int db_add_first_process(unsigned int id)
@@ -160,7 +160,7 @@ int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
     {
         perror("Getting time failed (clock_gettime)");
-        return 1;
+        return -1;
     }
     check(sqlite3_bind_text(stmt_insert_file, 1, name, -1, SQLITE_TRANSIENT));
     {
@@ -182,5 +182,5 @@ int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
 sqlerror:
     fprintf(stderr, "sqlite3 error inserting file: %s\n",
             sqlite3_errmsg(db));
-    return 1;
+    return -1;
 }
