@@ -57,7 +57,8 @@ class DpkgManager(object):
                 pkgname, f = pkgname.decode('ascii'), f.strip().decode('ascii')
                 self.package_files[f] = pkgname
                 if f == filename:
-                    return pkgname
+                    if ' ' not in pkgname:
+                        return pkgname
         finally:
             p.wait()
         return None
