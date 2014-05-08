@@ -196,7 +196,7 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
     else if(process->in_syscall
           && (syscall == SYS_open || syscall == SYS_execve) )
     {
-        int ret = params[0];
+        int ret = params[-1];
         if(ret >= 0)
         {
 #ifdef DEBUG
