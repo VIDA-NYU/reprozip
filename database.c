@@ -15,8 +15,45 @@ static sqlite3_stmt *stmt_insert_file;
 
 int db_init(const char *filename)
 {
+    int tables_exist;
+
     check(sqlite3_open(filename, &db));
 
+    {
+        int ret;
+        const char *sql = ""
+                "SELECT name FROM SQLITE_MASTER "
+                "WHERE type='table';";
+        sqlite3_stmt *stmt_get_tables;
+        unsigned int found = 0x00;
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_get_tables, NULL));
+        while((ret = sqlite3_step(stmt_get_tables)) == SQLITE_ROW)
+        {
+            const char *colname = (const char*)sqlite3_column_text(
+                    stmt_get_tables, 0);
+            if(strcmp("processes", colname) == 0)
+                found |= 0x01;
+            else if(strcmp("opened_files", colname) == 0)
+                found |= 0x02;
+            else
+                goto wrongschema;
+        }
+        if(found == 0x00)
+            tables_exist = 0;
+        else if(found == 0x03)
+            tables_exist = 1;
+        else
+        {
+        wrongschema:
+            fprintf(stderr, "Database schema is wrong\n");
+            return 1;
+        }
+        sqlite3_finalize(stmt_get_tables);
+        if(ret != SQLITE_DONE)
+            goto sqlerror;
+    }
+
+    if(!tables_exist)
     {
         const char *sql[] = {
             "CREATE TABLE processes("
