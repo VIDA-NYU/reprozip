@@ -159,7 +159,7 @@ static unsigned int flags2mode(int flags)
     return mode;
 }
 
-void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
+int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 {
     pid_t pid = process->pid;
 #ifdef DEBUG
@@ -202,9 +202,10 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 #ifdef DEBUG
             fprintf(stderr, "File %s\n", process->current_syscall.path);
 #endif
-            db_add_file_open(process->identifier,
-                             process->current_syscall.path,
-                             process->current_syscall.mode);
+            if(db_add_file_open(process->identifier,
+                                process->current_syscall.path,
+                                process->current_syscall.mode) != 0)
+                return 1;
         }
         else
         {
@@ -235,16 +236,20 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
             new_process->status = PROCESS_ALLOCATED;
             new_process->pid = new_pid;
             new_process->in_syscall = 0;
-            db_add_process(new_process->identifier, process->identifier);
+            if(db_add_process(new_process->identifier,
+                              process->identifier) != 0)
+                return 1;
         }
     }
 
     /* Run to next syscall */
     process->in_syscall = 1 - process->in_syscall;
     ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+
+    return 0;
 }
 
-void trace(void)
+int trace(void)
 {
     int nprocs = 0;
     for(;;)
@@ -277,7 +282,8 @@ void trace(void)
             process->status = PROCESS_ALLOCATED;
             process->pid = pid;
             process->in_syscall = 0;
-            db_add_first_process(process->identifier);
+            if(db_add_first_process(process->identifier) != 0)
+                return 1;
         }
         if(process->status != PROCESS_ATTACHED)
         {
@@ -342,6 +348,8 @@ void trace(void)
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
         }
     }
+
+    return 0;
 }
 
 void trace_init(void)
@@ -410,7 +418,11 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->in_syscall = 0;
 
         fprintf(stderr, "Process %d created by initial fork()\n", child);
-        db_add_first_process(process->identifier);
+        if(db_add_first_process(process->identifier) != 0)
+        {
+            kill(child, SIGKILL);
+            return 1;
+        }
     }
 
     trace();
