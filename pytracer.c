@@ -22,19 +22,6 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
                           &databasepath)))
         return NULL;
 
-    /* DEBUG */
-    fprintf(stderr,
-            "pytracer_execute(\n"
-            "    binary=%s\n"
-            "    argv=",
-            binary);
-    PyObject_Print(py_argv, stderr, 0);
-    fprintf(stderr,
-            "\n"
-            "    databasepath=%s\n"
-            "    )\n",
-            databasepath);
-
     /* Converts argv from Python list to char[][] */
     {
         argv_len = PyList_Size(py_argv);
