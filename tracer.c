@@ -163,7 +163,17 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
 {
     pid_t pid = process->pid;
 #ifdef DEBUG
-    fprintf(stderr, "syscall=%u, in_syscall=%u\n", syscall, process->in_syscall);
+    if(syscall == SYS_open || syscall == SYS_execve || syscall == SYS_fork
+     || syscall == SYS_vfork || syscall == SYS_clone)
+    {
+        const char *callname = (syscall == SYS_open)?"open":
+                               (SYS_execve)?"execve":
+                               (SYS_fork)?"fork":
+                               (SYS_vfork)?"vfork":
+                               "clone";
+        fprintf(stderr, "syscall=%u %s, in_syscall=%u\n",
+                syscall, callname, process->in_syscall);
+    }
 #endif
     if(!process->in_syscall
      && (syscall == SYS_open || syscall == SYS_execve) )
@@ -175,8 +185,11 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
         pathname[pathname_size] = '\0';
         process->current_syscall.n = syscall;
         process->current_syscall.path = pathname;
+#ifdef DEBUG
+        fprintf(stderr, "    %s\n", pathname);
+#endif
         if(syscall == SYS_execve)
-           process->current_syscall.mode = FILE_EXEC;
+            process->current_syscall.mode = FILE_EXEC;
         else
             process->current_syscall.mode = flags2mode((int)params[1]);
     }
@@ -185,9 +198,20 @@ void trace_handle_syscall(struct Process *process, int syscall, size_t *params)
     {
         int ret = params[0];
         if(ret >= 0)
+        {
+#ifdef DEBUG
+            fprintf(stderr, "File %s\n", process->current_syscall.path);
+#endif
             db_add_file_open(process->identifier,
                              process->current_syscall.path,
                              process->current_syscall.mode);
+        }
+        else
+        {
+#ifdef DEBUG
+            fprintf(stderr, "Call failed, %d\n", ret);
+#endif
+        }
         free(process->current_syscall.path);
         process->current_syscall.n = -1;
     }
@@ -228,10 +252,7 @@ void trace(void)
         struct Process *process;
 
         /* Wait for a process */
-        pid = waitpid(-1, &status, 0);
-#ifdef DEBUG
-        fprintf(stderr, "\npid=%d, status=%u\n", pid, status);
-#endif
+        pid = waitpid(-1, &status, __WALL);
         if(WIFEXITED(status))
         {
             fprintf(stderr, "Process %d exited, %d processes remain\n",
@@ -274,23 +295,13 @@ void trace(void)
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
             continue;
         }
-#ifdef DEBUG
-        else
-            fprintf(stderr, "Process %d is known (process=%p)\n", pid, process);
-#endif
 
 #ifdef DEBUG
-        if(WIFSTOPPED(status))
-        {
-            if(WSTOPSIG(status) & 0x80)
-                fprintf(stderr, "Process %d stopped because of syscall "
-                        "tracing\n", pid);
-            else
-                fprintf(stderr, "Process %d stopped elsewhere (WSTOPSIG=%u)\n",
-                        pid, WSTOPSIG(status));
-        }
-        else
+        if(!WIFSTOPPED(status))
             fprintf(stderr, "Process %d is NOT stopped\n", pid);
+        else if( (WSTOPSIG(status) & 0x80) == 0)
+            fprintf(stderr, "Process %d is NOT stopped because of syscall "
+                    "(WSTOPSIG=%u)\n", pid, WSTOPSIG(status));
 #endif
 
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
@@ -324,7 +335,7 @@ void trace(void)
         else if(WIFSTOPPED(status))
         {
 #ifdef DEBUG
-            fprintf(stderr, "Resuming on signal\n");
+            fprintf(stderr, "Resuming %d on signal\n", pid);
 #endif
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
         }
