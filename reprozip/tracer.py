@@ -115,6 +115,11 @@ def get_files(database):
     return [f for f in files if f.what != File.WRITTEN]
 
 
+def compat_execfile(filename, globals=None, locals=None):
+    with open(filename) as fp:
+        exec(fp.read(), globals, locals)
+
+
 def trace(binary, argv, directory, append):
     """Main function for the trace subcommand.
     """
@@ -155,7 +160,7 @@ def trace(binary, argv, directory, append):
     oldconfig = {}
     if os.path.exists(config):
         # Loads in previous config
-        execfile(config, oldconfig)
+        compat_execfile(config, oldconfig)
     distribution = platform.linux_distribution()[0:2]
     with open(config, 'w') as fp:
         # Writes preamble
