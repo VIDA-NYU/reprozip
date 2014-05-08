@@ -1,15 +1,32 @@
+from __future__ import unicode_literals
+
 import platform
 import subprocess
 
+from reprozip.utils import CommonEqualityMixin, Serializable
 
-class Package(object):
+
+class Package(CommonEqualityMixin, Serializable):
     def __init__(self, name, version, files=[], packfiles=True):
         self.name = name
         self.version = version
         self.files = list(files)
+        self.packfiles = packfiles
 
     def add_file(self, filename):
         self.files.append(filename)
+
+    def serialize(self, fp, lvl=0):
+        fp.write(b"Package(name='%s'%s, packfiles=%s, files=[\n" % (
+                 self.string(self.name),
+                 b", version='%s'" % self.string(self.version)
+                 if self.version is not None else '',
+                 b'True' if self.packfiles else b'False'))
+        for f in self.files:
+            fp.write(b'    ' * (lvl + 1))
+            f.serialize(fp, lvl + 1)
+            fp.write(b', # %s\n' % f.hsize())
+        fp.write(b'    ' * lvl + '])')
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
