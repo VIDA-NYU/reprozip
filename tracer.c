@@ -82,7 +82,6 @@ struct Process {
 
 struct Process **processes;
 size_t processes_size;
-unsigned int next_identifier = 0;
 
 struct Process *trace_find_process(pid_t pid)
 {
@@ -232,11 +231,10 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
                     "clone()");
 #endif
             new_process = trace_get_empty_process();
-            new_process->identifier = next_identifier++;
             new_process->status = PROCESS_ALLOCATED;
             new_process->pid = new_pid;
             new_process->in_syscall = 0;
-            if(db_add_process(new_process->identifier,
+            if(db_add_process(&new_process->identifier,
                               process->identifier) != 0)
                 return -1;
         }
@@ -278,11 +276,10 @@ int trace(void)
         {
             fprintf(stderr, "Warning: found unexpected process %d\n", pid);
             process = trace_get_empty_process();
-            process->identifier = next_identifier++;
             process->status = PROCESS_ALLOCATED;
             process->pid = pid;
             process->in_syscall = 0;
-            if(db_add_first_process(process->identifier) != 0)
+            if(db_add_first_process(&process->identifier) != 0)
                 return -1;
         }
         if(process->status != PROCESS_ATTACHED)
@@ -412,13 +409,12 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     /* Creates entry for first process */
     {
         struct Process *process = trace_get_empty_process();
-        process->identifier = next_identifier++;
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
         process->pid = child;
         process->in_syscall = 0;
 
         fprintf(stderr, "Process %d created by initial fork()\n", child);
-        if(db_add_first_process(process->identifier) != 0)
+        if(db_add_first_process(&process->identifier) != 0)
         {
             kill(child, SIGKILL);
             return 1;

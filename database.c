@@ -10,6 +10,7 @@
 #define check(r) if((r) != SQLITE_OK) { goto sqlerror; }
 
 static sqlite3 *db;
+static sqlite3_stmt *stmt_last_rowid;
 static sqlite3_stmt *stmt_insert_process;
 static sqlite3_stmt *stmt_insert_file;
 
@@ -77,8 +78,14 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO processes(id, parent, timestamp)"
-                "VALUES(?, ?, ?)";
+                "SELECT last_insert_rowid()";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_last_rowid, NULL));
+    }
+
+    {
+        const char *sql = ""
+                "INSERT INTO processes(parent, timestamp)"
+                "VALUES(?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
     }
 
@@ -99,6 +106,7 @@ sqlerror:
 
 int db_close(void)
 {
+    check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_insert_file));
     check(sqlite3_close(db));
@@ -111,7 +119,7 @@ sqlerror:
 
 #define DB_NO_PARENT ((unsigned int)-2)
 
-int db_add_process(unsigned int id, unsigned int parent_id)
+int db_add_process(unsigned int *id, unsigned int parent_id)
 {
     struct timespec now;
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
@@ -119,14 +127,13 @@ int db_add_process(unsigned int id, unsigned int parent_id)
         perror("Getting time failed (clock_gettime)");
         return -1;
     }
-    check(sqlite3_bind_int(stmt_insert_process, 1, id));
     if(parent_id == DB_NO_PARENT)
     {
-        check(sqlite3_bind_null(stmt_insert_process, 2));
+        check(sqlite3_bind_null(stmt_insert_process, 1));
     }
     else
     {
-        check(sqlite3_bind_int(stmt_insert_process, 2, parent_id));
+        check(sqlite3_bind_int(stmt_insert_process, 1, parent_id));
     }
     {
         /* This assumes that we won't go over 2^32 seconds (~135 years) */
@@ -134,12 +141,20 @@ int db_add_process(unsigned int id, unsigned int parent_id)
         timestamp = now.tv_sec;
         timestamp *= 1000000000;
         timestamp += now.tv_nsec;
-        check(sqlite3_bind_int64(stmt_insert_process, 3, timestamp));
+        check(sqlite3_bind_int64(stmt_insert_process, 2, timestamp));
     }
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
         goto sqlerror;
     sqlite3_reset(stmt_insert_process);
+
+    /* Get id */
+    if(sqlite3_step(stmt_last_rowid) != SQLITE_ROW)
+        goto sqlerror;
+    *id = sqlite3_column_int(stmt_last_rowid, 0);
+    if(sqlite3_step(stmt_last_rowid) != SQLITE_DONE)
+        goto sqlerror;
+    sqlite3_reset(stmt_last_rowid);
 
     return 0;
 
@@ -149,7 +164,7 @@ sqlerror:
     return -1;
 }
 
-int db_add_first_process(unsigned int id)
+int db_add_first_process(unsigned int *id)
 {
     return db_add_process(id, DB_NO_PARENT);
 }
