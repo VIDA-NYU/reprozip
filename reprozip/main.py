@@ -116,20 +116,23 @@ def main():
     # Parses command-line
 
     # General options
-    parser = argparse.ArgumentParser(
-            description="Reproducible experiments tool.",
-            epilog="Please report issues to remi.rampin@nyu.edu")
-    parser.add_argument('-v', '--verbose', action='count', default=0,
+    options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('-v', '--verbose', action='count', default=0,
                         dest='verbosity',
                         help="augments verbosity level")
-    parser.add_argument('-d', '--dir', default='.reprozip',
+    options.add_argument('-d', '--dir', default='.reprozip',
                         help="where to store database and configuration file "
                         "(default: ./.reprozip)")
+
+    parser = argparse.ArgumentParser(
+            description="Reproducible experiments tool.",
+            epilog="Please report issues to remi.rampin@nyu.edu",
+            parents=[options])
     subparsers = parser.add_subparsers(title="commands", metavar='')
 
     # trace command
     parser_trace = subparsers.add_parser(
-            'trace',
+            'trace', parents=[options],
             help="Runs the program and writes out database and configuration "
             "file")
     parser_trace.add_argument(
@@ -145,7 +148,7 @@ def main():
 
     # testrun command
     parser_testrun = subparsers.add_parser(
-            'testrun',
+            'testrun', parents=[options],
             help="Runs the program and writes out the database contents")
     parser_testrun.add_argument(
             '-a',
