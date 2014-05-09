@@ -11,6 +11,7 @@ import reprozip
 from reprozip import _pytracer
 from reprozip.linux_pkgs import magic_dirs, system_dirs, Package, \
     identify_packages
+from reprozip.orderedset import OrderedSet
 from reprozip.utils import CommonEqualityMixin, Serializable, compat_execfile
 
 
@@ -119,16 +120,16 @@ def get_files(database):
     return [f for f in files.values() if f.what != File.WRITTEN]
 
 
-def merge_files(files, packages, oldfiles, oldpackages):
-    files = set(files)
-    files.update(oldfiles)
+def merge_files(newfiles, newpackages, oldfiles, oldpackages):
+    files = OrderedSet(oldfiles)
+    files.update(newfiles)
     files = list(files)
 
-    packages = dict((pkg.name, pkg) for pkg in packages)
+    packages = dict((pkg.name, pkg) for pkg in newpackages)
     for oldpkg in oldpackages:
         if oldpkg.name in packages:
             pkg = packages[oldpkg.name]
-            s = set(oldpkg.files)
+            s = OrderedSet(oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
