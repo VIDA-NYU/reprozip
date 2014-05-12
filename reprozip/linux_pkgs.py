@@ -7,23 +7,29 @@ from reprozip.utils import CommonEqualityMixin, Serializable, hsize
 
 
 class Package(CommonEqualityMixin, Serializable):
-    def __init__(self, name, version, files=[], packfiles=True):
+    def __init__(self, name, version, files=[], packfiles=True, size=None):
         self.name = name
         self.version = version
         self.files = list(files)
         self.packfiles = packfiles
+        self.size = size
 
     def add_file(self, filename):
         self.files.append(filename)
 
     def serialize(self, fp, lvl=0):
-        fp.write("Package(name=%s%s, packfiles=%s, files=[\n" % (
+        fp.write("Package(name=%s%s, size=%d,\n" % (
                  self.string(self.name),
                  ", version=%s" % self.string(self.version)
                  if self.version is not None else '',
-                 'True' if self.packfiles else 'False'))
+                 self.size))
+        fp.write('    ' * lvl + "        packfiles=%s,\n" %
+                 ('True' if self.packfiles else 'False'))
+        fp.write('    ' * lvl + "        files=[\n")
         fp.write('    ' * (lvl + 1) + "# Total files used: %s\n" %
                  hsize(sum(f.size for f in self.files if f.size is not None)))
+        fp.write('    ' * (lvl + 1) + "# Installed package size: %s\n" %
+                 hsize(self.size))
         for f in self.files:
             fp.write('    ' * (lvl + 1))
             f.serialize(fp, lvl + 1)
@@ -85,7 +91,8 @@ class DpkgManager(object):
     def _create_package(self, pkgname, files):
         p = subprocess.Popen(['dpkg-query',
                               '--showformat=${Package;-50}\t'
-                                  '${Version}\n',
+                                  '${Version}\t'
+                                  '${Installed-Size}\n',
                               '-W',
                               pkgname],
                 stdout=subprocess.PIPE)
@@ -95,11 +102,12 @@ class DpkgManager(object):
                 fields = l.split()
                 if fields[0].decode('ascii') == pkgname:
                     version = fields[1].decode('ascii')
+                    size = int(fields[2].decode('ascii')) * 1024 # kbytes
                     break
         finally:
             p.wait()
         assert p.returncode == 0
-        pkg = Package(pkgname, version, files)
+        pkg = Package(pkgname, version, files, size=size)
         self.packages[pkgname] = pkg
         return pkg
 
