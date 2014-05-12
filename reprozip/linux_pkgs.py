@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import platform
 import subprocess
 
-from reprozip.utils import CommonEqualityMixin, Serializable
+from reprozip.utils import CommonEqualityMixin, Serializable, hsize
 
 
 class Package(CommonEqualityMixin, Serializable):
@@ -22,10 +22,12 @@ class Package(CommonEqualityMixin, Serializable):
                  ", version=%s" % self.string(self.version)
                  if self.version is not None else '',
                  'True' if self.packfiles else 'False'))
+        fp.write('    ' * (lvl + 1) + "# Total files used: %s\n" %
+                 hsize(sum(f.size for f in self.files if f.size is not None)))
         for f in self.files:
             fp.write('    ' * (lvl + 1))
             f.serialize(fp, lvl + 1)
-            fp.write(', # %s\n' % f.hsize())
+            fp.write(', # %s\n' % hsize(f.size))
         fp.write('    ' * lvl + '])')
 
 

@@ -12,7 +12,8 @@ from reprozip import _pytracer
 from reprozip.linux_pkgs import magic_dirs, system_dirs, Package, \
     identify_packages
 from reprozip.orderedset import OrderedSet
-from reprozip.utils import CommonEqualityMixin, Serializable, compat_execfile
+from reprozip.utils import CommonEqualityMixin, Serializable, \
+    compat_execfile, hsize
 
 
 class File(CommonEqualityMixin, Serializable):
@@ -53,33 +54,6 @@ class File(CommonEqualityMixin, Serializable):
             self.what = File.WRITTEN
         elif self.what == File.ONLY_READ:
             self.what = File.READ_THEN_WRITTEN
-
-    def hsize(self):
-        """Readable size.
-        """
-        if self.size is None:
-            return "unknown"
-
-        KB = 1<<10
-        MB = 1<<20
-        GB = 1<<30
-        TB = 1<<40
-        PB = 1<<50
-
-        bytes = float(self.size)
-
-        if bytes < KB:
-            return "{} bytes".format(self.size)
-        elif bytes < MB:
-            return "{:.2f} KB".format(bytes / KB)
-        elif bytes < GB:
-            return "{:.2f} MB".format(bytes / MB)
-        elif bytes < TB:
-            return "{:.2f} GB".format(bytes / GB)
-        elif bytes < PB:
-            return "{:.2f} TB".format(bytes / TB)
-        else:
-            return "{:.2f} PB".format(bytes / PB)
 
     def serialize(self, fp, lvl=0, eol=False):
         fp.write("File(%s)" % self.string(self.path))
@@ -236,7 +210,7 @@ other_files = [
         for f in files:
             fp.write('    ')
             f.serialize(fp, 1)
-            fp.write(', # %s\n' % f.hsize())
+            fp.write(', # %s\n' % hsize(f.size))
         fp.write("]\n")
 
     print("Configuration file written in {}".format(config))
