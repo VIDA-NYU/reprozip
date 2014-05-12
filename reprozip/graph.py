@@ -97,17 +97,13 @@ def generate(target, directory, all_forks=False):
                        ((r[1], 'file', r) for r in file_rows))
     for ts, event_type, data in rows:
         if event_type == 'process':
-            print("data: %r" % (data,))
             r_id, r_parent, r_timestamp = data
-            print("Creating process %d" % r_id)
             if r_parent is not None:
                 parent = processes[r_parent]
                 binary = parent.binary
-                print("Parent is %s, setting binary to %s" % (r_parent, binary))
             else:
                 parent = None
                 binary = None
-                print("Parent is None, setting binary to None")
             p = Process(r_id,
                         parent,
                         r_timestamp,
@@ -121,17 +117,14 @@ def generate(target, directory, all_forks=False):
             r_name, r_timestamp, r_mode, r_process = data
             process = processes[r_process]
             if r_mode == _pytracer.FILE_EXEC:
-                print("Process %d execs %s" % (r_process, r_name))
                 binaries.add(r_name)
                 # Here we split this process in two "programs", unless the previous
                 # one hasn't done anything since it was created via fork()
                 if not all_forks and not process.acted:
-                    print("Changing binary from %s to %s" % (process.binary, r_name))
                     process.binary = r_name
                     process.created = C_FORKEXEC
                     process.acted = True
                 else:
-                    print("Creating new process")
                     process = Process(process.pid,
                                       process,
                                       r_timestamp,
