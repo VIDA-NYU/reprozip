@@ -199,14 +199,20 @@ int trace_handle_syscall(struct Process *process)
 #endif
         if(ret >= 0)
         {
-            if(syscall == SYS_execve)
-                mode = FILE_EXEC;
-            else
+            if(syscall == SYS_open)
+            {
                 mode = flags2mode((int)process->params[1]);
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                mode) != 0)
-                return -1;
+                if(db_add_file_open(process->identifier,
+                                    pathname,
+                                    mode) != 0)
+                    return -1;
+            }
+            else /* syscall == SYS_execve */
+            {
+                const char *n[1] = {NULL}; /* TODO */
+                if(db_add_exec(process->identifier, pathname, n) != 0)
+                    return -1;
+            }
         }
         else
         {

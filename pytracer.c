@@ -154,7 +154,6 @@ PyMODINIT_FUNC init_pytracer(void)
 
     PyModule_AddIntMacro(mod, FILE_READ);
     PyModule_AddIntMacro(mod, FILE_WRITE);
-    PyModule_AddIntMacro(mod, FILE_EXEC);
 
 #if PY_MAJOR_VERSION >= 3
     return mod;
