@@ -66,18 +66,15 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
 #define PROCESS_ALLOCATED   1
 #define PROCESS_ATTACHED    2
 
-struct Syscall {
-    int n;
-    char *path;
-    int mode;
-};
-
 struct Process {
     unsigned int identifier;
     pid_t pid;
     int status;
     int in_syscall;
-    struct Syscall current_syscall;
+    int current_syscall;
+    size_t retvalue;
+    size_t params[6];
+    void *syscall_info;
 };
 
 struct Process **processes;
@@ -115,7 +112,8 @@ struct Process *trace_get_empty_process(void)
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
             processes[i]->in_syscall = 0;
-            processes[i]->current_syscall.n = -1;
+            processes[i]->current_syscall = -1;
+            processes[i]->syscall_info = NULL;
         }
         return ret;
     }
@@ -158,9 +156,10 @@ static unsigned int flags2mode(int flags)
     return mode;
 }
 
-int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
+int trace_handle_syscall(struct Process *process)
 {
     pid_t pid = process->pid;
+    const int syscall = process->current_syscall;
 #ifdef DEBUG
     if(syscall == SYS_open || syscall == SYS_execve || syscall == SYS_fork
      || syscall == SYS_vfork || syscall == SYS_clone)
@@ -177,33 +176,32 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
     if(!process->in_syscall
      && (syscall == SYS_open || syscall == SYS_execve) )
     {
-        size_t pathname_addr = params[0];
+        size_t pathname_addr = process->params[0];
         size_t pathname_size = tracee_strlen(pid, pathname_addr);
         char *pathname = malloc(pathname_size + 1);
         tracee_read(pid, pathname, pathname_addr, pathname_size);
         pathname[pathname_size] = '\0';
-        process->current_syscall.n = syscall;
-        process->current_syscall.path = pathname;
-#ifdef DEBUG
-        fprintf(stderr, "    %s\n", pathname);
-#endif
-        if(syscall == SYS_execve)
-            process->current_syscall.mode = FILE_EXEC;
-        else
-            process->current_syscall.mode = flags2mode((int)params[1]);
+        process->syscall_info = pathname;
     }
-    else if(process->in_syscall
-          && (syscall == SYS_open || syscall == SYS_execve) )
+    if(process->in_syscall
+     && (syscall == SYS_open || syscall == SYS_execve) )
     {
-        int ret = params[-1];
+        /* FIXME : this cast doesn't look too safe */
+        int ret = process->retvalue;
+        unsigned int mode;
+        const char *pathname = process->syscall_info;
+#ifdef DEBUG
+        fprintf(stderr, "File %s\n", pathname);
+#endif
         if(ret >= 0)
         {
-#ifdef DEBUG
-            fprintf(stderr, "File %s\n", process->current_syscall.path);
-#endif
+            if(syscall == SYS_execve)
+                mode = FILE_EXEC;
+            else
+                mode = flags2mode((int)process->params[1]);
             if(db_add_file_open(process->identifier,
-                                process->current_syscall.path,
-                                process->current_syscall.mode) != 0)
+                                pathname,
+                                mode) != 0)
                 return -1;
         }
         else
@@ -212,16 +210,15 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
             fprintf(stderr, "Call failed, %d\n", ret);
 #endif
         }
-        free(process->current_syscall.path);
-        process->current_syscall.n = -1;
+        free(process->syscall_info);
     }
     else if(process->in_syscall
           && (syscall == SYS_fork || syscall == SYS_vfork
             || syscall == SYS_clone) )
     {
-        if(params[-1] > 0)
+        if(process->retvalue > 0)
         {
-            pid_t new_pid = params[-1];
+            pid_t new_pid = process->retvalue;
             struct Process *new_process;
 #ifdef DEBUG
             fprintf(stderr, "Process %d created by %d via %s\n",
@@ -241,7 +238,14 @@ int trace_handle_syscall(struct Process *process, int syscall, size_t *params)
     }
 
     /* Run to next syscall */
-    process->in_syscall = 1 - process->in_syscall;
+    if(process->in_syscall)
+    {
+        process->in_syscall = 0;
+        process->current_syscall = -1;
+        process->syscall_info = NULL;
+    }
+    else
+        process->in_syscall = 1;
     ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
 
     return 0;
@@ -311,30 +315,36 @@ int trace(void)
 
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
         {
-            int syscall;
-            size_t params[7];
             struct user_regs_struct regs;
             ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 #if defined(I386)
-            syscall = regs.orig_eax;
-            params[0] = regs.eax;
-            params[1] = regs.ebx;
-            params[2] = regs.ecx;
-            params[3] = regs.edx;
-            params[4] = regs.esi;
-            params[5] = regs.edi;
-            params[6] = regs.ebp;
+            process->current_syscall = regs.orig_eax;
+            if(process->in_syscall)
+                process->retvalue = regs.eax;
+            else
+            {
+                process->params[0] = regs.ebx;
+                process->params[1] = regs.ecx;
+                process->params[2] = regs.edx;
+                process->params[3] = regs.esi;
+                process->params[4] = regs.edi;
+                process->params[5] = regs.ebp;
+            }
 #elif defined(X86_64)
-            syscall = regs.orig_rax;
-            params[0] = regs.rax;
-            params[1] = regs.rdi;
-            params[2] = regs.rsi;
-            params[3] = regs.rdx;
-            params[4] = regs.r10;
-            params[5] = regs.r8;
-            params[6] = regs.r9;
+            process->current_syscall = regs.orig_rax;
+            if(process->in_syscall)
+                process->retvalue = regs.rax;
+            else
+            {
+                process->params[0] = regs.rdi;
+                process->params[1] = regs.rsi;
+                process->params[2] = regs.rdx;
+                process->params[3] = regs.r10;
+                process->params[4] = regs.r8;
+                process->params[5] = regs.r9;
+            }
 #endif
-            trace_handle_syscall(process, syscall, params + 1);
+            trace_handle_syscall(process);
         }
         /* Continue on SIGTRAP */
         else if(WIFSTOPPED(status))
@@ -362,7 +372,8 @@ void trace_init(void)
         processes[i] = pool++;
         processes[i]->status = PROCESS_FREE;
         processes[i]->in_syscall = 0;
-        processes[i]->current_syscall.n = -1;
+        processes[i]->current_syscall = -1;
+        processes[i]->syscall_info = NULL;
     }
 }
 
