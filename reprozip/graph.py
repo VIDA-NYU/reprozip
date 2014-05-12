@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import namedtuple
+import heapq
 import os
 import sqlite3
 
@@ -56,31 +57,6 @@ def generate(target, directory, all_forks=False):
 
     database = os.path.join(directory, 'trace.sqlite3')
 
-    conn = sqlite3.connect(database)
-    cur = conn.cursor()
-
-    # Reads processes from the database
-    rows = cur.execute('''
-            SELECT id, parent, timestamp
-            FROM processes
-            ORDER BY id
-            ''')
-    processes = {}
-    for r_id, r_parent, r_timestamp in rows:
-        if r_parent is not None:
-            parent = processes[r_parent]
-            binary = parent.binary
-        else:
-            parent = None
-            binary = None
-        processes[r_id] = Process(r_id,
-                                  parent,
-                                  r_timestamp,
-                                  False,
-                                  binary,
-                                  C_INITIAL if r_parent is None else C_FORK)
-    all_programs = list(processes.values())
-
     # Reads package ownership from the configuration
     packages = {}
     configfile = os.path.join(directory, 'config.py')
@@ -93,8 +69,21 @@ def generate(target, directory, all_forks=False):
         for f in pkg.files:
             packages[f.path] = pkg
 
-    # Reads files from the database
-    rows = cur.execute('''
+    conn = sqlite3.connect(database)
+
+    # Reads processes from the database
+    process_cursor = conn.cursor()
+    process_rows = process_cursor.execute('''
+            SELECT id, parent, timestamp
+            FROM processes
+            ORDER BY id
+            ''')
+    processes = {}
+    all_programs = []
+
+    # ... and files. At the same time.
+    file_cursor = conn.cursor()
+    file_rows = file_cursor.execute('''
             SELECT name, timestamp, mode, process
             FROM opened_files
             ORDER BY id
@@ -102,34 +91,65 @@ def generate(target, directory, all_forks=False):
     binaries = set()
     files = OrderedSet()
     edges = OrderedSet()
-    for r_name, r_timestamp, r_mode, r_process in rows:
-        process = processes[r_process]
-        if r_mode == _pytracer.FILE_EXEC:
-            binaries.add(r_name)
-            # Here we split this process in two "programs", unless the previous
-            # one hasn't done anything since it was created via fork()
-            if not all_forks and not process.acted:
-                process.binary = r_name
-                process.created = C_FORKEXEC
-                process.acted = True
-            else:
-                process = Process(process.pid,
-                                  process,
-                                  r_timestamp,
-                                  True,         # Don't hide double execs
-                                  r_name,
-                                  C_EXEC)
-                all_programs.append(process)
-                processes[r_process] = process
-            edges.add((process, r_name, r_mode))
-        else:
-            files.add(r_name)
-            edges.add((process, r_name, r_mode))
 
-    cur.close()
+    # Loop on both event lists
+    rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
+                       ((r[1], 'file', r) for r in file_rows))
+    for ts, event_type, data in rows:
+        if event_type == 'process':
+            print("data: %r" % (data,))
+            r_id, r_parent, r_timestamp = data
+            print("Creating process %d" % r_id)
+            if r_parent is not None:
+                parent = processes[r_parent]
+                binary = parent.binary
+                print("Parent is %s, setting binary to %s" % (r_parent, binary))
+            else:
+                parent = None
+                binary = None
+                print("Parent is None, setting binary to None")
+            p = Process(r_id,
+                        parent,
+                        r_timestamp,
+                        False,
+                        binary,
+                        C_INITIAL if r_parent is None else C_FORK)
+            processes[r_id] = p
+            all_programs.append(p)
+
+        elif event_type == 'file':
+            r_name, r_timestamp, r_mode, r_process = data
+            process = processes[r_process]
+            if r_mode == _pytracer.FILE_EXEC:
+                print("Process %d execs %s" % (r_process, r_name))
+                binaries.add(r_name)
+                # Here we split this process in two "programs", unless the previous
+                # one hasn't done anything since it was created via fork()
+                if not all_forks and not process.acted:
+                    print("Changing binary from %s to %s" % (process.binary, r_name))
+                    process.binary = r_name
+                    process.created = C_FORKEXEC
+                    process.acted = True
+                else:
+                    print("Creating new process")
+                    process = Process(process.pid,
+                                      process,
+                                      r_timestamp,
+                                      True,         # Hides exec only once
+                                      r_name,
+                                      C_EXEC)
+                    all_programs.append(process)
+                    processes[r_process] = process
+                edges.add((process, r_name, r_mode))
+            else:
+                files.add(r_name)
+                edges.add((process, r_name, r_mode))
+
+    process_cursor.close()
+    file_cursor.close()
     conn.close()
 
-    # Put files in packages
+    # Puts files in packages
     package_files = {}
     other_files = []
     for f in files:
