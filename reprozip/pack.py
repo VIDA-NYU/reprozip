@@ -60,13 +60,21 @@ def pack(target, directory):
         if pkg.packfiles:
             logging.info("Adding files from package %s..." % pkg.name)
             for f in pkg.files:
-                tar.add(f.path)
+                t = f.path
+                logging.debug(t)
+                tar.add(t)
+                while os.path.islink(t):
+                    t = os.path.join(os.path.dirname(t),
+                                     os.readlink(t))
+                    logging.debug(t)
+                    tar.add(t)
         else:
             logging.info("NOT adding files from package %s" % pkg.name)
 
     # Add the rest of the files
     logging.info("Adding other files...")
-    for f in config.get('file', []):
+    for f in config.get('other_files', []):
+        logging.debug(f.path)
         tar.add(f.path)
 
     tar.close()
