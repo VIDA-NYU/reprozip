@@ -10,6 +10,7 @@ import sys
 import tempfile
 
 import reprozip.graph
+import reprozip.pack
 import reprozip.tracer
 from reprozip import _pytracer
 
@@ -111,6 +112,14 @@ def graph(args):
     reprozip.graph.generate(args.target[0], args.dir, args.all_forks)
 
 
+def pack(args):
+    """pack subcommand.
+
+    Reads in the configuration file and writes out a tarball.
+    """
+    reprozip.pack.pack(args.target, args.dir)
+
+
 def main():
     """Entry point when called on the command line.
     """
@@ -176,6 +185,14 @@ def main():
     parser_graph.add_argument('-F', '--all-forks', action='store_true',
                               help="Show forked processes before they exec")
     parser_graph.set_defaults(func=graph)
+
+    # pack command
+    parser_pack = subparsers.add_parser(
+            'pack', parents=[options],
+            help="Packs the experiment according to the current configuration")
+    parser_pack.add_argument('target', nargs='?', default='experiment.rpz',
+                             help="Destination file")
+    parser_pack.set_defaults(func=pack)
 
     args = parser.parse_args()
     levels = [logging.WARNING, logging.INFO, logging.DEBUG]

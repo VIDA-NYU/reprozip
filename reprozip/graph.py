@@ -17,7 +17,8 @@ C_FORKEXEC  = 3 # A fork then an exec, folded as one because all_forks==False
 
 
 File = namedtuple('File', ['path'])
-Package = namedtuple('Package', ['name', 'version', 'files', 'packfiles'])
+Package = namedtuple('Package', ['name', 'version', 'files', 'packfiles',
+                                 'size'])
 
 
 class Process(CommonEqualityMixin):
