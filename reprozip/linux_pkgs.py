@@ -81,15 +81,18 @@ class DpkgManager(object):
         return None
 
     def _create_package(self, pkgname, files):
-        p = subprocess.Popen(['dpkg', '-l', pkgname], stdout=subprocess.PIPE)
+        p = subprocess.Popen(['dpkg-query',
+                              '--showformat=${Package;-50}\t'
+                                  '${Version}\n',
+                              '-W',
+                              pkgname],
+                stdout=subprocess.PIPE)
         try:
             version = None
             for l in p.stdout:
-                if not l.startswith(b'ii'):
-                    continue
                 fields = l.split()
-                if fields[1].decode('ascii') == pkgname:
-                    version = fields[2].decode('ascii')
+                if fields[0].decode('ascii') == pkgname:
+                    version = fields[1].decode('ascii')
                     break
         finally:
             p.wait()
