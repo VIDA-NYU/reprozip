@@ -9,6 +9,21 @@
 #define count(x) (sizeof((x))/sizeof(*(x)))
 #define check(r) if((r) != SQLITE_OK) { goto sqlerror; }
 
+static sqlite3_uint64 gettime(void)
+{
+    sqlite3_uint64 timestamp;
+    struct timespec now;
+    if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
+    {
+        perror("Getting time failed (clock_gettime)");
+        exit(1);
+    }
+    timestamp = now.tv_sec;
+    timestamp *= 1000000000;
+    timestamp += now.tv_nsec;
+    return timestamp;
+}
+
 static sqlite3 *db;
 static sqlite3_stmt *stmt_last_rowid;
 static sqlite3_stmt *stmt_insert_process;
@@ -121,12 +136,6 @@ sqlerror:
 
 int db_add_process(unsigned int *id, unsigned int parent_id)
 {
-    struct timespec now;
-    if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
-    {
-        perror("Getting time failed (clock_gettime)");
-        return -1;
-    }
     if(parent_id == DB_NO_PARENT)
     {
         check(sqlite3_bind_null(stmt_insert_process, 1));
@@ -135,14 +144,8 @@ int db_add_process(unsigned int *id, unsigned int parent_id)
     {
         check(sqlite3_bind_int(stmt_insert_process, 1, parent_id));
     }
-    {
-        /* This assumes that we won't go over 2^32 seconds (~135 years) */
-        sqlite3_uint64 timestamp;
-        timestamp = now.tv_sec;
-        timestamp *= 1000000000;
-        timestamp += now.tv_nsec;
-        check(sqlite3_bind_int64(stmt_insert_process, 2, timestamp));
-    }
+    /* This assumes that we won't go over 2^32 seconds (~135 years) */
+    check(sqlite3_bind_int64(stmt_insert_process, 2, gettime()));
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
         goto sqlerror;
@@ -171,21 +174,9 @@ int db_add_first_process(unsigned int *id)
 
 int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
 {
-    struct timespec now;
-    if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
-    {
-        perror("Getting time failed (clock_gettime)");
-        return -1;
-    }
     check(sqlite3_bind_text(stmt_insert_file, 1, name, -1, SQLITE_TRANSIENT));
-    {
-        /* This assumes that we won't go over 2^32 seconds (~135 years) */
-        sqlite3_uint64 timestamp;
-        timestamp = now.tv_sec;
-        timestamp *= 1000000000;
-        timestamp += now.tv_nsec;
-        check(sqlite3_bind_int64(stmt_insert_file, 2, timestamp));
-    }
+    /* This assumes that we won't go over 2^32 seconds (~135 years) */
+    check(sqlite3_bind_int64(stmt_insert_file, 2, gettime()));
     check(sqlite3_bind_int(stmt_insert_file, 3, mode));
     check(sqlite3_bind_int(stmt_insert_file, 4, process));
 
