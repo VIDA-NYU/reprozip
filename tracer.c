@@ -344,7 +344,8 @@ int trace(void)
                 process->params[5] = regs.r9;
             }
 #endif
-            trace_handle_syscall(process);
+            if(trace_handle_syscall(process) != 0)
+                return -1;
         }
         /* Continue on SIGTRAP */
         else if(WIFSTOPPED(status))
@@ -374,6 +375,25 @@ void trace_init(void)
         processes[i]->in_syscall = 0;
         processes[i]->current_syscall = -1;
         processes[i]->syscall_info = NULL;
+    }
+}
+
+void cleanup(void)
+{
+    size_t i;
+#ifdef DEBUG
+    {
+        size_t nb = 0;
+        for(i = 0; i < processes_size; ++i)
+            if(processes[i]->status != PROCESS_FREE)
+                ++nb;
+        fprintf(stderr, "Cleaning up, %u processes to kill...\n", nb);
+    }
+#endif
+    for(i = 0; i < processes_size; ++i)
+    {
+        if(processes[i]->status != PROCESS_FREE)
+            kill(processes[i]->pid, SIGKILL);
     }
 }
 
@@ -427,12 +447,17 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         fprintf(stderr, "Process %d created by initial fork()\n", child);
         if(db_add_first_process(&process->identifier) != 0)
         {
-            kill(child, SIGKILL);
+            cleanup();
             return 1;
         }
     }
 
-    trace();
+    if(trace() != 0)
+    {
+        cleanup();
+        db_close();
+        return 1;
+    }
 
     if(db_close() != 0)
         return 1;
