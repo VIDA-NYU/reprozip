@@ -360,24 +360,6 @@ int trace(void)
     return 0;
 }
 
-void trace_init(void)
-{
-    size_t i;
-    struct Process *pool;
-    signal(SIGCHLD, SIG_DFL);
-    processes_size = 16;
-    processes = malloc(processes_size * sizeof(*processes));
-    pool = malloc(processes_size * sizeof(*pool));
-    for(i = 0; i < processes_size; ++i)
-    {
-        processes[i] = pool++;
-        processes[i]->status = PROCESS_FREE;
-        processes[i]->in_syscall = 0;
-        processes[i]->current_syscall = -1;
-        processes[i]->syscall_info = NULL;
-    }
-}
-
 void cleanup(void)
 {
     size_t i;
@@ -398,6 +380,32 @@ void cleanup(void)
         if(processes[i]->status != PROCESS_FREE)
             kill(processes[i]->pid, SIGKILL);
     }
+}
+
+void sigint_handler(int signo)
+{
+    cleanup();
+    exit(1);
+}
+
+void trace_init(void)
+{
+    size_t i;
+    struct Process *pool;
+    signal(SIGCHLD, SIG_DFL);
+    processes_size = 16;
+    processes = malloc(processes_size * sizeof(*processes));
+    pool = malloc(processes_size * sizeof(*pool));
+    for(i = 0; i < processes_size; ++i)
+    {
+        processes[i] = pool++;
+        processes[i]->status = PROCESS_FREE;
+        processes[i]->in_syscall = 0;
+        processes[i]->current_syscall = -1;
+        processes[i]->syscall_info = NULL;
+    }
+
+    signal(SIGINT, sigint_handler);
 }
 
 
