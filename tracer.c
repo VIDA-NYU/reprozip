@@ -249,8 +249,24 @@ int trace_handle_syscall(struct Process *process)
          *            char *const argv[],
          *            char *const envp[]); */
         struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
+#ifdef DEBUG
+        fprintf(stderr, "Entering execve, getting arguments...\n");
+#endif
         execi->binary = tracee_strdup(pid, process->params[0]);
         execi->argv = tracee_strarraydup(pid, process->params[1]);
+#ifdef DEBUG
+        fprintf(stderr, "Got arguments:\n  binary=%s\n  argv:\n",
+                execi->binary);
+        {
+            /* Note: this conversion is correct and shouldn't need a cast */
+            const char *const *v = (const char* const*)execi->argv;
+            while(*v)
+            {
+                fprintf(stderr, "    %s\n", *v);
+                ++v;
+            }
+        }
+#endif
         /* TODO : record envp? */
         process->syscall_info = execi;
     }

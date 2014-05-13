@@ -82,7 +82,6 @@ def testrun(args):
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        print(args.cmdline[0], argv, database)
         _pytracer.execute(args.cmdline[0], argv, database)
         print("\n\n-----------------------------------------------------------"
               "--------------------")
