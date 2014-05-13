@@ -429,7 +429,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     if(child == 0)
     {
-        char **args = malloc(argc * sizeof(char*));
+        char **args = malloc((argc + 1) * sizeof(char*));
         memcpy(args, argv, argc * sizeof(char*));
         args[argc] = NULL;
         /* Trace this process */
