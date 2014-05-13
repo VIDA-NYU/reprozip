@@ -57,6 +57,15 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
     }
 }
 
+char *tracee_strdup(pid_t pid, size_t ptr)
+{
+    size_t length = tracee_strlen(pid, ptr);
+    char *str = malloc(length + 1);
+    tracee_read(pid, str, ptr, length);
+    str[length] = '\0';
+    return str;
+}
+
 
 /* *************************************
  * Tracer
@@ -176,12 +185,7 @@ int trace_handle_syscall(struct Process *process)
     if(!process->in_syscall
      && (syscall == SYS_open || syscall == SYS_execve) )
     {
-        size_t pathname_addr = process->params[0];
-        size_t pathname_size = tracee_strlen(pid, pathname_addr);
-        char *pathname = malloc(pathname_size + 1);
-        tracee_read(pid, pathname, pathname_addr, pathname_size);
-        pathname[pathname_size] = '\0';
-        process->syscall_info = pathname;
+        process->syscall_info = tracee_strdup(pid, process->params[0]);
     }
     if(process->in_syscall
      && (syscall == SYS_open || syscall == SYS_execve) )
