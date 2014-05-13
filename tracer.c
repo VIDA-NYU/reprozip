@@ -57,6 +57,51 @@ void tracee_read(pid_t pid, char *dst, size_t ptr, size_t size)
     }
 }
 
+char *tracee_strdup(pid_t pid, size_t ptr)
+{
+    size_t length = tracee_strlen(pid, ptr);
+    char *str = malloc(length + 1);
+    tracee_read(pid, str, ptr, length);
+    str[length] = '\0';
+    return str;
+}
+
+char **tracee_strarraydup(pid_t pid, size_t ptr)
+{
+    char **array;
+    /* Reads number of pointers in pointer array */
+    size_t nb_args = 0;
+    const char *const *const argv = (void*)ptr;
+    {
+        const char *const *a = argv;
+        /* xargv = *a */
+        const char *xargv = (void*)ptrace(PTRACE_PEEKDATA, pid, a, NULL);
+        while(xargv != NULL)
+        {
+            ++nb_args;
+            ++a;
+            xargv = (void*)ptrace(PTRACE_PEEKDATA, pid, a, NULL);
+        }
+    }
+    /* Allocs pointer array */
+    array = malloc((nb_args + 1) * sizeof(char*));
+    /* Dups array elements */
+    {
+        size_t i = 0;
+        /* xargv = argv[0] */
+        const char *xargv = (void*)ptrace(PTRACE_PEEKDATA, pid, argv, NULL);
+        while(xargv != NULL)
+        {
+            array[i] = tracee_strdup(pid, (size_t)xargv);
+            ++i;
+            /* xargv = argv[i] */
+            xargv = (void*)ptrace(PTRACE_PEEKDATA, pid, argv + i, NULL);
+        }
+        array[i] = NULL;
+    }
+    return array;
+}
+
 
 /* *************************************
  * Tracer
@@ -75,6 +120,11 @@ struct Process {
     size_t retvalue;
     size_t params[6];
     void *syscall_info;
+};
+
+struct ExecveInfo {
+    char *binary;
+    char **argv;
 };
 
 struct Process **processes;
@@ -173,44 +223,79 @@ int trace_handle_syscall(struct Process *process)
                 syscall, callname, process->in_syscall);
     }
 #endif
-    if(!process->in_syscall
-     && (syscall == SYS_open || syscall == SYS_execve) )
-    {
-        size_t pathname_addr = process->params[0];
-        size_t pathname_size = tracee_strlen(pid, pathname_addr);
-        char *pathname = malloc(pathname_size + 1);
-        tracee_read(pid, pathname, pathname_addr, pathname_size);
-        pathname[pathname_size] = '\0';
-        process->syscall_info = pathname;
-    }
-    if(process->in_syscall
-     && (syscall == SYS_open || syscall == SYS_execve) )
+    if(process->in_syscall && syscall == SYS_open)
     {
         /* FIXME : this cast doesn't look too safe */
         int ret = process->retvalue;
         unsigned int mode;
-        const char *pathname = process->syscall_info;
+        char *pathname = tracee_strdup(pid, process->params[0]);
 #ifdef DEBUG
-        fprintf(stderr, "File %s\n", pathname);
+        fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname, ret,
+                (ret >= 0)?"success":"failure");
 #endif
         if(ret >= 0)
         {
-            if(syscall == SYS_execve)
-                mode = FILE_EXEC;
-            else
-                mode = flags2mode((int)process->params[1]);
+            mode = flags2mode((int)process->params[1]);
             if(db_add_file_open(process->identifier,
                                 pathname,
                                 mode) != 0)
                 return -1;
         }
-        else
-        {
+        free(pathname);
+    }
+    else if(!process->in_syscall && syscall == SYS_execve)
+    {
+        /* int execve(const char *filename,
+         *            char *const argv[],
+         *            char *const envp[]); */
+        struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
 #ifdef DEBUG
-            fprintf(stderr, "Call failed, %d\n", ret);
+        fprintf(stderr, "Entering execve, getting arguments...\n");
 #endif
+        execi->binary = tracee_strdup(pid, process->params[0]);
+        execi->argv = tracee_strarraydup(pid, process->params[1]);
+#ifdef DEBUG
+        fprintf(stderr, "Got arguments:\n  binary=%s\n  argv:\n",
+                execi->binary);
+        {
+            /* Note: this conversion is correct and shouldn't need a cast */
+            const char *const *v = (const char* const*)execi->argv;
+            while(*v)
+            {
+                fprintf(stderr, "    %s\n", *v);
+                ++v;
+            }
         }
-        free(process->syscall_info);
+#endif
+        /* TODO : record envp? */
+        process->syscall_info = execi;
+    }
+    else if(process->in_syscall && syscall == SYS_execve)
+    {
+        /* FIXME : this cast doesn't look too safe */
+        int ret = process->retvalue;
+        struct ExecveInfo *execi = process->syscall_info;
+        if(ret >= 0)
+        {
+            /* Note: exec->argv needs cast to suppress a bogus GCC warning
+             * While conversion from char** to const char** is invalid,
+             * conversion from char** to const char*const* is, in fact, safe.
+             * G++ accepts it, GCC issues a warning */
+            if(db_add_exec(process->identifier, execi->binary,
+                           (const char *const*)execi->argv) != 0)
+                return -1;
+        }
+        {
+            char **ptr = execi->argv;
+            while(*ptr)
+            {
+                free(*ptr);
+                ++ptr;
+            }
+            free(execi->argv);
+            free(execi->binary);
+            free(execi);
+        }
     }
     else if(process->in_syscall
           && (syscall == SYS_fork || syscall == SYS_vfork
