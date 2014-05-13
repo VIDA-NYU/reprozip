@@ -44,6 +44,31 @@ def print_db(database):
 
     cur = conn.cursor()
     processes = cur.execute('''
+            SELECT id, name, timestamp, process, argv
+            FROM executed_files;
+            ''')
+    print("\nExecuted files:")
+    header = ("+--------+--------------------+---------+------+---------------"
+              "---------------+")
+    print(header)
+    print("|   id   |      timestamp     | process | name and argv            "
+          "    |")
+    print(header)
+    for r_id, r_name, r_timestamp, r_process, r_argv in processes:
+        f_id = "{: 7d} ".format(r_id)
+        f_timestamp = "{: 19d} ".format(r_timestamp)
+        f_proc = "{: 8d} ".format(r_process)
+        argv = r_argv.split('\0')
+        cmdline = ' '.join(repr(a) for a in argv)
+        if argv[0] != os.path.basename(r_name):
+            cmdline = "(%s) %s" % (r_name, cmdline)
+        f_cmdline = " {: <28s} ".format(cmdline)
+        print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
+        print(header)
+    cur.close()
+
+    cur = conn.cursor()
+    processes = cur.execute('''
             SELECT id, name, timestamp, mode, process
             FROM opened_files;
             ''')
