@@ -387,7 +387,10 @@ void cleanup(void)
         for(i = 0; i < processes_size; ++i)
             if(processes[i]->status != PROCESS_FREE)
                 ++nb;
-        fprintf(stderr, "Cleaning up, %u processes to kill...\n", nb);
+        /* size_t size is implementation dependent; %u for size_t can trigger
+         * a warning */
+        fprintf(stderr, "Cleaning up, %u processes to kill...\n",
+                (unsigned int)nb);
     }
 #endif
     for(i = 0; i < processes_size; ++i)
