@@ -8,4 +8,5 @@ install:
 script:
   - reprozip testrun bash -c "cat /etc/passwd;echo"
   - reprozip trace bash -c "cat /etc/passwd;echo"
-  - reprozip trace --continue sh -c "cat /etc/group;/bin/id"
+  - reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
+  - reprozip graph graph.dot
