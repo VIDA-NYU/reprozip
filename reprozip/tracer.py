@@ -152,7 +152,13 @@ def trace(binary, argv, directory, append):
     # Runs the trace
     database = os.path.join(directory, 'trace.sqlite3')
     logging.info("Running program")
-    _pytracer.execute(binary, argv, database) # Might raise _pytracer.Error
+    c = _pytracer.execute(binary, argv, database) # Might raise _pytracer.Error
+    if c != 0:
+        if c & 0x0100:
+            logging.warning("Program appears to have been terminated by "
+                            "signal %d" % (c & 0xFF))
+        else:
+            logging.warning("Program exited with non-zero code %d" % c)
     logging.info("Program completed")
 
     # Reads info from database

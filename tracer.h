@@ -4,6 +4,6 @@
 #include "config.h"
 
 int fork_and_trace(const char *binary, int argc, char **argv,
-                   const char *database_path);
+                   const char *database_path, int *exit_status);
 
 #endif

@@ -247,7 +247,7 @@ int trace_handle_syscall(struct Process *process)
     return 0;
 }
 
-int trace(void)
+int trace(pid_t first_proc, int *first_exit_code)
 {
     int nprocs = 0;
     for(;;)
@@ -262,6 +262,14 @@ int trace(void)
         {
             fprintf(stderr, "Process %d exited, %d processes remain\n",
                     pid, nprocs-1);
+            if(pid == first_proc && first_exit_code != NULL)
+            {
+                if(WIFSIGNALED(status))
+                    /* exit codes are 8 bits */
+                    *first_exit_code = 0x0100 | WTERMSIG(status);
+                else
+                    *first_exit_code = WEXITSTATUS(status);
+            }
             process = trace_find_process(pid);
             if(process != NULL)
                 process->status = PROCESS_FREE;
@@ -406,7 +414,7 @@ void trace_init(void)
 }
 
 int fork_and_trace(const char *binary, int argc, char **argv,
-                   const char *database_path)
+                   const char *database_path, int *exit_status)
 {
     pid_t child;
 
@@ -455,7 +463,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         }
     }
 
-    if(trace() != 0)
+    if(trace(child, exit_status) != 0)
     {
         cleanup();
         db_close();
