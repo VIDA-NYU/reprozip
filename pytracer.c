@@ -10,6 +10,7 @@ PyObject *Err_Base;
 static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 {
     PyObject *ret;
+    int exit_status;
 
     /* Reads arguments */
     const char *binary, *databasepath;
@@ -81,10 +82,9 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
         argv[argv_len] = NULL;
     }
 
-    if(fork_and_trace(binary, argv_len, argv, databasepath) == 0)
+    if(fork_and_trace(binary, argv_len, argv, databasepath, &exit_status) == 0)
     {
-        Py_INCREF(Py_None);
-        ret = Py_None;
+        ret = PyInt_FromLong(exit_status);
     }
     else
     {
