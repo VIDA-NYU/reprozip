@@ -28,8 +28,8 @@ struct Process {
     int status;
     int in_syscall;
     int current_syscall;
-    size_t retvalue;
-    size_t params[6];
+    register_type retvalue;
+    register_type params[6];
     void *syscall_info;
 };
 
@@ -136,17 +136,15 @@ int trace_handle_syscall(struct Process *process)
 #endif
     if(process->in_syscall && syscall == SYS_open)
     {
-        /* FIXME : this cast doesn't look too safe */
-        int ret = process->retvalue;
         unsigned int mode;
-        char *pathname = tracee_strdup(pid, process->params[0]);
+        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
 #ifdef DEBUG
         fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname, ret,
                 (ret >= 0)?"success":"failure");
 #endif
-        if(ret >= 0)
+        if(process->retvalue >= 0)
         {
-            mode = flags2mode((int)process->params[1]);
+            mode = flags2mode(process->params[1]);
             if(db_add_file_open(process->identifier,
                                 pathname,
                                 mode) != 0)
@@ -163,8 +161,8 @@ int trace_handle_syscall(struct Process *process)
 #ifdef DEBUG
         fprintf(stderr, "Entering execve, getting arguments...\n");
 #endif
-        execi->binary = tracee_strdup(pid, process->params[0]);
-        execi->argv = tracee_strarraydup(pid, process->params[1]);
+        execi->binary = tracee_strdup(pid, (void*)process->params[0]);
+        execi->argv = tracee_strarraydup(pid, (void*)process->params[1]);
 #ifdef DEBUG
         fprintf(stderr, "Got arguments:\n  binary=%s\n  argv:\n",
                 execi->binary);
@@ -183,10 +181,8 @@ int trace_handle_syscall(struct Process *process)
     }
     else if(process->in_syscall && syscall == SYS_execve)
     {
-        /* FIXME : this cast doesn't look too safe */
-        int ret = process->retvalue;
         struct ExecveInfo *execi = process->syscall_info;
-        if(ret >= 0)
+        if(process->retvalue >= 0)
         {
             /* Note: exec->argv needs cast to suppress a bogus GCC warning
              * While conversion from char** to const char** is invalid,
