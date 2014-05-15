@@ -84,7 +84,7 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 
     if(fork_and_trace(binary, argv_len, argv, databasepath, &exit_status) == 0)
     {
-        ret = PyInt_FromLong(exit_status);
+        ret = PyLong_FromLong(exit_status);
     }
     else
     {
