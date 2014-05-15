@@ -15,6 +15,7 @@
 
 #include "config.h"
 #include "database.h"
+#include "ptrace_utils.h"
 
 
 #define PROCESS_FREE        0
@@ -379,6 +380,7 @@ void cleanup(void)
 
 void sigint_handler(int signo)
 {
+    (void)signo;
     cleanup();
     exit(1);
 }

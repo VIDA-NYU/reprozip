@@ -4,7 +4,7 @@
 
 CC=gcc
 LIBS=
-CFLAGS=-W -Wall -Wextra -pedantic
+CFLAGS=-W -Wall -Wextra -Wstrict-prototypes -pedantic
 
 OBJS=tracer.o database.o cmdline.o ptrace_utils.o
 
