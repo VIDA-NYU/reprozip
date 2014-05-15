@@ -10,3 +10,4 @@ script:
   - reprozip trace bash -c "cat /etc/passwd;echo"
   - reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
   - reprozip graph graph.dot
+  - reprozip pack
