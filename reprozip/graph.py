@@ -72,6 +72,11 @@ def generate(target, directory, all_forks=False):
 
     conn = sqlite3.connect(database)
 
+    # This is a bit weird. We need to iterate on all types of events at the
+    # same time, ordering by timestamp, so we decorate-sort-undecorate
+    # Decoration adds timestamp (for sorting) and tags by event type, one of
+    # 'process', 'open' or 'exec'
+
     # Reads processes from the database
     process_cursor = conn.cursor()
     process_rows = process_cursor.execute('''
@@ -82,7 +87,7 @@ def generate(target, directory, all_forks=False):
     processes = {}
     all_programs = []
 
-    # ... and files. At the same time.
+    # ... and opened files...
     file_cursor = conn.cursor()
     file_rows = file_cursor.execute('''
             SELECT name, timestamp, mode, process
@@ -93,9 +98,18 @@ def generate(target, directory, all_forks=False):
     files = OrderedSet()
     edges = OrderedSet()
 
-    # Loop on both event lists
+    # ... as well as executed files.
+    exec_cursor = conn.cursor()
+    exec_rows = exec_cursor.execute('''
+            SELECT name, timestamp, process, argv
+            FROM executed_files
+            ORDER BY id
+            ''')
+
+    # Loop on all event lists
     rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
-                       ((r[1], 'file', r) for r in file_rows))
+                       ((r[1], 'open', r) for r in file_rows),
+                       ((r[1], 'exec', r) for r in exec_rows))
     for ts, event_type, data in rows:
         if event_type == 'process':
             r_id, r_parent, r_timestamp = data
@@ -114,30 +128,33 @@ def generate(target, directory, all_forks=False):
             processes[r_id] = p
             all_programs.append(p)
 
-        elif event_type == 'file':
+        elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
             process = processes[r_process]
-            if r_mode == _pytracer.FILE_EXEC:
-                binaries.add(r_name)
-                # Here we split this process in two "programs", unless the previous
-                # one hasn't done anything since it was created via fork()
-                if not all_forks and not process.acted:
-                    process.binary = r_name
-                    process.created = C_FORKEXEC
-                    process.acted = True
-                else:
-                    process = Process(process.pid,
-                                      process,
-                                      r_timestamp,
-                                      True,         # Hides exec only once
-                                      r_name,
-                                      C_EXEC)
-                    all_programs.append(process)
-                    processes[r_process] = process
-                edges.add((process, r_name, r_mode))
+            files.add(r_name)
+            edges.add((process, r_name, r_mode, None))
+
+        elif event_type == 'exec':
+            r_name, r_timestamp, r_process, r_argv = data
+            process = processes[r_process]
+            binaries.add(r_name)
+            # Here we split this process in two "programs", unless the previous
+            # one hasn't done anything since it was created via fork()
+            if not all_forks and not process.acted:
+                process.binary = r_name
+                process.created = C_FORKEXEC
+                process.acted = True
             else:
-                files.add(r_name)
-                edges.add((process, r_name, r_mode))
+                process = Process(process.pid,
+                                  process,
+                                  r_timestamp,
+                                  True,         # Hides exec only once
+                                  r_name,
+                                  C_EXEC)
+                all_programs.append(process)
+                processes[r_process] = process
+            argv = tuple(r_argv.split('\0'))
+            edges.add((process, r_name, None, argv))
 
     process_cursor.close()
     file_cursor.close()
@@ -193,10 +210,10 @@ def generate(target, directory, all_forks=False):
         fp.write('\n')
 
         # Edges
-        for prog, f, mode in edges:
-            if mode & _pytracer.FILE_EXEC:
-                fp.write('    "%s" -> prog%d [color=blue];\n' % (
-                         escape(f), id(prog)))
+        for prog, f, mode, argv in edges:
+            if mode is None:
+                fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (
+                         escape(f), id(prog), escape(' '.join(argv))))
             elif mode & _pytracer.FILE_WRITE:
                 fp.write('    prog%d -> "%s" [color=red];\n' % (
                          id(prog), escape(f)))

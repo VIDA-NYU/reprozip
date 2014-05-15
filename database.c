@@ -28,6 +28,7 @@ static sqlite3 *db;
 static sqlite3_stmt *stmt_last_rowid;
 static sqlite3_stmt *stmt_insert_process;
 static sqlite3_stmt *stmt_insert_file;
+static sqlite3_stmt *stmt_insert_exec;
 
 int db_init(const char *filename)
 {
@@ -51,12 +52,14 @@ int db_init(const char *filename)
                 found |= 0x01;
             else if(strcmp("opened_files", colname) == 0)
                 found |= 0x02;
+            else if(strcmp("executed_files", colname) == 0)
+                found |= 0x04;
             else
                 goto wrongschema;
         }
         if(found == 0x00)
             tables_exist = 0;
-        else if(found == 0x03)
+        else if(found == 0x07)
             tables_exist = 1;
         else
         {
@@ -85,6 +88,13 @@ int db_init(const char *filename)
             "    mode INTEGER NOT NULL,"
             "    process INTEGER NOT NULL"
             "    );",
+            "CREATE TABLE executed_files("
+            "    id INTEGER NOT NULL PRIMARY KEY,"
+            "    name TEXT NOT NULL,"
+            "    timestamp INTEGER NOT NULL,"
+            "    process INTEGER NOT NULL,"
+            "    argv TEXT NOT NULL"
+            "    );",
         };
         size_t i;
         for(i = 0; i < count(sql); ++i)
@@ -111,6 +121,13 @@ int db_init(const char *filename)
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
 
+    {
+        const char *sql = ""
+                "INSERT INTO executed_files(name, timestamp, process, argv)"
+                "VALUES(?, ?, ?, ?)";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
+    }
+
     return 0;
 
 sqlerror:
@@ -124,6 +141,7 @@ int db_close(void)
     check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_insert_file));
+    check(sqlite3_finalize(stmt_insert_exec));
     check(sqlite3_close(db));
     return 0;
 
@@ -187,6 +205,53 @@ int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
 
 sqlerror:
     fprintf(stderr, "sqlite3 error inserting file: %s\n",
+            sqlite3_errmsg(db));
+    return -1;
+}
+
+int db_add_exec(unsigned int process,
+                const char *binary, const char *const *argv)
+{
+    check(sqlite3_bind_text(stmt_insert_exec, 1, binary, -1, SQLITE_TRANSIENT));
+    /* This assumes that we won't go over 2^32 seconds (~135 years) */
+    check(sqlite3_bind_int64(stmt_insert_exec, 2, gettime()));
+    check(sqlite3_bind_int(stmt_insert_exec, 3, process));
+    {
+        char *arglist;
+        size_t len = 0;
+        {
+            const char *const *a = argv;
+            while(*a)
+            {
+                len += strlen(*a) + 1;
+                ++a;
+            }
+        }
+        {
+            const char *const *a = argv;
+            char *p;
+            p = arglist = malloc(len);
+            while(*a)
+            {
+                const char *s = *a;
+                while(*s)
+                    *p++ = *s++;
+                *p++ = '\0';
+                ++a;
+            }
+        }
+        check(sqlite3_bind_text(stmt_insert_exec, 4, arglist, len,
+                                SQLITE_TRANSIENT));
+        free(arglist);
+    }
+
+    if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)
+        goto sqlerror;
+    sqlite3_reset(stmt_insert_exec);
+    return 0;
+
+sqlerror:
+    fprintf(stderr, "sqlite3 error inserting exec: %s\n",
             sqlite3_errmsg(db));
     return -1;
 }

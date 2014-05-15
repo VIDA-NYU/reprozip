@@ -72,19 +72,31 @@ def get_files(database):
     conn = sqlite3.connect(database)
     conn.row_factory = sqlite3.Row
 
+    files = {}
+
     cur = conn.cursor()
+    executed_files = cur.execute('''
+            SELECT name
+            FROM executed_files
+            ORDER BY timestamp;
+            ''')
+    for r_name, in executed_files:
+        if r_name not in files:
+            f = File(r_name)
+            f.read()
+            files[f.path] = f
+
     opened_files = cur.execute('''
             SELECT name, mode
             FROM opened_files
             ORDER BY timestamp;
             ''')
-    files = {}
     for r_name, r_mode in opened_files:
         if r_name not in files:
             f = File(r_name)
             if r_mode & _pytracer.FILE_WRITE:
                 f.write()
-            elif r_mode & (_pytracer.FILE_READ | _pytracer.FILE_EXEC):
+            elif r_mode & _pytracer.FILE_READ:
                 f.read()
             else:
                 continue
