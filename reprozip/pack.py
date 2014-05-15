@@ -42,7 +42,7 @@ def pack(target, directory):
     os.close(fd)
     try:
         with open(manifest, 'wb') as fp:
-            fp.write('REPROZIP VERSION 1\n')
+            fp.write(b'REPROZIP VERSION 1\n')
         tar.add(manifest, 'METADATA/version')
     finally:
         os.remove(manifest)
