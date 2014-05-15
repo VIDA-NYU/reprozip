@@ -107,10 +107,16 @@ def testrun(args):
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        _pytracer.execute(args.cmdline[0], argv, database)
+        c = _pytracer.execute(args.cmdline[0], argv, database)
         print("\n\n-----------------------------------------------------------"
               "--------------------")
         print_db(database)
+        if c != 0:
+            if c & 0x0100:
+                print("\nWarning: program appears to have been terminated by "
+                      "signal %d" % (c & 0xFF))
+            else:
+                print("\nWarning: program exited with non-zero code %d" % c)
     finally:
         os.remove(database)
 
