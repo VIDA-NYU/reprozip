@@ -1,16 +1,11 @@
-from collections import namedtuple
+from __future__ import unicode_literals
+
 import logging
 import os
 import sys
 import tarfile
 import tempfile
-
-from reprozip.utils import compat_execfile
-
-
-File = namedtuple('File', ['path'])
-Package = namedtuple('Package', ['name', 'version', 'files', 'packfiles',
-                                 'size'])
+from reprozip.tracer.common import load_config
 
 
 def find_all_links_recursive(filename, files):
@@ -67,16 +62,14 @@ def pack(target, directory):
         sys.exit(1)
 
     # Reads configuration
-    configfile = os.path.join(directory, 'config.py')
-    config = {}
+    configfile = os.path.join(directory, 'config.yml')
     if not os.path.isfile(configfile):
         sys.stderr.write("Error: Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
                          "alternate location.\n")
         sys.exit(1)
-    compat_execfile(configfile, {'Package': Package, 'File': File},
-                    config)
+    runs, packages, other_files = load_config(configfile)
 
     logging.info("Creating pack %s..." % target)
     tar = tarfile.open(target, 'w:gz')
@@ -93,7 +86,7 @@ def pack(target, directory):
         os.remove(manifest)
 
     # Stores the configuration file
-    tar.add(configfile, 'METADATA/config.py')
+    tar.add(configfile, 'METADATA/config.yml')
 
     # Stores the original trace
     trace = os.path.join(directory, 'trace.sqlite3')
@@ -101,7 +94,7 @@ def pack(target, directory):
         tar.add(trace, 'METADATA/trace.sqlite3')
 
     # Add the files from the packages
-    for pkg in config.get('packages', []):
+    for pkg in packages:
         if pkg.packfiles:
             logging.info("Adding files from package %s..." % pkg.name)
             for f in pkg.files:
@@ -114,7 +107,7 @@ def pack(target, directory):
 
     # Add the rest of the files
     logging.info("Adding other files...")
-    for f in config.get('other_files', []):
+    for f in other_files:
         logging.debug(f.path)
         tar.add(f.path)
 

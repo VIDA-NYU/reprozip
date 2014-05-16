@@ -1,27 +1,8 @@
 from __future__ import unicode_literals
 
 
-def compat_execfile(filename, globals=None, locals=None):
-    with open(filename) as fp:
-        exec(fp.read(), globals, locals)
-
-
-class Serializable(object):
-    """Base class for things to be serialized.
-    """
-    @staticmethod
-    def line(fp, line, lvl=0):
-        fp.write(b'    ' * lvl + line + b'\n')
-
-    @staticmethod
-    def string(s):
-        s = repr(s)
-        if s[0] == 'u' or s[0] == 'b':
-            return s[1:]
-        return s
-
-    def serialize(self, fp, lvl=0):
-        raise NotImplementedError
+def escape(s):
+    return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
 class CommonEqualityMixin(object):
