@@ -154,7 +154,8 @@ def trace(binary, argv, directory, append):
         runs, oldpkgs, oldfiles = [], [], []
     distribution = platform.linux_distribution()[0:2]
     runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd,
-                 'distribution': distribution})
+                 'distribution': distribution,
+                 'signal' if c & 0x0100 else 'exitcode': c & 0xFF})
     if oldconfig:
         files, packages = merge_files(files, packages,
                                       oldfiles,
