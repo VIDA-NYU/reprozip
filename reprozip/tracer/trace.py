@@ -9,7 +9,7 @@ import sqlite3
 
 import reprozip
 from reprozip import _pytracer
-from reprozip.linux_pkgs import magic_dirs, system_dirs, Package, \
+from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, Package, \
     identify_packages
 from reprozip.orderedset import OrderedSet
 from reprozip.utils import CommonEqualityMixin, Serializable, \
