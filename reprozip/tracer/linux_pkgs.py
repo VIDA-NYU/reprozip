@@ -3,38 +3,7 @@ from __future__ import unicode_literals
 import platform
 import subprocess
 
-from reprozip.utils import CommonEqualityMixin, Serializable, hsize
-
-
-class Package(CommonEqualityMixin, Serializable):
-    def __init__(self, name, version, files=[], packfiles=True, size=None):
-        self.name = name
-        self.version = version
-        self.files = list(files)
-        self.packfiles = packfiles
-        self.size = size
-
-    def add_file(self, filename):
-        self.files.append(filename)
-
-    def serialize(self, fp, lvl=0):
-        fp.write("Package(name=%s%s, size=%d,\n" % (
-                 self.string(self.name),
-                 ", version=%s" % self.string(self.version)
-                 if self.version is not None else '',
-                 self.size))
-        fp.write('    ' * lvl + "        packfiles=%s,\n" %
-                 ('True' if self.packfiles else 'False'))
-        fp.write('    ' * lvl + "        files=[\n")
-        fp.write('    ' * (lvl + 1) + "# Total files used: %s\n" %
-                 hsize(sum(f.size for f in self.files if f.size is not None)))
-        fp.write('    ' * (lvl + 1) + "# Installed package size: %s\n" %
-                 hsize(self.size))
-        for f in self.files:
-            fp.write('    ' * (lvl + 1))
-            f.serialize(fp, lvl + 1)
-            fp.write(', # %s\n' % hsize(f.size))
-        fp.write('    ' * lvl + '])')
+from reprozip.tracer.common import Package
 
 
 magic_dirs = ('/dev', '/proc', '/sys')

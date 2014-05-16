@@ -9,61 +9,11 @@ import sqlite3
 
 import reprozip
 from reprozip import _pytracer
-from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, Package, \
+from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.orderedset import OrderedSet
-from reprozip.utils import CommonEqualityMixin, Serializable, \
-    compat_execfile, hsize
-
-
-class File(CommonEqualityMixin, Serializable):
-    """A file, used at some point during the experiment.
-    """
-    def __init__(self, path):
-        self.path = path
-        self.what = None
-        try:
-            stat = os.stat(path)
-        except OSError:
-            self.size = None
-        else:
-            self.size = stat.st_size
-
-    #                               read
-    #                              +------+
-    #                              |      |
-    #                read          v      +   write
-    # (init) +------------------> ONLY_READ +-------> READ_THEN_WRITTEN
-    #        |                                           ^         +
-    #        |                                           |         |
-    #        +-------> WRITTEN +--+                      +---------+
-    #          write    ^         |                      read, write
-    #                   |         |
-    #                   +---------+
-    #                   read, write
-    READ_THEN_WRITTEN   = 0
-    ONLY_READ           = 1
-    WRITTEN             = 2
-
-    def read(self):
-        if self.what is None:
-            self.what = File.ONLY_READ
-
-    def write(self):
-        if self.what is None:
-            self.what = File.WRITTEN
-        elif self.what == File.ONLY_READ:
-            self.what = File.READ_THEN_WRITTEN
-
-    def serialize(self, fp, lvl=0, eol=False):
-        fp.write("File(%s)" % self.string(self.path))
-
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.path == other.path)
-
-    def __hash__(self):
-        return hash(self.path)
+from reprozip.tracer.common import File, Package
+from reprozip.utils import compat_execfile, hsize
 
 
 def get_files(database):
