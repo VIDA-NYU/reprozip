@@ -8,5 +8,6 @@ void tracee_read(pid_t pid, char *dst, const char *src, size_t size);
 char *tracee_strdup(pid_t pid, const char *str);
 
 char **tracee_strarraydup(pid_t pid, const char *const *argv);
+void free_strarray(char **array);
 
 #endif

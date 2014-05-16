@@ -93,7 +93,8 @@ int db_init(const char *filename)
             "    name TEXT NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
-            "    argv TEXT NOT NULL"
+            "    argv TEXT NOT NULL,"
+            "    envp TEXT NOT NULL"
             "    );",
         };
         size_t i;
@@ -123,8 +124,9 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO executed_files(name, timestamp, process, argv)"
-                "VALUES(?, ?, ?, ?)";
+                "INSERT INTO executed_files(name, timestamp, process, "
+                "        argv, envp)"
+                "VALUES(?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
     }
 
@@ -209,40 +211,55 @@ sqlerror:
     return -1;
 }
 
-int db_add_exec(unsigned int process,
-                const char *binary, const char *const *argv)
+static char *strarray2nulsep(const char *const *array, size_t *plen)
+{
+    char *list;
+    size_t len = 0;
+    {
+        const char *const *a = array;
+        while(*a)
+        {
+            len += strlen(*a) + 1;
+            ++a;
+        }
+    }
+    {
+        const char *const *a = array;
+        char *p;
+        p = list = malloc(len);
+        while(*a)
+        {
+            const char *s = *a;
+            while(*s)
+                *p++ = *s++;
+            *p++ = '\0';
+            ++a;
+        }
+    }
+    *plen = len;
+    return list;
+}
+
+int db_add_exec(unsigned int process, const char *binary,
+                const char *const *argv, const char *const *envp)
 {
     check(sqlite3_bind_text(stmt_insert_exec, 1, binary, -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
     check(sqlite3_bind_int64(stmt_insert_exec, 2, gettime()));
     check(sqlite3_bind_int(stmt_insert_exec, 3, process));
     {
-        char *arglist;
-        size_t len = 0;
-        {
-            const char *const *a = argv;
-            while(*a)
-            {
-                len += strlen(*a) + 1;
-                ++a;
-            }
-        }
-        {
-            const char *const *a = argv;
-            char *p;
-            p = arglist = malloc(len);
-            while(*a)
-            {
-                const char *s = *a;
-                while(*s)
-                    *p++ = *s++;
-                *p++ = '\0';
-                ++a;
-            }
-        }
+        size_t len;
+        char *arglist = strarray2nulsep(argv, &len);
         check(sqlite3_bind_text(stmt_insert_exec, 4, arglist, len,
                                 SQLITE_TRANSIENT));
         free(arglist);
+    }
+    {
+        size_t len;
+        char *envlist = strarray2nulsep(envp, &len);
+        check(sqlite3_bind_text(stmt_insert_exec, 5, envlist, len,
+                                SQLITE_TRANSIENT));
+        free(envlist);
     }
 
     if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)

@@ -100,3 +100,14 @@ char **tracee_strarraydup(pid_t pid, const char *const *argv)
     }
     return array;
 }
+
+void free_strarray(char **array)
+{
+    char **ptr = array;
+    while(*ptr)
+    {
+        free(*ptr);
+        ++ptr;
+    }
+    free(array);
+}
