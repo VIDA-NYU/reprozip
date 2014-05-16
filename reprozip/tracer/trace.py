@@ -16,6 +16,36 @@ from reprozip.tracer.common import File, Package
 from reprozip.utils import compat_execfile, hsize
 
 
+class TracedFile(File):
+    #                               read
+    #                              +------+
+    #                              |      |
+    #                read          v      +   write
+    # (init) +------------------> ONLY_READ +-------> READ_THEN_WRITTEN
+    #        |                                           ^         +
+    #        |                                           |         |
+    #        +-------> WRITTEN +--+                      +---------+
+    #          write    ^         |                      read, write
+    #                   |         |
+    #                   +---------+
+    #                   read, write
+    READ_THEN_WRITTEN   = 0
+    ONLY_READ           = 1
+    WRITTEN             = 2
+
+    what = None
+
+    def read(self):
+        if self.what is None:
+            self.what = TracedFile.ONLY_READ
+
+    def write(self):
+        if self.what is None:
+            self.what = TracedFile.WRITTEN
+        elif self.what == TracedFile.ONLY_READ:
+            self.what = TracedFile.READ_THEN_WRITTEN
+
+
 def get_files(database):
     """Find all the files used by the experiment by reading the trace.
     """
@@ -32,7 +62,7 @@ def get_files(database):
             ''')
     for r_name, in executed_files:
         if r_name not in files:
-            f = File(r_name)
+            f = TracedFile(r_name)
             f.read()
             files[f.path] = f
 
@@ -43,7 +73,7 @@ def get_files(database):
             ''')
     for r_name, r_mode in opened_files:
         if r_name not in files:
-            f = File(r_name)
+            f = TracedFile(r_name)
             if r_mode & _pytracer.FILE_WRITE:
                 f.write()
             elif r_mode & _pytracer.FILE_READ:
@@ -53,7 +83,7 @@ def get_files(database):
             files[f.path] = f
     cur.close()
     conn.close()
-    return [f for f in files.values() if f.what != File.WRITTEN]
+    return [f for f in files.values() if f.what != TracedFile.WRITTEN]
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -123,7 +153,7 @@ def trace(binary, argv, directory, append):
     if os.path.exists(config):
         # Loads in previous config
         compat_execfile(config,
-                        {'Package': Package, 'File': File},
+                        {'Package': Package, 'File': TracedFile},
                         oldconfig)
     distribution = platform.linux_distribution()[0:2]
     with open(config, 'w') as fp:

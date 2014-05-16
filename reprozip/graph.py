@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import heapq
 import os
 import sqlite3
@@ -8,17 +7,13 @@ import sqlite3
 from reprozip import _pytracer
 from reprozip.orderedset import OrderedSet
 from reprozip.utils import compat_execfile, CommonEqualityMixin
+from reprozip.tracer.common import File, Package
 
 
 C_INITIAL   = 0 # First process or don't know
 C_FORK      = 1 # Might actually be any one of fork, vfork or clone
 C_EXEC      = 2 # Replaced image with execve
 C_FORKEXEC  = 3 # A fork then an exec, folded as one because all_forks==False
-
-
-File = namedtuple('File', ['path'])
-Package = namedtuple('Package', ['name', 'version', 'files', 'packfiles',
-                                 'size'])
 
 
 class Process(CommonEqualityMixin):

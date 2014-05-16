@@ -8,7 +8,6 @@ class File(CommonEqualityMixin, Serializable):
     """
     def __init__(self, path):
         self.path = path
-        self.what = None
         try:
             stat = os.stat(path)
         except OSError:
@@ -16,37 +15,11 @@ class File(CommonEqualityMixin, Serializable):
         else:
             self.size = stat.st_size
 
-    #                               read
-    #                              +------+
-    #                              |      |
-    #                read          v      +   write
-    # (init) +------------------> ONLY_READ +-------> READ_THEN_WRITTEN
-    #        |                                           ^         +
-    #        |                                           |         |
-    #        +-------> WRITTEN +--+                      +---------+
-    #          write    ^         |                      read, write
-    #                   |         |
-    #                   +---------+
-    #                   read, write
-    READ_THEN_WRITTEN   = 0
-    ONLY_READ           = 1
-    WRITTEN             = 2
-
-    def read(self):
-        if self.what is None:
-            self.what = File.ONLY_READ
-
-    def write(self):
-        if self.what is None:
-            self.what = File.WRITTEN
-        elif self.what == File.ONLY_READ:
-            self.what = File.READ_THEN_WRITTEN
-
-    def serialize(self, fp, lvl=0, eol=False):
+    def serialize(self, fp, lvl=0):
         fp.write("File(%s)" % self.string(self.path))
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
+        return (isinstance(other, File) and
                 self.path == other.path)
 
     def __hash__(self):
