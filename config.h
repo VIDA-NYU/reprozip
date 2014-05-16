@@ -13,4 +13,11 @@
 #   endif
 #endif
 
+/* Static assertion trick */
+enum { ASSERT_POINTER_FITS_IN_LONG_INT = 1/(!!(
+        sizeof(long int) >= sizeof(void*)
+)) };
+
+typedef signed long int register_type;
+
 #endif
