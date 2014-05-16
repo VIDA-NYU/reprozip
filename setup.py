@@ -29,10 +29,12 @@ creating a virtual machine through Vagrant.
 setup(name='reprozip',
       version='0.0',
       ext_modules=[pytracer],
-      packages=['reprozip'],
+      packages=['reprozip', 'reprozip.tracer'],
       entry_points={
         'console_scripts': [
           'reprozip = reprozip.main:main']},
+      install_requires=[
+        'PyYAML'],
       description='Linux tool enabling reproducible experiments',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',

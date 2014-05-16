@@ -11,7 +11,7 @@ import tempfile
 
 import reprozip.graph
 import reprozip.pack
-import reprozip.tracer
+import reprozip.tracer.trace
 from reprozip import _pytracer
 
 
@@ -130,7 +130,7 @@ def trace(args):
         argv = [args.arg0] + args.cmdline[1:]
     else:
         argv = args.cmdline
-    reprozip.tracer.trace(args.cmdline[0], argv, args.dir, args.append)
+    reprozip.tracer.trace.trace(args.cmdline[0], argv, args.dir, args.append)
 
 
 def graph(args):

@@ -1,24 +1,20 @@
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import heapq
 import os
 import sqlite3
+import sys
 
 from reprozip import _pytracer
 from reprozip.orderedset import OrderedSet
-from reprozip.utils import compat_execfile, CommonEqualityMixin
+from reprozip.tracer.common import load_config
+from reprozip.utils import CommonEqualityMixin, escape
 
 
 C_INITIAL   = 0 # First process or don't know
 C_FORK      = 1 # Might actually be any one of fork, vfork or clone
 C_EXEC      = 2 # Replaced image with execve
 C_FORKEXEC  = 3 # A fork then an exec, folded as one because all_forks==False
-
-
-File = namedtuple('File', ['path'])
-Package = namedtuple('Package', ['name', 'version', 'files', 'packfiles',
-                                 'size'])
 
 
 class Process(CommonEqualityMixin):
@@ -38,10 +34,6 @@ class Process(CommonEqualityMixin):
         return id(self)
 
 
-def escape(s):
-    return s.replace('\\', '\\\\').replace('"', '\\"')
-
-
 def generate(target, directory, all_forks=False):
     """Main function for the graph subcommand.
     """
@@ -59,16 +51,15 @@ def generate(target, directory, all_forks=False):
     database = os.path.join(directory, 'trace.sqlite3')
 
     # Reads package ownership from the configuration
-    packages = {}
-    configfile = os.path.join(directory, 'config.py')
-    config = {}
-    if os.path.isfile(configfile):
-        compat_execfile(configfile,
-                        {'Package': Package, 'File': File},
-                        config)
-    for pkg in config.get('packages', []):
-        for f in pkg.files:
-            packages[f.path] = pkg
+    configfile = os.path.join(directory, 'config.yml')
+    if not os.path.isfile(configfile):
+        sys.stderr.write("Error: Configuration file does not exist!\n"
+                         "Did you forget to run 'reprozip trace'?\n"
+                         "If not, you might want to use --dir to specify an "
+                         "alternate location.\n")
+        sys.exit(1)
+    runs, packages, other_files = load_config(configfile)
+    packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
     conn = sqlite3.connect(database)
 
