@@ -102,6 +102,17 @@ char **tracee_strarraydup(pid_t pid, size_t ptr)
     return array;
 }
 
+void free_strarray(char **array)
+{
+    char **ptr = array;
+    while(*ptr)
+    {
+        free(*ptr);
+        ++ptr;
+    }
+    free(array);
+}
+
 
 /* *************************************
  * Tracer
@@ -125,6 +136,7 @@ struct Process {
 struct ExecveInfo {
     char *binary;
     char **argv;
+    char **envp;
 };
 
 struct Process **processes;
@@ -254,6 +266,7 @@ int trace_handle_syscall(struct Process *process)
 #endif
         execi->binary = tracee_strdup(pid, process->params[0]);
         execi->argv = tracee_strarraydup(pid, process->params[1]);
+        execi->envp = tracee_strarraydup(pid, process->params[2]);
 #ifdef DEBUG
         fprintf(stderr, "Got arguments:\n  binary=%s\n  argv:\n",
                 execi->binary);
@@ -266,8 +279,14 @@ int trace_handle_syscall(struct Process *process)
                 ++v;
             }
         }
+        {
+            /* Note: this conversion is correct and shouldn't need a cast */
+            size_t nb = 0;
+            while(execi->envp[nb] != NULL)
+                ++nb;
+            fprintf(stderr, "  envp: (%u entries)\n", (unsigned int)nb);
+        }
 #endif
-        /* TODO : record envp? */
         process->syscall_info = execi;
     }
     else if(process->in_syscall && syscall == SYS_execve)
@@ -282,20 +301,14 @@ int trace_handle_syscall(struct Process *process)
              * conversion from char** to const char*const* is, in fact, safe.
              * G++ accepts it, GCC issues a warning */
             if(db_add_exec(process->identifier, execi->binary,
-                           (const char *const*)execi->argv) != 0)
+                           (const char *const*)execi->argv,
+                           (const char *const*)execi->envp) != 0)
                 return -1;
         }
-        {
-            char **ptr = execi->argv;
-            while(*ptr)
-            {
-                free(*ptr);
-                ++ptr;
-            }
-            free(execi->argv);
-            free(execi->binary);
-            free(execi);
-        }
+        free_strarray(execi->argv);
+        free_strarray(execi->envp);
+        free(execi->binary);
+        free(execi);
     }
     else if(process->in_syscall
           && (syscall == SYS_fork || syscall == SYS_vfork
