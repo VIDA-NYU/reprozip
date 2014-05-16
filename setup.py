@@ -33,6 +33,8 @@ setup(name='reprozip',
       entry_points={
         'console_scripts': [
           'reprozip = reprozip.main:main']},
+      install_requires=[
+        'PyYAML'],
       description='Linux tool enabling reproducible experiments',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',

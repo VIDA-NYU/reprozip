@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 import heapq
 import os
 import sqlite3
+import sys
 
 from reprozip import _pytracer
 from reprozip.orderedset import OrderedSet
-from reprozip.utils import compat_execfile, CommonEqualityMixin
-from reprozip.tracer.common import File, Package
+from reprozip.tracer.common import load_config
+from reprozip.utils import CommonEqualityMixin, escape
 
 
 C_INITIAL   = 0 # First process or don't know
@@ -33,10 +34,6 @@ class Process(CommonEqualityMixin):
         return id(self)
 
 
-def escape(s):
-    return s.replace('\\', '\\\\').replace('"', '\\"')
-
-
 def generate(target, directory, all_forks=False):
     """Main function for the graph subcommand.
     """
@@ -54,16 +51,15 @@ def generate(target, directory, all_forks=False):
     database = os.path.join(directory, 'trace.sqlite3')
 
     # Reads package ownership from the configuration
-    packages = {}
-    configfile = os.path.join(directory, 'config.py')
-    config = {}
-    if os.path.isfile(configfile):
-        compat_execfile(configfile,
-                        {'Package': Package, 'File': File},
-                        config)
-    for pkg in config.get('packages', []):
-        for f in pkg.files:
-            packages[f.path] = pkg
+    configfile = os.path.join(directory, 'config.yml')
+    if not os.path.isfile(configfile):
+        sys.stderr.write("Error: Configuration file does not exist!\n"
+                         "Did you forget to run 'reprozip trace'?\n"
+                         "If not, you might want to use --dir to specify an "
+                         "alternate location.\n")
+        sys.exit(1)
+    runs, packages, other_files = load_config(configfile)
+    packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
     conn = sqlite3.connect(database)
 
