@@ -11,3 +11,9 @@ script:
   - reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
   - reprozip graph graph.dot
   - reprozip pack
+notifications:
+  email:
+    recipients:
+       - reprozip-dev@vgc.poly.edu
+    on_success: change
+    on_failure: always

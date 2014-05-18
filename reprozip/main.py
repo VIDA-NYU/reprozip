@@ -175,7 +175,7 @@ def main():
 
     parser = argparse.ArgumentParser(
             description="Reproducible experiments tool.",
-            epilog="Please report issues to remi.rampin@nyu.edu",
+            epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
     subparsers = parser.add_subparsers(title="commands", metavar='')
 
