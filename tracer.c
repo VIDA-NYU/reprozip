@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,7 @@ struct Process {
     int status;
     int in_syscall;
     int current_syscall;
+    char *wd;
     register_type retvalue;
     register_type params[6];
     void *syscall_info;
@@ -118,6 +120,59 @@ static unsigned int flags2mode(int flags)
     return mode;
 }
 
+static char *abspath(const char *wd, const char *path)
+{
+    size_t len_wd = strlen(wd);
+#ifdef DEBUG
+    fprintf(stderr, "abspath(%s, %s) = ", wd, path);
+#endif
+    if(wd[len_wd-1] == '/')
+    {
+        char *result = malloc(len_wd + strlen(path) + 1);
+        memcpy(result, wd, len_wd);
+        strcpy(result + len_wd, path);
+#ifdef DEBUG
+        fprintf(stderr, "%s\n", result);
+#endif
+        return result;
+    }
+    else
+    {
+        char *result = malloc(len_wd + 1 + strlen(path) + 1);
+        memcpy(result, wd, len_wd);
+        result[len_wd] = '/';
+        strcpy(result + len_wd + 1, path);
+#ifdef DEBUG
+        fprintf(stderr, "%s\n", result);
+#endif
+        return result;
+    }
+}
+
+static char *get_wd(void)
+{
+    /* PATH_MAX has issues, don't use it */
+    size_t size = 1024;
+    char *path;
+    for(;;)
+    {
+        path = malloc(size);
+        if(getcwd(path, size) != NULL)
+            return path;
+        else
+        {
+            if(errno != ERANGE)
+            {
+                free(path);
+                perror("getcwd failed");
+                return strdup("/UNKNOWN");
+            }
+            free(path);
+            size <<= 1;
+        }
+    }
+}
+
 int trace_handle_syscall(struct Process *process)
 {
     pid_t pid = process->pid;
@@ -139,6 +194,12 @@ int trace_handle_syscall(struct Process *process)
     {
         unsigned int mode;
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
 #ifdef DEBUG
         fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname,
                 (int)process->retvalue,
@@ -154,6 +215,28 @@ int trace_handle_syscall(struct Process *process)
         }
         free(pathname);
     }
+    else if(process->in_syscall && syscall == SYS_chdir)
+    {
+        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+#ifdef DEBUG
+        fprintf(stderr, "chdir(\"%s\") = %d (%s)\n", pathname,
+                (int)process->retvalue,
+                (process->retvalue >= 0)?"success":"failure");
+#endif
+        if(process->retvalue >= 0)
+        {
+            free(process->wd);
+            process->wd = pathname;
+        }
+        else
+            free(pathname);
+    }
     else if(!process->in_syscall && syscall == SYS_execve)
     {
         /* int execve(const char *filename,
@@ -164,6 +247,12 @@ int trace_handle_syscall(struct Process *process)
         fprintf(stderr, "Entering execve, getting arguments...\n");
 #endif
         execi->binary = tracee_strdup(pid, (void*)process->params[0]);
+        if(execi->binary[0] != '/')
+        {
+            char *oldbin = execi->binary;
+            execi->binary = abspath(process->wd, oldbin);
+            free(oldbin);
+        }
         execi->argv = tracee_strarraydup(pid, (void*)process->params[1]);
         execi->envp = tracee_strarraydup(pid, (void*)process->params[2]);
 #ifdef DEBUG
@@ -226,6 +315,10 @@ int trace_handle_syscall(struct Process *process)
             new_process->status = PROCESS_ALLOCATED;
             new_process->pid = new_pid;
             new_process->in_syscall = 0;
+            new_process->wd = strdup(process->wd);
+#ifdef DEBUG
+            fprintf(stderr, "WD = \"%s\"\n", new_process->wd);
+#endif
             if(db_add_process(&new_process->identifier,
                               process->identifier) != 0)
                 return -1;
@@ -271,7 +364,10 @@ int trace(pid_t first_proc, int *first_exit_code)
             }
             process = trace_find_process(pid);
             if(process != NULL)
+            {
+                free(process->wd);
                 process->status = PROCESS_FREE;
+            }
             --nprocs;
             if(nprocs <= 0)
                 break;
@@ -286,6 +382,7 @@ int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ALLOCATED;
             process->pid = pid;
             process->in_syscall = 0;
+            process->wd = strdup("/UNKNOWN"); /* FIXME */
             if(db_add_first_process(&process->identifier) != 0)
                 return -1;
         }
@@ -381,8 +478,12 @@ void cleanup(void)
     for(i = 0; i < processes_size; ++i)
     {
         if(processes[i]->status != PROCESS_FREE)
+        {
             kill(processes[i]->pid, SIGKILL);
+            free(processes[i]->wd);
+        }
     }
+    free(processes); /* FIXME : We still leak memory here */
 }
 
 void sigint_handler(int signo)
@@ -407,6 +508,7 @@ void trace_init(void)
         processes[i]->in_syscall = 0;
         processes[i]->current_syscall = -1;
         processes[i]->syscall_info = NULL;
+        processes[i]->wd = NULL;
     }
 
     signal(SIGINT, sigint_handler);
@@ -453,8 +555,12 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
         process->pid = child;
         process->in_syscall = 0;
+        process->wd = get_wd();
 
         fprintf(stderr, "Process %d created by initial fork()\n", child);
+#ifdef DEBUG
+        fprintf(stderr, "WD = \"%s\"\n", process->wd);
+#endif
         if(db_add_first_process(&process->identifier) != 0)
         {
             cleanup();
