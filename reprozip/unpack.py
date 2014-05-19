@@ -9,11 +9,35 @@ import os
 import platform
 import subprocess
 
-from reprozip.tracer.common import load_config
+import reprozip.tracer.common
 
 
-UNPACKERS = {
-    'executable'}
+def shell_escape(s):
+    return '"%s"' % (s.replace('\\', '\\\\')
+                      .replace('"', '\\"')
+                      .replace('$', '\\$'))
+
+
+def load_config(pack):
+    tmp = tempfile.mkdtemp(prefix='reprozip_')
+    try:
+        # Loads info from package
+        tar = tarfile.open(pack, 'r:*')
+        f = tar.extractfile('METADATA/version')
+        version = f.read()
+        f.close()
+        if version != b'REPROZIP VERSION 1\n':
+            sys.stderr.write("Unknown pack format\n")
+            print repr(version)
+            sys.exit(1)
+        tar.extract('METADATA/config.yml', path=tmp)
+        configfile = os.path.join(tmp, 'METADATA/config.yml')
+        ret = reprozip.tracer.common.load_config(configfile)
+        tar.close()
+    finally:
+        shutil.rmtree(tmp)
+
+    return ret
 
 
 class AptInstaller(object):
@@ -62,23 +86,10 @@ class AptInstaller(object):
 
 
 def installpkgs(args):
-    pkg = args.pack[0]
-    tmp = tempfile.mkdtemp(prefix='reprozip_')
-    try:
-        # Loads info from package
-        tar = tarfile.open(pkg, 'r:*')
-        f = tar.extractfile('METADATA/version')
-        version = f.read()
-        f.close()
-        if version != b'REPROZIP VERSION 1\n':
-            sys.stderr.write("Unknown pack format\n")
-            print repr(version)
-            sys.exit(1)
-        tar.extract('METADATA/config.yml', path=tmp)
-        configfile = os.path.join(tmp, 'METADATA/config.yml')
-        runs, packages, other_files = load_config(configfile)
-    finally:
-        shutil.rmtree(tmp)
+    pack = args.pack[0]
+
+    # Loads config
+    runs, packages, other_files = load_config(pack)
 
     # Identifies current distribution
     distribution = platform.linux_distribution()[0].lower()
@@ -127,6 +138,58 @@ def installpkgs(args):
         sys.exit(r)
 
 
+def create_chroot(args):
+    pack = args.pack[0]
+    target = args.target[0]
+    if os.path.exists(target):
+        sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    # Loads config
+    runs, packages, other_files = load_config(pack)
+
+    os.mkdir(target)
+    root = os.path.abspath(os.path.join(target, 'root'))
+    os.mkdir(root)
+
+    # Unpacks files
+    tar = tarfile.open(pack, 'r:*')
+    members = filter(lambda m: not m.name.startswith('METADATA/'),
+                     tar.getmembers())
+    tar.extractall(root, members)
+
+    # Copies additional files
+    # FIXME : This is because we need /bin/sh
+    for d in ('/bin', '/lib/i386-linux-gnu'):
+        path = root
+        for c in d.split('/')[1:]:
+            path = os.path.join(path, c)
+            if not os.path.isdir(path):
+                os.mkdir(path)
+    for f in ('/bin/sh', '/lib/ld-linux.so.2', '/lib/i386-linux-gnu/libc.so.6'):
+        dest = os.path.join(root, f.lstrip('/'))
+        if not os.path.exists(dest):
+            shutil.copy(f, dest)
+
+    # Writes start script
+    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+        fp.write('#!/bin/sh\n\n')
+        for run in runs:
+            cmd = "cd %s && " % shell_escape(run['workingdir'])
+            if os.path.basename(run['binary']) != run['argv'][0]:
+                cmd += "exec -a %s %s" % (
+                        shell_escape(run['argv'][0]),
+                        ' '.join(shell_escape(a)
+                                 for a in [run['binary']] + run['argv'][1:]))
+            else:
+                cmd += 'exec %s' % ' '.join(
+                        shell_escape(a)
+                        for a in [run['binary']] + run['argv'][1:])
+            fp.write('chroot --userspec=1000 %s /bin/sh -c %s\n' % (
+                    shell_escape(root),
+                    shell_escape(cmd)))
+
+
 def setup_unpack_subcommand(parser_unpack):
     subparsers = parser_unpack.add_subparsers(title="formats", metavar='')
 
@@ -140,3 +203,13 @@ def setup_unpack_subcommand(parser_unpack):
             '-y', '--assume-yes',
             help="Assumes yes for package manager's questions (if supported)")
     parser_installpkgs.set_defaults(func=installpkgs)
+
+    # Unpacks all the file so the experiment can be run with chroot
+    parser_chroot = subparsers.add_parser(
+            'chroot',
+            help="Unpacks the files so the experiment can be run with chroot")
+    parser_chroot.add_argument('pack', nargs=1,
+                                    help="Pack to extract")
+    parser_chroot.add_argument('target', nargs=1,
+                                    help="Directory to create")
+    parser_chroot.set_defaults(func=create_chroot)
