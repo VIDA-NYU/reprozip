@@ -9,10 +9,11 @@ import sqlite3
 import sys
 import tempfile
 
+from reprozip import _pytracer
 import reprozip.graph
 import reprozip.pack
 import reprozip.tracer.trace
-from reprozip import _pytracer
+from reprozip.unpack import setup_unpack_subcommand
 
 
 def print_db(database):
@@ -223,6 +224,12 @@ def main():
     parser_pack.add_argument('target', nargs='?', default='experiment.rpz',
                              help="Destination file")
     parser_pack.set_defaults(func=pack)
+
+    # unpack command
+    parser_unpack = subparsers.add_parser(
+            'unpack', parents=[options],
+            help="Unpacks an experiment from .rpz to a variety of formats")
+    setup_unpack_subcommand(parser_unpack)
 
     args = parser.parse_args()
     levels = [logging.WARNING, logging.INFO, logging.DEBUG]
