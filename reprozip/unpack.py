@@ -28,7 +28,6 @@ def load_config(pack):
         f.close()
         if version != b'REPROZIP VERSION 1\n':
             sys.stderr.write("Unknown pack format\n")
-            print repr(version)
             sys.exit(1)
         tar.extract('METADATA/config.yml', path=tmp)
         configfile = os.path.join(tmp, 'METADATA/config.yml')
@@ -108,7 +107,6 @@ def installpkgs(args):
     orig_distribution, = orig_distribution
 
     # Checks that the distributions match
-    print repr(set([orig_distribution, distribution]))
     if set([orig_distribution, distribution]) == set(['ubuntu', 'debian']):
         # Packages are more or less the same on Debian and Ubuntu
         sys.stderr.write("Warning: Installing on %s but pack was generated on "
