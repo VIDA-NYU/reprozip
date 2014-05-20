@@ -7,8 +7,10 @@ import tarfile
 import tempfile
 import os
 import platform
+import sqlite3
 import subprocess
 
+from reprozip import _pytracer
 import reprozip.tracer.common
 
 
@@ -30,13 +32,37 @@ def load_config(pack):
             sys.stderr.write("Unknown pack format\n")
             sys.exit(1)
         tar.extract('METADATA/config.yml', path=tmp)
+        tar.close()
         configfile = os.path.join(tmp, 'METADATA/config.yml')
         ret = reprozip.tracer.common.load_config(configfile)
-        tar.close()
     finally:
         shutil.rmtree(tmp)
 
     return ret
+
+
+def list_directories(pack):
+    tmp = tempfile.mkdtemp(prefix='reprozip_')
+    try:
+        tar = tarfile.open(pack, 'r:*')
+        tar.extract('METADATA/trace.sqlite3', path=tmp)
+        database = os.path.join(tmp, 'METADATA/trace.sqlite3')
+        tar.close()
+        conn = sqlite3.connect(database)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        executed_files = cur.execute('''
+                SELECT name
+                FROM opened_files
+                WHERE mode = ?
+                ''',
+                (_pytracer.FILE_WDIR,))
+        result = set(n for (n,) in executed_files)
+        cur.close()
+        conn.close()
+        return result
+    finally:
+        shutil.rmtree(tmp)
 
 
 class AptInstaller(object):
@@ -136,6 +162,15 @@ def installpkgs(args):
         sys.exit(r)
 
 
+def makedir(path):
+    if not os.path.exists(path):
+        makedir(os.path.dirname(path))
+        try:
+            os.mkdir(path)
+        except OSError:
+            pass
+
+
 def create_chroot(args):
     pack = args.pack[0]
     target = args.target[0]
@@ -168,6 +203,12 @@ def create_chroot(args):
         dest = os.path.join(root, f.lstrip('/'))
         if not os.path.exists(dest):
             shutil.copy(f, dest)
+
+    # Makes sure all the directories used as working directories exist
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    for directory in list_directories(pack):
+        makedir(os.path.join(root, directory[1:]))
 
     # Writes start script
     with open(os.path.join(target, 'script.sh'), 'w') as fp:
