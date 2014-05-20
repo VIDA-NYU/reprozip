@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 
 
 # List the source files
-sources = ['pytracer.c', 'tracer.c', 'database.c', 'ptrace_utils.c']
+sources = ['pytracer.c', 'tracer.c', 'database.c', 'ptrace_utils.c', 'utils.c']
 
 
 # Setup the libraries
