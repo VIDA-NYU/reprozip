@@ -173,6 +173,40 @@ static char *get_wd(void)
     }
 }
 
+static char *get_p_wd(pid_t pid)
+{
+    /* PATH_MAX has issues, don't use it */
+    size_t size = 1024;
+    char *path;
+    char dummy;
+    char *proclink;
+    int len = snprintf(&dummy, 1, "/proc/%d/cwd", pid);
+    proclink = malloc(len + 1);
+    snprintf(proclink, len + 1, "/proc/%d/cwd", pid);
+    for(;;)
+    {
+        int ret;
+        path = malloc(size);
+        ret = readlink(proclink, path, size);
+        if(ret == -1)
+        {
+            free(path);
+            perror("readlink failed");
+            return strdup("/UNKNOWN");
+        }
+        else if(ret >= size)
+        {
+            free(path);
+            size <<= 1;
+        }
+        else
+        {
+            path[ret] = '\0';
+            return path;
+        }
+    }
+}
+
 int trace_handle_syscall(struct Process *process)
 {
     pid_t pid = process->pid;
@@ -387,7 +421,7 @@ int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ALLOCATED;
             process->pid = pid;
             process->in_syscall = 0;
-            process->wd = strdup("/UNKNOWN"); /* FIXME */
+            process->wd = get_p_wd(pid);
             if(db_add_first_process(&process->identifier, process->wd) != 0)
                 return -1;
         }
