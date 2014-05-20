@@ -140,8 +140,9 @@ int trace_handle_syscall(struct Process *process)
         unsigned int mode;
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
 #ifdef DEBUG
-        fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname, ret,
-                (ret >= 0)?"success":"failure");
+        fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname,
+                (int)process->retvalue,
+                (process->retvalue >= 0)?"success":"failure");
 #endif
         if(process->retvalue >= 0)
         {
