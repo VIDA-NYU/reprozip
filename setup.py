@@ -1,8 +1,11 @@
+import os
 from setuptools import setup, Extension
 
 
 # List the source files
 sources = ['pytracer.c', 'tracer.c', 'database.c', 'ptrace_utils.c', 'utils.c']
+# They can be found under native/
+sources = [os.path.join('native', n) for n in sources]
 
 
 # Setup the libraries
