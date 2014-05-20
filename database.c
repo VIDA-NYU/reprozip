@@ -6,6 +6,8 @@
 
 #include <sqlite3.h>
 
+#include "database.h"
+
 #define count(x) (sizeof((x))/sizeof(*(x)))
 #define check(r) if((r) != SQLITE_OK) { goto sqlerror; }
 
@@ -154,7 +156,8 @@ sqlerror:
 
 #define DB_NO_PARENT ((unsigned int)-2)
 
-int db_add_process(unsigned int *id, unsigned int parent_id)
+int db_add_process(unsigned int *id, unsigned int parent_id,
+                   const char *working_dir)
 {
     if(parent_id == DB_NO_PARENT)
     {
@@ -179,7 +182,7 @@ int db_add_process(unsigned int *id, unsigned int parent_id)
         goto sqlerror;
     sqlite3_reset(stmt_last_rowid);
 
-    return 0;
+    return db_add_file_open(*id, working_dir, FILE_WDIR);
 
 sqlerror:
     fprintf(stderr, "sqlite3 error inserting process: %s\n",
@@ -187,9 +190,9 @@ sqlerror:
     return -1;
 }
 
-int db_add_first_process(unsigned int *id)
+int db_add_first_process(unsigned int *id, const char *working_dir)
 {
-    return db_add_process(id, DB_NO_PARENT);
+    return db_add_process(id, DB_NO_PARENT, working_dir);
 }
 
 int db_add_file_open(unsigned int process, const char *name, unsigned int mode)

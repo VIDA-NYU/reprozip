@@ -233,6 +233,10 @@ int trace_handle_syscall(struct Process *process)
         {
             free(process->wd);
             process->wd = pathname;
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_WDIR) != 0)
+                return -1;
         }
         else
             free(pathname);
@@ -320,7 +324,8 @@ int trace_handle_syscall(struct Process *process)
             fprintf(stderr, "WD = \"%s\"\n", new_process->wd);
 #endif
             if(db_add_process(&new_process->identifier,
-                              process->identifier) != 0)
+                              process->identifier,
+                              process->wd) != 0)
                 return -1;
         }
     }
@@ -383,7 +388,7 @@ int trace(pid_t first_proc, int *first_exit_code)
             process->pid = pid;
             process->in_syscall = 0;
             process->wd = strdup("/UNKNOWN"); /* FIXME */
-            if(db_add_first_process(&process->identifier) != 0)
+            if(db_add_first_process(&process->identifier, process->wd) != 0)
                 return -1;
         }
         if(process->status != PROCESS_ATTACHED)
@@ -561,7 +566,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 #ifdef DEBUG
         fprintf(stderr, "WD = \"%s\"\n", process->wd);
 #endif
-        if(db_add_first_process(&process->identifier) != 0)
+        if(db_add_first_process(&process->identifier, process->wd) != 0)
         {
             cleanup();
             return 1;
