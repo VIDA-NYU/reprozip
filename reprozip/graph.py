@@ -208,7 +208,7 @@ def generate(target, directory, all_forks=False):
             elif mode & _pytracer.FILE_WRITE:
                 fp.write('    prog%d -> "%s" [color=red];\n' % (
                          id(prog), escape(f)))
-            else:
+            elif mode & _pytracer.FILE_READ:
                 fp.write('    "%s" -> prog%d [color=green];\n' % (
                          escape(f), id(prog)))
 
