@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import os
 import platform
+import re
 import sqlite3
 import subprocess
 
@@ -191,18 +192,27 @@ def create_chroot(args):
                      tar.getmembers())
     tar.extractall(root, members)
 
-    # Copies additional files
-    # FIXME : This is because we need /bin/sh
-    for d in ('/bin', '/lib/i386-linux-gnu'):
-        path = root
-        for c in d.split('/')[1:]:
-            path = os.path.join(path, c)
-            if not os.path.isdir(path):
-                os.mkdir(path)
-    for f in ('/bin/sh', '/lib/ld-linux.so.2', '/lib/i386-linux-gnu/libc.so.6'):
-        dest = os.path.join(root, f.lstrip('/'))
-        if not os.path.exists(dest):
+    # Copies /bin/sh + dependencies
+    fmt = re.compile(r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$')
+    p = subprocess.Popen(['ldd', '/bin/sh'], stdout=subprocess.PIPE)
+    try:
+        for l in p.stdout:
+            l = l.decode('ascii')
+            m = fmt.match(l)
+            f = m.group(1)
+            if not os.path.exists(f):
+                continue
+            dest = f
+            if dest[0] == '/':
+                dest = dest[1:]
+            dest = os.path.join(root, dest)
+            makedir(os.path.dirname(dest))
             shutil.copy(f, dest)
+    finally:
+        p.wait()
+    assert p.returncode == 0
+    makedir(os.path.join(root, 'bin'))
+    shutil.copy('/bin/sh', os.path.join(root, 'bin/sh'))
 
     # Makes sure all the directories used as working directories exist
     # (they already do if files from them are used, but empty directories do
