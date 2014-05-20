@@ -53,6 +53,23 @@ def find_all_links(filename):
     return list(files) + [path]
 
 
+def safe_abspath(filename):
+    """Turns an absolute path containing '..' into a filename without '..'.
+
+    Also removes initial '/'.
+
+    Example:
+
+    >>> safe_abspath('/var/lib/../../../../tmp/test')
+    'tmp/test'
+    >>> safe_abspath('/var/lib/../www/index.html')
+    'var/www/index.html'
+
+    This is used to build tar filenames.
+    """
+    return os.path.normpath(filename)[1:]
+
+
 def pack(target, directory):
     """Main function for the pack subcommand.
     """
@@ -100,15 +117,16 @@ def pack(target, directory):
             for f in pkg.files:
                 # This path is absolute, but not canonical
                 for t in find_all_links(f.path):
-                    logging.debug(t)
-                    tar.add(t)
+                    logging.debug("%s -> %s" % (t, safe_abspath(t)))
+                    tar.add(t, safe_abspath(t))
         else:
             logging.info("NOT adding files from package %s" % pkg.name)
 
     # Add the rest of the files
     logging.info("Adding other files...")
     for f in other_files:
-        logging.debug(f.path)
-        tar.add(f.path)
+        logging.debug("%s -> %s" % (os.path.abspath(f.path),
+                                    safe_abspath(f.path)))
+        tar.add(f.path, safe_abspath(f.path))
 
     tar.close()
