@@ -173,6 +173,152 @@ static char *get_wd(void)
     }
 }
 
+static char *get_p_wd(pid_t pid)
+{
+    /* PATH_MAX has issues, don't use it */
+    size_t size = 1024;
+    char *path;
+    char dummy;
+    char *proclink;
+    int len = snprintf(&dummy, 1, "/proc/%d/cwd", pid);
+    proclink = malloc(len + 1);
+    snprintf(proclink, len + 1, "/proc/%d/cwd", pid);
+    for(;;)
+    {
+        int ret;
+        path = malloc(size);
+        ret = readlink(proclink, path, size);
+        if(ret == -1)
+        {
+            free(path);
+            perror("readlink failed");
+            return strdup("/UNKNOWN");
+        }
+        else if(ret >= size)
+        {
+            free(path);
+            size <<= 1;
+        }
+        else
+        {
+            path[ret] = '\0';
+            return path;
+        }
+    }
+}
+
+static char *read_line(char *buffer, size_t *size, FILE *fp)
+{
+    size_t pos = 0;
+    if(buffer == NULL)
+    {
+        *size = 4096;
+        buffer = malloc(*size);
+    }
+    for(;;)
+    {
+        char c;
+        {
+            int t = getc(fp);
+            if(t == EOF)
+            {
+                free(buffer);
+                return NULL;
+            }
+            c = t;
+        }
+        if(c == '\n')
+        {
+            buffer[pos] = '\0';
+            return buffer;
+        }
+        else
+        {
+            if(pos + 1 >= *size)
+            {
+                *size <<= 2;
+                buffer = realloc(buffer, *size);
+            }
+            buffer[pos++] = c;
+        }
+    }
+}
+
+int trace_add_files_from_proc(unsigned int process, pid_t pid,
+                               const char *binary)
+{
+    FILE *fp;
+    char dummy;
+    int len = snprintf(&dummy, 1, "/proc/%d/maps", pid);
+    char *procfile = malloc(len + 1);
+    snprintf(procfile, len + 1, "/proc/%d/maps", pid);
+#ifdef DEBUG
+    fprintf(stderr, "Parsing %s\n", procfile);
+#endif
+    fp = fopen(procfile, "r");
+
+    /* Loops on lines
+     * Format:
+     * 08134000-0813a000 rw-p 000eb000 fe:00 868355     /bin/bash
+     * 0813a000-0813f000 rw-p 00000000 00:00 0
+     * b7721000-b7740000 r-xp 00000000 fe:00 901950     /lib/ld-2.18.so
+     * bfe44000-bfe65000 rw-p 00000000 00:00 0          [stack]
+     */
+    char *line = NULL;
+    size_t length = 0;
+    char previous_path[4096] = "";
+    while((line = read_line(line, &length, fp)) != NULL)
+    {
+        unsigned long int addr_start, addr_end;
+        char perms[5];
+        unsigned long int offset;
+        unsigned int dev_major, dev_minor;
+        unsigned long int inode;
+        char pathname[4096];
+        sscanf(line,
+               "%lx-%lx %4s %lx %x:%x %lu %s",
+               &addr_start, &addr_end,
+               perms,
+               &offset,
+               &dev_major, &dev_minor,
+               &inode,
+               pathname);
+
+#ifdef DEBUG
+        fprintf(stderr,
+                "proc line:\n"
+                "    addr_start: %lx\n"
+                "    addr_end: %lx\n"
+                "    perms: %s\n"
+                "    offset: %lx\n"
+                "    dev_major: %x\n"
+                "    dev_minor: %x\n"
+                "    inode: %lu\n"
+                "    pathname: %s\n",
+                addr_start, addr_end,
+                perms,
+                offset,
+                dev_major, dev_minor,
+                inode,
+                pathname);
+#endif
+        if(inode > 0)
+        {
+            if(strncmp(pathname, binary, 4096) != 0
+             && strncmp(previous_path, pathname, 4096) != 0)
+            {
+#ifdef DEBUG
+                fprintf(stderr, "    adding to database\n");
+#endif
+                if(db_add_file_open(process, pathname, FILE_READ) != 0)
+                    return -1;
+                strncpy(previous_path, pathname, 4096);
+            }
+        }
+    }
+    return 0;
+}
+
 int trace_handle_syscall(struct Process *process)
 {
     pid_t pid = process->pid;
@@ -294,7 +440,15 @@ int trace_handle_syscall(struct Process *process)
                            (const char *const*)execi->argv,
                            (const char *const*)execi->envp) != 0)
                 return -1;
+#ifdef DEBUG
+            fprintf(stderr, "Proc %d successfully exec'd %s\n",
+                    process->pid, execi->binary);
+#endif
+            if(trace_add_files_from_proc(process->identifier, process->pid,
+                                         execi->binary) != 0)
+                return -1;
         }
+
         free_strarray(execi->argv);
         free_strarray(execi->envp);
         free(execi->binary);
@@ -387,7 +541,7 @@ int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ALLOCATED;
             process->pid = pid;
             process->in_syscall = 0;
-            process->wd = strdup("/UNKNOWN"); /* FIXME */
+            process->wd = get_p_wd(pid);
             if(db_add_first_process(&process->identifier, process->wd) != 0)
                 return -1;
         }
