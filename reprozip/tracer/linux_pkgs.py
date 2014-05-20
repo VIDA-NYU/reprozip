@@ -48,7 +48,12 @@ class DpkgManager(object):
         try:
             for l in p.stdout:
                 pkgname, f = l.split(b': ', 1)
-                pkgname, f = pkgname.decode('ascii'), f.strip().decode('ascii')
+                f = f.strip().decode('ascii')
+                pkgname = (pkgname.decode('iso-8859-1')
+                                    # 8-bit safe encoding, because this might
+                                    # be a localized error message (that we
+                                    # don't care about)
+                                  .split(':', 1)[0]) # Removes :arch
                 self.package_files[f] = pkgname
                 if f == filename:
                     if ' ' not in pkgname:
@@ -66,10 +71,12 @@ class DpkgManager(object):
                               pkgname],
                 stdout=subprocess.PIPE)
         try:
-            version = None
+            size = version = None
             for l in p.stdout:
                 fields = l.split()
-                if fields[0].decode('ascii') == pkgname:
+                # Removes :arch
+                name = fields[0].decode('ascii').split(':', 1)[0]
+                if name == pkgname:
                     version = fields[1].decode('ascii')
                     size = int(fields[2].decode('ascii')) * 1024 # kbytes
                     break
