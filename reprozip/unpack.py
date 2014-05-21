@@ -74,7 +74,7 @@ class AptInstaller(object):
         # Installs
         options = []
         if assume_yes:
-            options.append('y')
+            options.append('-y')
         returncode = subprocess.call([self.bin, 'install'] +
                                      options +
                                      [pkg.name for pkg in packages])
@@ -226,7 +226,7 @@ def create_chroot(args):
         for run in runs:
             cmd = "cd %s && " % shell_escape(run['workingdir'])
             if os.path.basename(run['binary']) != run['argv'][0]:
-                cmd += "exec -a %s %s" % (
+                cmd += 'exec -a %s %s' % (
                         shell_escape(run['argv'][0]),
                         ' '.join(shell_escape(a)
                                  for a in [run['binary']] + run['argv'][1:]))
@@ -238,6 +238,8 @@ def create_chroot(args):
                     shell_escape(root),
                     shell_escape(cmd)))
 
+    print("Experiment set up, run %s to start" % (
+          os.path.join(target, 'script.sh')))
 
 def setup_unpack_subcommand(parser_unpack):
     subparsers = parser_unpack.add_subparsers(title="formats", metavar='')
@@ -258,7 +260,7 @@ def setup_unpack_subcommand(parser_unpack):
             'chroot',
             help="Unpacks the files so the experiment can be run with chroot")
     parser_chroot.add_argument('pack', nargs=1,
-                                    help="Pack to extract")
+                               help="Pack to extract")
     parser_chroot.add_argument('target', nargs=1,
-                                    help="Directory to create")
+                               help="Directory to create")
     parser_chroot.set_defaults(func=create_chroot)
