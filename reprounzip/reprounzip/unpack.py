@@ -11,8 +11,8 @@ import re
 import sqlite3
 import subprocess
 
-from reprozip import _pytracer
-import reprozip.tracer.common
+import reprounzip.common
+from reprounzip.common import FILE_WDIR
 
 
 def shell_escape(s):
@@ -35,7 +35,7 @@ def load_config(pack):
         tar.extract('METADATA/config.yml', path=tmp)
         tar.close()
         configfile = os.path.join(tmp, 'METADATA/config.yml')
-        ret = reprozip.tracer.common.load_config(configfile)
+        ret = reprounzip.common.load_config(configfile)
     finally:
         shutil.rmtree(tmp)
 
@@ -57,7 +57,7 @@ def list_directories(pack):
                 FROM opened_files
                 WHERE mode = ?
                 ''',
-                (_pytracer.FILE_WDIR,))
+                (FILE_WDIR,))
         result = set(n for (n,) in executed_files)
         cur.close()
         conn.close()
@@ -240,27 +240,3 @@ def create_chroot(args):
 
     print("Experiment set up, run %s to start" % (
           os.path.join(target, 'script.sh')))
-
-def setup_unpack_subcommand(parser_unpack):
-    subparsers = parser_unpack.add_subparsers(title="formats", metavar='')
-
-    # Install the required packages
-    parser_installpkgs = subparsers.add_parser(
-            'installpkgs',
-            help="Installs the required packages on this system")
-    parser_installpkgs.add_argument('pack', nargs=1,
-                                    help="Pack to process")
-    parser_installpkgs.add_argument(
-            '-y', '--assume-yes',
-            help="Assumes yes for package manager's questions (if supported)")
-    parser_installpkgs.set_defaults(func=installpkgs)
-
-    # Unpacks all the file so the experiment can be run with chroot
-    parser_chroot = subparsers.add_parser(
-            'chroot',
-            help="Unpacks the files so the experiment can be run with chroot")
-    parser_chroot.add_argument('pack', nargs=1,
-                               help="Pack to extract")
-    parser_chroot.add_argument('target', nargs=1,
-                               help="Directory to create")
-    parser_chroot.set_defaults(func=create_chroot)

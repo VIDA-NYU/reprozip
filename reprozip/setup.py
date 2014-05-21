@@ -28,6 +28,9 @@ user to review.
 Then, it can pack these files in a package to allow for easy reproducibility
 elsewhere, either by unpacking and running on a compatible machine or by
 creating a virtual machine through Vagrant.
+
+This package holds the tracer and packer components (and the 'reprozip'
+command-line utility).
 """
 setup(name='reprozip',
       version='0.0',
@@ -38,13 +41,13 @@ setup(name='reprozip',
           'reprozip = reprozip.main:main']},
       install_requires=[
         'PyYAML'],
-      description='Linux tool enabling reproducible experiments',
+      description='Linux tool enabling reproducible experiments (packer)',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',
       url='http://github.com/remram44/reprozip',
       long_description=description,
       license='BSD',
-      keywords=['reprozip', 'reproducibility', 'provenance'],
+      keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
       classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Science/Research',
