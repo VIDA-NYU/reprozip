@@ -36,8 +36,8 @@ def main():
     # General options
     options = argparse.ArgumentParser(add_help=False)
     options.add_argument('-v', '--verbose', action='count', default=0,
-                        dest='verbosity',
-                        help="augments verbosity level")
+                         dest='verbosity',
+                         help="augments verbosity level")
 
     # General options
     parser = argparse.ArgumentParser(
@@ -54,9 +54,10 @@ def main():
                               help="Destination DOT file")
     parser_graph.add_argument('-F', '--all-forks', action='store_true',
                               help="Show forked processes before they exec")
-    parser_graph.add_argument('-d', '--dir', default='.reprozip',
-                        help="where the database and configuration file are "
-                        "stored (default: ./.reprozip)")
+    parser_graph.add_argument(
+            '-d', '--dir', default='.reprozip',
+            help="where the database and configuration file are stored "
+            "(default: ./.reprozip)")
     parser_graph.set_defaults(func=graph)
 
     # Install the required packages

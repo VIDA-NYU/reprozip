@@ -79,8 +79,8 @@ def load_config(filename, File=File, Package=Package):
 
 def write_file(fp, fi, indent=0):
     fp.write("%s  - \"%s\" # %s\n" % ("    " * indent,
-                                 escape(fi.path),
-                                 hsize(fi.size)))
+                                      escape(fi.path),
+                                      hsize(fi.size)))
 
 
 def write_package(fp, pkg, indent=0):
@@ -93,13 +93,15 @@ def write_package(fp, pkg, indent=0):
                                                     else 'false'))
     fp.write("%s    files:\n"
              "%s      # Total files used: %s\n" % (
-             indent_str, indent_str,
-             hsize(sum(fi.size for fi in pkg.files if fi.size is not None))))
+                 indent_str, indent_str,
+                 hsize(sum(fi.size
+                           for fi in pkg.files
+                           if fi.size is not None))))
     if pkg.size is not None:
         fp.write("%s      # Installed package size: %s\n" % (
-                indent_str, hsize(pkg.size)))
+                 indent_str, hsize(pkg.size)))
     for fi in pkg.files:
-        write_file(fp, fi, indent+1)
+        write_file(fp, fi, indent + 1)
 
 
 def save_config(filename, runs, packages, other_files):
@@ -118,7 +120,8 @@ version: "{version!s}"
 """.format(version=escape(reprozip.__version__),
            date=datetime.now().isoformat()))
         fp.write(dump({'runs': runs}).decode('utf-8'))
-        fp.write("""
+        fp.write("""\
+
 
 # Files to pack
 # All the files below were used by the program; they will be included in the

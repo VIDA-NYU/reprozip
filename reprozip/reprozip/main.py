@@ -21,7 +21,8 @@ def print_db(database):
     conn.row_factory = sqlite3.Row
 
     cur = conn.cursor()
-    processes = cur.execute('''
+    processes = cur.execute(
+            '''
             SELECT id, parent, timestamp
             FROM processes;
             ''')
@@ -42,7 +43,8 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute('''
+    processes = cur.execute(
+            '''
             SELECT id, name, timestamp, process, argv
             FROM executed_files;
             ''')
@@ -67,7 +69,8 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute('''
+    processes = cur.execute(
+            '''
             SELECT id, name, timestamp, mode, process
             FROM opened_files;
             ''')
@@ -157,11 +160,11 @@ def main():
     # General options
     options = argparse.ArgumentParser(add_help=False)
     options.add_argument('-v', '--verbose', action='count', default=0,
-                        dest='verbosity',
-                        help="augments verbosity level")
+                         dest='verbosity',
+                         help="augments verbosity level")
     options.add_argument('-d', '--dir', default='.reprozip',
-                        help="where to store database and configuration file "
-                        "(default: ./.reprozip)")
+                         help="where to store database and configuration file "
+                         "(default: ./.reprozip)")
 
     parser = argparse.ArgumentParser(
             description="Reproducible experiments tool.",

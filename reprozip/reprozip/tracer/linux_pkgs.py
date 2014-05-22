@@ -49,11 +49,10 @@ class DpkgManager(object):
             for l in p.stdout:
                 pkgname, f = l.split(b': ', 1)
                 f = f.strip().decode('ascii')
+                # 8-bit safe encoding, because this might be a localized error
+                # message (that we don't care about)
                 pkgname = (pkgname.decode('iso-8859-1')
-                                    # 8-bit safe encoding, because this might
-                                    # be a localized error message (that we
-                                    # don't care about)
-                                  .split(':', 1)[0]) # Removes :arch
+                                  .split(':', 1)[0])    # Removes :arch
                 self.package_files[f] = pkgname
                 if f == filename:
                     if ' ' not in pkgname:
@@ -65,11 +64,11 @@ class DpkgManager(object):
     def _create_package(self, pkgname, files):
         p = subprocess.Popen(['dpkg-query',
                               '--showformat=${Package;-50}\t'
-                                  '${Version}\t'
-                                  '${Installed-Size}\n',
+                              '${Version}\t'
+                              '${Installed-Size}\n',
                               '-W',
                               pkgname],
-                stdout=subprocess.PIPE)
+                             stdout=subprocess.PIPE)
         try:
             size = version = None
             for l in p.stdout:
@@ -78,7 +77,7 @@ class DpkgManager(object):
                 name = fields[0].decode('ascii').split(':', 1)[0]
                 if name == pkgname:
                     version = fields[1].decode('ascii')
-                    size = int(fields[2].decode('ascii')) * 1024 # kbytes
+                    size = int(fields[2].decode('ascii')) * 1024    # kbytes
                     break
         finally:
             p.wait()

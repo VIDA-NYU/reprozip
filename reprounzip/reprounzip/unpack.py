@@ -57,7 +57,8 @@ def list_directories(pack):
         conn = sqlite3.connect(database)
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        executed_files = cur.execute('''
+        executed_files = cur.execute(
+                '''
                 SELECT name
                 FROM opened_files
                 WHERE mode = ?
@@ -89,11 +90,10 @@ class AptInstaller(object):
         # Checks package versions
         pkgs_dict = dict((pkg.name, pkg) for pkg in packages)
         p = subprocess.Popen(['dpkg-query',
-                              '--showformat=${Package;-50}\t'
-                                  '${Version}\n',
+                              '--showformat=${Package;-50}\t${Version}\n',
                               '-W'] +
                              [pkg.name for pkg in packages],
-                stdout=subprocess.PIPE)
+                             stdout=subprocess.PIPE)
         try:
             for l in p.stdout:
                 fields = l.split()
@@ -104,7 +104,7 @@ class AptInstaller(object):
                     if pkg.version != version:
                         sys.stderr.write("Warning: version %s of %s was "
                                          "installed, instead of %s\n" % (
-                                        version, name, pkg.version))
+                                             version, name, pkg.version))
                     logging.info("Installed %s %s (original: %s)" % (
                                  name, version, pkg.version))
         finally:
@@ -150,13 +150,13 @@ def select_installer(pack, runs):
         # Packages are more or less the same on Debian and Ubuntu
         sys.stderr.write("Warning: Installing on %s but pack was generated on "
                          "%s\n" % (
-                         distribution.capitalize(),
-                         orig_distribution.capitalize()))
+                             distribution.capitalize(),
+                             orig_distribution.capitalize()))
     elif orig_distribution != distribution:
         sys.stderr.write("Error: Installing on %s but pack was generated on %s"
                          "\n" % (
-                         distribution.capitalize(),
-                         orig_distribution.capitalize()))
+                             distribution.capitalize(),
+                             orig_distribution.capitalize()))
         sys.exit(1)
 
     # Selects installation method
@@ -264,8 +264,8 @@ def create_chroot(args):
                         shell_escape(a)
                         for a in [run['binary']] + run['argv'][1:])
             fp.write('chroot --userspec=1000 %s /bin/sh -c %s\n' % (
-                    shell_escape(root),
-                    shell_escape(cmd)))
+                     shell_escape(root),
+                     shell_escape(cmd)))
 
     print("Experiment set up, run %s to start" % (
           os.path.join(target, 'script.sh')))
@@ -312,13 +312,13 @@ def create_vagrant(args):
             fp.write('cd %s\n' % shell_escape(run['workingdir']))
             if os.path.basename(run['binary']) != run['argv'][0]:
                 fp.write('exec -a %s %s\n' % (
-                        shell_escape(run['argv'][0]),
-                        ' '.join(shell_escape(a)
-                                 for a in [run['binary']] + run['argv'][1:])))
+                         shell_escape(run['argv'][0]),
+                         ' '.join(shell_escape(a)
+                                  for a in [run['binary']] + run['argv'][1:])))
             else:
                 fp.write('exec %s\n' % ' '.join(
-                        shell_escape(a)
-                        for a in [run['binary']] + run['argv'][1:]))
+                         shell_escape(a)
+                         for a in [run['binary']] + run['argv'][1:]))
     # TODO : Copy /bin/sh over and use /bin/sh -c exec or no exec
 
     # Writes Vagrant file

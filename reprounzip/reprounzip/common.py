@@ -4,9 +4,9 @@ import yaml
 from reprounzip.utils import CommonEqualityMixin
 
 
-FILE_READ   = 0x01
-FILE_WRITE  = 0x02
-FILE_WDIR   = 0x04
+FILE_READ = 0x01
+FILE_WRITE = 0x02
+FILE_WDIR = 0x04
 
 
 class File(CommonEqualityMixin):

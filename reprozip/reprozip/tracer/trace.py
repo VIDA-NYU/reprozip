@@ -26,9 +26,9 @@ class TracedFile(File):
     #                   |         |
     #                   +---------+
     #                   read, write
-    READ_THEN_WRITTEN   = 0
-    ONLY_READ           = 1
-    WRITTEN             = 2
+    READ_THEN_WRITTEN = 0
+    ONLY_READ = 1
+    WRITTEN = 2
 
     what = None
 
@@ -52,7 +52,8 @@ def get_files(database):
     files = {}
 
     cur = conn.cursor()
-    executed_files = cur.execute('''
+    executed_files = cur.execute(
+            '''
             SELECT name
             FROM executed_files
             ORDER BY timestamp;
@@ -63,7 +64,8 @@ def get_files(database):
             f.read()
             files[f.path] = f
 
-    opened_files = cur.execute('''
+    opened_files = cur.execute(
+            '''
             SELECT name, mode
             FROM opened_files
             ORDER BY timestamp;
@@ -80,7 +82,7 @@ def get_files(database):
             files[f.path] = f
     cur.close()
     conn.close()
-    return [f for f in files.values() if f.what != TracedFile.WRITTEN]
+    return [fi for fi in files.values() if fi.what != TracedFile.WRITTEN]
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -129,7 +131,8 @@ def trace(binary, argv, directory, append):
     # Runs the trace
     database = os.path.join(directory, 'trace.sqlite3')
     logging.info("Running program")
-    c = _pytracer.execute(binary, argv, database) # Might raise _pytracer.Error
+    # Might raise _pytracer.Error
+    c = _pytracer.execute(binary, argv, database)
     if c != 0:
         if c & 0x0100:
             logging.warning("Program appears to have been terminated by "

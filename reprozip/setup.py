@@ -17,7 +17,7 @@ pytracer = Extension('reprozip._pytracer',
                      sources=sources,
                      libraries=libraries)
 
-description = """
+description = """\
 ReproZip is a tool aimed at scientists using Linux distributions, that
 simplifies the process of creating reproducible experiments from programs.
 
@@ -36,11 +36,10 @@ setup(name='reprozip',
       version='0.0',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
-      entry_points={
-        'console_scripts': [
+      entry_points={'console_scripts': [
           'reprozip = reprozip.main:main']},
       install_requires=[
-        'PyYAML'],
+          'PyYAML'],
       description='Linux tool enabling reproducible experiments (packer)',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',
@@ -49,10 +48,10 @@ setup(name='reprozip',
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
       classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: C',
-        'Topic :: Scientific/Engineering',
-        'Topic :: System :: Archiving'])
+          'Development Status :: 2 - Pre-Alpha',
+          'Intended Audience :: Science/Research',
+          'License :: OSI Approved :: BSD License',
+          'Operating System :: POSIX :: Linux',
+          'Programming Language :: C',
+          'Topic :: Scientific/Engineering',
+          'Topic :: System :: Archiving'])
