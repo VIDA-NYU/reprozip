@@ -11,10 +11,10 @@ from reprozip.tracer.common import load_config
 from reprozip.utils import CommonEqualityMixin, escape
 
 
-C_INITIAL   = 0 # First process or don't know
-C_FORK      = 1 # Might actually be any one of fork, vfork or clone
-C_EXEC      = 2 # Replaced image with execve
-C_FORKEXEC  = 3 # A fork then an exec, folded as one because all_forks==False
+C_INITIAL = 0   # First process or don't know
+C_FORK = 1      # Might actually be any one of fork, vfork or clone
+C_EXEC = 2      # Replaced image with execve
+C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
 
 
 class Process(CommonEqualityMixin):
@@ -22,13 +22,13 @@ class Process(CommonEqualityMixin):
         self.pid = pid
         self.parent = parent
         self.timestamp = timestamp
-        self.acted = acted      # Whether that process has done
-                                # something yet. If it execve()s
-                                # and hasn't done anything since it
-                                # forked, no need for it to appear
-        self.binary = binary    # Executable file
-        self.created = created  # How was this process created, one
-                                # of the C_* constants
+        # Whether that process has done something yet. If it execve()s and
+        # hasn't done anything since it forked, no need for it to appear
+        self.acted = acted
+        # Executable file
+        self.binary = binary
+        # How was this process created, one of the C_* constants
+        self.created = created
 
     def __hash__(self):
         return id(self)
@@ -70,7 +70,8 @@ def generate(target, directory, all_forks=False):
 
     # Reads processes from the database
     process_cursor = conn.cursor()
-    process_rows = process_cursor.execute('''
+    process_rows = process_cursor.execute(
+            '''
             SELECT id, parent, timestamp
             FROM processes
             ORDER BY id
@@ -80,7 +81,8 @@ def generate(target, directory, all_forks=False):
 
     # ... and opened files...
     file_cursor = conn.cursor()
-    file_rows = file_cursor.execute('''
+    file_rows = file_cursor.execute(
+            '''
             SELECT name, timestamp, mode, process
             FROM opened_files
             ORDER BY id
@@ -91,7 +93,8 @@ def generate(target, directory, all_forks=False):
 
     # ... as well as executed files.
     exec_cursor = conn.cursor()
-    exec_rows = exec_cursor.execute('''
+    exec_rows = exec_cursor.execute(
+            '''
             SELECT name, timestamp, process, argv
             FROM executed_files
             ORDER BY id

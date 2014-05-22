@@ -33,6 +33,7 @@ def find_all_links_recursive(filename, files):
             path = os.path.realpath(path)
     return path
 
+
 def find_all_links(filename):
     """Dereferences symlinks from a path, returning them plus the final target.
 

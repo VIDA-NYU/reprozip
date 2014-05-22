@@ -17,7 +17,7 @@ pytracer = Extension('reprozip._pytracer',
                      sources=sources,
                      libraries=libraries)
 
-description = """
+description = """\
 ReproZip is a tool aimed at scientists using Linux distributions, that
 simplifies the process of creating reproducible experiments from programs.
 
