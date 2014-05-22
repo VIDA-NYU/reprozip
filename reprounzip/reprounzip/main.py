@@ -7,7 +7,7 @@ import logging
 import sys
 
 import reprounzip.graph
-from reprounzip.unpack import installpkgs, create_chroot
+from reprounzip.unpack import installpkgs, create_chroot, create_vagrant
 
 
 def graph(args):
@@ -79,6 +79,17 @@ def main():
     parser_chroot.add_argument('target', nargs=1,
                                help="Directory to create")
     parser_chroot.set_defaults(func=create_chroot)
+
+    # Creates a virtual machine with Vagrant
+    parser_vagrant = subparsers.add_parser(
+            'vagrant', parents=[options],
+            help="Unpacks the files and sets up the experiment to be run in "
+            "Vagrant")
+    parser_vagrant.add_argument('pack', nargs=1,
+                                help="Pack to extract")
+    parser_vagrant.add_argument('target', nargs=1,
+                                help="Directory to create")
+    parser_vagrant.set_defaults(func=create_vagrant)
 
     args = parser.parse_args()
     levels = [logging.WARNING, logging.INFO, logging.DEBUG]

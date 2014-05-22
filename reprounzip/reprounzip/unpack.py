@@ -21,6 +21,11 @@ def shell_escape(s):
                       .replace('$', '\\$'))
 
 
+def rb_escape(s):
+    return "'%s'" % (s.replace('\\', '\\\\')
+                      .replace("'", "\\'"))
+
+
 def load_config(pack):
     tmp = tempfile.mkdtemp(prefix='reprozip_')
     try:
@@ -110,16 +115,15 @@ class AptInstaller(object):
                 sys.stderr.write("    %s\n" % pkg)
         assert p.returncode == 0
 
+    def update_script(self):
+        return '%s update' % self.bin
 
-def installpkgs(args):
-    pack = args.pack[0]
+    def install_script(self, packages):
+        return '%s install -y %s' % (self.bin,
+                                     ' '.join(pkg.name for pkg in packages))
 
-    # Loads config
-    runs, packages, other_files = load_config(pack)
 
-    # Identifies current distribution
-    distribution = platform.linux_distribution()[0].lower()
-
+def identify_distribution(runs):
     # Identifies original distribution
     orig_distribution = set(run['distribution'][0].lower() for run in runs)
     if len(orig_distribution) > 1:
@@ -132,6 +136,14 @@ def installpkgs(args):
                          "on?\n")
         sys.exit(1)
     orig_distribution, = orig_distribution
+    return orig_distribution
+
+
+def select_installer(pack, runs):
+    # Identifies current distribution
+    distribution = platform.linux_distribution()[0].lower()
+
+    orig_distribution = identify_distribution(runs)
 
     # Checks that the distributions match
     if set([orig_distribution, distribution]) == set(['ubuntu', 'debian']):
@@ -156,6 +168,23 @@ def installpkgs(args):
         sys.stderr.write("Your current distribution, \"%s\", is not "
                          "supported\n" % distribution.capitalize())
         sys.exit(1)
+
+    return distribution.capitalize(), installer
+
+
+def select_box(runs):
+    orig_distribution = identify_distribution(runs)
+    # TODO
+    return 'hashicorp/precise32'
+
+
+def installpkgs(args):
+    pack = args.pack[0]
+
+    # Loads config
+    runs, packages, other_files = load_config(pack)
+
+    distribution, installer = select_installer(pack, runs)
 
     # Installs packages
     r = installer.install(packages, assume_yes=args.assume_yes)
@@ -240,3 +269,79 @@ def create_chroot(args):
 
     print("Experiment set up, run %s to start" % (
           os.path.join(target, 'script.sh')))
+
+
+def create_vagrant(args):
+    pack = args.pack[0]
+    target = args.target[0]
+    if os.path.exists(target):
+        sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    # Loads config
+    runs, packages, other_files = load_config(pack)
+
+    distribution, installer = select_installer(pack, runs)
+    box = select_box(runs)
+
+    os.mkdir(target)
+
+    # Writes setup script
+    with open(os.path.join(target, 'setup.sh'), 'w') as fp:
+        fp.write('#!/bin/sh\n\n')
+        # Makes sure the start script is executable
+        fp.write('chmod +x script.sh\n\n')
+        # Updates package sources
+        fp.write(installer.update_script())
+        fp.write('\n')
+        # Installs necessary packages
+        fp.write(installer.install_script(packages))
+        fp.write('\n\n')
+        # TODO : Compare package versions (painful because of sh)
+        # Untar
+        fp.write('cd /\n')
+        fp.write('tar zxf /vagrant/experiment.rpz --exclude=METADATA\n')
+
+    # Copies pack
+    shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))
+
+    # Writes start script
+    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+        fp.write('#!/bin/sh\n\n')
+        for run in runs:
+            fp.write('cd %s\n' % shell_escape(run['workingdir']))
+            if os.path.basename(run['binary']) != run['argv'][0]:
+                fp.write('exec -a %s %s\n' % (
+                        shell_escape(run['argv'][0]),
+                        ' '.join(shell_escape(a)
+                                 for a in [run['binary']] + run['argv'][1:])))
+            else:
+                fp.write('exec %s\n' % ' '.join(
+                        shell_escape(a)
+                        for a in [run['binary']] + run['argv'][1:]))
+    # TODO : Copy /bin/sh over and use /bin/sh -c exec or no exec
+
+    # Writes Vagrant file
+    with open(os.path.join(target, 'Vagrantfile'), 'w') as fp:
+        # Vagrant header and version
+        fp.write('# -*- mode: ruby -*-\n'
+                 '# vi: set ft=ruby\n\n'
+                 'VAGRANTFILE_API_VERSION = "2"\n\n'
+                 'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
+        # Selects which box to install
+        fp.write('  config.vm.box = "%s"\n' % box)
+        # Run the setup script on the virtual machine
+        fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
+
+        fp.write('end\n')
+
+    if not target:
+        target_dir = './'
+    elif target.endswith('/'):
+        target_dir = target
+    else:
+        target_dir = target + '/'
+    print("Vagrantfile ready\n"
+          "Create the virtual machine by running 'vagrant up' from %s\n"
+          "Then, ssh into it (for example using 'vagrant ssh') and run "
+          "'sh script.sh'" % target_dir)
