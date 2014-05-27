@@ -13,6 +13,7 @@ import subprocess
 
 import reprounzip.common
 from reprounzip.common import FILE_WDIR
+from reprounzip.utils import find_all_links
 
 
 def shell_escape(s):
@@ -214,6 +215,31 @@ def create_chroot(args):
     os.mkdir(target)
     root = os.path.abspath(os.path.join(target, 'root'))
     os.mkdir(root)
+
+    # Checks that everything was packed
+    packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
+    if packages_not_packed:
+        sys.stderr.write("Error: According to configuration, some files were "
+                         "left out because they belong to the following "
+                         "packages:\n")
+        sys.stderr.write(''.join('    %s\n' % pkg
+                                 for pkg in packages_not_packed))
+        sys.stderr.write("Will copy files from HOST SYSTEM\n")
+        for pkg in packages_not_packed:
+            for ff in pkg.files:
+                for f in find_all_links(ff.path):
+                    if not os.path.exists(f):
+                        sys.stderr.write("Missing file %s (from package %s)"
+                                         "\n" % (f, pkg.name))
+                    dest = f
+                    if dest[0] == '/':
+                        dest = dest[1:]
+                    dest = os.path.join(root, dest)
+                    makedir(os.path.dirname(dest))
+                    if os.path.islink(f):
+                        os.symlink(os.readlink(f), dest)
+                    else:
+                        shutil.copy(f, dest)
 
     # Unpacks files
     tar = tarfile.open(pack, 'r:*')

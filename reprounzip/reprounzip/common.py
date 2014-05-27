@@ -40,6 +40,10 @@ class Package(CommonEqualityMixin):
     def add_file(self, filename):
         self.files.append(filename)
 
+    def __unicode__(self):
+        return '%s (%s)' % (self.name, self.version)
+    __str__ = __unicode__
+
 
 class InvalidConfig(ValueError):
     """Configuration file is invalid.
