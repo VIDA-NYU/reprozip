@@ -157,7 +157,12 @@ def trace(binary, argv, directory, append):
         runs, oldpkgs, oldfiles = [], [], []
     distribution = platform.linux_distribution()[0:2]
     runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd,
-                 'distribution': distribution,
+                 'architecture': platform.machine(),
+                 'distribution': distribution, 'hostname': platform.node(),
+                 'system': [platform.system(), platform.release()],
+                 'envp': dict(os.environ),
+                 'uid': os.getuid(),
+                 'gid': os.getgid(),
                  'signal' if c & 0x0100 else 'exitcode': c & 0xFF})
     if oldconfig:
         files, packages = merge_files(files, packages,
