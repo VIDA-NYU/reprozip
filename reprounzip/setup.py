@@ -34,7 +34,5 @@ setup(name='reprounzip',
           'Development Status :: 2 - Pre-Alpha',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: C',
           'Topic :: Scientific/Engineering',
           'Topic :: System :: Archiving'])
