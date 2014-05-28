@@ -54,21 +54,20 @@ def find_all_links(filename):
     return list(files) + [path]
 
 
-def safe_abspath(filename):
-    """Turns an absolute path containing '..' into a filename without '..'.
+def data_path(filename, prefix='DATA/'):
+    """Computes the filename to store in the archive.
 
-    Also removes initial '/'.
+    Turns an absolute path containing '..' into a filename without '..', and
+    prefixes with DATA/.
 
     Example:
 
-    >>> safe_abspath('/var/lib/../../../../tmp/test')
-    'tmp/test'
-    >>> safe_abspath('/var/lib/../www/index.html')
-    'var/www/index.html'
-
-    This is used to build tar filenames.
+    >>> data_path('/var/lib/../../../../tmp/test')
+    'DATA/tmp/test'
+    >>> data_path('/var/lib/../www/index.html')
+    'DATA/var/www/index.html'
     """
-    return os.path.normpath(filename)[1:]
+    return prefix + os.path.normpath(filename)[1:]
 
 
 def pack(target, directory):
@@ -118,8 +117,8 @@ def pack(target, directory):
             for f in pkg.files:
                 # This path is absolute, but not canonical
                 for t in find_all_links(f.path):
-                    logging.debug("%s -> %s" % (t, safe_abspath(t)))
-                    tar.add(t, safe_abspath(t))
+                    logging.debug("%s -> %s" % (t, data_path(t)))
+                    tar.add(t, data_path(t))
         else:
             logging.info("NOT adding files from package %s" % pkg.name)
 
@@ -127,7 +126,7 @@ def pack(target, directory):
     logging.info("Adding other files...")
     for f in other_files:
         logging.debug("%s -> %s" % (os.path.abspath(f.path),
-                                    safe_abspath(f.path)))
-        tar.add(f.path, safe_abspath(f.path))
+                                    data_path(f.path)))
+        tar.add(f.path, data_path(f.path))
 
     tar.close()
