@@ -137,41 +137,41 @@ class AptInstaller(object):
                                      ' '.join(pkg.name for pkg in packages))
 
 
-def select_installer(pack, runs):
-    # Identifies current distribution
-    distribution = platform.linux_distribution()[0].lower()
-
+def select_installer(pack, runs,
+        target_distribution=platform.linux_distribution()[0].lower()):
     orig_distribution = runs[0]['distribution'][0].lower()
 
     # Checks that the distributions match
-    if set([orig_distribution, distribution]) == set(['ubuntu', 'debian']):
+    if (set([orig_distribution, target_distribution]) ==
+            set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
         sys.stderr.write("Warning: Installing on %s but pack was generated on "
                          "%s\n" % (
-                             distribution.capitalize(),
+                             target_distribution.capitalize(),
                              orig_distribution.capitalize()))
-    elif orig_distribution != distribution:
+    elif orig_distribution != target_distribution:
         sys.stderr.write("Error: Installing on %s but pack was generated on %s"
                          "\n" % (
-                             distribution.capitalize(),
+                             target_distribution.capitalize(),
                              orig_distribution.capitalize()))
         sys.exit(1)
 
     # Selects installation method
-    if distribution == 'ubuntu':
+    if target_distribution == 'ubuntu':
         installer = AptInstaller('apt-get')
-    elif distribution == 'debian':
+    elif target_distribution == 'debian':
         installer = AptInstaller('aptitude')
     else:
         sys.stderr.write("Your current distribution, \"%s\", is not "
-                         "supported\n" % distribution.capitalize())
+                         "supported\n" % target_distribution.capitalize())
         sys.exit(1)
 
     return installer
 
 
 def select_box(runs):
-    distribution, version = runs[0]['distribution'][0].lower()
+    distribution, version = runs[0]['distribution']
+    distribution = distribution.lower()
     architecture = runs[0]['architecture']
 
     if architecture not in ('i686', 'x86_64'):
@@ -183,21 +183,22 @@ def select_box(runs):
             sys.stderr.write("Warning: using Ubuntu 12.01 'Precise' instead "
                              "of '%s'\n" % version)
         if architecture == 'i686':
-            return 'hashicorp/precise32'
+            return 'ubuntu', 'hashicorp/precise32'
         else:  # architecture == 'x86_64':
-            return 'hashicorp/precise64'
+            return 'ubuntu', 'hashicorp/precise64'
 
     # Debian
     elif distribution != 'debian':
         sys.stderr.write("Warning: unsupported distribution %s, using Debian"
                          "\n" % distribution)
-    if distribution == 'debian' and version != '7':
+    if (distribution == 'debian' and
+            version != '7' and not version.startswith('jessie')):
         sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
                          "\n" % version)
     if architecture == 'i686':
-        return 'remram/debian-7.5-i386'
+        return 'debian', 'remram/debian-7.5-i386'
     else:  # architecture == 'x86_64':
-        return 'remram/debian-7.5-amd64'
+        return 'debian', 'remram/debian-7.5-amd64'
 
 
 def installpkgs(args):
@@ -326,22 +327,26 @@ def create_vagrant(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
+    target_distribution, box = select_box(runs)
+
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
     if use_chroot:
         packages = [pkg for pkg in packages if not pkg.packfiles]
+        if packages:
+            sys.stderr.write("Warning: Some packages were not packed, so "
+                             "we'll install and copy their files\n"
+                             "Packages that are missing:\n%s\n" %
+                             ' '.join(pkg.name for pkg in packages))
 
     if packages:
-        installer = select_installer(pack, runs)
-    box = select_box(runs)
+        installer = select_installer(pack, runs, target_distribution)
 
     os.mkdir(target)
 
     # Writes setup script
     with open(os.path.join(target, 'setup.sh'), 'w') as fp:
         fp.write('#!/bin/sh\n\n')
-        # Makes sure the start script is executable
-        fp.write('chmod +x script.sh\n\n')
         if packages:
             # Updates package sources
             fp.write(installer.update_script())
