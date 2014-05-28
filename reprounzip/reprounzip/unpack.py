@@ -174,7 +174,7 @@ def select_installer(pack, runs):
                          "supported\n" % distribution.capitalize())
         sys.exit(1)
 
-    return distribution.capitalize(), installer
+    return installer
 
 
 def select_box(runs):
@@ -189,7 +189,7 @@ def installpkgs(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    distribution, installer = select_installer(pack, runs)
+    installer = select_installer(pack, runs)
 
     # Installs packages
     r = installer.install(packages, assume_yes=args.assume_yes)
@@ -289,15 +289,10 @@ def create_chroot(args):
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = "cd %s && " % shell_escape(run['workingdir'])
-            if os.path.basename(run['binary']) != run['argv'][0]:
-                cmd += 'exec -a %s %s' % (
-                        shell_escape(run['argv'][0]),
-                        ' '.join(shell_escape(a)
-                                 for a in [run['binary']] + run['argv'][1:]))
-            else:
-                cmd += 'exec %s' % ' '.join(
-                        shell_escape(a)
-                        for a in [run['binary']] + run['argv'][1:])
+            # FIXME : Use exec -a or something if binary != argv[0]
+            cmd += ' '.join(
+                    shell_escape(a)
+                    for a in [run['binary']] + run['argv'][1:])
             fp.write('chroot --userspec=1000 %s /bin/sh -c %s\n' % (
                      shell_escape(root),
                      shell_escape(cmd)))
@@ -316,7 +311,7 @@ def create_vagrant(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    distribution, installer = select_installer(pack, runs)
+    installer = select_installer(pack, runs)
     box = select_box(runs)
 
     os.mkdir(target)
@@ -342,19 +337,13 @@ def create_vagrant(args):
 
     # Writes start script
     with open(os.path.join(target, 'script.sh'), 'w') as fp:
-        fp.write('#!/bin/sh\n\n')
+        fp.write('#!/bin/bash\n\n')
         for run in runs:
             fp.write('cd %s\n' % shell_escape(run['workingdir']))
-            if os.path.basename(run['binary']) != run['argv'][0]:
-                fp.write('exec -a %s %s\n' % (
-                         shell_escape(run['argv'][0]),
-                         ' '.join(shell_escape(a)
-                                  for a in [run['binary']] + run['argv'][1:])))
-            else:
-                fp.write('exec %s\n' % ' '.join(
-                         shell_escape(a)
-                         for a in [run['binary']] + run['argv'][1:]))
-    # TODO : Copy /bin/sh over and use /bin/sh -c exec or no exec
+            # FIXME : Use exec -a or something if binary != argv[0]
+            fp.write('%s\n' % ' '.join(
+                     shell_escape(a)
+                     for a in [run['binary']] + run['argv'][1:]))
 
     # Writes Vagrant file
     with open(os.path.join(target, 'Vagrantfile'), 'w') as fp:

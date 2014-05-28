@@ -5,7 +5,7 @@ import os
 import sqlite3
 import sys
 
-from reprounzip.common import FILE_READ, FILE_WRITE, load_config
+from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.utils import CommonEqualityMixin, escape
 
@@ -123,9 +123,10 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
-            process = processes[r_process]
-            files.add(r_name)
-            edges.add((process, r_name, r_mode, None))
+            if r_mode != FILE_WDIR:
+                process = processes[r_process]
+                files.add(r_name)
+                edges.add((process, r_name, r_mode, None))
 
         elif event_type == 'exec':
             r_name, r_timestamp, r_process, r_argv = data
