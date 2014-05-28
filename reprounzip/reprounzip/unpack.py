@@ -128,27 +128,11 @@ class AptInstaller(object):
                                      ' '.join(pkg.name for pkg in packages))
 
 
-def identify_distribution(runs):
-    # Identifies original distribution
-    orig_distribution = set(run['distribution'][0].lower() for run in runs)
-    if len(orig_distribution) > 1:
-        sys.stderr.write("Error: Multiple distributions were used in "
-                         "generating the original pack\nThis is very "
-                         "unusual\n")
-        sys.exit(1)
-    if not orig_distribution:
-        sys.stderr.write("Error: No run in pack configuration. What is going "
-                         "on?\n")
-        sys.exit(1)
-    orig_distribution, = orig_distribution
-    return orig_distribution
-
-
 def select_installer(pack, runs):
     # Identifies current distribution
     distribution = platform.linux_distribution()[0].lower()
 
-    orig_distribution = identify_distribution(runs)
+    orig_distribution = runs[0]['distribution'][0].lower()
 
     # Checks that the distributions match
     if set([orig_distribution, distribution]) == set(['ubuntu', 'debian']):
@@ -178,9 +162,33 @@ def select_installer(pack, runs):
 
 
 def select_box(runs):
-    orig_distribution = identify_distribution(runs)
-    # TODO
-    return 'hashicorp/precise32'
+    distribution, version = runs[0]['distribution'][0].lower()
+    architecture = runs[0]['architecture']
+
+    if architecture not in ('i686', 'x86_64'):
+        sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+
+    # Ubuntu
+    if distribution == 'ubuntu':
+        if version != '12.04':
+            sys.stderr.write("Warning: using Ubuntu 12.01 'Precise' instead "
+                             "of '%s'\n" % version)
+        if architecture == 'i686':
+            return 'hashicorp/precise32'
+        else:  # architecture == 'x86_64':
+            return 'hashicorp/precise64'
+
+    # Debian
+    elif distribution != 'debian':
+        sys.stderr.write("Warning: unsupported distribution %s, using Debian"
+                         "\n" % distribution)
+    if distribution == 'debian' and version != '7':
+        sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
+                         "\n" % version)
+    if architecture == 'i686':
+        return 'remram/debian-7.5-i386'
+    else:  # architecture == 'x86_64':
+        return 'remram/debian-7.5-amd64'
 
 
 def installpkgs(args):
