@@ -9,6 +9,7 @@ import os
 import platform
 import re
 import sqlite3
+import string
 import subprocess
 
 import reprounzip.common
@@ -17,9 +18,12 @@ from reprounzip.utils import find_all_links
 
 
 def shell_escape(s):
-    return '"%s"' % (s.replace('\\', '\\\\')
-                      .replace('"', '\\"')
-                      .replace('$', '\\$'))
+    if any(c in s for c in string.whitespace + '$\\"\''):
+        return '"%s"' % (s.replace('\\', '\\\\')
+                          .replace('"', '\\"')
+                          .replace('$', '\\$'))
+    else:
+        return s
 
 
 def rb_escape(s):
