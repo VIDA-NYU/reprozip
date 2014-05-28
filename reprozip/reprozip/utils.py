@@ -1,3 +1,7 @@
+# This file is shared:
+#   reprozip/reprozip/utils.py
+#   reprounzip/reprounzip/utils.py
+
 from __future__ import unicode_literals
 
 import os

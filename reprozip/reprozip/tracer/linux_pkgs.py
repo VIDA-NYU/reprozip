@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import platform
 import subprocess
 
-from reprozip.tracer.common import Package
+from reprozip.common import Package
 
 
 magic_dirs = ('/dev', '/proc', '/sys')

@@ -6,7 +6,7 @@ import sys
 import tarfile
 import tempfile
 
-from reprozip.tracer.common import load_config
+from reprozip.common import load_config
 from reprozip.utils import find_all_links
 
 

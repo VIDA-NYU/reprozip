@@ -10,7 +10,8 @@ from reprozip import _pytracer
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.orderedset import OrderedSet
-from reprozip.tracer.common import File, load_config, save_config
+from reprozip.common import File, load_config, save_config, \
+    FILE_READ, FILE_WRITE
 
 
 class TracedFile(File):
@@ -73,9 +74,9 @@ def get_files(database):
     for r_name, r_mode in opened_files:
         if r_name not in files:
             f = TracedFile(r_name)
-            if r_mode & _pytracer.FILE_WRITE:
+            if r_mode & FILE_WRITE:
                 f.write()
-            elif r_mode & _pytracer.FILE_READ:
+            elif r_mode & FILE_READ:
                 f.read()
             else:
                 continue
