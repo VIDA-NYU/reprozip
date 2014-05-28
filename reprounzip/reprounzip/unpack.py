@@ -338,7 +338,8 @@ def create_vagrant(args):
         # TODO : Compare package versions (painful because of sh)
         # Untar
         fp.write('cd /\n')
-        fp.write('tar zxf /vagrant/experiment.rpz --exclude=METADATA\n')
+        fp.write('tar zxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
+                 shell_escape(f.path) for f in other_files))
 
     # Copies pack
     shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))
