@@ -217,9 +217,11 @@ def create_chroot(args):
 
     # Unpacks files
     tar = tarfile.open(pack, 'r:*')
-    members = filter(lambda m: not m.name.startswith('METADATA/'),
-                     tar.getmembers())
+    members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
+    for m in members:
+        m.name = m.name[5:]
     tar.extractall(root, members)
+    tar.close()
 
     # Copies /bin/sh + dependencies
     fmt = re.compile(r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$')
