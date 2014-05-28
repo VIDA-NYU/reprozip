@@ -31,6 +31,15 @@ def rb_escape(s):
                       .replace("'", "\\'"))
 
 
+def makedir(path):
+    if not os.path.exists(path):
+        makedir(os.path.dirname(path))
+        try:
+            os.mkdir(path)
+        except OSError:
+            pass
+
+
 def load_config(pack):
     tmp = tempfile.mkdtemp(prefix='reprozip_')
     try:
@@ -192,6 +201,8 @@ def select_box(runs):
 
 
 def installpkgs(args):
+    """Installs the necessary packages on the current machine.
+    """
     pack = args.pack[0]
 
     # Loads config
@@ -205,16 +216,9 @@ def installpkgs(args):
         sys.exit(r)
 
 
-def makedir(path):
-    if not os.path.exists(path):
-        makedir(os.path.dirname(path))
-        try:
-            os.mkdir(path)
-        except OSError:
-            pass
-
-
 def create_chroot(args):
+    """Unpacks the experiment in a folder so it can be run with chroot.
+    """
     pack = args.pack[0]
     target = args.target[0]
     if os.path.exists(target):
@@ -310,16 +314,25 @@ def create_chroot(args):
 
 
 def create_vagrant(args):
+    """Sets up the experiment to be run in a Vagrant-built virtual machine.
+    """
     pack = args.pack[0]
     target = args.target[0]
     if os.path.exists(target):
         sys.stderr.write("Error: Target directory exists\n")
         sys.exit(1)
+    use_chroot = args.use_chroot
 
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    installer = select_installer(pack, runs)
+    # If using chroot, we might still need to install packages to get missing
+    # (not packed) files
+    if use_chroot:
+        packages = [pkg for pkg in packages if not pkg.packfiles]
+
+    if packages:
+        installer = select_installer(pack, runs)
     box = select_box(runs)
 
     os.mkdir(target)
@@ -329,15 +342,33 @@ def create_vagrant(args):
         fp.write('#!/bin/sh\n\n')
         # Makes sure the start script is executable
         fp.write('chmod +x script.sh\n\n')
-        # Updates package sources
-        fp.write(installer.update_script())
-        fp.write('\n')
-        # Installs necessary packages
-        fp.write(installer.install_script(packages))
-        fp.write('\n\n')
-        # TODO : Compare package versions (painful because of sh)
+        if packages:
+            # Updates package sources
+            fp.write(installer.update_script())
+            fp.write('\n')
+            # Installs necessary packages
+            fp.write(installer.install_script(packages))
+            fp.write('\n\n')
+
+            if use_chroot:
+                for pkg in packages:
+                    fp.write('# Copies files from package %s\n' % pkg.name)
+                    for ff in pkg.files:
+                        for f in find_all_links(ff.path):
+                            dest = f
+                            if dest[0] == '/':
+                                dest = dest[1:]
+                            dest = os.path.join('root', dest)
+                            fp.write('cp %s %s\n' % (shell_escape(f),
+                                                     shell_escape(dest)))
+                    fp.write('\n')
+            # TODO : Compare package versions (painful because of sh)
+
         # Untar
-        fp.write('cd /\n')
+        if use_chroot:
+            fp.write('cd root\n')
+        else:
+            fp.write('cd /\n')
         fp.write('tar zxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
                  shell_escape(f.path) for f in other_files))
 
