@@ -243,6 +243,9 @@ def create_chroot(args):
 
     # Unpacks files
     tar = tarfile.open(pack, 'r:*')
+    if any('..' in m.name for m in tar.getmembers()):
+        sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
+        sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
