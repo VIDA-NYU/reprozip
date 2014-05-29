@@ -25,9 +25,9 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 
     /* Converts argv from Python list to char[][] */
     {
-        argv_len = PyList_Size(py_argv);
         size_t i;
         int bad = 0;
+        argv_len = PyList_Size(py_argv);
         argv = malloc((argv_len + 1) * sizeof(char*));
         for(i = 0; i < argv_len; ++i)
         {

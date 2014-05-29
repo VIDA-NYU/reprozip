@@ -117,13 +117,13 @@ char *get_p_wd(pid_t pid)
         int ret;
         path = malloc(size);
         ret = readlink(proclink, path, size);
-        if(ret == -1)
+        if(ret < 0)
         {
             free(path);
             perror("readlink failed");
             return strdup("/UNKNOWN");
         }
-        else if(ret >= size)
+        else if((size_t)ret >= size)
         {
             free(path);
             size <<= 1;
