@@ -88,13 +88,13 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
 {
     FILE *fp;
     char dummy;
+    char *line = NULL;
+    size_t length = 0;
+    char previous_path[4096] = "";
+
     int len = snprintf(&dummy, 1, "/proc/%d/maps", pid);
     char *procfile = malloc(len + 1);
     snprintf(procfile, len + 1, "/proc/%d/maps", pid);
-#ifdef DEBUG
-    fprintf(stderr, "Parsing %s\n", procfile);
-#endif
-    fp = fopen(procfile, "r");
 
     /* Loops on lines
      * Format:
@@ -103,9 +103,12 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
      * b7721000-b7740000 r-xp 00000000 fe:00 901950     /lib/ld-2.18.so
      * bfe44000-bfe65000 rw-p 00000000 00:00 0          [stack]
      */
-    char *line = NULL;
-    size_t length = 0;
-    char previous_path[4096] = "";
+
+#ifdef DEBUG
+    fprintf(stderr, "Parsing %s\n", procfile);
+#endif
+    fp = fopen(procfile, "r");
+
     while((line = read_line(line, &length, fp)) != NULL)
     {
         unsigned long int addr_start, addr_end;
