@@ -5,10 +5,9 @@ import os
 import sqlite3
 import sys
 
-from reprozip import _pytracer
-from reprozip.orderedset import OrderedSet
-from reprozip.tracer.common import load_config
-from reprozip.utils import CommonEqualityMixin, escape
+from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
+from reprounzip.orderedset import OrderedSet
+from reprounzip.utils import CommonEqualityMixin, escape
 
 
 C_INITIAL = 0   # First process or don't know
@@ -124,9 +123,10 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
-            process = processes[r_process]
-            files.add(r_name)
-            edges.add((process, r_name, r_mode, None))
+            if r_mode != FILE_WDIR:
+                process = processes[r_process]
+                files.add(r_name)
+                edges.add((process, r_name, r_mode, None))
 
         elif event_type == 'exec':
             r_name, r_timestamp, r_process, r_argv = data
@@ -208,10 +208,10 @@ def generate(target, directory, all_forks=False):
             if mode is None:
                 fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (
                          escape(f), id(prog), escape(' '.join(argv))))
-            elif mode & _pytracer.FILE_WRITE:
+            elif mode & FILE_WRITE:
                 fp.write('    prog%d -> "%s" [color=red];\n' % (
                          id(prog), escape(f)))
-            elif mode & _pytracer.FILE_READ:
+            elif mode & FILE_READ:
                 fp.write('    "%s" -> prog%d [color=green];\n' % (
                          escape(f), id(prog)))
 

@@ -3,7 +3,10 @@
 case "$TEST_MODE"
 in
     run_program)
-        python setup.py install
+        (while read line; do echo "$line"; sh -c "$line" || exit $?; done)<<'EOF'
+        cd reprozip && python setup.py install
+        cd reprounzip && python setup.py install
+EOF
         ;;
     check_style)
         pip install flake8

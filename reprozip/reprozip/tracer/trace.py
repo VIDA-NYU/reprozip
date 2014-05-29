@@ -10,7 +10,8 @@ from reprozip import _pytracer
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.orderedset import OrderedSet
-from reprozip.tracer.common import File, load_config, save_config
+from reprozip.common import File, load_config, save_config, \
+    FILE_READ, FILE_WRITE
 
 
 class TracedFile(File):
@@ -73,9 +74,9 @@ def get_files(database):
     for r_name, r_mode in opened_files:
         if r_name not in files:
             f = TracedFile(r_name)
-            if r_mode & _pytracer.FILE_WRITE:
+            if r_mode & FILE_WRITE:
                 f.write()
-            elif r_mode & _pytracer.FILE_READ:
+            elif r_mode & FILE_READ:
                 f.read()
             else:
                 continue
@@ -157,7 +158,12 @@ def trace(binary, argv, directory, append):
         runs, oldpkgs, oldfiles = [], [], []
     distribution = platform.linux_distribution()[0:2]
     runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd,
-                 'distribution': distribution,
+                 'architecture': platform.machine(),
+                 'distribution': distribution, 'hostname': platform.node(),
+                 'system': [platform.system(), platform.release()],
+                 'envp': dict(os.environ),
+                 'uid': os.getuid(),
+                 'gid': os.getgid(),
                  'signal' if c & 0x0100 else 'exitcode': c & 0xFF})
     if oldconfig:
         files, packages = merge_files(files, packages,

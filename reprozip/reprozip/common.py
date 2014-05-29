@@ -1,11 +1,20 @@
+# This file is shared:
+#   reprozip/reprozip/common.py
+#   reprounzip/reprounzip/common.py
+
 from __future__ import unicode_literals
 
 from datetime import datetime
 import os
 import yaml
 
-import reprozip
-from reprozip.utils import CommonEqualityMixin, escape, hsize
+from . import __version__ as reprozip_version
+from .utils import CommonEqualityMixin, escape, hsize
+
+
+FILE_READ = 0x01
+FILE_WRITE = 0x02
+FILE_WDIR = 0x04
 
 
 class File(CommonEqualityMixin):
@@ -38,6 +47,10 @@ class Package(CommonEqualityMixin):
 
     def add_file(self, filename):
         self.files.append(filename)
+
+    def __unicode__(self):
+        return '%s (%s)' % (self.name, self.version)
+    __str__ = __unicode__
 
 
 class InvalidConfig(ValueError):
@@ -117,7 +130,7 @@ def save_config(filename, runs, packages, other_files):
 
 # Run info
 version: "{version!s}"
-""".format(version=escape(reprozip.__version__),
+""".format(version=escape(reprozip_version),
            date=datetime.now().isoformat()))
         fp.write(dump({'runs': runs}).decode('utf-8'))
         fp.write("""\

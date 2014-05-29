@@ -9,10 +9,9 @@ import sqlite3
 import sys
 import tempfile
 
-import reprozip.graph
+from reprozip import _pytracer
 import reprozip.pack
 import reprozip.tracer.trace
-from reprozip import _pytracer
 
 
 def print_db(database):
@@ -136,15 +135,6 @@ def trace(args):
     reprozip.tracer.trace.trace(args.cmdline[0], argv, args.dir, args.append)
 
 
-def graph(args):
-    """graph subcommand.
-
-    Reads in the trace sqlite3 database and writes out a graph in GraphViz DOT
-    format.
-    """
-    reprozip.graph.generate(args.target[0], args.dir, args.all_forks)
-
-
 def pack(args):
     """pack subcommand.
 
@@ -208,16 +198,6 @@ def main():
             help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
-
-    # graph command
-    parser_graph = subparsers.add_parser(
-            'graph', parents=[options],
-            help="Generates a provenance graph from the trace data")
-    parser_graph.add_argument('target', nargs=1,
-                              help="Destination DOT file")
-    parser_graph.add_argument('-F', '--all-forks', action='store_true',
-                              help="Show forked processes before they exec")
-    parser_graph.set_defaults(func=graph)
 
     # pack command
     parser_pack = subparsers.add_parser(
