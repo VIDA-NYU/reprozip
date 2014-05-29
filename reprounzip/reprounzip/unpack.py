@@ -17,6 +17,9 @@ from reprounzip.common import FILE_WDIR
 from reprounzip.utils import find_all_links
 
 
+THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
+
+
 def shell_escape(s):
     if any(c in s for c in string.whitespace + '$\\"\''):
         return '"%s"' % (s.replace('\\', '\\\\')
@@ -65,7 +68,12 @@ def list_directories(pack):
     tmp = tempfile.mkdtemp(prefix='reprozip_')
     try:
         tar = tarfile.open(pack, 'r:*')
-        tar.extract('METADATA/trace.sqlite3', path=tmp)
+        try:
+            tar.extract('METADATA/trace.sqlite3', path=tmp)
+        except KeyError:
+            sys.stderr.write("Pack doesn't have trace.sqlite3, can't create "
+                             "working directories\n")
+            return set()
         database = os.path.join(tmp, 'METADATA/trace.sqlite3')
         tar.close()
         conn = sqlite3.connect(database)
@@ -137,8 +145,7 @@ class AptInstaller(object):
                                      ' '.join(pkg.name for pkg in packages))
 
 
-def select_installer(pack, runs,
-        target_distribution=platform.linux_distribution()[0].lower()):
+def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     orig_distribution = runs[0]['distribution'][0].lower()
 
     # Checks that the distributions match
@@ -219,6 +226,10 @@ def installpkgs(args):
 
 def create_chroot(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
+
+    All the files in the pack are unpacked; system files are copied only if
+    they were not packed, and for /bin/sh and dependencies (if they were not
+    packed).
     """
     pack = args.pack[0]
     target = args.target[0]
@@ -246,8 +257,10 @@ def create_chroot(args):
             for ff in pkg.files:
                 for f in find_all_links(ff.path):
                     if not os.path.exists(f):
-                        sys.stderr.write("Missing file %s (from package %s)"
-                                         "\n" % (f, pkg.name))
+                        sys.stderr.write(
+                                "Missing file %s (from package %s) on host, "
+                                "experiment will probably miss it\n" % (
+                                    f, pkg.name))
                     dest = f
                     if dest[0] == '/':
                         dest = dest[1:]
@@ -284,12 +297,15 @@ def create_chroot(args):
                 dest = dest[1:]
             dest = os.path.join(root, dest)
             makedir(os.path.dirname(dest))
-            shutil.copy(f, dest)
+            if not os.path.exists(dest):
+                shutil.copy(f, dest)
     finally:
         p.wait()
     assert p.returncode == 0
     makedir(os.path.join(root, 'bin'))
-    shutil.copy('/bin/sh', os.path.join(root, 'bin/sh'))
+    dest = os.path.join(root, 'bin/sh')
+    if not os.path.exists(dest):
+        shutil.copy('/bin/sh', dest)
 
     # Makes sure all the directories used as working directories exist
     # (they already do if files from them are used, but empty directories do
@@ -316,6 +332,18 @@ def create_chroot(args):
 
 def create_vagrant(args):
     """Sets up the experiment to be run in a Vagrant-built virtual machine.
+
+    This can either build a chroot or not.
+
+    If building a chroot, we do just like without Vagrant: we copy all the
+    files and only get what's missing from the host. But we do install
+    automatically the packages whose files are required.
+
+    If not building a chroot, we install all the packages, and only unpack
+    files that don't come from packages.
+
+    In short: files from packages with packfiles=True will only be used if
+    building a chroot.
     """
     pack = args.pack[0]
     target = args.target[0]
