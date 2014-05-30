@@ -325,6 +325,7 @@ def create_chroot(args):
             fp.write('chroot --userspec=1000 %s /bin/sh -c %s\n' % (
                      shell_escape(root),
                      shell_escape(cmd)))
+        # TODO : use uid/gid, not root
 
     print("Experiment set up, run %s to start" % (
           os.path.join(target, 'script.sh')))
@@ -402,12 +403,14 @@ def create_vagrant(args):
             fp.write('mkdir /experimentroot; cd /experimentroot\n')
         else:
             fp.write('cd /\n')
-        fp.write('tar zxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
+        fp.write('tar zpxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
                  shell_escape('DATA' + f.path) for f in other_files))
 
         # TODO : With chroot:
         #   * need to copy /bin/sh + deps (ldd)
         #   * script.sh needs to call chroot /experimentroot /bin/sh -c ...
+
+        # TODO : Use correct permissions, not root
 
     # Copies pack
     shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))

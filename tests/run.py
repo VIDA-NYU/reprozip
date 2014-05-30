@@ -65,3 +65,10 @@ with in_temp_dir():
           "Test and press enter")
     sys.stdin.readline()
     shutil.rmtree('/vagrant/simplevagrantchroot')
+    # Unpack usual Vagrant
+    subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant',
+                           'simple.rpz', '/vagrant/simplevagrant'])
+    print("\nVagrant project set up in simplevagrant\n"
+          "Test and press enter")
+    sys.stdin.readline()
+    shutil.rmtree('/vagrant/simplevagrant')
