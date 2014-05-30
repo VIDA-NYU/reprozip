@@ -399,11 +399,15 @@ def create_vagrant(args):
 
         # Untar
         if use_chroot:
-            fp.write('cd root\n')
+            fp.write('mkdir /experimentroot; cd /experimentroot\n')
         else:
             fp.write('cd /\n')
         fp.write('tar zxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
-                 shell_escape(f.path) for f in other_files))
+                 shell_escape('DATA' + f.path) for f in other_files))
+
+        # TODO : With chroot:
+        #   * need to copy /bin/sh + deps (ldd)
+        #   * script.sh needs to call chroot /experimentroot /bin/sh -c ...
 
     # Copies pack
     shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))

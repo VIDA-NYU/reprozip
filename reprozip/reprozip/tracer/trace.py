@@ -60,6 +60,7 @@ def get_files(database):
             ORDER BY timestamp;
             ''')
     for r_name, in executed_files:
+        r_name = os.path.abspath(r_name)
         if r_name not in files:
             f = TracedFile(r_name)
             f.read()
@@ -72,6 +73,7 @@ def get_files(database):
             ORDER BY timestamp;
             ''')
     for r_name, r_mode in opened_files:
+        r_name = os.path.abspath(r_name)
         if r_name not in files:
             f = TracedFile(r_name)
             if r_mode & FILE_WRITE:

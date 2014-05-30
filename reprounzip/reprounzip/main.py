@@ -119,7 +119,7 @@ def main():
     parser_vagrant.add_argument('target', nargs=1,
                                 help="Directory to create")
     parser_vagrant.add_argument(
-            '--use-chroot',
+            '--use-chroot', action='store_true',
             help="Use a chroot and the original files in the virtual machine")
     parser_vagrant.set_defaults(func=create_vagrant)
 
