@@ -317,15 +317,16 @@ def create_chroot(args):
     with open(os.path.join(target, 'script.sh'), 'w') as fp:
         fp.write('#!/bin/sh\n\n')
         for run in runs:
-            cmd = "cd %s && " % shell_escape(run['workingdir'])
+            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
                     for a in [run['binary']] + run['argv'][1:])
-            fp.write('chroot --userspec=1000 %s /bin/sh -c %s\n' % (
+            userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
+            fp.write('chroot --userspec=%s %s /bin/sh -c %s\n' % (
+                     userspec,
                      shell_escape(root),
                      shell_escape(cmd)))
-        # TODO : use uid/gid, not root
 
     print("Experiment set up, run %s to start" % (
           os.path.join(target, 'script.sh')))
@@ -406,11 +407,7 @@ def create_vagrant(args):
         fp.write('tar zpxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
                  shell_escape('DATA' + f.path) for f in other_files))
 
-        # TODO : With chroot:
-        #   * need to copy /bin/sh + deps (ldd)
-        #   * script.sh needs to call chroot /experimentroot /bin/sh -c ...
-
-        # TODO : Use correct permissions, not root
+        # TODO : With chroot: need to copy /bin/sh + deps (ldd)
 
     # Copies pack
     shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))
@@ -419,11 +416,15 @@ def create_vagrant(args):
     with open(os.path.join(target, 'script.sh'), 'w') as fp:
         fp.write('#!/bin/bash\n\n')
         for run in runs:
-            fp.write('cd %s\n' % shell_escape(run['workingdir']))
+            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
             # FIXME : Use exec -a or something if binary != argv[0]
-            fp.write('%s\n' % ' '.join(
+            cmd += ' '.join(
                      shell_escape(a)
-                     for a in [run['binary']] + run['argv'][1:]))
+                     for a in [run['binary']] + run['argv'][1:])
+            userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
+            fp.write('chroot --userspec=%s /experimentroot /bin/sh -c %s\n' % (
+                     userspec,
+                     shell_escape(cmd)))
 
     # Writes Vagrant file
     with open(os.path.join(target, 'Vagrantfile'), 'w') as fp:
