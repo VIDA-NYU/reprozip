@@ -6,6 +6,7 @@ import platform
 import shutil
 import sqlite3
 
+from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
@@ -172,7 +173,7 @@ def trace(binary, argv, directory, append):
                                       oldfiles,
                                       oldpkgs)
 
-    save_config(config, runs, packages, files)
+    save_config(config, runs, packages, files, reprozip_version)
 
     print("Configuration file written in {}".format(config))
     print("Edit that file then run the packer -- "

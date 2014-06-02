@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 
+import argparse
 import heapq
 import os
+import shutil
 import sqlite3
 import sys
+import tarfile
+import tempfile
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
@@ -216,3 +220,51 @@ def generate(target, directory, all_forks=False):
                          escape(f), id(prog)))
 
         fp.write('}\n')
+
+
+def graph(args):
+    """graph subcommand.
+
+    Reads in the trace sqlite3 database and writes out a graph in GraphViz DOT
+    format.
+    """
+    if args.pack is not None:
+        tmp = tempfile.mkdtemp(prefix='reprozip_')
+        try:
+            tar = tarfile.open(args.pack, 'r:*')
+            f = tar.extractfile('METADATA/version')
+            version = f.read()
+            f.close()
+            if version != b'REPROZIP VERSION 1\n':
+                sys.stderr.write("Unknown pack format\n")
+                sys.exit(1)
+            try:
+                tar.extract('METADATA/config.yml', path=tmp)
+                tar.extract('METADATA/trace.sqlite3', path=tmp)
+            except KeyError as e:
+                sys.stderr.write("Error extracting from pack: %s" % e.args[0])
+            generate(args.target[0],
+                     os.path.join(tmp, 'METADATA'),
+                     args.all_forks)
+        finally:
+            shutil.rmtree(tmp)
+    else:
+        generate(args.target[0], args.dir, args.all_forks)
+
+
+def setup(subparsers, general_options):
+    parser_graph = subparsers.add_parser(
+            'graph', parents=[general_options],
+            help="Generates a provenance graph from the trace data")
+    parser_graph.add_argument('target', nargs=1,
+                              help="Destination DOT file")
+    parser_graph.add_argument('-F', '--all-forks', action='store_true',
+                              help="Show forked processes before they exec")
+    parser_graph.add_argument(
+            '-d', '--dir', default='.reprozip',
+            help="where the database and configuration file are stored "
+            "(default: ./.reprozip)")
+    parser_graph.add_argument(
+            'pack', nargs=argparse.OPTIONAL,
+            help="Pack to extract (defaults to reading from --dir)")
+    parser_graph.set_defaults(func=graph)

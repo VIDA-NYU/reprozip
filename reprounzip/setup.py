@@ -18,9 +18,14 @@ utility).
 """
 setup(name='reprounzip',
       version='0.0',
-      packages=['reprounzip'],
-      entry_points={'console_scripts': [
-          'reprounzip = reprounzip.main:main']},
+      packages=['reprounzip', 'reprounzip.unpackers'],
+      entry_points={
+          'console_scripts': [
+              'reprounzip = reprounzip.reprounzip:main'],
+          'reprounzip.unpackers': [
+              'graph = reprounzip.unpackers.graph:setup',
+              'default = reprounzip.unpackers.default:setup']},
+      namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
           'PyYAML'],
       description='Linux tool enabling reproducible experiments (unpacker)',

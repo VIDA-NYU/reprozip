@@ -8,7 +8,6 @@ from datetime import datetime
 import os
 import yaml
 
-from . import __version__ as reprozip_version
 from .utils import CommonEqualityMixin, escape, hsize
 
 
@@ -117,7 +116,7 @@ def write_package(fp, pkg, indent=0):
         write_file(fp, fi, indent + 1)
 
 
-def save_config(filename, runs, packages, other_files):
+def save_config(filename, runs, packages, other_files, reprozip_version):
     dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
     with open(filename, 'w') as fp:
         # Writes preamble
