@@ -70,6 +70,74 @@ def installpkgs(args):
         sys.exit(r)
 
 
+def create_directory(args):
+    """Unpacks the experiment in a folder.
+
+    Only the files that are not part of a package are copied (unless they are
+    missing from the system and were packed).
+    """
+    pack = args.pack[0]
+    target = args.target[0]
+    if os.path.exists(target):
+        sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    # Loads config
+    runs, packages, other_files = load_config(pack)
+
+    os.mkdir(target)
+    root = os.path.abspath(os.path.join(target, 'root'))
+    os.mkdir(root)
+
+    # Unpacks files
+    tar = tarfile.open(pack, 'r:*')
+    if any('..' in m.name for m in tar.getmembers()):
+        sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
+        sys.exit(1)
+    members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
+    for m in members:
+        m.name = m.name[5:]
+    tar.extractall(root, members)
+    tar.close()
+
+    # Makes sure all the directories used as working directories exist
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    for directory in list_directories(pack):
+        makedir(os.path.join(root, directory[1:]))
+
+    # Gets library paths
+    lib_dirs = []
+    p = subprocess.Popen(['/sbin/ldconfig', '-v', '-N'],
+                         stdout=subprocess.PIPE)
+    try:
+        for l in p.stdout:
+            if len(l) < 3 or l[0] in (b' ', b'\t'):
+                continue
+            if l.endswith(b':\n'):
+                lib_dirs.append(l[:-2].decode('ascii'))
+    finally:
+        p.wait()
+
+    # Writes start script
+    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+        fp.write('#!/bin/sh\n\n')
+        fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
+                shell_escape(os.path.join(target, d[1:]))
+                for d in lib_dirs))
+        for run in runs:
+            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
+            cmd += 'PATH=%s ' % shell_escape(run['envp'].get('PATH', ''))
+            # FIXME : Use exec -a or something if binary != argv[0]
+            cmd += ' '.join(
+                    shell_escape(a)
+                    for a in [run['binary']] + run['argv'][1:])
+            fp.write('%s\n' % cmd)
+
+    print("Experiment set up, run %s to start" % (
+          os.path.join(target, 'script.sh')))
+
+
 def create_chroot(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
 
@@ -189,6 +257,17 @@ def setup(subparsers, general_options):
             '-y', '--assume-yes',
             help="Assumes yes for package manager's questions (if supported)")
     parser_installpkgs.set_defaults(func=installpkgs)
+
+    # Unpacks all the file in a directory to be run with changed PATH and
+    # LD_LIBRARY_PATH
+    parser_directory = subparsers.add_parser(
+            'directory', parents=[general_options],
+            help="Unpacks the files in a directory")
+    parser_directory.add_argument('pack', nargs=1,
+                                  help="Pack to extract")
+    parser_directory.add_argument('target', nargs=1,
+                                  help="Directory to create")
+    parser_directory.set_defaults(func=create_directory)
 
     # Unpacks all the file so the experiment can be run with chroot
     parser_chroot = subparsers.add_parser(
