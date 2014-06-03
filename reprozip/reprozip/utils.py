@@ -92,3 +92,12 @@ def find_all_links(filename):
     files = set()
     path = find_all_links_recursive(filename, files)
     return list(files) + [path]
+
+
+def makedir(path):
+    if not os.path.exists(path):
+        makedir(os.path.dirname(path))
+        try:
+            os.mkdir(path)
+        except OSError:
+            pass

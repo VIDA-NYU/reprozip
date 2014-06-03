@@ -3,55 +3,13 @@ from __future__ import unicode_literals
 import shutil
 import sys
 import tarfile
-import tempfile
 import os
 import re
-import sqlite3
 import subprocess
 
-from reprounzip.common import FILE_WDIR
-from reprounzip.utils import find_all_links
+from reprounzip.utils import find_all_links, makedir
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape
-
-
-def makedir(path):
-    if not os.path.exists(path):
-        makedir(os.path.dirname(path))
-        try:
-            os.mkdir(path)
-        except OSError:
-            pass
-
-
-def list_directories(pack):
-    tmp = tempfile.mkdtemp(prefix='reprozip_')
-    try:
-        tar = tarfile.open(pack, 'r:*')
-        try:
-            tar.extract('METADATA/trace.sqlite3', path=tmp)
-        except KeyError:
-            sys.stderr.write("Pack doesn't have trace.sqlite3, can't create "
-                             "working directories\n")
-            return set()
-        database = os.path.join(tmp, 'METADATA/trace.sqlite3')
-        tar.close()
-        conn = sqlite3.connect(database)
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        executed_files = cur.execute(
-                '''
-                SELECT name
-                FROM opened_files
-                WHERE mode = ?
-                ''',
-                (FILE_WDIR,))
-        result = set(n for (n,) in executed_files)
-        cur.close()
-        conn.close()
-        return result
-    finally:
-        shutil.rmtree(tmp)
 
 
 def installpkgs(args):
@@ -99,12 +57,6 @@ def create_directory(args):
         m.name = m.name[5:]
     tar.extractall(root, members)
     tar.close()
-
-    # Makes sure all the directories used as working directories exist
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    for directory in list_directories(pack):
-        makedir(os.path.join(root, directory[1:]))
 
     # Gets library paths
     lib_dirs = []
@@ -220,12 +172,6 @@ def create_chroot(args):
     dest = os.path.join(root, 'bin/sh')
     if not os.path.exists(dest):
         shutil.copy('/bin/sh', dest)
-
-    # Makes sure all the directories used as working directories exist
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    for directory in list_directories(pack):
-        makedir(os.path.join(root, directory[1:]))
 
     # Writes start script
     with open(os.path.join(target, 'script.sh'), 'w') as fp:

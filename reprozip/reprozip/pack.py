@@ -2,12 +2,30 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import sqlite3
 import sys
 import tarfile
 import tempfile
 
-from reprozip.common import load_config
+from reprozip.common import FILE_WDIR, load_config
 from reprozip.utils import find_all_links
+
+
+def list_directories(database):
+    conn = sqlite3.connect(database)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    executed_files = cur.execute(
+            '''
+            SELECT name
+            FROM opened_files
+            WHERE mode = ?
+            ''',
+            (FILE_WDIR,))
+    result = set(n for (n,) in executed_files)
+    cur.close()
+    conn.close()
+    return result
 
 
 def data_path(filename, prefix='DATA/'):
@@ -24,6 +42,30 @@ def data_path(filename, prefix='DATA/'):
     'DATA/var/www/index.html'
     """
     return prefix + os.path.normpath(filename)[1:]
+
+
+class PackBuilder(object):
+    def __init__(self, filename):
+        self.tar = tarfile.open(filename, 'w:gz')
+        self.seen = set()
+
+    def add(self, *args, **kwargs):
+        self.tar.add(*args, **kwargs)
+
+    def add_data(self, filename):
+        if filename in self.seen:
+            return
+        logging.debug("%s -> %s" % (filename, data_path(filename)))
+        self.tar.add(filename, data_path(filename), recursive=False)
+        path = '/'
+        for c in filename.split(os.sep)[1:]:
+            # Add next component
+            path = os.path.join(path, c)
+            self.seen.add(path)
+
+    def close(self):
+        self.tar.close()
+        self.seen = None
 
 
 def pack(target, directory):
@@ -45,7 +87,7 @@ def pack(target, directory):
     runs, packages, other_files = load_config(configfile)
 
     logging.info("Creating pack %s..." % target)
-    tar = tarfile.open(target, 'w:gz')
+    tar = PackBuilder(target)
 
     logging.info("Adding metadata...")
     # Stores pack version
@@ -73,16 +115,19 @@ def pack(target, directory):
             for f in pkg.files:
                 # This path is absolute, but not canonical
                 for t in find_all_links(f.path):
-                    logging.debug("%s -> %s" % (t, data_path(t)))
-                    tar.add(t, data_path(t))
+                    tar.add_data(t)
         else:
             logging.info("NOT adding files from package %s" % pkg.name)
 
     # Add the rest of the files
     logging.info("Adding other files...")
     for f in other_files:
-        logging.debug("%s -> %s" % (os.path.abspath(f.path),
-                                    data_path(f.path)))
-        tar.add(f.path, data_path(f.path))
+        tar.add_data(f.path)
+
+    # Makes sure all the directories used as working directories are packed
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    for directory in list_directories(trace):
+        tar.add_data(directory)
 
     tar.close()
