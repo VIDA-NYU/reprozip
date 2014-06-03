@@ -7,7 +7,7 @@ import sys
 import tarfile
 import tempfile
 
-from reprozip.common import FILE_WDIR, load_config
+from reprozip.common import FILE_WRITE, FILE_WDIR, load_config
 from reprozip.utils import find_all_links
 
 
@@ -17,12 +17,16 @@ def list_directories(database):
     cur = conn.cursor()
     executed_files = cur.execute(
             '''
-            SELECT name
+            SELECT name, mode
             FROM opened_files
-            WHERE mode = ?
+            WHERE mode = ? OR mode = ?
             ''',
-            (FILE_WDIR,))
-    result = set(n for (n,) in executed_files)
+            (FILE_WDIR, FILE_WRITE))
+    # If WDIR, the name is a folder that was used as working directory
+    # If WRITE, the name is a file that was written to; its directory must
+    # exist
+    result = set(n if m == FILE_WDIR else os.path.dirname(n)
+                 for n, m in executed_files)
     cur.close()
     conn.close()
     return result
