@@ -80,6 +80,9 @@ def create_directory(args):
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(join_root(root,
                                                        run['workingdir']))
+            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                            for k, v in run['environ'].items())
+            cmd += ' '
             path = run['environ'].get('PATH', '').split(':')
             path = ':'.join(join_root(root, d) if d[0] == '/' else d
                             for d in path)
@@ -178,6 +181,9 @@ def create_chroot(args):
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
+            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                            for k, v in run['environ'].items())
+            cmd += ' '
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)

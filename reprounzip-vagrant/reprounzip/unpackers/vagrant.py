@@ -145,6 +145,9 @@ cp /bin/sh /experimentroot/bin/sh
         fp.write('#!/bin/bash\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
+            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                            for k, v in run['environ'].items())
+            cmd += ' '
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                      shell_escape(a)

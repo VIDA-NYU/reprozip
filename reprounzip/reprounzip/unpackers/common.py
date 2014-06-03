@@ -17,7 +17,7 @@ THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
 def shell_escape(s):
-    if any(c in s for c in string.whitespace + '$\\"\''):
+    if any(c in s for c in string.whitespace + '*$\\"\''):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
