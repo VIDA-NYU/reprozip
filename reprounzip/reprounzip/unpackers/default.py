@@ -81,7 +81,8 @@ def create_directory(args):
             cmd = 'cd %s && ' % shell_escape(join_root(root,
                                                        run['workingdir']))
             path = run['environ'].get('PATH', '').split(':')
-            path = ':'.join(join_root(root, d) for d in path)
+            path = ':'.join(join_root(root, d) if d[0] == '/' else d
+                            for d in path)
             cmd += 'PATH=%s ' % shell_escape(path)
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
