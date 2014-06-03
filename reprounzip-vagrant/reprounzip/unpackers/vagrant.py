@@ -123,7 +123,19 @@ def create_vagrant(args):
                          shell_escape(join_root('DATA', f.path))
                          for f in other_files))
 
-        # TODO : With chroot: need to copy /bin/sh + deps (ldd)
+        # Copies /bin/sh + dependencies
+        if use_chroot:
+            regex = r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$'
+            fp.write(r'''
+for i in $(ldd /bin/sh | perl -n -e '/{regex}/ && print "$1\n"'); do
+    if [ -e "$i" ] ; then
+        mkdir -p "$(dirname /experimentroot/$i)"
+        cp "$i" "/experimentroot/$i"
+    fi
+done
+mkdir -p /experimentroot/bin
+cp /bin/sh /experimentroot/bin/sh
+'''.format(regex=regex))
 
     # Copies pack
     shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))
