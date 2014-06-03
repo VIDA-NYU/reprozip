@@ -156,6 +156,8 @@ def create_chroot(args):
         for l in p.stdout:
             l = l.decode('ascii')
             m = fmt.match(l)
+            if m is None:
+                continue
             f = m.group(1)
             if not os.path.exists(f):
                 continue
