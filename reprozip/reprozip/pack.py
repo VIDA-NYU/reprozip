@@ -59,12 +59,13 @@ class PackBuilder(object):
     def add_data(self, filename):
         if filename in self.seen:
             return
-        logging.debug("%s -> %s" % (filename, data_path(filename)))
-        self.tar.add(filename, data_path(filename), recursive=False)
         path = '/'
         for c in filename.split(os.sep)[1:]:
-            # Add next component
             path = os.path.join(path, c)
+            if path in self.seen:
+                break
+            logging.debug("%s -> %s" % (filename, data_path(filename)))
+            self.tar.add(path, data_path(path), recursive=False)
             self.seen.add(path)
 
     def close(self):
