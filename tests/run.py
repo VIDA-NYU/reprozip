@@ -28,6 +28,15 @@ def build(target, *sources):
                                                   for s in sources])
 
 
+if len(sys.argv) == 2 and sys.argv[1] == '--interactive':
+    interactive = True
+elif len(sys.argv) == 1:
+    interactive = False
+else:
+    print("Usage: run.py [--interactive]")
+    sys.exit(1)
+
+
 with in_temp_dir():
     # Build
     build('simple', 'simple.c')
@@ -73,21 +82,28 @@ with in_temp_dir():
     with open(output_in_chroot) as fp:
         assert fp.read().strip() == '42'
     os.remove(output_in_chroot)
+
+    if not os.path.exists('/vagrant'):
+        subprocess.check_call(['sudo', 'sh', '-c',
+                               'mkdir /vagrant; chmod 777 /vagrant'])
+
     # Unpack Vagrant-chroot
     subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant', '--use-chroot',
                            'simple.rpz', '/vagrant/simplevagrantchroot'])
-    print("\nVagrant project set up in simplevagrantchroot\n"
-          "Test and press enter")
+    print("\nVagrant project set up in simplevagrantchroot")
     try:
-        sys.stdin.readline()
+        if interactive:
+            print("Test and press enter")
+            sys.stdin.readline()
     finally:
         shutil.rmtree('/vagrant/simplevagrantchroot')
     # Unpack usual Vagrant
     subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant',
                            'simple.rpz', '/vagrant/simplevagrant'])
-    print("\nVagrant project set up in simplevagrant\n"
-          "Test and press enter")
+    print("\nVagrant project set up in simplevagrant")
     try:
-        sys.stdin.readline()
+        if interactive:
+            print("Test and press enter")
+            sys.stdin.readline()
     finally:
         shutil.rmtree('/vagrant/simplevagrant')

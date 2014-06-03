@@ -9,6 +9,7 @@ in
         reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
         reprounzip graph graph.dot
         reprozip pack
+        python tests/run.py
 EOF
         ;;
     check_style)
