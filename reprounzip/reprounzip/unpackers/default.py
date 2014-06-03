@@ -9,7 +9,7 @@ import subprocess
 
 from reprounzip.utils import find_all_links, makedir
 from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape
+    shell_escape, join_root
 
 
 def installpkgs(args):
@@ -75,11 +75,14 @@ def create_directory(args):
     with open(os.path.join(target, 'script.sh'), 'w') as fp:
         fp.write('#!/bin/sh\n\n')
         fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
-                shell_escape(os.path.join(target, d[1:]))
+                shell_escape(join_root(root, d))
                 for d in lib_dirs))
         for run in runs:
-            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-            cmd += 'PATH=%s ' % shell_escape(run['environ'].get('PATH', ''))
+            cmd = 'cd %s && ' % shell_escape(join_root(root,
+                                                       run['workingdir']))
+            path = run['environ'].get('PATH', '').split(':')
+            path = ':'.join(join_root(root, d) for d in path)
+            cmd += 'PATH=%s ' % shell_escape(path)
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
@@ -127,10 +130,7 @@ def create_chroot(args):
                                 "Missing file %s (from package %s) on host, "
                                 "experiment will probably miss it\n" % (
                                     f, pkg.name))
-                    dest = f
-                    if dest[0] == '/':
-                        dest = dest[1:]
-                    dest = os.path.join(root, dest)
+                    dest = join_root(root, f)
                     makedir(os.path.dirname(dest))
                     if os.path.islink(f):
                         os.symlink(os.readlink(f), dest)
@@ -158,10 +158,7 @@ def create_chroot(args):
             f = m.group(1)
             if not os.path.exists(f):
                 continue
-            dest = f
-            if dest[0] == '/':
-                dest = dest[1:]
-            dest = os.path.join(root, dest)
+            dest = join_root(root, f)
             makedir(os.path.dirname(dest))
             if not os.path.exists(dest):
                 shutil.copy(f, dest)

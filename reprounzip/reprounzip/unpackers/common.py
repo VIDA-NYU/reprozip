@@ -126,3 +126,9 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         sys.exit(1)
 
     return installer
+
+
+def join_root(root, path):
+    assert path[0] == '/'
+    assert len(path) == 1 or path[1] != '/'
+    return os.path.join(root, path[1:])

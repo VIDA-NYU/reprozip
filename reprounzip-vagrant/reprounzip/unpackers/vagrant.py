@@ -5,7 +5,7 @@ import shutil
 import sys
 
 from reprounzip.unpackers.common import load_config, select_installer,\
-    shell_escape
+    shell_escape, join_root
 from reprounzip.utils import find_all_links
 
 
@@ -104,10 +104,7 @@ def create_vagrant(args):
                     fp.write('# Copies files from package %s\n' % pkg.name)
                     for ff in pkg.files:
                         for f in find_all_links(ff.path):
-                            dest = f
-                            if dest[0] == '/':
-                                dest = dest[1:]
-                            dest = os.path.join('root', dest)
+                            dest = join_root('root', f)
                             fp.write('cp %s %s\n' % (shell_escape(f),
                                                      shell_escape(dest)))
                     fp.write('\n')
@@ -116,10 +113,13 @@ def create_vagrant(args):
         # Untar
         if use_chroot:
             fp.write('mkdir /experimentroot; cd /experimentroot\n')
+            fp.write('tar zpxf --strip=1 /vagrant/experiment.rpz DATA\n')
         else:
             fp.write('cd /\n')
-        fp.write('tar zpxf /vagrant/experiment.rpz --strip=1 %s\n' % ' '.join(
-                 shell_escape('DATA' + f.path) for f in other_files))
+            fp.write('tar zpxf --strip=1 /vagrant/experiment.rpz %s\n' %
+                     ' '.join(
+                         shell_escape(join_root('DATA', f.path))
+                         for f in other_files))
 
         # TODO : With chroot: need to copy /bin/sh + deps (ldd)
 
@@ -136,9 +136,10 @@ def create_vagrant(args):
                      shell_escape(a)
                      for a in [run['binary']] + run['argv'][1:])
             userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
-            fp.write('chroot --userspec=%s /experimentroot /bin/sh -c %s\n' % (
-                     userspec,
-                     shell_escape(cmd)))
+            fp.write('sudo chroot --userspec=%s /experimentroot '
+                     '/bin/sh -c %s\n' % (
+                         userspec,
+                         shell_escape(cmd)))
 
     # Writes Vagrant file
     with open(os.path.join(target, 'Vagrantfile'), 'w') as fp:
@@ -163,7 +164,7 @@ def create_vagrant(args):
     print("Vagrantfile ready\n"
           "Create the virtual machine by running 'vagrant up' from %s\n"
           "Then, ssh into it (for example using 'vagrant ssh') and run "
-          "'sh script.sh'" % target_dir)
+          "'sh /vagrant/script.sh'" % target_dir)
 
 
 def setup(subparsers, general_options):
