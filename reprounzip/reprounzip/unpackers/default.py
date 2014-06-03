@@ -79,7 +79,7 @@ def create_directory(args):
                 for d in lib_dirs))
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-            cmd += 'PATH=%s ' % shell_escape(run['envp'].get('PATH', ''))
+            cmd += 'PATH=%s ' % shell_escape(run['environ'].get('PATH', ''))
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
