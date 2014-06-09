@@ -1,30 +1,27 @@
 from contextlib import contextmanager
-import os
-import shutil
 import subprocess
-import tempfile
 import yaml
 import sys
 
 from reprounzip.unpackers.common import join_root
+from rpaths import Path
 
 
 @contextmanager
 def in_temp_dir():
-    tmp = tempfile.mkdtemp(prefix='reprozip_tests_')
-    os.chdir(tmp)
+    tmp = Path.tempdir(prefix='reprozip_tests_')
     try:
-        yield tmp
+        with tmp.in_dir():
+            yield
     finally:
-        os.chdir('/')
-        shutil.rmtree(tmp, ignore_errors=True)
+        tmp.rmtree(ignore_errors=True)
 
 
-tests = os.path.abspath(os.path.dirname(__file__))
+tests = Path(__file__).parent.absolute()
 
 
 def build(target, *sources):
-    subprocess.check_call(['cc', '-o', target] + [os.path.join(tests, s)
+    subprocess.check_call(['cc', '-o', target] + [(tests / s).path
                                                   for s in sources])
 
 
@@ -44,19 +41,19 @@ with in_temp_dir():
     subprocess.check_call(['reprozip', '-v', '-v', 'trace',
                            '-d', 'rpz-simple',
                            './simple',
-                           os.path.join(tests, 'simple_input.txt'),
+                           (tests / 'simple_input.txt').path,
                            'simple_output.txt'])
-    orig_output_location = os.path.abspath('simple_output.txt')
-    assert os.path.isfile(orig_output_location)
-    with open(orig_output_location) as fp:
+    orig_output_location = Path('simple_output.txt').absolute()
+    assert orig_output_location.is_file()
+    with orig_output_location.open() as fp:
         assert fp.read().strip() == '42'
-    os.remove(orig_output_location)
+    orig_output_location.remove()
     # Read config
-    with open('rpz-simple/config.yml') as fp:
+    with Path('rpz-simple/config.yml').open() as fp:
         conf = yaml.safe_load(fp)
-    other_files = set(os.path.abspath(f) for f in conf['other_files'])
-    expected = ['simple', os.path.join(tests, 'simple_input.txt')]
-    assert other_files.issuperset([os.path.abspath(f) for f in expected])
+    other_files = set(Path(f).absolute() for f in conf['other_files'])
+    expected = [Path('simple'), (tests / 'simple_input.txt')]
+    assert other_files.issuperset([f.absolute() for f in expected])
     # Pack
     subprocess.check_call(['reprozip', '-v', '-v', 'pack',
                            '-d', 'rpz-simple',
@@ -67,23 +64,24 @@ with in_temp_dir():
     # Run script
     subprocess.check_call(['cat', 'simpledir/script.sh'])
     subprocess.check_call(['sh', 'simpledir/script.sh'])
-    output_in_dir = join_root('simpledir/root', orig_output_location)
-    assert os.path.isfile(output_in_dir)
-    with open(output_in_dir) as fp:
+    output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
+    assert output_in_dir.is_file()
+    with output_in_dir.open() as fp:
         assert fp.read().strip() == '42'
-    os.remove(output_in_dir)
+    output_in_dir.remove()
     # Unpack chroot
     subprocess.check_call(['reprounzip', '-v', '-v', 'chroot',
                            'simple.rpz', 'simplechroot'])
     # Run chroot
     subprocess.check_call(['sudo', 'sh', 'simplechroot/script.sh'])
-    output_in_chroot = join_root('simplechroot/root', orig_output_location)
-    assert os.path.isfile(output_in_chroot)
-    with open(output_in_chroot) as fp:
+    output_in_chroot = join_root(Path('simplechroot/root'),
+                                 orig_output_location)
+    assert output_in_chroot.is_file()
+    with output_in_chroot.open() as fp:
         assert fp.read().strip() == '42'
-    os.remove(output_in_chroot)
+    output_in_chroot.remove()
 
-    if not os.path.exists('/vagrant'):
+    if not Path('/vagrant').exists():
         subprocess.check_call(['sudo', 'sh', '-c',
                                'mkdir /vagrant; chmod 777 /vagrant'])
 
@@ -96,7 +94,7 @@ with in_temp_dir():
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        shutil.rmtree('/vagrant/simplevagrantchroot')
+        Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack usual Vagrant
     subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant',
                            'simple.rpz', '/vagrant/simplevagrant'])
@@ -106,4 +104,4 @@ with in_temp_dir():
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        shutil.rmtree('/vagrant/simplevagrant')
+        Path('/vagrant/simplevagrant').rmtree()
