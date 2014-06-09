@@ -4,7 +4,11 @@
 
 from __future__ import unicode_literals
 
-import os
+from rpaths import Path
+import sys
+
+
+PY3 = sys.version_info[0] == 3
 
 
 def escape(s):
@@ -49,19 +53,17 @@ def hsize(nbytes):
 
 
 def find_all_links_recursive(filename, files):
-    # We assume that filename is an abspath, so we can just split on os.sep
-    path = '/'
-    for c in filename.split(os.sep)[1:]:
+    path = Path('/')
+    for c in filename.components[1:]:
         # At this point, path is a canonical path, and all links in it have
         # been resolved
 
         # We add the next path component
-        path = os.path.join(path, c)
+        path = path / c
 
         # That component is possibly a link
-        if os.path.islink(path):
-            target = os.path.abspath(os.path.join(os.path.dirname(path),
-                                                  os.readlink(path)))
+        if path.is_link():
+            target = path.read_link(absolute=True)
             # Here, target might contain a number of symlinks
             if target not in files:
                 # Adds the link itself
@@ -70,7 +72,7 @@ def find_all_links_recursive(filename, files):
                 # Recurse on this new path
                 find_all_links_recursive(target, files)
             # Restores the invariant; realpath might resolve several links here
-            path = os.path.realpath(path)
+            path = path.resolve()
     return path
 
 
@@ -90,14 +92,7 @@ def find_all_links(filename):
     ['/a', '/b/c', '/b/g', '/b/d/e', '/f']
     """
     files = set()
+    filename = Path(filename)
+    assert filename.absolute()
     path = find_all_links_recursive(filename, files)
     return list(files) + [path]
-
-
-def makedir(path):
-    if not os.path.exists(path):
-        makedir(os.path.dirname(path))
-        try:
-            os.mkdir(path)
-        except OSError:
-            pass

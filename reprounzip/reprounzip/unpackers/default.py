@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
-import shutil
+import re
+from rpaths import PosixPath, Path
+import subprocess
 import sys
 import tarfile
-import os
-import re
-import subprocess
 
-from reprounzip.utils import find_all_links, makedir
+from reprounzip.utils import find_all_links
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, join_root
 
@@ -34,28 +33,28 @@ def create_directory(args):
     Only the files that are not part of a package are copied (unless they are
     missing from the system and were packed).
     """
-    pack = args.pack[0]
-    target = args.target[0]
-    if os.path.exists(target):
+    pack = Path(args.pack[0])
+    target = Path(args.target[0])
+    if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
         sys.exit(1)
 
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    os.mkdir(target)
-    root = os.path.abspath(os.path.join(target, 'root'))
-    os.mkdir(root)
+    target.mkdir()
+    root = (target / 'root').absolute()
+    root.mkdir()
 
     # Unpacks files
-    tar = tarfile.open(pack, 'r:*')
+    tar = tarfile.open(bytes(pack), 'r:*')  # tarfile only accepts bytes on PY2
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
-    tar.extractall(root, members)
+    tar.extractall(bytes(root), members)
     tar.close()
 
     # Gets library paths
@@ -67,24 +66,26 @@ def create_directory(args):
             if len(l) < 3 or l[0] in (b' ', b'\t'):
                 continue
             if l.endswith(b':\n'):
-                lib_dirs.append(l[:-2].decode('ascii'))
+                lib_dirs.append(Path(l[:-2]))
     finally:
         p.wait()
 
     # Writes start script
-    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+    with (target / 'script.sh').open('w') as fp:
         fp.write('#!/bin/sh\n\n')
         fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
-                shell_escape(join_root(root, d))
+                shell_escape(unicode(join_root(root, d)))
                 for d in lib_dirs))
         for run in runs:
-            cmd = 'cd %s && ' % shell_escape(join_root(root,
-                                                       run['workingdir']))
+            cmd = 'cd %s && ' % shell_escape(
+                    unicode(join_root(root,
+                                      Path(run['workingdir']))))
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                             for k, v in run['environ'].items())
             cmd += ' '
-            path = run['environ'].get('PATH', '').split(':')
-            path = ':'.join(join_root(root, d) if d[0] == '/' else d
+            path = [PosixPath(d)
+                    for d in run['environ'].get('PATH', '').split(':')]
+            path = ':'.join(unicode(join_root(root, d)) if d.root == '/' else d
                             for d in path)
             cmd += 'PATH=%s ' % shell_escape(path)
             # FIXME : Use exec -a or something if binary != argv[0]
@@ -93,8 +94,7 @@ def create_directory(args):
                     for a in [run['binary']] + run['argv'][1:])
             fp.write('%s\n' % cmd)
 
-    print("Experiment set up, run %s to start" % (
-          os.path.join(target, 'script.sh')))
+    print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
 def create_chroot(args):
@@ -104,18 +104,18 @@ def create_chroot(args):
     they were not packed, and for /bin/sh and dependencies (if they were not
     packed).
     """
-    pack = args.pack[0]
-    target = args.target[0]
-    if os.path.exists(target):
+    pack = Path(args.pack[0])
+    target = Path(args.target[0])
+    if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
         sys.exit(1)
 
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    os.mkdir(target)
-    root = os.path.abspath(os.path.join(target, 'root'))
-    os.mkdir(root)
+    target.mkdir()
+    root = (target / 'root').absolute()
+    root.mkdir()
 
     # Checks that everything was packed
     packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
@@ -129,27 +129,27 @@ def create_chroot(args):
         for pkg in packages_not_packed:
             for ff in pkg.files:
                 for f in find_all_links(ff.path):
-                    if not os.path.exists(f):
+                    if not f.exists():
                         sys.stderr.write(
                                 "Missing file %s (from package %s) on host, "
                                 "experiment will probably miss it\n" % (
                                     f, pkg.name))
                     dest = join_root(root, f)
-                    makedir(os.path.dirname(dest))
-                    if os.path.islink(f):
-                        os.symlink(os.readlink(f), dest)
+                    dest.parent.mkdir(parents=True)
+                    if f.is_link():
+                        dest.symlink(f.read_link())
                     else:
-                        shutil.copy(f, dest)
+                        f.copy(dest)
 
     # Unpacks files
-    tar = tarfile.open(pack, 'r:*')
+    tar = tarfile.open(bytes(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
-    tar.extractall(root, members)
+    tar.extractall(bytes(root), members)
     tar.close()
 
     # Copies /bin/sh + dependencies
@@ -161,23 +161,23 @@ def create_chroot(args):
             m = fmt.match(l)
             if m is None:
                 continue
-            f = m.group(1)
-            if not os.path.exists(f):
+            f = Path(m.group(1))
+            if not f.exists():
                 continue
             dest = join_root(root, f)
-            makedir(os.path.dirname(dest))
-            if not os.path.exists(dest):
-                shutil.copy(f, dest)
+            dest.parent.mkdir(parents=True)
+            if not dest.exists():
+                f.copy(dest)
     finally:
         p.wait()
     assert p.returncode == 0
-    makedir(os.path.join(root, 'bin'))
-    dest = os.path.join(root, 'bin/sh')
-    if not os.path.exists(dest):
-        shutil.copy('/bin/sh', dest)
+    (root / 'bin').mkdir(parents=True)
+    dest = root / 'bin/sh'
+    if not dest.exists():
+        Path('/bin/sh').copy(dest)
 
     # Writes start script
-    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+    with (target / 'script.sh').open('w') as fp:
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
@@ -191,11 +191,10 @@ def create_chroot(args):
             userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
             fp.write('chroot --userspec=%s %s /bin/sh -c %s\n' % (
                      userspec,
-                     shell_escape(root),
+                     shell_escape(unicode(root)),
                      shell_escape(cmd)))
 
-    print("Experiment set up, run %s to start" % (
-          os.path.join(target, 'script.sh')))
+    print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
 def setup(subparsers, general_options):

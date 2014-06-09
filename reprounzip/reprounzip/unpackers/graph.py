@@ -2,16 +2,14 @@ from __future__ import unicode_literals
 
 import argparse
 import heapq
-import os
-import shutil
+from rpaths import PosixPath, Path
 import sqlite3
 import sys
 import tarfile
-import tempfile
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.utils import CommonEqualityMixin, escape
+from reprounzip.utils import PY3, CommonEqualityMixin, escape
 
 
 C_INITIAL = 0   # First process or don't know
@@ -51,11 +49,11 @@ def generate(target, directory, all_forks=False):
     # doesn't do anything worth showing on the graph, it will be erased, unless
     # all_forks is True (--all-forks).
 
-    database = os.path.join(directory, 'trace.sqlite3')
+    database = directory / 'trace.sqlite3'
 
     # Reads package ownership from the configuration
-    configfile = os.path.join(directory, 'config.yml')
-    if not os.path.isfile(configfile):
+    configfile = directory / 'config.yml'
+    if not configfile.is_file():
         sys.stderr.write("Error: Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
@@ -64,7 +62,11 @@ def generate(target, directory, all_forks=False):
     runs, packages, other_files = load_config(configfile)
     packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
-    conn = sqlite3.connect(database)
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
 
     # This is a bit weird. We need to iterate on all types of events at the
     # same time, ordering by timestamp, so we decorate-sort-undecorate
@@ -127,6 +129,7 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
+            r_name = PosixPath(r_name)
             if r_mode != FILE_WDIR:
                 process = processes[r_process]
                 files.add(r_name)
@@ -134,6 +137,7 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'exec':
             r_name, r_timestamp, r_process, r_argv = data
+            r_name = PosixPath(r_name)
             process = processes[r_process]
             binaries.add(r_name)
             # Here we split this process in two "programs", unless the previous
@@ -229,7 +233,7 @@ def graph(args):
     format.
     """
     if args.pack is not None:
-        tmp = tempfile.mkdtemp(prefix='reprozip_')
+        tmp = Path.tempdir(prefix='reprounzip_')
         try:
             tar = tarfile.open(args.pack, 'r:*')
             f = tar.extractfile('METADATA/version')
@@ -239,17 +243,17 @@ def graph(args):
                 sys.stderr.write("Unknown pack format\n")
                 sys.exit(1)
             try:
-                tar.extract('METADATA/config.yml', path=tmp)
-                tar.extract('METADATA/trace.sqlite3', path=tmp)
+                tar.extract('METADATA/config.yml', path=bytes(tmp))
+                tar.extract('METADATA/trace.sqlite3', path=bytes(tmp))
             except KeyError as e:
                 sys.stderr.write("Error extracting from pack: %s" % e.args[0])
-            generate(args.target[0],
-                     os.path.join(tmp, 'METADATA'),
+            generate(Path(args.target[0]),
+                     tmp / 'METADATA',
                      args.all_forks)
         finally:
-            shutil.rmtree(tmp)
+            tmp.rmtree()
     else:
-        generate(args.target[0], args.dir, args.all_forks)
+        generate(Path(args.target[0]), Path(args.dir), args.all_forks)
 
 
 def setup(subparsers, general_options):

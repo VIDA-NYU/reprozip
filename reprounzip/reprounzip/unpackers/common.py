@@ -1,16 +1,15 @@
 from __future__ import unicode_literals
 
 import logging
-import os
 import platform
-import shutil
+from rpaths import Path
 import string
 import subprocess
 import sys
 import tarfile
-import tempfile
 
 import reprounzip.common
+from reprounzip.utils import PY3
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
@@ -26,22 +25,30 @@ def shell_escape(s):
 
 
 def load_config(pack):
-    tmp = tempfile.mkdtemp(prefix='reprozip_')
+    tmp = Path.tempdir(prefix='reprozip_')
     try:
         # Loads info from package
-        tar = tarfile.open(pack, 'r:*')
+        # tarfile only accepts bytes on PY2
+        if PY3:
+            tar = tarfile.open(pack.path, 'r:*')
+        else:
+            tar = tarfile.open(bytes(pack), 'r:*')
         f = tar.extractfile('METADATA/version')
         version = f.read()
         f.close()
         if version != b'REPROZIP VERSION 1\n':
             sys.stderr.write("Unknown pack format\n")
             sys.exit(1)
-        tar.extract('METADATA/config.yml', path=tmp)
+        # tarfile only accepts bytes on PY2
+        if PY3:
+            tar.extract('METADATA/config.yml', path=tmp.path)
+        else:
+            tar.extract('METADATA/config.yml', path=bytes(tmp))
         tar.close()
-        configfile = os.path.join(tmp, 'METADATA/config.yml')
+        configfile = tmp / 'METADATA/config.yml'
         ret = reprounzip.common.load_config(configfile)
     finally:
-        shutil.rmtree(tmp)
+        tmp.rmtree()
 
     return ret
 
@@ -129,6 +136,6 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
 
 
 def join_root(root, path):
-    assert path[0] == '/'
-    assert len(path) == 1 or path[1] != '/'
-    return os.path.join(root, path[1:])
+    p_root, p_loc = path.split_root()
+    assert p_root == b'/'
+    return root / p_loc

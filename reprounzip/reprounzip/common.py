@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from rpaths import PosixPath
 import yaml
 
 from .utils import CommonEqualityMixin, escape, hsize
@@ -52,7 +53,7 @@ class InvalidConfig(ValueError):
 
 
 def read_files(files, File=File):
-    return [File(f) for f in files]
+    return [File(PosixPath(f)) for f in files]
 
 
 def read_packages(packages, File=File, Package=Package):
@@ -64,7 +65,7 @@ def read_packages(packages, File=File, Package=Package):
 
 
 def load_config(filename, File=File, Package=Package):
-    with open(filename) as fp:
+    with filename.open() as fp:
         config = yaml.safe_load(fp)
 
     keys_ = set(config.keys())
@@ -85,7 +86,7 @@ def load_config(filename, File=File, Package=Package):
 
 def write_file(fp, fi, indent=0):
     fp.write("%s  - \"%s\" # %s\n" % ("    " * indent,
-                                      escape(fi.path),
+                                      escape(unicode(fi.path)),
                                       hsize(fi.size)))
 
 
@@ -112,7 +113,7 @@ def write_package(fp, pkg, indent=0):
 
 def save_config(filename, runs, packages, other_files, reprozip_version):
     dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
-    with open(filename, 'w') as fp:
+    with filename.open('w') as fp:
         # Writes preamble
         fp.write("""\
 # ReproZip configuration file
