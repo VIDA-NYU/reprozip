@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
-import os
-import shutil
+from rpaths import PosixPath, Path
 import sys
 
 from reprounzip.unpackers.common import load_config, select_installer,\
@@ -61,9 +60,9 @@ def create_vagrant(args):
     In short: files from packages with packfiles=True will only be used if
     building a chroot.
     """
-    pack = args.pack[0]
-    target = args.target[0]
-    if os.path.exists(target):
+    pack = Path(args.pack[0])
+    target = Path(args.target[0])
+    if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
         sys.exit(1)
     use_chroot = args.use_chroot
@@ -86,10 +85,10 @@ def create_vagrant(args):
     if packages:
         installer = select_installer(pack, runs, target_distribution)
 
-    os.mkdir(target)
+    target.mkdir(parents=True)
 
     # Writes setup script
-    with open(os.path.join(target, 'setup.sh'), 'w') as fp:
+    with (target / 'setup.sh').open('w') as fp:
         fp.write('#!/bin/sh\n\n')
         if packages:
             # Updates package sources
@@ -103,9 +102,10 @@ def create_vagrant(args):
                 for pkg in packages:
                     fp.write('# Copies files from package %s\n' % pkg.name)
                     for f in pkg.files:
-                        dest = join_root('root', f)
-                        fp.write('cp -L %s %s\n' % (shell_escape(f),
-                                                    shell_escape(dest)))
+                        dest = join_root(PosixPath('root'), f)
+                        fp.write('cp -L %s %s\n' % (
+                                 shell_escape(unicode(f)),
+                                 shell_escape(unicode(dest))))
                     fp.write('\n')
             # TODO : Compare package versions (painful because of sh)
 
@@ -119,7 +119,8 @@ def create_vagrant(args):
             fp.write('tar zpxf /vagrant/experiment.rpz '
                      '--numeric-owner --strip=1 %s\n' %
                      ' '.join(
-                         shell_escape(join_root('DATA', f.path))
+                         shell_escape(unicode(join_root(PosixPath('DATA'),
+                                                        f.path)))
                          for f in other_files))
 
         # Copies /bin/sh + dependencies
@@ -137,10 +138,10 @@ cp -L /bin/sh /experimentroot/bin/sh
 '''.format(regex=regex))
 
     # Copies pack
-    shutil.copyfile(pack, os.path.join(target, 'experiment.rpz'))
+    pack.copyfile(target / 'experiment.rpz')
 
     # Writes start script
-    with open(os.path.join(target, 'script.sh'), 'w') as fp:
+    with (target / 'script.sh').open('w') as fp:
         fp.write('#!/bin/bash\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
@@ -158,7 +159,7 @@ cp -L /bin/sh /experimentroot/bin/sh
                          shell_escape(cmd)))
 
     # Writes Vagrant file
-    with open(os.path.join(target, 'Vagrantfile'), 'w') as fp:
+    with (target / 'Vagrantfile').open('w') as fp:
         # Vagrant header and version
         fp.write('# -*- mode: ruby -*-\n'
                  '# vi: set ft=ruby\n\n'
@@ -171,16 +172,13 @@ cp -L /bin/sh /experimentroot/bin/sh
 
         fp.write('end\n')
 
-    if not target:
-        target_dir = './'
-    elif target.endswith('/'):
-        target_dir = target
-    else:
-        target_dir = target + '/'
+    target_readable = unicode(target)
+    if not target_readable.endswith('/'):
+        target_readable = target_readable + '/'
     print("Vagrantfile ready\n"
           "Create the virtual machine by running 'vagrant up' from %s\n"
           "Then, ssh into it (for example using 'vagrant ssh') and run "
-          "'sh /vagrant/script.sh'" % target_dir)
+          "'sh /vagrant/script.sh'" % target_readable)
 
 
 def setup(subparsers, general_options):
