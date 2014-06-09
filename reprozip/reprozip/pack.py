@@ -2,17 +2,21 @@ from __future__ import unicode_literals
 
 import logging
 import os
+from rpaths import Path
 import sqlite3
 import sys
 import tarfile
-import tempfile
 
 from reprozip.common import FILE_WRITE, FILE_WDIR, load_config
-from reprozip.utils import find_all_links
+from reprozip.utils import PY3, find_all_links
 
 
 def list_directories(database):
-    conn = sqlite3.connect(database)
+    if PY3:
+        # On Python 3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     executed_files = cur.execute(
@@ -22,17 +26,18 @@ def list_directories(database):
             WHERE mode = ? OR mode = ?
             ''',
             (FILE_WDIR, FILE_WRITE))
+    executed_files = ((Path(n), m) for n, m in executed_files)
     # If WDIR, the name is a folder that was used as working directory
     # If WRITE, the name is a file that was written to; its directory must
     # exist
-    result = set(n if m == FILE_WDIR else os.path.dirname(n)
+    result = set(n if m == FILE_WDIR else n.parent
                  for n, m in executed_files)
     cur.close()
     conn.close()
     return result
 
 
-def data_path(filename, prefix='DATA/'):
+def data_path(filename, prefix=Path('DATA')):
     """Computes the filename to store in the archive.
 
     Turns an absolute path containing '..' into a filename without '..', and
@@ -40,32 +45,36 @@ def data_path(filename, prefix='DATA/'):
 
     Example:
 
-    >>> data_path('/var/lib/../../../../tmp/test')
-    'DATA/tmp/test'
-    >>> data_path('/var/lib/../www/index.html')
-    'DATA/var/www/index.html'
+    >>> data_path(PosixPath('/var/lib/../../../../tmp/test'))
+    PosixPath(b'DATA/tmp/test')
+    >>> data_path(PosixPath('/var/lib/../www/index.html'))
+    PosixPath(b'DATA/var/www/index.html')
     """
-    return prefix + os.path.normpath(filename)[1:]
+    return prefix / filename.split_root()[1]
 
 
 class PackBuilder(object):
     def __init__(self, filename):
-        self.tar = tarfile.open(filename, 'w:gz')
+        # tarfile only accepts bytes on PY2
+        self.tar = tarfile.open(bytes(filename), 'w:gz')
         self.seen = set()
 
-    def add(self, *args, **kwargs):
-        self.tar.add(*args, **kwargs)
+    def add(self, name, arcname, *args, **kwargs):
+        name = bytes(name)
+        arcname = bytes(arcname)
+        self.tar.add(name, arcname, *args, **kwargs)
 
     def add_data(self, filename):
+        filename = Path(filename)
         if filename in self.seen:
             return
-        path = '/'
-        for c in filename.split(os.sep)[1:]:
-            path = os.path.join(path, c)
+        path = Path('/')
+        for c in filename.components[1:]:
+            path = path / c
             if path in self.seen:
                 continue
             logging.debug("%s -> %s" % (path, data_path(path)))
-            self.tar.add(path, data_path(path), recursive=False)
+            self.tar.add(bytes(path), bytes(data_path(path)), recursive=False)
             self.seen.add(path)
 
     def close(self):
@@ -76,14 +85,14 @@ class PackBuilder(object):
 def pack(target, directory):
     """Main function for the pack subcommand.
     """
-    if os.path.exists(target):
+    if target.exists():
         # Don't overwrite packs...
         sys.stderr.write("Error: Target file exists!\n")
         sys.exit(1)
 
     # Reads configuration
-    configfile = os.path.join(directory, 'config.yml')
-    if not os.path.isfile(configfile):
+    configfile = directory / 'config.yml'
+    if not configfile.is_file():
         sys.stderr.write("Error: Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
@@ -96,22 +105,22 @@ def pack(target, directory):
 
     logging.info("Adding metadata...")
     # Stores pack version
-    fd, manifest = tempfile.mkstemp(prefix='reprozip_', suffix='.txt')
+    fd, manifest = Path.tempfile(prefix='reprozip_', suffix='.txt')
     os.close(fd)
     try:
-        with open(manifest, 'wb') as fp:
+        with manifest.open('wb') as fp:
             fp.write(b'REPROZIP VERSION 1\n')
-        tar.add(manifest, 'METADATA/version')
+        tar.add(manifest, b'METADATA/version')
     finally:
-        os.remove(manifest)
+        manifest.remove()
 
     # Stores the configuration file
-    tar.add(configfile, 'METADATA/config.yml')
+    tar.add(configfile, b'METADATA/config.yml')
 
     # Stores the original trace
-    trace = os.path.join(directory, 'trace.sqlite3')
-    if os.path.isfile(trace):
-        tar.add(trace, 'METADATA/trace.sqlite3')
+    trace = directory / 'trace.sqlite3'
+    if trace.is_file():
+        tar.add(trace, b'METADATA/trace.sqlite3')
 
     # Add the files from the packages
     for pkg in packages:

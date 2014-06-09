@@ -3,16 +3,17 @@ from __future__ import unicode_literals
 import logging
 import os
 import platform
-import shutil
+from rpaths import Path
 import sqlite3
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
-    identify_packages
-from reprozip.orderedset import OrderedSet
 from reprozip.common import File, load_config, save_config, \
     FILE_READ, FILE_WRITE
+from reprozip.orderedset import OrderedSet
+from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
+    identify_packages
+from reprozip.utils import PY3
 
 
 class TracedFile(File):
@@ -36,7 +37,7 @@ class TracedFile(File):
 
     def __init__(self, path):
         try:
-            size = os.path.getsize(path)
+            size = path.size()
         except OSError:
             size = None
         File.__init__(self, path, size)
@@ -55,7 +56,11 @@ class TracedFile(File):
 def get_files(database):
     """Find all the files used by the experiment by reading the trace.
     """
-    conn = sqlite3.connect(database)
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
 
     files = {}
@@ -68,7 +73,7 @@ def get_files(database):
             ORDER BY timestamp;
             ''')
     for r_name, in executed_files:
-        r_name = os.path.abspath(r_name)
+        r_name = Path(r_name).absolute()
         if r_name not in files:
             f = TracedFile(r_name)
             f.read()
@@ -81,7 +86,7 @@ def get_files(database):
             ORDER BY timestamp;
             ''')
     for r_name, r_mode in opened_files:
-        r_name = os.path.abspath(r_name)
+        r_name = Path(r_name).absolute()
         if r_name not in files:
             f = TracedFile(r_name)
             if r_mode & FILE_WRITE:
@@ -119,9 +124,9 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
 def trace(binary, argv, directory, append):
     """Main function for the trace subcommand.
     """
-    cwd = os.getcwd()
-    if (any(cwd.startswith(c) for c in magic_dirs + system_dirs) and
-            not cwd.startswith('/usr/local')):
+    cwd = Path.cwd()
+    if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
+            not cwd.lies_under('/usr/local')):
         logging.warning(
                 "You are running this experiment from a system directory! "
                 "Autodetection of non-system files will probably not work as "
@@ -129,21 +134,21 @@ def trace(binary, argv, directory, append):
 
     # Trace directory
     if not append:
-        if os.path.exists(directory):
+        if directory.exists():
             logging.info("Removing existing directory %s" % directory)
-            shutil.rmtree(directory)
-        os.mkdir(directory)
+            directory.rmtree()
+        directory.mkdir(parents=True)
     else:
-        if not os.path.exists(directory):
+        if not directory.exists():
             logging.warning("--continue was specified but %s does not exist "
                             "-- creating" % directory)
-            os.mkdir(directory)
+            directory.mkdir(parents=True)
 
     # Runs the trace
-    database = os.path.join(directory, 'trace.sqlite3')
+    database = directory / 'trace.sqlite3'
     logging.info("Running program")
     # Might raise _pytracer.Error
-    c = _pytracer.execute(binary, argv, database)
+    c = _pytracer.execute(binary, argv, database.path)
     if c != 0:
         if c & 0x0100:
             logging.warning("Program appears to have been terminated by "
@@ -159,15 +164,15 @@ def trace(binary, argv, directory, append):
     files, packages = identify_packages(files)
 
     # Writes configuration file
-    config = os.path.join(directory, 'config.yml')
-    oldconfig = os.path.exists(config)
+    config = directory / 'config.yml'
+    oldconfig = config.exists()
     if oldconfig:
         # Loads in previous config
         runs, oldpkgs, oldfiles = load_config(config, File=TracedFile)
     else:
         runs, oldpkgs, oldfiles = [], [], []
     distribution = platform.linux_distribution()[0:2]
-    runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd,
+    runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd.path,
                  'architecture': platform.machine(),
                  'distribution': distribution, 'hostname': platform.node(),
                  'system': [platform.system(), platform.release()],
@@ -182,6 +187,6 @@ def trace(binary, argv, directory, append):
 
     save_config(config, runs, packages, files, reprozip_version)
 
-    print("Configuration file written in {}".format(config))
+    print("Configuration file written in {!s}".format(config))
     print("Edit that file then run the packer -- "
           "use 'reprozip pack -h' for help")

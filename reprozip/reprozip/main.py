@@ -5,19 +5,24 @@ import codecs
 import locale
 import logging
 import os
+from rpaths import Path
 import sqlite3
 import sys
-import tempfile
 
 from reprozip import _pytracer
 import reprozip.pack
 import reprozip.tracer.trace
+from reprozip.utils import PY3
 
 
 def print_db(database):
     """Prints out database content.
     """
-    conn = sqlite3.connect(database)
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
 
     cur = conn.cursor()
@@ -102,14 +107,14 @@ def testrun(args):
 
     Not really useful, except for debugging.
     """
-    fd, database = tempfile.mkstemp(prefix='reprozip_', suffix='.sqlite3')
+    fd, database = Path.tempfile(prefix='reprozip_', suffix='.sqlite3')
     os.close(fd)
     try:
         if args.arg0 is not None:
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        c = _pytracer.execute(args.cmdline[0], argv, database)
+        c = _pytracer.execute(args.cmdline[0], argv, database.path)
         print("\n\n-----------------------------------------------------------"
               "--------------------")
         print_db(database)
@@ -120,7 +125,7 @@ def testrun(args):
             else:
                 print("\nWarning: program exited with non-zero code %d" % c)
     finally:
-        os.remove(database)
+        database.remove()
 
 
 def trace(args):
@@ -132,7 +137,10 @@ def trace(args):
         argv = [args.arg0] + args.cmdline[1:]
     else:
         argv = args.cmdline
-    reprozip.tracer.trace.trace(args.cmdline[0], argv, args.dir, args.append)
+    reprozip.tracer.trace.trace(args.cmdline[0],
+                                argv,
+                                Path(args.dir),
+                                args.append)
 
 
 def pack(args):
@@ -140,7 +148,7 @@ def pack(args):
 
     Reads in the configuration file and writes out a tarball.
     """
-    reprozip.pack.pack(args.target, args.dir)
+    reprozip.pack.pack(Path(args.target), Path(args.dir))
 
 
 def main():
@@ -150,7 +158,7 @@ def main():
     locale.setlocale(locale.LC_ALL, '')
 
     # Encoding for output streams
-    if str == bytes:
+    if str == bytes:  # PY2
         writer = codecs.getwriter(locale.getpreferredencoding())
         sys.stdout = writer(sys.stdout)
         sys.stderr = writer(sys.stderr)

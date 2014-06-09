@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import platform
+from rpaths import Path
 import subprocess
 
 from reprozip.common import Package
@@ -18,12 +19,12 @@ class DpkgManager(object):
 
     def search_for_file(self, f):
         # Special files
-        if any(f.path.startswith(c) for c in magic_dirs):
+        if any(f.path.lies_under(c) for c in magic_dirs):
             return
 
         # If it's not in a system directory, no need to look for it
-        if (f.path.startswith('/usr/local') or
-                not any(f.path.startswith(c) for c in system_dirs)):
+        if (f.path.lies_under('/usr/local') or
+                not any(f.path.lies_under(c) for c in system_dirs)):
             self.unknown_files.append(f)
             return
 
@@ -44,11 +45,12 @@ class DpkgManager(object):
                 self._create_package(pkgname, [f])
 
     def _get_package_for_file(self, filename):
-        p = subprocess.Popen(['dpkg', '-S', filename], stdout=subprocess.PIPE)
+        p = subprocess.Popen(['dpkg', '-S', filename.path],
+                             stdout=subprocess.PIPE)
         try:
             for l in p.stdout:
                 pkgname, f = l.split(b': ', 1)
-                f = f.strip().decode('ascii')
+                f = Path(f.strip())
                 # 8-bit safe encoding, because this might be a localized error
                 # message (that we don't care about)
                 pkgname = (pkgname.decode('iso-8859-1')
