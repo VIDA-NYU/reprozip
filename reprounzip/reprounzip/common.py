@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-import os
 import yaml
 
 from .utils import CommonEqualityMixin, escape, hsize
@@ -19,14 +18,9 @@ FILE_WDIR = 0x04
 class File(CommonEqualityMixin):
     """A file, used at some point during the experiment.
     """
-    def __init__(self, path):
+    def __init__(self, path, size=None):
         self.path = path
-        try:
-            stat = os.stat(path)
-        except OSError:
-            self.size = None
-        else:
-            self.size = stat.st_size
+        self.size = size
 
     def __eq__(self, other):
         return (isinstance(other, File) and

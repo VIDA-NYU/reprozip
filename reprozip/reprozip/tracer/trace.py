@@ -34,6 +34,13 @@ class TracedFile(File):
 
     what = None
 
+    def __init__(self, path):
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            size = None
+        File.__init__(self, path, size)
+
     def read(self):
         if self.what is None:
             self.what = TracedFile.ONLY_READ
