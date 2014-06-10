@@ -63,8 +63,8 @@ class PackBuilder(object):
         for c in filename.split(os.sep)[1:]:
             path = os.path.join(path, c)
             if path in self.seen:
-                break
-            logging.debug("%s -> %s" % (filename, data_path(filename)))
+                continue
+            logging.debug("%s -> %s" % (path, data_path(path)))
             self.tar.add(path, data_path(path), recursive=False)
             self.seen.add(path)
 
