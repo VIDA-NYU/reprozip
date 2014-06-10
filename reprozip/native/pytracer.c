@@ -67,11 +67,18 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
     const char *binary, *databasepath;
     char **argv;
     size_t argv_len;
-    PyObject *py_argv;
-    if(!(PyArg_ParseTuple(args, "sO!s",
-                          &binary,
+    PyObject *py_binary, *py_argv, *py_databasepath;
+    if(!(PyArg_ParseTuple(args, "OO!O",
+                          &py_binary,
                           &PyList_Type, &py_argv,
-                          &databasepath)))
+                          &py_databasepath)))
+        return NULL;
+
+    binary = get_string(py_binary);
+    if(binary == NULL)
+        return NULL;
+    databasepath = get_string(py_databasepath);
+    if(databasepath == NULL)
         return NULL;
 
     /* Converts argv from Python list to char[][] */
