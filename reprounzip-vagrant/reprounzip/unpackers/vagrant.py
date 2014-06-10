@@ -152,11 +152,17 @@ cp -L /bin/sh /experimentroot/bin/sh
             cmd += ' '.join(
                      shell_escape(a)
                      for a in [run['binary']] + run['argv'][1:])
-            userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
-            fp.write('sudo chroot --userspec=%s /experimentroot '
-                     '/bin/sh -c %s\n' % (
-                         userspec,
-                         shell_escape(cmd)))
+            uid = run.get('uid', 1000)
+            gid = run.get('gid', 1000)
+            if use_chroot:
+                userspec = '%s:%s' % (uid, gid)
+                fp.write('sudo chroot --userspec=%s /experimentroot '
+                         '/bin/sh -c %s\n' % (
+                             userspec,
+                             shell_escape(cmd)))
+            else:
+                fp.write('sudo -u \'#%d\' %s\n' % (
+                         uid, cmd))
 
     # Writes Vagrant file
     with (target / 'Vagrantfile').open('w') as fp:
