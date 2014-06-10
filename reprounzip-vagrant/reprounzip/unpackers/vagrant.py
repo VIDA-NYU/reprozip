@@ -127,9 +127,11 @@ def create_vagrant(args):
                         continue
                     paths.add(path)
                     pathlist.append(unicode(join_root(dataroot, path)))
+            # FIXME : for some reason we need reversed() here, I'm not sure
+            # why. Need to read more of tar's docs.
             fp.write('tar zpxf /vagrant/experiment.rpz '
                      '--numeric-owner --strip=1 %s\n' %
-                     ' '.join(shell_escape(p) for p in pathlist))
+                     ' '.join(shell_escape(p) for p in reversed(pathlist)))
 
         # Copies /bin/sh + dependencies
         if use_chroot:
@@ -169,8 +171,8 @@ cp -L /bin/sh /experimentroot/bin/sh
                              userspec,
                              shell_escape(cmd)))
             else:
-                fp.write('sudo -u \'#%d\' %s\n' % (
-                         uid, cmd))
+                fp.write('sudo -u \'#%d\' sh -c %s\n' % (
+                         uid, shell_escape(cmd)))
 
     # Writes Vagrant file
     with (target / 'Vagrantfile').open('w') as fp:
