@@ -116,12 +116,20 @@ def create_vagrant(args):
                      '--numeric-owner --strip=1 DATA\n')
         else:
             fp.write('cd /\n')
+            paths = set()
+            pathlist = []
+            dataroot = PosixPath('DATA')
+            for f in other_files:
+                path = PosixPath('/')
+                for c in f.path.components[1:]:
+                    path = path / c
+                    if path in paths:
+                        continue
+                    paths.add(path)
+                    pathlist.append(unicode(join_root(dataroot, path)))
             fp.write('tar zpxf /vagrant/experiment.rpz '
                      '--numeric-owner --strip=1 %s\n' %
-                     ' '.join(
-                         shell_escape(unicode(join_root(PosixPath('DATA'),
-                                                        f.path)))
-                         for f in other_files))
+                     ' '.join(shell_escape(p) for p in pathlist))
 
         # Copies /bin/sh + dependencies
         if use_chroot:
