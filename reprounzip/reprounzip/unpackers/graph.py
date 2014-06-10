@@ -173,7 +173,7 @@ def generate(target, directory, all_forks=False):
             other_files.append(f)
 
     # Writes DOT file
-    with open(target, 'w') as fp:
+    with target.open('w') as fp:
         fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
         # Programs
         for program in all_programs:
@@ -200,14 +200,14 @@ def generate(target, directory, all_forks=False):
             else:
                 fp.write('"%s";\n' % escape(name))
             for f in files:
-                fp.write('        "%s";\n' % escape(f))
+                fp.write('        "%s";\n' % escape(unicode(f)))
             fp.write('    }\n')
 
         fp.write('\n    /* other files */\n')
 
         # Other files
         for f in other_files:
-            fp.write('    "%s"\n' % escape(f))
+            fp.write('    "%s"\n' % escape(unicode(f)))
 
         fp.write('\n')
 
@@ -215,13 +215,13 @@ def generate(target, directory, all_forks=False):
         for prog, f, mode, argv in edges:
             if mode is None:
                 fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (
-                         escape(f), id(prog), escape(' '.join(argv))))
+                         escape(unicode(f)), id(prog), escape(' '.join(argv))))
             elif mode & FILE_WRITE:
                 fp.write('    prog%d -> "%s" [color=red];\n' % (
-                         id(prog), escape(f)))
+                         id(prog), escape(unicode(f))))
             elif mode & FILE_READ:
                 fp.write('    "%s" -> prog%d [color=green];\n' % (
-                         escape(f), id(prog)))
+                         escape(unicode(f)), id(prog)))
 
         fp.write('}\n')
 

@@ -37,8 +37,9 @@ class TracedFile(File):
 
     def __init__(self, path):
         try:
+            path = Path(path)
             size = path.size()
-        except OSError:
+        except (TypeError, OSError):
             size = None
         File.__init__(self, path, size)
 
