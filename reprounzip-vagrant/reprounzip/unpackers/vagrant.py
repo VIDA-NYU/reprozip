@@ -20,6 +20,7 @@ def select_box(runs):
 
     if architecture not in ('i686', 'x86_64'):
         sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+        sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
