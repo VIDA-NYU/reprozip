@@ -7,6 +7,57 @@
 PyObject *Err_Base;
 
 
+/**
+ * Makes a C string from a Python unicode or bytes object.
+ *
+ * If successful, the result is a string that the caller must free().
+ * Else, returns NULL.
+ */
+static char *get_string(PyObject *obj)
+{
+    if(PyUnicode_Check(obj))
+    {
+        const char *str;
+        PyObject *pyutf8 = PyUnicode_AsUTF8String(obj);
+        if(pyutf8 == NULL)
+            return NULL;
+        fprintf(stderr, "\n");
+#if PY_MAJOR_VERSION >= 3
+        str = PyBytes_AsString(pyutf8);
+#else
+        str = PyString_AsString(pyutf8);
+#endif
+        if(str == NULL)
+            return NULL;
+        {
+            char *ret = strdup(str);
+            Py_DECREF(pyutf8);
+            return ret;
+        }
+    }
+    else if(
+#if PY_MAJOR_VERSION >= 3
+            PyBytes_Check(obj)
+#else
+            PyString_Check(obj)
+#endif
+            )
+    {
+        const char *str;
+#if PY_MAJOR_VERSION >= 3
+        str = PyBytes_AsString(obj);
+#else
+        str = PyString_AsString(obj);
+#endif
+        if(str == NULL)
+            return NULL;
+        return strdup(str);
+    }
+    else
+        return NULL;
+}
+
+
 static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 {
     PyObject *ret;
@@ -32,44 +83,10 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
         for(i = 0; i < argv_len; ++i)
         {
             PyObject *arg = PyList_GetItem(py_argv, i);
-            if(PyUnicode_Check(arg))
-            {
-                const char *str;
-                PyObject *pyutf8 = PyUnicode_AsUTF8String(arg);
-                if(pyutf8 == NULL)
-                {
-                    bad = 1;
-                    break;
-                }
-                fprintf(stderr, "\n");
-#if PY_MAJOR_VERSION >= 3
-                str = PyBytes_AsString(pyutf8);
-#else
-                str = PyString_AsString(pyutf8);
-#endif
-                if(str == NULL)
-                {
-                    bad = 1;
-                    break;
-                }
-                argv[i] = strdup(str);
-                Py_DECREF(pyutf8);
-            }
-            else
-            {
-                const char *str;
-#if PY_MAJOR_VERSION >= 3
-                str = PyBytes_AsString(arg);
-#else
-                str = PyString_AsString(arg);
-#endif
-                if(str == NULL)
-                {
-                    bad = 1;
-                    break;
-                }
-                argv[i] = strdup(str);
-            }
+            char *str = get_string(arg);
+            if(str == NULL)
+                break;
+            argv[i] = str;
         }
         if(bad)
         {
