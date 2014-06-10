@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.utils import find_all_links
+from reprounzip.utils import find_all_links, unicode_
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, join_root
 
@@ -74,19 +74,19 @@ def create_directory(args):
     with (target / 'script.sh').open('w') as fp:
         fp.write('#!/bin/sh\n\n')
         fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
-                shell_escape(unicode(join_root(root, d)))
+                shell_escape(unicode_(join_root(root, d)))
                 for d in lib_dirs))
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(
-                    unicode(join_root(root,
-                                      Path(run['workingdir']))))
+                    unicode_(join_root(root,
+                                       Path(run['workingdir']))))
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                             for k, v in run['environ'].items())
             cmd += ' '
             path = [PosixPath(d)
                     for d in run['environ'].get('PATH', '').split(':')]
-            path = ':'.join(unicode(join_root(root, d)) if d.root == '/'
-                            else unicode(d)
+            path = ':'.join(unicode_(join_root(root, d)) if d.root == '/'
+                            else unicode_(d)
                             for d in path)
             cmd += 'PATH=%s ' % shell_escape(path)
             # FIXME : Use exec -a or something if binary != argv[0]
@@ -192,7 +192,7 @@ def create_chroot(args):
             userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
             fp.write('chroot --userspec=%s %s /bin/sh -c %s\n' % (
                      userspec,
-                     shell_escape(unicode(root)),
+                     shell_escape(unicode_(root)),
                      shell_escape(cmd)))
 
     print("Experiment set up, run %s to start" % (target / 'script.sh'))

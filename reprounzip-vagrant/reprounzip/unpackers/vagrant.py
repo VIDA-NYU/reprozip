@@ -5,6 +5,7 @@ import sys
 
 from reprounzip.unpackers.common import load_config, select_installer,\
     shell_escape, join_root
+from reprounzip.utils import unicode_
 
 
 def rb_escape(s):
@@ -104,8 +105,8 @@ def create_vagrant(args):
                     for f in pkg.files:
                         dest = join_root(PosixPath('root'), f)
                         fp.write('cp -L %s %s\n' % (
-                                 shell_escape(unicode(f)),
-                                 shell_escape(unicode(dest))))
+                                 shell_escape(unicode_(f)),
+                                 shell_escape(unicode_(dest))))
                     fp.write('\n')
             # TODO : Compare package versions (painful because of sh)
 
@@ -126,7 +127,7 @@ def create_vagrant(args):
                     if path in paths:
                         continue
                     paths.add(path)
-                    pathlist.append(unicode(join_root(dataroot, path)))
+                    pathlist.append(unicode_(join_root(dataroot, path)))
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
             fp.write('tar zpxf /vagrant/experiment.rpz '
@@ -188,7 +189,7 @@ cp -L /bin/sh /experimentroot/bin/sh
 
         fp.write('end\n')
 
-    target_readable = unicode(target)
+    target_readable = unicode_(target)
     if not target_readable.endswith('/'):
         target_readable = target_readable + '/'
     print("Vagrantfile ready\n"

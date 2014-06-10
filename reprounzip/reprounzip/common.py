@@ -8,7 +8,7 @@ from datetime import datetime
 from rpaths import PosixPath
 import yaml
 
-from .utils import CommonEqualityMixin, escape, hsize
+from .utils import CommonEqualityMixin, escape, hsize, unicode_
 
 
 FILE_READ = 0x01
@@ -86,7 +86,7 @@ def load_config(filename, File=File, Package=Package):
 
 def write_file(fp, fi, indent=0):
     fp.write("%s  - \"%s\" # %s\n" % ("    " * indent,
-                                      escape(unicode(fi.path)),
+                                      escape(unicode_(fi.path)),
                                       hsize(fi.size)))
 
 

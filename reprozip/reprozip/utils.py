@@ -11,6 +11,12 @@ import sys
 PY3 = sys.version_info[0] == 3
 
 
+if PY3:
+    unicode_ = str
+else:
+    unicode_ = unicode
+
+
 def escape(s):
     return s.replace('\\', '\\\\').replace('"', '\\"')
 
