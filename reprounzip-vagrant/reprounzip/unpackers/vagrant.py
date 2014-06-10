@@ -6,7 +6,6 @@ import sys
 
 from reprounzip.unpackers.common import load_config, select_installer,\
     shell_escape, join_root
-from reprounzip.utils import find_all_links
 
 
 def rb_escape(s):
@@ -102,11 +101,10 @@ def create_vagrant(args):
             if use_chroot:
                 for pkg in packages:
                     fp.write('# Copies files from package %s\n' % pkg.name)
-                    for ff in pkg.files:
-                        for f in find_all_links(ff.path):
-                            dest = join_root('root', f)
-                            fp.write('cp %s %s\n' % (shell_escape(f),
-                                                     shell_escape(dest)))
+                    for f in pkg.files:
+                        dest = join_root('root', f)
+                        fp.write('cp %s %s\n' % (shell_escape(f),
+                                                 shell_escape(dest)))
                     fp.write('\n')
             # TODO : Compare package versions (painful because of sh)
 
