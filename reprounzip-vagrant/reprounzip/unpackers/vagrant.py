@@ -104,8 +104,8 @@ def create_vagrant(args):
                     fp.write('# Copies files from package %s\n' % pkg.name)
                     for f in pkg.files:
                         dest = join_root('root', f)
-                        fp.write('cp %s %s\n' % (shell_escape(f),
-                                                 shell_escape(dest)))
+                        fp.write('cp -L %s %s\n' % (shell_escape(f),
+                                                    shell_escape(dest)))
                     fp.write('\n')
             # TODO : Compare package versions (painful because of sh)
 
@@ -129,11 +129,11 @@ def create_vagrant(args):
 for i in $(ldd /bin/sh | perl -n -e '/{regex}/ && print "$1\n"'); do
     if [ -e "$i" ] ; then
         mkdir -p "$(dirname /experimentroot/$i)"
-        cp "$i" "/experimentroot/$i"
+        cp -L "$i" "/experimentroot/$i"
     fi
 done
 mkdir -p /experimentroot/bin
-cp /bin/sh /experimentroot/bin/sh
+cp -L /bin/sh /experimentroot/bin/sh
 '''.format(regex=regex))
 
     # Copies pack
