@@ -71,7 +71,7 @@ def create_directory(args):
         p.wait()
 
     # Writes start script
-    with (target / 'script.sh').open('w') as fp:
+    with (target / 'script.sh').open('w', encoding='utf-8') as fp:
         fp.write('#!/bin/sh\n\n')
         fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
                 shell_escape(unicode_(join_root(root, d)))
@@ -178,7 +178,7 @@ def create_chroot(args):
         Path('/bin/sh').copy(dest)
 
     # Writes start script
-    with (target / 'script.sh').open('w') as fp:
+    with (target / 'script.sh').open('w', encoding='utf-8') as fp:
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])

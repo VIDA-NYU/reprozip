@@ -45,11 +45,11 @@ with in_temp_dir():
                            'simple_output.txt'])
     orig_output_location = Path('simple_output.txt').absolute()
     assert orig_output_location.is_file()
-    with orig_output_location.open() as fp:
+    with orig_output_location.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     orig_output_location.remove()
     # Read config
-    with Path('rpz-simple/config.yml').open() as fp:
+    with Path('rpz-simple/config.yml').open(encoding='utf-8') as fp:
         conf = yaml.safe_load(fp)
     other_files = set(Path(f).absolute() for f in conf['other_files'])
     expected = [Path('simple'), (tests / 'simple_input.txt')]
@@ -66,7 +66,7 @@ with in_temp_dir():
     subprocess.check_call(['sh', 'simpledir/script.sh'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
     assert output_in_dir.is_file()
-    with output_in_dir.open() as fp:
+    with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     output_in_dir.remove()
     # Unpack chroot
@@ -77,7 +77,7 @@ with in_temp_dir():
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
     assert output_in_chroot.is_file()
-    with output_in_chroot.open() as fp:
+    with output_in_chroot.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     output_in_chroot.remove()
 

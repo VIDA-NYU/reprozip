@@ -65,7 +65,7 @@ def read_packages(packages, File=File, Package=Package):
 
 
 def load_config(filename, File=File, Package=Package):
-    with filename.open() as fp:
+    with filename.open(encoding='utf-8') as fp:
         config = yaml.safe_load(fp)
 
     keys_ = set(config.keys())
@@ -113,7 +113,7 @@ def write_package(fp, pkg, indent=0):
 
 def save_config(filename, runs, packages, other_files, reprozip_version):
     dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
-    with filename.open('w') as fp:
+    with filename.open('w', encoding='utf-8') as fp:
         # Writes preamble
         fp.write("""\
 # ReproZip configuration file
