@@ -89,7 +89,7 @@ def create_vagrant(args):
     target.mkdir(parents=True)
 
     # Writes setup script
-    with (target / 'setup.sh').open('w', encoding='utf-8') as fp:
+    with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('#!/bin/sh\n\n')
         if packages:
             # Updates package sources
@@ -152,7 +152,8 @@ cp -L /bin/sh /experimentroot/bin/sh
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes start script
-    with (target / 'script.sh').open('w', encoding='utf-8') as fp:
+    with (target / 'script.sh').open('w', encoding='utf-8',
+                                     newline='\n') as fp:
         fp.write('#!/bin/bash\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
@@ -176,7 +177,8 @@ cp -L /bin/sh /experimentroot/bin/sh
                          uid, shell_escape(cmd)))
 
     # Writes Vagrant file
-    with (target / 'Vagrantfile').open('w', encoding='utf-8') as fp:
+    with (target / 'Vagrantfile').open('w', encoding='utf-8',
+                                       newline='\n') as fp:
         # Vagrant header and version
         fp.write('# -*- mode: ruby -*-\n'
                  '# vi: set ft=ruby\n\n'

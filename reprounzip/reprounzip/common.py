@@ -113,7 +113,7 @@ def write_package(fp, pkg, indent=0):
 
 def save_config(filename, runs, packages, other_files, reprozip_version):
     dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
-    with filename.open('w', encoding='utf-8') as fp:
+    with filename.open('w', encoding='utf-8', newline='\n') as fp:
         # Writes preamble
         fp.write("""\
 # ReproZip configuration file

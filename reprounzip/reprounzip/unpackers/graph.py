@@ -173,7 +173,7 @@ def generate(target, directory, all_forks=False):
             other_files.append(f)
 
     # Writes DOT file
-    with target.open('w', encoding='utf-8') as fp:
+    with target.open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
         # Programs
         for program in all_programs:
