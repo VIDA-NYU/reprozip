@@ -54,6 +54,13 @@ def create_directory(args):
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
+    # Makes symlink targets relative
+    for m in members:
+        if not m.issym():
+            continue
+        linkname = PosixPath(m.linkname)
+        if linkname.is_absolute:
+            m.linkname = join_root(root, PosixPath(m.linkname)).path
     tar.extractall(str(root), members)
     tar.close()
 
