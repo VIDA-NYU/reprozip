@@ -64,18 +64,18 @@ class PackBuilder(object):
         assert isinstance(arcname, PosixPath)
         self.tar.add(str(name), str(arcname), *args, **kwargs)
 
-    def add_data(self, filename):
-        filename = Path(filename)
-        if filename in self.seen:
-            return
-        path = Path('/')
-        for c in filename.components[1:]:
-            path = path / c
-            if path in self.seen:
-                continue
-            logging.debug("%s -> %s" % (path, data_path(path)))
-            self.tar.add(str(path), str(data_path(path)), recursive=False)
-            self.seen.add(path)
+    def add_data(self, filename_):
+        for link in find_all_links(filename_):
+            if link in self.seen:
+                return
+            path = Path('/')
+            for c in link.components[1:]:
+                path = path / c
+                if path in self.seen:
+                    continue
+                logging.debug("%s -> %s" % (path, data_path(path)))
+                self.tar.add(str(path), str(data_path(path)), recursive=False)
+                self.seen.add(path)
 
     def close(self):
         self.tar.close()
@@ -127,9 +127,7 @@ def pack(target, directory):
         if pkg.packfiles:
             logging.info("Adding files from package %s..." % pkg.name)
             for f in pkg.files:
-                # This path is absolute, but not canonical
-                for t in find_all_links(f.path):
-                    tar.add_data(t)
+                tar.add_data(f.path)
         else:
             logging.info("NOT adding files from package %s" % pkg.name)
 
