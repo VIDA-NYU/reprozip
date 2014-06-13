@@ -9,13 +9,14 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import PY3
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
 def shell_escape(s):
+    if isinstance(s, bytes):
+        s = s.decode('utf-8')
     if any(c in s for c in string.whitespace + '*$\\"\''):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
@@ -28,22 +29,14 @@ def load_config(pack):
     tmp = Path.tempdir(prefix='reprozip_')
     try:
         # Loads info from package
-        # tarfile only accepts bytes on PY2
-        if PY3:
-            tar = tarfile.open(pack.path, 'r:*')
-        else:
-            tar = tarfile.open(bytes(pack), 'r:*')
+        tar = tarfile.open(str(pack), 'r:*')
         f = tar.extractfile('METADATA/version')
         version = f.read()
         f.close()
         if version != b'REPROZIP VERSION 1\n':
             sys.stderr.write("Unknown pack format\n")
             sys.exit(1)
-        # tarfile only accepts bytes on PY2
-        if PY3:
-            tar.extract('METADATA/config.yml', path=tmp.path)
-        else:
-            tar.extract('METADATA/config.yml', path=bytes(tmp))
+        tar.extract('METADATA/config.yml', path=str(tmp))
         tar.close()
         configfile = tmp / 'METADATA/config.yml'
         ret = reprounzip.common.load_config(configfile)

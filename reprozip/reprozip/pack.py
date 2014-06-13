@@ -55,14 +55,14 @@ def data_path(filename, prefix=Path('DATA')):
 
 class PackBuilder(object):
     def __init__(self, filename):
-        # tarfile only accepts bytes on PY2
-        self.tar = tarfile.open(bytes(filename), 'w:gz')
+        self.tar = tarfile.open(str(filename), 'w:gz')
         self.seen = set()
 
     def add(self, name, arcname, *args, **kwargs):
-        name = bytes(name)
-        arcname = bytes(arcname)
-        self.tar.add(name, arcname, *args, **kwargs)
+        from rpaths import PosixPath
+        assert isinstance(name, PosixPath)
+        assert isinstance(arcname, PosixPath)
+        self.tar.add(str(name), str(arcname), *args, **kwargs)
 
     def add_data(self, filename):
         filename = Path(filename)
@@ -74,7 +74,7 @@ class PackBuilder(object):
             if path in self.seen:
                 continue
             logging.debug("%s -> %s" % (path, data_path(path)))
-            self.tar.add(bytes(path), bytes(data_path(path)), recursive=False)
+            self.tar.add(str(path), str(data_path(path)), recursive=False)
             self.seen.add(path)
 
     def close(self):
@@ -110,17 +110,17 @@ def pack(target, directory):
     try:
         with manifest.open('wb') as fp:
             fp.write(b'REPROZIP VERSION 1\n')
-        tar.add(manifest, b'METADATA/version')
+        tar.add(manifest, Path('METADATA/version'))
     finally:
         manifest.remove()
 
     # Stores the configuration file
-    tar.add(configfile, b'METADATA/config.yml')
+    tar.add(configfile, Path('METADATA/config.yml'))
 
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
     if trace.is_file():
-        tar.add(trace, b'METADATA/trace.sqlite3')
+        tar.add(trace, Path('METADATA/trace.sqlite3'))
 
     # Add the files from the packages
     for pkg in packages:

@@ -245,8 +245,8 @@ def graph(args):
                 sys.stderr.write("Unknown pack format\n")
                 sys.exit(1)
             try:
-                tar.extract('METADATA/config.yml', path=bytes(tmp))
-                tar.extract('METADATA/trace.sqlite3', path=bytes(tmp))
+                tar.extract('METADATA/config.yml', path=str(tmp))
+                tar.extract('METADATA/trace.sqlite3', path=str(tmp))
             except KeyError as e:
                 sys.stderr.write("Error extracting from pack: %s" % e.args[0])
             generate(Path(args.target[0]),

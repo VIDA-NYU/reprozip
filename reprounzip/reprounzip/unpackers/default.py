@@ -47,14 +47,14 @@ def create_directory(args):
     root.mkdir()
 
     # Unpacks files
-    tar = tarfile.open(bytes(pack), 'r:*')  # tarfile only accepts bytes on PY2
+    tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
-    tar.extractall(bytes(root), members)
+    tar.extractall(str(root), members)
     tar.close()
 
     # Gets library paths
@@ -143,14 +143,14 @@ def create_chroot(args):
                         f.copy(dest)
 
     # Unpacks files
-    tar = tarfile.open(bytes(pack), 'r:*')
+    tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
-    tar.extractall(bytes(root), members)
+    tar.extractall(str(root), members)
     tar.close()
 
     # Copies /bin/sh + dependencies
