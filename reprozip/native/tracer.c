@@ -66,11 +66,11 @@ struct Process *trace_get_empty_process(void)
 
     /* Allocate more! */
     {
-        struct Process *pool, *ret;
+        struct Process *pool;
+        size_t prev_size = processes_size;
         processes_size *= 2;
-        pool = malloc((processes_size - i) * sizeof(*pool));
+        pool = malloc((processes_size - prev_size) * sizeof(*pool));
         processes = realloc(processes, processes_size);
-        ret = processes[i];
         for(; i < processes_size; ++i)
         {
             processes[i] = pool++;
@@ -79,7 +79,7 @@ struct Process *trace_get_empty_process(void)
             processes[i]->current_syscall = -1;
             processes[i]->syscall_info = NULL;
         }
-        return ret;
+        return processes[prev_size];
     }
 }
 
