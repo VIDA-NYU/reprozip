@@ -4,6 +4,7 @@
 #define FILE_READ   0x01
 #define FILE_WRITE  0x02
 #define FILE_WDIR   0x04
+#define FILE_STAT   0x08
 
 int db_init(const char *filename);
 int db_close(void);

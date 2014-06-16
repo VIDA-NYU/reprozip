@@ -178,7 +178,10 @@ int trace_handle_syscall(struct Process *process)
                 syscall, callname, process->in_syscall);
     }
 #endif
-    if(process->in_syscall && syscall == SYS_open)
+    /* ********************
+     * open(), access()
+     */
+    if(process->in_syscall && (syscall == SYS_open || syscall == SYS_access) )
     {
         unsigned int mode;
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
@@ -189,13 +192,19 @@ int trace_handle_syscall(struct Process *process)
             free(oldpath);
         }
 #ifdef DEBUG
-        fprintf(stderr, "open(\"%s\") = %d (%s)\n", pathname,
+        fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
+                (syscall == SYS_open)?"open":"access",
+                pathname,
                 (int)process->retvalue,
                 (process->retvalue >= 0)?"success":"failure");
 #endif
         if(process->retvalue >= 0)
         {
-            mode = flags2mode(process->params[1]);
+            if(syscall == SYS_open)
+                mode = flags2mode(process->params[1]);
+            else /* syscall == SYS_access */
+                mode = FILE_STAT;
+
             if(db_add_file_open(process->identifier,
                                 pathname,
                                 mode) != 0)
@@ -203,6 +212,9 @@ int trace_handle_syscall(struct Process *process)
         }
         free(pathname);
     }
+    /* ********************
+     * chdir()
+     */
     else if(process->in_syscall && syscall == SYS_chdir)
     {
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
@@ -229,6 +241,9 @@ int trace_handle_syscall(struct Process *process)
         else
             free(pathname);
     }
+    /* ********************
+     * execve()
+     */
     else if(!process->in_syscall && syscall == SYS_execve)
     {
         /* int execve(const char *filename,
@@ -296,6 +311,9 @@ int trace_handle_syscall(struct Process *process)
         free(execi->binary);
         free(execi);
     }
+    /* ********************
+     * fork(), clone(), ...
+     */
     else if(process->in_syscall
           && (syscall == SYS_fork || syscall == SYS_vfork
             || syscall == SYS_clone) )

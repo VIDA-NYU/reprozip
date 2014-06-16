@@ -28,7 +28,7 @@ file opening syscalls
 file stat syscalls
     oldstat stat stat64
     oldlstat lstat lstat64
-    access
+ x  access
     readdir
     readlink
     chmod

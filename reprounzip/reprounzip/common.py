@@ -14,6 +14,7 @@ from .utils import CommonEqualityMixin, escape, hsize, unicode_
 FILE_READ = 0x01
 FILE_WRITE = 0x02
 FILE_WDIR = 0x04
+FILE_STAT = 0x08
 
 
 class File(CommonEqualityMixin):
