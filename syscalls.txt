@@ -29,8 +29,7 @@ file stat syscalls
     oldstat stat stat64
     oldlstat lstat lstat64
  x  access
-    readdir
-    readlink
+ x  readlink
     chmod
     chown chown32
     lchown lchown32

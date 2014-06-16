@@ -242,6 +242,33 @@ int trace_handle_syscall(struct Process *process)
         free(pathname);
     }
     /* ********************
+     * readlink()
+     */
+    else if(process->in_syscall && syscall == SYS_readlink)
+    {
+        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+#ifdef DEBUG
+        fprintf(stderr, "readlink(\"%s\") = %d (%s)\n",
+                pathname,
+                (int)process->retvalue,
+                (process->retvalue >= 0)?"success":"failure");
+#endif
+        if(process->retvalue >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_STAT) != 0)
+                return -1;
+        }
+        free(pathname);
+    }
+    /* ********************
      * chdir()
      */
     else if(process->in_syscall && syscall == SYS_chdir)
