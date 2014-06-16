@@ -213,6 +213,35 @@ int trace_handle_syscall(struct Process *process)
         free(pathname);
     }
     /* ********************
+     * stat(), lstat()
+     */
+    else if(process->in_syscall && (syscall == SYS_stat ||
+                                    syscall == SYS_lstat) )
+    {
+        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+#ifdef DEBUG
+        fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
+                (syscall == SYS_stat)?"stat":"lstat",
+                pathname,
+                (int)process->retvalue,
+                (process->retvalue >= 0)?"success":"failure");
+#endif
+        if(process->retvalue >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_STAT) != 0)
+                return -1;
+        }
+        free(pathname);
+    }
+    /* ********************
      * chdir()
      */
     else if(process->in_syscall && syscall == SYS_chdir)
