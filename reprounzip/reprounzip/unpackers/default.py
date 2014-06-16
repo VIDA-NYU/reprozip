@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import itertools
 import re
 from rpaths import PosixPath, Path
 import subprocess
@@ -9,6 +10,34 @@ import tarfile
 from reprounzip.utils import find_all_links, unicode_
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, join_root
+
+
+_ldd_fmt = re.compile(r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$')
+
+
+def ldd(program):
+    p = subprocess.Popen(['ldd', program], stdout=subprocess.PIPE)
+    try:
+        for l in p.stdout:
+            l = l.decode('ascii')
+            m = _ldd_fmt.match(l)
+            if m is None:
+                continue
+            f = Path(m.group(1))
+            yield f
+    finally:
+        p.wait()
+    assert p.returncode == 0
+
+
+def copy_with_so(program, root):
+    for f in itertools.chain(ldd(program), [Path(program)]):
+        if not f.exists():
+            continue
+        dest = join_root(root, f)
+        dest.parent.mkdir(parents=True)
+        if not dest.exists():
+            f.copy(dest)
 
 
 def installpkgs(args):
@@ -161,28 +190,7 @@ def create_chroot(args):
     tar.close()
 
     # Copies /bin/sh + dependencies
-    fmt = re.compile(r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$')
-    p = subprocess.Popen(['ldd', '/bin/sh'], stdout=subprocess.PIPE)
-    try:
-        for l in p.stdout:
-            l = l.decode('ascii')
-            m = fmt.match(l)
-            if m is None:
-                continue
-            f = Path(m.group(1))
-            if not f.exists():
-                continue
-            dest = join_root(root, f)
-            dest.parent.mkdir(parents=True)
-            if not dest.exists():
-                f.copy(dest)
-    finally:
-        p.wait()
-    assert p.returncode == 0
-    (root / 'bin').mkdir(parents=True)
-    dest = root / 'bin/sh'
-    if not dest.exists():
-        Path('/bin/sh').copy(dest)
+    copy_with_so('/bin/sh', root)
 
     # Writes start script
     with (target / 'script.sh').open('w', encoding='utf-8') as fp:
