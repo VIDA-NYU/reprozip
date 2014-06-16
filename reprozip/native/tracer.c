@@ -70,7 +70,7 @@ struct Process *trace_get_empty_process(void)
         size_t prev_size = processes_size;
         processes_size *= 2;
         pool = malloc((processes_size - prev_size) * sizeof(*pool));
-        processes = realloc(processes, processes_size);
+        processes = realloc(processes, processes_size * sizeof(*processes));
         for(; i < processes_size; ++i)
         {
             processes[i] = pool++;
