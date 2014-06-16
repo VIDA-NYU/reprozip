@@ -138,7 +138,8 @@ def create_vagrant(args):
         if use_chroot:
             regex = r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$'
             fp.write(r'''
-for i in $(ldd /bin/sh | perl -n -e '/{regex}/ && print "$1\n"'); do
+for i in $(ldd /bin/sh /usr/bin/env |
+           perl -n -e '/{regex}/ && print "$1\n"'); do
     if [ -e "$i" ] ; then
         mkdir -p "$(dirname /experimentroot/$i)"
         cp -L "$i" "/experimentroot/$i"
@@ -146,6 +147,8 @@ for i in $(ldd /bin/sh | perl -n -e '/{regex}/ && print "$1\n"'); do
 done
 mkdir -p /experimentroot/bin
 cp -L /bin/sh /experimentroot/bin/sh
+mkdir -p /experimentroot/usr/bin
+cp -L /usr/bin/env /experimentroot/usr/bin/env
 '''.format(regex=regex))
 
     # Copies pack
@@ -157,6 +160,7 @@ cp -L /bin/sh /experimentroot/bin/sh
         fp.write('#!/bin/bash\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
+            cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                             for k, v in run['environ'].items())
             cmd += ' '
