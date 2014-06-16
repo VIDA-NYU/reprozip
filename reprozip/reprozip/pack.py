@@ -67,7 +67,7 @@ class PackBuilder(object):
     def add_data(self, filename_):
         for link in find_all_links(filename_):
             if link in self.seen:
-                return
+                continue
             path = Path('/')
             for c in link.components[1:]:
                 path = path / c
