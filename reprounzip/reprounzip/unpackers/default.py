@@ -192,11 +192,20 @@ def create_chroot(args):
     # Copies /bin/sh + dependencies
     copy_with_so('/bin/sh', root)
 
+    # Copies /usr/bin/env + dependencies
+    if Path('/usr/bin/env').exists():
+        has_env = True
+        copy_with_so('/usr/bin/env', root)
+    else:
+        has_env = False
+
     # Writes start script
     with (target / 'script.sh').open('w', encoding='utf-8') as fp:
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
+            if has_env:
+                cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                             for k, v in run['environ'].items())
             cmd += ' '
