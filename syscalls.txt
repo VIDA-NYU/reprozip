@@ -8,7 +8,6 @@ process syscalls
 file opening syscalls
     creat
  x  execve
-    link
     mkdir
  x  open
     rename
@@ -26,8 +25,8 @@ file opening syscalls
 
 
 file stat syscalls
-    oldstat stat stat64
-    oldlstat lstat lstat64
+ x  oldstat stat stat64
+ x  oldlstat lstat lstat64
  x  access
  x  readlink
     chmod

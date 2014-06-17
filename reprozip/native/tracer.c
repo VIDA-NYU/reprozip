@@ -215,8 +215,10 @@ int trace_handle_syscall(struct Process *process)
     /* ********************
      * stat(), lstat()
      */
-    else if(process->in_syscall && (syscall == SYS_stat ||
-                                    syscall == SYS_lstat) )
+    else if(process->in_syscall
+          && (syscall == SYS_stat || syscall == SYS_stat64
+             || syscall == SYS_oldstat || syscall == SYS_lstat
+             || syscall == SYS_lstat64 || syscall == SYS_oldlstat) )
     {
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
         if(pathname[0] != '/')
@@ -227,7 +229,9 @@ int trace_handle_syscall(struct Process *process)
         }
 #ifdef DEBUG
         fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                (syscall == SYS_stat)?"stat":"lstat",
+                (syscall == SYS_stat ||
+                 syscall == SYS_stat64 ||
+                 syscall == SYS_oldstat)?"stat":"lstat",
                 pathname,
                 (int)process->retvalue,
                 (process->retvalue >= 0)?"success":"failure");
