@@ -92,9 +92,10 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
     size_t length = 0;
     char previous_path[4096] = "";
 
-    int len = snprintf(&dummy, 1, "/proc/%d/maps", pid);
+    const char *const fmt = "/proc/%d/maps";
+    int len = snprintf(&dummy, 1, fmt, pid);
     char *procfile = malloc(len + 1);
-    snprintf(procfile, len + 1, "/proc/%d/maps", pid);
+    snprintf(procfile, len + 1, fmt, pid);
 
     /* Loops on lines
      * Format:
@@ -159,6 +160,111 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
         }
     }
     return 0;
+}
+
+char *trace_unhandled_syscall(int syscall, struct Process *process)
+{
+    const char *name = NULL;
+    int type = 0;
+    switch(syscall)
+    {
+    /* Path as first argument */
+    case SYS_mkdir:
+        name = "mkdir";
+        break;
+    case SYS_rename:
+        name = "rename";
+        break;
+    case SYS_rmdir:
+        name = "rmdir";
+        break;
+    case SYS_link:
+        name = "link";
+        break;
+    case SYS_truncate:
+    case SYS_truncate64:
+        name = "truncate";
+        break;
+    case SYS_unlink:
+        name = "unlink";
+        break;
+    case SYS_chmod:
+        name = "chmod";
+        break;
+    case SYS_chown:
+    case SYS_chown32:
+        name = "chown";
+        break;
+    case SYS_lchown:
+    case SYS_lchown32:
+        name = "lchown";
+        break;
+    case SYS_utime:
+        name = "utime";
+        break;
+    case SYS_utimes:
+        name = "utimes";
+        break;
+
+    /* Path as second argument */
+    case SYS_symlink:
+        name = "symlink"; type = 1;
+        break;
+
+    /* Functions that use open descriptors, which we currently don't track */
+    case SYS_linkat:
+        name = "linkat"; type = 2;
+        break;
+    case SYS_mkdirat:
+        name = "mkdirat"; type = 2;
+        break;
+    case SYS_openat:
+        name = "openat"; type = 2;
+        break;
+    case SYS_renameat:
+        name = "renameat"; type = 2;
+        break;
+    case SYS_symlinkat:
+        name = "symlinkat"; type = 2;
+        break;
+    case SYS_unlinkat:
+        name = "unlinkat"; type = 2;
+        break;
+    case SYS_fchmodat:
+        name = "fchmodat"; type = 2;
+        break;
+    case SYS_fchownat:
+        name = "fchownat"; type = 2;
+        break;
+    case SYS_readlinkat:
+        name = "readlinkat"; type = 2;
+        break;
+    }
+
+    if(name == NULL)
+        return NULL;
+    else if(type == 0 || type == 1)
+    {
+        char *pathname = tracee_strdup(process->pid,
+                                       (void*)process->params[type]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        {
+            const char *fmt = "%s(\"%s\")";
+            char dummy;
+            int len = snprintf(&dummy, 1, fmt, name, pathname);
+            char *s = malloc(len + 1);
+            snprintf(s, len + 1, fmt, name, pathname);
+            free(pathname);
+            return s;
+        }
+    }
+    else /* type == 2 */
+        return strdup(name);
 }
 
 int trace_handle_syscall(struct Process *process)
@@ -406,6 +512,20 @@ int trace_handle_syscall(struct Process *process)
                               process->identifier,
                               process->wd) != 0)
                 return -1;
+        }
+    }
+    /* ********************
+     * Other syscalls that might be of interest but that we don't handle yet
+     */
+    else if(process->in_syscall && process->retvalue >= 0)
+    {
+        char *desc = trace_unhandled_syscall(syscall, process);
+        if(desc != NULL)
+        {
+            fprintf(stderr,
+                    "WARNING: process %d used unhandled system call %s\n",
+                    process->pid, desc);
+            free(desc);
         }
     }
 
