@@ -179,9 +179,10 @@ int trace_handle_syscall(struct Process *process)
     }
 #endif
     /* ********************
-     * open(), access()
+     * open(), creat(), access()
      */
-    if(process->in_syscall && (syscall == SYS_open || syscall == SYS_access) )
+    if(process->in_syscall && (syscall == SYS_open || syscall == SYS_creat
+        || syscall == SYS_access) )
     {
         unsigned int mode;
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
@@ -193,17 +194,21 @@ int trace_handle_syscall(struct Process *process)
         }
 #ifdef DEBUG
         fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                (syscall == SYS_open)?"open":"access",
+                (syscall == SYS_open)?"open":
+                    (syscall == SYS_creat)?"creat":"access",
                 pathname,
                 (int)process->retvalue,
                 (process->retvalue >= 0)?"success":"failure");
 #endif
         if(process->retvalue >= 0)
         {
-            if(syscall == SYS_open)
-                mode = flags2mode(process->params[1]);
-            else /* syscall == SYS_access */
+            if(syscall == SYS_access)
                 mode = FILE_STAT;
+            else if(syscall == SYS_creat)
+                mode = flags2mode(process->params[1] |
+                                  O_CREAT | O_WRONLY | O_TRUNC);
+            else /* syscall == SYS_open */
+                mode = flags2mode(process->params[1]);
 
             if(db_add_file_open(process->identifier,
                                 pathname,

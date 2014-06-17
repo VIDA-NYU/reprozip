@@ -6,7 +6,7 @@ process syscalls
 
 
 file opening syscalls
-    creat
+ x  creat
  x  execve
     mkdir
  x  open
