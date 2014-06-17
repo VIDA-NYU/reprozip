@@ -88,15 +88,17 @@ def get_files(database):
             ''')
     for r_name, r_mode in opened_files:
         r_name = Path(r_name)
+        if not (r_mode & (FILE_WRITE | FILE_READ)):
+            continue
         if r_name not in files:
             f = TracedFile(r_name)
-            if r_mode & FILE_WRITE:
-                f.write()
-            elif r_mode & FILE_READ:
-                f.read()
-            else:
-                continue
             files[f.path] = f
+        else:
+            f = files[f.path]
+        if r_mode & FILE_WRITE:
+            f.write()
+        elif r_mode & FILE_READ:
+            f.read()
     cur.close()
     conn.close()
     return [fi for fi in files.values() if fi.what != TracedFile.WRITTEN]
