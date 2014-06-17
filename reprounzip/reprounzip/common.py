@@ -20,6 +20,8 @@ FILE_STAT = 0x08
 class File(CommonEqualityMixin):
     """A file, used at some point during the experiment.
     """
+    comment = None
+
     def __init__(self, path, size=None):
         self.path = path
         self.size = size
@@ -86,9 +88,10 @@ def load_config(filename, File=File, Package=Package):
 
 
 def write_file(fp, fi, indent=0):
-    fp.write("%s  - \"%s\" # %s\n" % ("    " * indent,
-                                      escape(unicode_(fi.path)),
-                                      hsize(fi.size)))
+    fp.write("%s  - \"%s\"%s\n" % (
+             "    " * indent,
+             escape(unicode_(fi.path)),
+             ' # %s' % fi.comment if fi.comment is not None else ''))
 
 
 def write_package(fp, pkg, indent=0):

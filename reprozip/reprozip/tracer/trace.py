@@ -13,7 +13,7 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, find_all_links
+from reprozip.utils import PY3, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -36,11 +36,14 @@ class TracedFile(File):
     what = None
 
     def __init__(self, path):
-        try:
-            path = Path(path)
-            size = path.size()
-        except (TypeError, OSError):
-            size = None
+        path = Path(path)
+        size = None
+        if path.exists():
+            if path.is_link():
+                self.comment = "Link to %s" % path.read_link(absolute=True)
+            else:
+                size = path.size()
+                self.comment = hsize(size)
         File.__init__(self, path, size)
 
     def read(self):
@@ -73,8 +76,8 @@ def get_files(database):
             FROM executed_files
             ORDER BY timestamp;
             ''')
-    for r_name_FIXME, in executed_files:
-        for filename in find_all_links(r_name_FIXME, True):
+    for r_name, in executed_files:
+        for filename in find_all_links(r_name, True):
             if filename not in files:
                 f = TracedFile(filename)
                 f.read()
