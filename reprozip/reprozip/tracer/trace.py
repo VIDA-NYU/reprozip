@@ -13,7 +13,7 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3
+from reprozip.utils import PY3, find_all_links
 
 
 class TracedFile(File):
@@ -73,12 +73,12 @@ def get_files(database):
             FROM executed_files
             ORDER BY timestamp;
             ''')
-    for r_name, in executed_files:
-        r_name = Path(r_name)
-        if r_name not in files:
-            f = TracedFile(r_name)
-            f.read()
-            files[f.path] = f
+    for r_name_FIXME, in executed_files:
+        for filename in find_all_links(r_name_FIXME, True):
+            if filename not in files:
+                f = TracedFile(filename)
+                f.read()
+                files[f.path] = f
 
     opened_files = cur.execute(
             '''
@@ -88,8 +88,14 @@ def get_files(database):
             ''')
     for r_name, r_mode in opened_files:
         r_name = Path(r_name)
-        if not (r_mode & (FILE_WRITE | FILE_READ)):
-            continue
+        # Adds symbolic links as read files
+        for filename in find_all_links(r_name, False):
+            if filename not in files:
+                f = TracedFile(filename)
+                f.read()
+                files[f.path] = f
+        # Adds final target
+        r_name = r_name.resolve()
         if r_name not in files:
             f = TracedFile(r_name)
             files[f.path] = f

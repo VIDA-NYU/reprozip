@@ -8,7 +8,7 @@ import sys
 import tarfile
 
 from reprozip.common import FILE_WRITE, FILE_WDIR, load_config
-from reprozip.utils import PY3, find_all_links
+from reprozip.utils import PY3
 
 
 def list_directories(database):
@@ -64,18 +64,17 @@ class PackBuilder(object):
         assert isinstance(arcname, PosixPath)
         self.tar.add(str(name), str(arcname), *args, **kwargs)
 
-    def add_data(self, filename_):
-        for link in find_all_links(filename_):
-            if link in self.seen:
+    def add_data(self, filename):
+        if filename in self.seen:
+            return
+        path = Path('/')
+        for c in filename.components[1:]:
+            path = path / c
+            if path in self.seen:
                 continue
-            path = Path('/')
-            for c in link.components[1:]:
-                path = path / c
-                if path in self.seen:
-                    continue
-                logging.debug("%s -> %s" % (path, data_path(path)))
-                self.tar.add(str(path), str(data_path(path)), recursive=False)
-                self.seen.add(path)
+            logging.debug("%s -> %s" % (path, data_path(path)))
+            self.tar.add(str(path), str(data_path(path)), recursive=False)
+            self.seen.add(path)
 
     def close(self):
         self.tar.close()
