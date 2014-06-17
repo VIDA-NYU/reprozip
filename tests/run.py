@@ -53,7 +53,7 @@ with in_temp_dir():
         conf = yaml.safe_load(fp)
     other_files = set(Path(f).absolute() for f in conf['other_files'])
     expected = [Path('simple'), (tests / 'simple_input.txt')]
-    assert other_files.issuperset([f.absolute() for f in expected])
+    assert other_files.issuperset([f.resolve() for f in expected])
     # Pack
     subprocess.check_call(['reprozip', '-v', '-v', 'pack',
                            '-d', 'rpz-simple',
