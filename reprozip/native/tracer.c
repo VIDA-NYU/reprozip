@@ -182,7 +182,9 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         name = "link";
         break;
     case SYS_truncate:
-    case SYS_truncate64:
+#ifdef SYS_truncate64
+    case SYS_truncate64: /* added for big file support on x86 */
+#endif
         name = "truncate";
         break;
     case SYS_unlink:
@@ -192,11 +194,15 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         name = "chmod";
         break;
     case SYS_chown:
-    case SYS_chown32:
+#ifdef SYS_chown32
+    case SYS_chown32: /* added for 32-bit ids on x86 */
+#endif
         name = "chown";
         break;
     case SYS_lchown:
-    case SYS_lchown32:
+#ifdef SYS_lchown32
+    case SYS_lchown32: /* added for 32-bit ids on x86 */
+#endif
         name = "lchown";
         break;
     case SYS_utime:
@@ -327,9 +333,20 @@ int trace_handle_syscall(struct Process *process)
      * stat(), lstat()
      */
     else if(process->in_syscall
-          && (syscall == SYS_stat || syscall == SYS_stat64
-             || syscall == SYS_oldstat || syscall == SYS_lstat
-             || syscall == SYS_lstat64 || syscall == SYS_oldlstat) )
+          && (syscall == SYS_stat || syscall == SYS_lstat
+#ifdef SYS_stat64
+             || syscall == SYS_stat64
+#endif
+#ifdef SYS_oldstat
+             || syscall == SYS_oldstat
+#endif
+#ifdef SYS_lstat64
+             || syscall == SYS_lstat64
+#endif
+#ifdef SYS_oldlstat
+             || syscall == SYS_oldlstat
+#endif
+              ) )
     {
         char *pathname = tracee_strdup(pid, (void*)process->params[0]);
         if(pathname[0] != '/')
@@ -340,9 +357,14 @@ int trace_handle_syscall(struct Process *process)
         }
 #ifdef DEBUG
         fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                (syscall == SYS_stat ||
-                 syscall == SYS_stat64 ||
-                 syscall == SYS_oldstat)?"stat":"lstat",
+                (syscall == SYS_stat
+#ifdef SYS_stat64
+               || syscall == SYS_stat64
+#endif
+#ifdef SYS_oldstat
+               || syscall == SYS_oldstat
+#endif
+                 )?"stat":"lstat",
                 pathname,
                 (int)process->retvalue,
                 (process->retvalue >= 0)?"success":"failure");
