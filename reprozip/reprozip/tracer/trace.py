@@ -124,7 +124,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
-def trace(binary, argv, directory, append):
+def trace(binary, argv, directory, append, sort_packages):
     """Main function for the trace subcommand.
     """
     cwd = Path.cwd()
@@ -164,7 +164,10 @@ def trace(binary, argv, directory, append):
     files = get_files(database)
 
     # Identifies which file comes from which package
-    files, packages = identify_packages(files)
+    if sort_packages:
+        files, packages = identify_packages(files)
+    else:
+        packages = []
 
     # Writes configuration file
     config = directory / 'config.yml'

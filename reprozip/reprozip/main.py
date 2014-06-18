@@ -140,7 +140,8 @@ def trace(args):
     reprozip.tracer.trace.trace(args.cmdline[0],
                                 argv,
                                 Path(args.dir),
-                                args.append)
+                                args.append,
+                                args.identify_packages)
 
 
 def pack(args):
@@ -194,6 +195,10 @@ def main():
             help="add to the previous run instead of replacing it")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER,
                               help="command-line to run under trace")
+    parser_trace.add_argument(
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
     parser_trace.set_defaults(func=trace)
 
     # testrun command
