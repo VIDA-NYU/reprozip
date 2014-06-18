@@ -82,8 +82,11 @@ def find_all_links_recursive(filename, files):
     return path
 
 
-def find_all_links(filename):
-    """Dereferences symlinks from a path, returning them plus the final target.
+def find_all_links(filename, include_target=False):
+    """Dereferences symlinks from a path.
+
+    If include_target is True, this also returns the real path of the final
+    target.
 
     Example:
         /
@@ -94,11 +97,14 @@ def find_all_links(filename):
                 d
                     e -> /f
             f
-    >>> find_all_links('/a/g/e')
+    >>> find_all_links('/a/g/e', True)
     ['/a', '/b/c', '/b/g', '/b/d/e', '/f']
     """
     files = set()
     filename = Path(filename)
     assert filename.absolute()
     path = find_all_links_recursive(filename, files)
-    return list(files) + [path]
+    files = list(files)
+    if include_target:
+        files.append(path)
+    return files

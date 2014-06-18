@@ -13,7 +13,7 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3
+from reprozip.utils import PY3, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -36,11 +36,14 @@ class TracedFile(File):
     what = None
 
     def __init__(self, path):
-        try:
-            path = Path(path)
-            size = path.size()
-        except (TypeError, OSError):
-            size = None
+        path = Path(path)
+        size = None
+        if path.exists():
+            if path.is_link():
+                self.comment = "Link to %s" % path.read_link(absolute=True)
+            else:
+                size = path.size()
+                self.comment = hsize(size)
         File.__init__(self, path, size)
 
     def read(self):
@@ -74,11 +77,11 @@ def get_files(database):
             ORDER BY timestamp;
             ''')
     for r_name, in executed_files:
-        r_name = Path(r_name)
-        if r_name not in files:
-            f = TracedFile(r_name)
-            f.read()
-            files[f.path] = f
+        for filename in find_all_links(r_name, True):
+            if filename not in files:
+                f = TracedFile(filename)
+                f.read()
+                files[f.path] = f
 
     opened_files = cur.execute(
             '''
@@ -88,8 +91,14 @@ def get_files(database):
             ''')
     for r_name, r_mode in opened_files:
         r_name = Path(r_name)
-        if not (r_mode & (FILE_WRITE | FILE_READ)):
-            continue
+        # Adds symbolic links as read files
+        for filename in find_all_links(r_name, False):
+            if filename not in files:
+                f = TracedFile(filename)
+                f.read()
+                files[f.path] = f
+        # Adds final target
+        r_name = r_name.resolve()
         if r_name not in files:
             f = TracedFile(r_name)
             files[f.path] = f

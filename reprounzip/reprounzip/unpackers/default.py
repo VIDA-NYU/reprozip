@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.utils import find_all_links, unicode_
+from reprounzip.utils import unicode_
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, join_root
 
@@ -164,19 +164,18 @@ def create_chroot(args):
                                  for pkg in packages_not_packed))
         sys.stderr.write("Will copy files from HOST SYSTEM\n")
         for pkg in packages_not_packed:
-            for ff in pkg.files:
-                for f in find_all_links(ff.path):
-                    if not f.exists():
-                        sys.stderr.write(
-                                "Missing file %s (from package %s) on host, "
-                                "experiment will probably miss it\n" % (
-                                    f, pkg.name))
-                    dest = join_root(root, f)
-                    dest.parent.mkdir(parents=True)
-                    if f.is_link():
-                        dest.symlink(f.read_link())
-                    else:
-                        f.copy(dest)
+            for f in pkg.files:
+                if not f.exists():
+                    sys.stderr.write(
+                            "Missing file %s (from package %s) on host, "
+                            "experiment will probably miss it\n" % (
+                                f, pkg.name))
+                dest = join_root(root, f)
+                dest.parent.mkdir(parents=True)
+                if f.is_link():
+                    dest.symlink(f.read_link())
+                else:
+                    f.copy(dest)
 
     # Unpacks files
     tar = tarfile.open(str(pack), 'r:*')
