@@ -142,7 +142,7 @@ packages:
 """)
 
         # Writes files
-        for pkg in packages:
+        for pkg in sorted(packages, key=lambda pkg: pkg.name):
             write_package(fp, pkg)
 
         fp.write("""\
@@ -151,5 +151,5 @@ packages:
 # want them packed
 other_files:
 """)
-        for f in other_files:
+        for f in sorted(other_files, key=lambda fi: fi.path):
             write_file(fp, f)
