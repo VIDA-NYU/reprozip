@@ -17,7 +17,7 @@ This package holds the unpacker components (and the 'reprounzip' command-line
 utility).
 """
 setup(name='reprounzip',
-      version='0.0',
+      version='0.2',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'console_scripts': [
@@ -37,7 +37,7 @@ setup(name='reprounzip',
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',

@@ -8,7 +8,7 @@ from pkg_resources import iter_entry_points
 import sys
 
 
-__version__ = '0.0'
+__version__ = '0.2'
 
 
 def main():

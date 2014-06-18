@@ -10,7 +10,7 @@ on a different system/architecture (notably on Windows). You will need Vagrant
 to run this virtual machine template.
 """
 setup(name='reprounzip-vagrant',
-      version='0.0',
+      version='0.2',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
@@ -27,7 +27,7 @@ setup(name='reprounzip-vagrant',
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',

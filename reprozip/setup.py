@@ -33,7 +33,7 @@ This package holds the tracer and packer components (and the 'reprozip'
 command-line utility).
 """
 setup(name='reprozip',
-      version='0.0',
+      version='0.2',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [
@@ -49,7 +49,7 @@ setup(name='reprozip',
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: POSIX :: Linux',
