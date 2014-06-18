@@ -67,6 +67,7 @@ def create_vagrant(args):
         sys.stderr.write("Error: Target directory exists\n")
         sys.exit(1)
     use_chroot = args.use_chroot
+    mount_bind = args.bind_magic_dirs
 
     # Loads config
     runs, packages, other_files = load_config(pack)
@@ -115,6 +116,12 @@ def create_vagrant(args):
             fp.write('mkdir /experimentroot; cd /experimentroot\n')
             fp.write('tar zpxf /vagrant/experiment.rpz '
                      '--numeric-owner --strip=1 DATA\n')
+            if mount_bind:
+                fp.write('\n'
+                         'mkdir -p /experimentroot/dev\n'
+                         'mount --bind /dev /experimentroot/dev\n'
+                         'mkdir -p /experimentroot/proc\n'
+                         'mount --bind /proc /experimentroot/proc\n')
         else:
             fp.write('cd /\n')
             paths = set()
@@ -217,4 +224,9 @@ def setup(subparsers, general_options):
     parser_vagrant.add_argument(
             '--use-chroot', action='store_true',
             help="Use a chroot and the original files in the virtual machine")
+    parser_vagrant.add_argument(
+            '--dont-bind-magic-dirs', action='store_false', default=True,
+            dest='bind_magic_dirs',
+            help="Don't mount /dev and /proc inside the chroot (if "
+            "--use-chroot is set)")
     parser_vagrant.set_defaults(func=create_vagrant)
