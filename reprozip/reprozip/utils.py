@@ -69,12 +69,12 @@ def find_all_links_recursive(filename, files):
 
         # That component is possibly a link
         if path.is_link():
+            # Adds the link itself
+            files.add(path)
+
             target = path.read_link(absolute=True)
             # Here, target might contain a number of symlinks
             if target not in files:
-                # Adds the link itself
-                files.add(path)
-
                 # Recurse on this new path
                 find_all_links_recursive(target, files)
             # Restores the invariant; realpath might resolve several links here
