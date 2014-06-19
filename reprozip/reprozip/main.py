@@ -37,12 +37,12 @@ def print_db(database):
     print("|  id  | parent |      timestamp     |")
     print(header)
     for r_id, r_parent, r_timestamp in processes:
-        f_id = "{: 5d} ".format(r_id)
+        f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
-            f_parent = "{: 7d} ".format(r_parent)
+            f_parent = "{0: 7d} ".format(r_parent)
         else:
             f_parent = "        "
-        f_timestamp = "{: 19d} ".format(r_timestamp)
+        f_timestamp = "{0: 19d} ".format(r_timestamp)
         print('|'.join(('', f_id, f_parent, f_timestamp, '')))
         print(header)
     cur.close()
@@ -61,14 +61,14 @@ def print_db(database):
           "    |")
     print(header)
     for r_id, r_name, r_timestamp, r_process, r_argv in processes:
-        f_id = "{: 7d} ".format(r_id)
-        f_timestamp = "{: 19d} ".format(r_timestamp)
-        f_proc = "{: 8d} ".format(r_process)
+        f_id = "{0: 7d} ".format(r_id)
+        f_timestamp = "{0: 19d} ".format(r_timestamp)
+        f_proc = "{0: 8d} ".format(r_process)
         argv = r_argv.split('\0')
         cmdline = ' '.join(repr(a) for a in argv)
         if argv[0] != os.path.basename(r_name):
             cmdline = "(%s) %s" % (r_name, cmdline)
-        f_cmdline = " {: <28s} ".format(cmdline)
+        f_cmdline = " {0: <28s} ".format(cmdline)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
         print(header)
     cur.close()
@@ -87,11 +87,11 @@ def print_db(database):
           "           |")
     print(header)
     for r_id, r_name, r_timestamp, r_mode, r_process in processes:
-        f_id = "{: 7d} ".format(r_id)
-        f_timestamp = "{: 19d} ".format(r_timestamp)
-        f_proc = "{: 8d} ".format(r_process)
-        f_mode = "{: 5d} ".format(r_mode)
-        f_name = " {: <28s} ".format(r_name)
+        f_id = "{0: 7d} ".format(r_id)
+        f_timestamp = "{0: 19d} ".format(r_timestamp)
+        f_proc = "{0: 8d} ".format(r_process)
+        f_mode = "{0: 5d} ".format(r_mode)
+        f_name = " {0: <28s} ".format(r_name)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()

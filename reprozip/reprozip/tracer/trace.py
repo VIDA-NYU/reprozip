@@ -202,6 +202,6 @@ def trace(binary, argv, directory, append, sort_packages, verbosity=1):
 
     save_config(config, runs, packages, files, reprozip_version)
 
-    print("Configuration file written in {!s}".format(config))
+    print("Configuration file written in {0!s}".format(config))
     print("Edit that file then run the packer -- "
           "use 'reprozip pack -h' for help")

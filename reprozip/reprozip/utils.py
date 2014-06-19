@@ -45,17 +45,17 @@ def hsize(nbytes):
     nbytes = float(nbytes)
 
     if nbytes < KB:
-        return "{} bytes".format(nbytes)
+        return "{0} bytes".format(nbytes)
     elif nbytes < MB:
-        return "{:.2f} KB".format(nbytes / KB)
+        return "{0:.2f} KB".format(nbytes / KB)
     elif nbytes < GB:
-        return "{:.2f} MB".format(nbytes / MB)
+        return "{0:.2f} MB".format(nbytes / MB)
     elif nbytes < TB:
-        return "{:.2f} GB".format(nbytes / GB)
+        return "{0:.2f} GB".format(nbytes / GB)
     elif nbytes < PB:
-        return "{:.2f} TB".format(nbytes / TB)
+        return "{0:.2f} TB".format(nbytes / TB)
     else:
-        return "{:.2f} PB".format(nbytes / PB)
+        return "{0:.2f} PB".format(nbytes / PB)
 
 
 def find_all_links_recursive(filename, files):
