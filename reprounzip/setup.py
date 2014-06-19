@@ -28,7 +28,7 @@ setup(name='reprounzip',
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
           'PyYAML',
-          'rpaths'],
+          'rpaths>=0.4'],
       description='Linux tool enabling reproducible experiments (unpacker)',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',
