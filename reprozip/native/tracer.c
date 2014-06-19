@@ -41,7 +41,7 @@ struct ExecveInfo {
     char **envp;
 };
 
-struct Process **processes;
+struct Process **processes = NULL;
 size_t processes_size;
 
 struct Process *trace_find_process(pid_t pid)
@@ -709,7 +709,6 @@ void cleanup(void)
             free(processes[i]->wd);
         }
     }
-    free(processes); /* FIXME : We still leak memory here */
 }
 
 void sigint_handler(int signo)
@@ -721,23 +720,26 @@ void sigint_handler(int signo)
 
 void trace_init(void)
 {
-    size_t i;
-    struct Process *pool;
     signal(SIGCHLD, SIG_DFL);
-    processes_size = 16;
-    processes = malloc(processes_size * sizeof(*processes));
-    pool = malloc(processes_size * sizeof(*pool));
-    for(i = 0; i < processes_size; ++i)
-    {
-        processes[i] = pool++;
-        processes[i]->status = PROCESS_FREE;
-        processes[i]->in_syscall = 0;
-        processes[i]->current_syscall = -1;
-        processes[i]->syscall_info = NULL;
-        processes[i]->wd = NULL;
-    }
-
     signal(SIGINT, sigint_handler);
+
+    if(processes == NULL)
+    {
+        size_t i;
+        struct Process *pool;
+        processes_size = 16;
+        processes = malloc(processes_size * sizeof(*processes));
+        pool = malloc(processes_size * sizeof(*pool));
+        for(i = 0; i < processes_size; ++i)
+        {
+            processes[i] = pool++;
+            processes[i]->status = PROCESS_FREE;
+            processes[i]->in_syscall = 0;
+            processes[i]->current_syscall = -1;
+            processes[i]->syscall_info = NULL;
+            processes[i]->wd = NULL;
+        }
+    }
 }
 
 int fork_and_trace(const char *binary, int argc, char **argv,
