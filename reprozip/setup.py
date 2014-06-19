@@ -1,5 +1,6 @@
 import os
 from setuptools import setup, Extension
+import sys
 
 
 # List the source files
@@ -32,15 +33,18 @@ creating a virtual machine through Vagrant.
 This package holds the tracer and packer components (and the 'reprozip'
 command-line utility).
 """
+req = [
+    'PyYAML',
+    'rpaths>=0.4']
+if sys.version_info <= (2, 6):
+    req.append('argparse')
 setup(name='reprozip',
       version='0.2',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [
           'reprozip = reprozip.main:main']},
-      install_requires=[
-          'PyYAML',
-          'rpaths>=0.4'],
+      install_requires=req,
       description='Linux tool enabling reproducible experiments (packer)',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',

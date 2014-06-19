@@ -1,4 +1,5 @@
 from setuptools import setup
+import sys
 
 
 description = """\
@@ -16,6 +17,11 @@ creating a virtual machine through Vagrant.
 This package holds the unpacker components (and the 'reprounzip' command-line
 utility).
 """
+req = [
+    'PyYAML',
+    'rpaths>=0.4']
+if sys.version_info <= (2, 6):
+    req.append('argparse')
 setup(name='reprounzip',
       version='0.2',
       packages=['reprounzip', 'reprounzip.unpackers'],
@@ -26,9 +32,7 @@ setup(name='reprounzip',
               'graph = reprounzip.unpackers.graph:setup',
               'default = reprounzip.unpackers.default:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
-      install_requires=[
-          'PyYAML',
-          'rpaths>=0.4'],
+      install_requires=req,
       description='Linux tool enabling reproducible experiments (unpacker)',
       author="Remi Rampin",
       author_email='remirampin@gmail.com',
