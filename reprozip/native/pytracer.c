@@ -67,12 +67,21 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
     const char *binary, *databasepath;
     char **argv;
     size_t argv_len;
+    int verbosity;
     PyObject *py_binary, *py_argv, *py_databasepath;
-    if(!(PyArg_ParseTuple(args, "OO!O",
+    if(!(PyArg_ParseTuple(args, "OO!Oi",
                           &py_binary,
                           &PyList_Type, &py_argv,
-                          &py_databasepath)))
+                          &py_databasepath,
+                          &verbosity)))
         return NULL;
+
+    if(verbosity < 0)
+    {
+        PyErr_SetString(Err_Base, "verbosity should be >= 0");
+        return NULL;
+    }
+    trace_verbosity = verbosity;
 
     binary = get_string(py_binary);
     if(binary == NULL)
@@ -130,7 +139,7 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 
 static PyMethodDef methods[] = {
     {"execute", pytracer_execute, METH_VARARGS,
-     "execute(binary, argv, databasepath)\n"
+     "execute(binary, argv, databasepath, verbosity)\n"
      "\n"
      "Runs the specified binary with the argument list argv under trace and "
      "writes\nthe captured events to SQLite3 database databasepath."},

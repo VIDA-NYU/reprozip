@@ -114,7 +114,8 @@ def testrun(args):
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        c = _pytracer.execute(args.cmdline[0], argv, database.path)
+        c = _pytracer.execute(args.cmdline[0], argv, database.path,
+                              args.verbosity)
         print("\n\n-----------------------------------------------------------"
               "--------------------")
         print_db(database)
@@ -141,7 +142,8 @@ def trace(args):
                                 argv,
                                 Path(args.dir),
                                 args.append,
-                                args.identify_packages)
+                                args.identify_packages,
+                                args.verbosity)
 
 
 def pack(args):
@@ -168,7 +170,7 @@ def main():
 
     # General options
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('-v', '--verbose', action='count', default=0,
+    options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
     options.add_argument('-d', '--dir', default='.reprozip',
@@ -221,8 +223,8 @@ def main():
     parser_pack.set_defaults(func=pack)
 
     args = parser.parse_args()
-    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=levels[min(args.verbosity, 2)])
+    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
+    logging.basicConfig(level=levels[min(args.verbosity, 3)])
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
     args.func(args)

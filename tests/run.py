@@ -38,7 +38,7 @@ with in_temp_dir():
     # Build
     build('simple', 'simple.c')
     # Trace
-    subprocess.check_call(['reprozip', '-v', '-v', 'trace',
+    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'trace',
                            '-d', 'rpz-simple',
                            './simple',
                            (tests / 'simple_input.txt').path,
@@ -55,11 +55,11 @@ with in_temp_dir():
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
     # Pack
-    subprocess.check_call(['reprozip', '-v', '-v', 'pack',
+    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'pack',
                            '-d', 'rpz-simple',
                            'simple.rpz'])
     # Unpack directory
-    subprocess.check_call(['reprounzip', '-v', '-v', 'directory',
+    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'directory',
                            'simple.rpz', 'simpledir'])
     # Run script
     subprocess.check_call(['cat', 'simpledir/script.sh'])
@@ -70,7 +70,7 @@ with in_temp_dir():
         assert fp.read().strip() == '42'
     output_in_dir.remove()
     # Unpack chroot
-    subprocess.check_call(['reprounzip', '-v', '-v', 'chroot',
+    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'chroot',
                            'simple.rpz', 'simplechroot'])
     # Run chroot
     subprocess.check_call(['sudo', 'sh', 'simplechroot/script.sh'])
@@ -86,7 +86,8 @@ with in_temp_dir():
                                'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant', '--use-chroot',
+    subprocess.check_call(['reprounzip', '-v', '-v', '-v',
+                           'vagrant', '--use-chroot',
                            'simple.rpz', '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
@@ -96,7 +97,7 @@ with in_temp_dir():
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack usual Vagrant
-    subprocess.check_call(['reprounzip', '-v', '-v', 'vagrant',
+    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'vagrant',
                            'simple.rpz', '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:

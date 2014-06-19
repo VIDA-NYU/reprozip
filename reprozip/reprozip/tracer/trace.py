@@ -133,7 +133,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
-def trace(binary, argv, directory, append, sort_packages):
+def trace(binary, argv, directory, append, sort_packages, verbosity=1):
     """Main function for the trace subcommand.
     """
     cwd = Path.cwd()
@@ -160,7 +160,7 @@ def trace(binary, argv, directory, append, sort_packages):
     database = directory / 'trace.sqlite3'
     logging.info("Running program")
     # Might raise _pytracer.Error
-    c = _pytracer.execute(binary, argv, database.path)
+    c = _pytracer.execute(binary, argv, database.path, verbosity)
     if c != 0:
         if c & 0x0100:
             logging.warning("Program appears to have been terminated by "

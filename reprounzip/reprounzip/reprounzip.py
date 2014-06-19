@@ -27,7 +27,7 @@ def main():
 
     # General options
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('-v', '--verbose', action='count', default=0,
+    options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
 
@@ -43,7 +43,7 @@ def main():
         setup_function(subparsers=subparsers, general_options=options)
 
     args = parser.parse_args()
-    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=levels[min(args.verbosity, 2)])
+    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
+    logging.basicConfig(level=levels[min(args.verbosity, 3)])
     args.func(args)
     sys.exit(0)

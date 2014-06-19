@@ -6,4 +6,6 @@
 int fork_and_trace(const char *binary, int argc, char **argv,
                    const char *database_path, int *exit_status);
 
+extern int trace_verbosity;
+
 #endif
