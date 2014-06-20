@@ -252,6 +252,10 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     case SYS_readlinkat:
         name = "readlinkat"; type = 2;
         break;
+
+    /* Others */
+    case SYS_ptrace:
+        name = "ptrace"; type = 2;
     }
 
     if(name == NULL)
