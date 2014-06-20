@@ -212,11 +212,20 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 #endif
         name = "lchown";
         break;
+    case SYS_faccessat:
+        name = "faccessat";
+        break;
     case SYS_utime:
         name = "utime";
         break;
     case SYS_utimes:
         name = "utimes";
+        break;
+    case SYS_mq_open:
+        name = "mq_open";
+        break;
+    case SYS_mq_unlink:
+        name = "mq_unlink";
         break;
 
     /* Path as second argument */
@@ -252,10 +261,27 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     case SYS_readlinkat:
         name = "readlinkat"; type = 2;
         break;
+#ifdef SYS_fstatat
+    case SYS_fstatat:
+#endif
+#ifdef SYS_fstatat64
+    case SYS_fstatat64:
+#endif
+#ifdef SYS_newfstatat
+    case SYS_newfstatat:
+#endif
+        name = "fstatat"; type = 2;
+        break;
 
     /* Others */
     case SYS_ptrace:
         name = "ptrace"; type = 2;
+        break;
+#ifdef SYS_name_to_handle_at
+    case SYS_name_to_handle_at:
+        name = "name_to_handle_at"; type = 2;
+        break;
+#endif
     }
 
     if(name == NULL)

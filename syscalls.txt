@@ -22,12 +22,17 @@ file opening syscalls
     renameat
     symlinkat
     unlinkat
+ x  chdir
+    mq_open
+    mq_unlink
+    name_to_handle_at
 
 
 file stat syscalls
  x  oldstat stat stat64
  x  oldlstat lstat lstat64
  x  access
+    faccessat
  x  readlink
     chmod
     chown chown32
@@ -36,3 +41,4 @@ file stat syscalls
     fchmodat
     fchownat
     readlinkat
+    fstatat fstatat64
