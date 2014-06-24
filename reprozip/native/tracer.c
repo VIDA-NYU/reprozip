@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -659,8 +660,27 @@ int trace(pid_t first_proc, int *first_exit_code)
 
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
         {
+            size_t len = 0;
             struct user_regs_struct regs;
-            ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+            /* Try to use GETREGSET first, since iov_len allows us to know if
+             * 32bit or 64bit mode was used */
+#ifdef PTRACE_GETREGSET
+#ifndef NT_PRSTATUS
+#define NT_PRSTATUS  1
+#endif
+            {
+                struct iovec iov;
+                iov.iov_base = &regs;
+                iov.iov_len = sizeof(regs);
+                if(ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov) == 0)
+                    len = iov.iov_len;
+            }
+            if(len == 0)
+#endif
+            /* GETREGSET undefined or call failed, fallback on GETREGS */
+            {
+                ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+            }
 #if defined(I386)
             process->current_syscall = regs.orig_eax;
             if(process->in_syscall)
@@ -675,18 +695,49 @@ int trace(pid_t first_proc, int *first_exit_code)
                 process->params[5] = regs.ebp;
             }
 #elif defined(X86_64)
-            /* TODO : 32-bit syscalls */
-            process->current_syscall = regs.orig_rax;
-            if(process->in_syscall)
-                process->retvalue = regs.rax;
+            /* On x86_64, process might be 32 or 64 bits */
+#ifndef __X32_SYSCALL_BIT
+#define __X32_SYSCALL_BIT 0x40000000
+#endif
+            /* If len is known (not 0) and not that of x86_64 registers,
+             * or if len is not known (0) and CS is 0x23 (not as reliable) */
+            if( (len != 0 && len != sizeof(regs))
+             || (len == 0 && regs.cs == 0x23) )
+            {
+                /* 32 bit mode */
+                process->current_syscall =
+                        regs.orig_rax & __X32_SYSCALL_BIT;
+                /* TODO : This is the correct syscall number, but the rest of
+                 * the code assumes it's a 64bit syscall
+                 * trace_handle_syscall() needs to be updated to handle
+                 * __X32_SYSCALL_BIT correctly! */
+                if(process->in_syscall)
+                    process->retvalue = regs.rax;
+                else
+                {
+                    process->params[0] = regs.rbx; /* ebx */
+                    process->params[1] = regs.rcx; /* ecx */
+                    process->params[2] = regs.rdx; /* edx */
+                    process->params[3] = regs.rsi; /* esi */
+                    process->params[4] = regs.rdi; /* edi */
+                    process->params[5] = regs.rbp; /* ebp */
+                }
+            }
             else
             {
-                process->params[0] = regs.rdi;
-                process->params[1] = regs.rsi;
-                process->params[2] = regs.rdx;
-                process->params[3] = regs.r10;
-                process->params[4] = regs.r8;
-                process->params[5] = regs.r9;
+                /* 64 bit mode */
+                process->current_syscall = regs.orig_rax;
+                if(process->in_syscall)
+                    process->retvalue = regs.rax;
+                else
+                {
+                    process->params[0] = regs.rdi;
+                    process->params[1] = regs.rsi;
+                    process->params[2] = regs.rdx;
+                    process->params[3] = regs.r10;
+                    process->params[4] = regs.r8;
+                    process->params[5] = regs.r9;
+                }
             }
 #endif
             if(trace_handle_syscall(process) != 0)
