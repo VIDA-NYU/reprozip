@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
+import logging
 from rpaths import PosixPath, Path
 import sys
+import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer,\
     shell_escape, join_root
@@ -127,6 +129,9 @@ def create_vagrant(args):
             paths = set()
             pathlist = []
             dataroot = PosixPath('DATA')
+            # Adds intermediate directories, and checks for existence in the
+            # tar
+            tar = tarfile.open(str(pack), 'r:*')
             for f in other_files:
                 path = PosixPath('/')
                 for c in f.path.components[1:]:
@@ -134,7 +139,14 @@ def create_vagrant(args):
                     if path in paths:
                         continue
                     paths.add(path)
-                    pathlist.append(unicode_(join_root(dataroot, path)))
+                    datapath = join_root(dataroot, path)
+                    try:
+                        tar.getmember(str(datapath))
+                    except KeyError:
+                        logging.info("Missing file %s" % datapath)
+                    else:
+                        pathlist.append(unicode_(datapath))
+            tar.close()
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
             fp.write('tar zpxf /vagrant/experiment.rpz '
