@@ -150,6 +150,7 @@ def create_vagrant(args):
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
             fp.write('tar zpxf /vagrant/experiment.rpz '
+                     '--keep-old-files --no-overwrite-dir '
                      '--numeric-owner --strip=1 %s\n' %
                      ' '.join(shell_escape(p) for p in reversed(pathlist)))
 
