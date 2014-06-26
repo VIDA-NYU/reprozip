@@ -212,9 +212,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 #endif
         name = "lchown";
         break;
-    case SYS_faccessat:
-        name = "faccessat";
-        break;
     case SYS_utime:
         name = "utime";
         break;
@@ -257,6 +254,9 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         break;
     case SYS_fchownat:
         name = "fchownat"; type = 2;
+        break;
+    case SYS_faccessat:
+        name = "faccessat"; type = 2;
         break;
     case SYS_readlinkat:
         name = "readlinkat"; type = 2;
