@@ -110,7 +110,10 @@ def get_files(database):
             f.read()
     cur.close()
     conn.close()
-    return [fi for fi in files.values() if fi.what != TracedFile.WRITTEN]
+    return [fi
+            for fi in files.values()
+            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                         for m in magic_dirs)]
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
