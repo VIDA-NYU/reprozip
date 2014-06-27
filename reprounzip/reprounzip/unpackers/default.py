@@ -1,43 +1,13 @@
 from __future__ import unicode_literals
 
-import itertools
-import re
 from rpaths import PosixPath, Path
 import subprocess
 import sys
 import tarfile
 
-from reprounzip.utils import unicode_
+from reprounzip.utils import unicode_, download_file
 from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape, join_root
-
-
-_ldd_fmt = re.compile(r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$')
-
-
-def ldd(program):
-    p = subprocess.Popen(['ldd', program], stdout=subprocess.PIPE)
-    try:
-        for l in p.stdout:
-            l = l.decode('ascii')
-            m = _ldd_fmt.match(l)
-            if m is None:
-                continue
-            f = Path(m.group(1))
-            yield f
-    finally:
-        p.wait()
-    assert p.returncode == 0
-
-
-def copy_with_so(program, root):
-    for f in itertools.chain(ldd(program), [Path(program)]):
-        if not f.exists():
-            continue
-        dest = join_root(root, f)
-        dest.parent.mkdir(parents=True)
-        if not dest.exists():
-            f.copy(dest)
+    shell_escape, busybox_url, join_root
 
 
 def installpkgs(args):
@@ -138,8 +108,7 @@ def create_chroot(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
 
     All the files in the pack are unpacked; system files are copied only if
-    they were not packed, and for /bin/sh and dependencies (if they were not
-    packed).
+    they were not packed, and busybox is installed if /bin/sh wasn't packed.
     """
     pack = Path(args.pack[0])
     target = Path(args.target[0])
@@ -188,23 +157,28 @@ def create_chroot(args):
     tar.extractall(str(root), members)
     tar.close()
 
-    # Copies /bin/sh + dependencies
-    copy_with_so('/bin/sh', root)
-
-    # Copies /usr/bin/env + dependencies
-    if Path('/usr/bin/env').exists():
-        has_env = True
-        copy_with_so('/usr/bin/env', root)
-    else:
-        has_env = False
+    # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
+    sh_path = join_root(root, Path('/bin/sh'))
+    env_path = join_root(root, Path('/usr/bin/env'))
+    if not sh_path.lexists() or not env_path.lexists():
+        busybox_path = join_root(root, Path('/bin/busybox'))
+        busybox_path.parent.mkdir(parents=True)
+        download_file(busybox_url(runs[0]['architecture']),
+                      busybox_path)
+        busybox_path.chmod(0o755)
+        if not sh_path.lexists():
+            sh_path.parent.mkdir(parents=True)
+            sh_path.symlink('/bin/busybox')
+        if not env_path.lexists():
+            env_path.parent.mkdir(parents=True)
+            env_path.symlink('/bin/busybox')
 
     # Writes start script
     with (target / 'script.sh').open('w', encoding='utf-8') as fp:
         fp.write('#!/bin/sh\n\n')
         for run in runs:
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-            if has_env:
-                cmd += '/usr/bin/env -i '
+            cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                             for k, v in run['environ'].items())
             cmd += ' '
