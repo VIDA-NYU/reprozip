@@ -69,6 +69,15 @@ def get_files(database):
 
     files = {}
 
+    # Adds dynamic linkers
+    for libdir in (Path('/lib'), Path('/lib64')):
+        if libdir.exists():
+            for linker in libdir.listdir('*ld-linux*'):
+                f = TracedFile(linker)
+                f.read()
+                files[f.path] = f
+
+    # Adds executed files
     cur = conn.cursor()
     executed_files = cur.execute(
             '''
@@ -83,6 +92,7 @@ def get_files(database):
                 f.read()
                 files[f.path] = f
 
+    # Adds opened files
     opened_files = cur.execute(
             '''
             SELECT name, mode
@@ -110,6 +120,7 @@ def get_files(database):
             f.read()
     cur.close()
     conn.close()
+
     return [fi
             for fi in files.values()
             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
