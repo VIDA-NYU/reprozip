@@ -70,6 +70,14 @@ def get_files(database):
 
     files = {}
 
+    # Adds dynamic linkers
+    for libdir in (Path('/lib'), Path('/lib64')):
+        if libdir.exists():
+            for linker in libdir.listdir('*ld-linux*'):
+                f = TracedFile(linker)
+                f.read()
+                files[f.path] = f
+
     # Adds executed files
     exec_cursor = conn.cursor()
     executed_files = exec_cursor.execute(
