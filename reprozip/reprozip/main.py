@@ -68,7 +68,7 @@ def print_db(database):
         cmdline = ' '.join(repr(a) for a in argv)
         if argv[0] != os.path.basename(r_name):
             cmdline = "(%s) %s" % (r_name, cmdline)
-        f_cmdline = " {0: <28s} ".format(cmdline)
+        f_cmdline = " {0: <35s} ".format(cmdline)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
         print(header)
     cur.close()
