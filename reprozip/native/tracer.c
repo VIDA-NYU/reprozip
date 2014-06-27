@@ -785,7 +785,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         /* Execute the target */
         execvp(binary, args);
         perror("Couldn't execute the target command (execvp returned)");
-        return 1;
+        exit(1);
     }
 
     if(db_init(database_path) != 0)
