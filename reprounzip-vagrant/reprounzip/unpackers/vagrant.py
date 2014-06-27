@@ -6,7 +6,7 @@ import sys
 import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer,\
-    shell_escape, join_root
+    shell_escape, busybox_url, join_root
 from reprounzip.utils import unicode_
 
 
@@ -156,20 +156,19 @@ def create_vagrant(args):
 
         # Copies /bin/sh + dependencies
         if use_chroot:
-            regex = r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$'
+            url = busybox_url(runs[0]['architecture'])
             fp.write(r'''
-for i in $(ldd /bin/sh /usr/bin/env |
-           perl -n -e '/{regex}/ && print "$1\n"'); do
-    if [ -e "$i" ] ; then
-        mkdir -p "$(dirname /experimentroot/$i)"
-        cp -L "$i" "/experimentroot/$i"
-    fi
-done
 mkdir -p /experimentroot/bin
-cp -L /bin/sh /experimentroot/bin/sh
 mkdir -p /experimentroot/usr/bin
-cp -L /usr/bin/env /experimentroot/usr/bin/env
-'''.format(regex=regex))
+if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
+    wget -O /experimentroot/bin/busybox {url}
+    chmod +x /experimentroot/bin/busybox
+fi
+[ -e /experimentroot/bin/sh ] || \
+    ln -s /bin/busybox /experimentroot/bin/sh
+[ -e /experimentroot/usr/bin/env ] || \
+    ln -s /bin/busybox /experimentroot/usr/bin/env
+'''.format(url=url))
 
     # Copies pack
     pack.copyfile(target / 'experiment.rpz')

@@ -128,6 +128,10 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     return installer
 
 
+def busybox_url(arch):
+    return 'http://www.busybox.net/downloads/binaries/latest/busybox-%s' % arch
+
+
 def join_root(root, path):
     p_root, p_loc = path.split_root()
     assert p_root == b'/'
