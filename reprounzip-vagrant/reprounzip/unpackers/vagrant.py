@@ -158,12 +158,16 @@ def create_vagrant(args):
         if use_chroot:
             url = busybox_url(runs[0]['architecture'])
             fp.write(r'''
-if [ ! -e /bin/sh -o ! -e /usr/bin/env ]; then
-    mkdir -p /experimentroot/bin
+mkdir -p /experimentroot/bin
+mkdir -p /experimentroot/usr/bin
+if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
     wget -O /experimentroot/bin/busybox {url}
+    chmod +x /experimentroot/bin/busybox
 fi
-[ -e /bin/sh ] || ln -s /bin/busybox /experimentroot/bin/sh
-[ -e /usr/bin/env ] || ln -s /bin/busybox /experimentroot/usr/bin/env
+[ -e /experimentroot/bin/sh ] || \
+    ln -s /bin/busybox /experimentroot/bin/sh
+[ -e /experimentroot/usr/bin/env ] || \
+    ln -s /bin/busybox /experimentroot/usr/bin/env
 '''.format(url=url))
 
     # Copies pack
