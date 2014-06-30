@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,88 @@
 #include "database.h"
 #include "ptrace_utils.h"
 #include "utils.h"
+
+
+/* Static assertion trick */
+enum { ASSERT_POINTER_FITS_IN_LONG_INT = 1/(!!(
+        sizeof(long int) >= sizeof(void*)
+)) };
+
+
+/* This is NOT a union because sign-extension rules depend on actual register
+ * sizes. */
+typedef struct S_register_type {
+    signed long int i;
+    unsigned long int u;
+    void *p;
+} register_type;
+
+
+struct i386_regs {
+    int32_t ebx;
+    int32_t ecx;
+    int32_t edx;
+    int32_t esi;
+    int32_t edi;
+    int32_t ebp;
+    int32_t eax;
+    int32_t xds;
+    int32_t xes;
+    int32_t xfs;
+    int32_t xgs;
+    int32_t orig_eax;
+    int32_t eip;
+    int32_t xcs;
+    int32_t eflags;
+    int32_t esp;
+    int32_t xss;
+};
+
+
+struct x86_64_regs {
+    int64_t r15;
+    int64_t r14;
+    int64_t r13;
+    int64_t r12;
+    int64_t rbp;
+    int64_t rbx;
+    int64_t r11;
+    int64_t r10;
+    int64_t r9;
+    int64_t r8;
+    int64_t rax;
+    int64_t rcx;
+    int64_t rdx;
+    int64_t rsi;
+    int64_t rdi;
+    int64_t orig_rax;
+    int64_t rip;
+    int64_t cs;
+    int64_t eflags;
+    int64_t rsp;
+    int64_t ss;
+    int64_t fs_base;
+    int64_t gs_base;
+    int64_t ds;
+    int64_t es;
+    int64_t fs;
+    int64_t gs;
+};
+
+
+static void get_i386_reg(register_type *reg, uint64_t value)
+{
+    reg->i = (int32_t)value;
+    reg->u = value;
+    reg->p = (void*)value;
+}
+
+static void get_x86_64_reg(register_type *reg, uint64_t value)
+{
+    reg->i = (int64_t)value;
+    reg->u = value;
+    reg->p = (void*)value;
+}
 
 
 int trace_verbosity = 0;
@@ -290,7 +373,7 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     else if(type == 0 || type == 1)
     {
         char *pathname = tracee_strdup(process->pid,
-                                       (void*)process->params[type]);
+                                       process->params[type].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -314,7 +397,18 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 int trace_handle_syscall(struct Process *process)
 {
     pid_t pid = process->pid;
-    const int syscall = process->current_syscall;
+    const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
+    if(verbosity >= 4)
+    {
+#ifdef I386
+        fprintf(stderr, "syscall %d (I386)\n", syscall);
+#else
+        fprintf(stderr, "syscall %d (%s)\n", syscall,
+                (process->current_syscall & __X32_SYSCALL_BIT)?
+                    "x32 mode":
+                    "x64 mode");
+#endif
+    }
 
     /* ********************
      * open(), creat(), access()
@@ -323,7 +417,7 @@ int trace_handle_syscall(struct Process *process)
         || syscall == SYS_access) )
     {
         unsigned int mode;
-        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        char *pathname = tracee_strdup(pid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -336,18 +430,18 @@ int trace_handle_syscall(struct Process *process)
                     (syscall == SYS_open)?"open":
                         (syscall == SYS_creat)?"creat":"access",
                     pathname,
-                    (int)process->retvalue,
-                    (process->retvalue >= 0)?"success":"failure");
+                    (int)process->retvalue.i,
+                    (process->retvalue.i >= 0)?"success":"failure");
         }
-        if(process->retvalue >= 0)
+        if(process->retvalue.i >= 0)
         {
             if(syscall == SYS_access)
                 mode = FILE_STAT;
             else if(syscall == SYS_creat)
-                mode = flags2mode(process->params[1] |
+                mode = flags2mode(process->params[1].u |
                                   O_CREAT | O_WRONLY | O_TRUNC);
             else /* syscall == SYS_open */
-                mode = flags2mode(process->params[1]);
+                mode = flags2mode(process->params[1].u);
 
             if(db_add_file_open(process->identifier,
                                 pathname,
@@ -375,7 +469,7 @@ int trace_handle_syscall(struct Process *process)
 #endif
               ) )
     {
-        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        char *pathname = tracee_strdup(pid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -394,10 +488,10 @@ int trace_handle_syscall(struct Process *process)
 #endif
                      )?"stat":"lstat",
                     pathname,
-                    (int)process->retvalue,
-                    (process->retvalue >= 0)?"success":"failure");
+                    (int)process->retvalue.i,
+                    (process->retvalue.i >= 0)?"success":"failure");
         }
-        if(process->retvalue >= 0)
+        if(process->retvalue.i >= 0)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
@@ -411,7 +505,7 @@ int trace_handle_syscall(struct Process *process)
      */
     else if(process->in_syscall && syscall == SYS_readlink)
     {
-        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        char *pathname = tracee_strdup(pid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -422,10 +516,10 @@ int trace_handle_syscall(struct Process *process)
         {
             fprintf(stderr, "readlink(\"%s\") = %d (%s)\n",
                     pathname,
-                    (int)process->retvalue,
-                    (process->retvalue >= 0)?"success":"failure");
+                    (int)process->retvalue.i,
+                    (process->retvalue.i >= 0)?"success":"failure");
         }
-        if(process->retvalue >= 0)
+        if(process->retvalue.i >= 0)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
@@ -439,7 +533,7 @@ int trace_handle_syscall(struct Process *process)
      */
     else if(process->in_syscall && syscall == SYS_chdir)
     {
-        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        char *pathname = tracee_strdup(pid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -449,10 +543,10 @@ int trace_handle_syscall(struct Process *process)
         if(verbosity >= 3)
         {
             fprintf(stderr, "chdir(\"%s\") = %d (%s)\n", pathname,
-                    (int)process->retvalue,
-                    (process->retvalue >= 0)?"success":"failure");
+                    (int)process->retvalue.i,
+                    (process->retvalue.i >= 0)?"success":"failure");
         }
-        if(process->retvalue >= 0)
+        if(process->retvalue.i >= 0)
         {
             free(process->wd);
             process->wd = pathname;
@@ -473,15 +567,15 @@ int trace_handle_syscall(struct Process *process)
          *            char *const argv[],
          *            char *const envp[]); */
         struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
-        execi->binary = tracee_strdup(pid, (void*)process->params[0]);
+        execi->binary = tracee_strdup(pid, process->params[0].p);
         if(execi->binary[0] != '/')
         {
             char *oldbin = execi->binary;
             execi->binary = abspath(process->wd, oldbin);
             free(oldbin);
         }
-        execi->argv = tracee_strarraydup(pid, (void*)process->params[1]);
-        execi->envp = tracee_strarraydup(pid, (void*)process->params[2]);
+        execi->argv = tracee_strarraydup(pid, process->params[1].p);
+        execi->envp = tracee_strarraydup(pid, process->params[2].p);
         if(verbosity >= 3)
         {
             fprintf(stderr, "execve called:\n  binary=%s\n  argv:\n",
@@ -508,7 +602,7 @@ int trace_handle_syscall(struct Process *process)
     else if(process->in_syscall && syscall == SYS_execve)
     {
         struct ExecveInfo *execi = process->syscall_info;
-        if(process->retvalue >= 0)
+        if(process->retvalue.i >= 0)
         {
             /* Note: execi->argv needs a cast to suppress a bogus warning
              * While conversion from char** to const char** is invalid,
@@ -538,9 +632,9 @@ int trace_handle_syscall(struct Process *process)
           && (syscall == SYS_fork || syscall == SYS_vfork
             || syscall == SYS_clone) )
     {
-        if(process->retvalue > 0)
+        if(process->retvalue.i > 0)
         {
-            pid_t new_pid = process->retvalue;
+            pid_t new_pid = process->retvalue.i;
             struct Process *new_process;
             if(verbosity >= 3)
                 fprintf(stderr,
@@ -566,7 +660,7 @@ int trace_handle_syscall(struct Process *process)
     /* ********************
      * Other syscalls that might be of interest but that we don't handle yet
      */
-    else if(verbosity >= 1 && process->in_syscall && process->retvalue >= 0)
+    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0)
     {
         char *desc = trace_unhandled_syscall(syscall, process);
         if(desc != NULL)
@@ -661,7 +755,11 @@ int trace(pid_t first_proc, int *first_exit_code)
         if(WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
         {
             size_t len = 0;
-            struct user_regs_struct regs;
+#ifdef I386
+            struct i386_regs regs;
+#else /* def X86_64 */
+            struct x86_64_regs regs;
+#endif
             /* Try to use GETREGSET first, since iov_len allows us to know if
              * 32bit or 64bit mode was used */
 #ifdef PTRACE_GETREGSET
@@ -684,43 +782,41 @@ int trace(pid_t first_proc, int *first_exit_code)
 #if defined(I386)
             process->current_syscall = regs.orig_eax;
             if(process->in_syscall)
-                process->retvalue = regs.eax;
+                get_i386_reg(&process->retvalue, regs.eax);
             else
             {
-                process->params[0] = regs.ebx;
-                process->params[1] = regs.ecx;
-                process->params[2] = regs.edx;
-                process->params[3] = regs.esi;
-                process->params[4] = regs.edi;
-                process->params[5] = regs.ebp;
+                get_i386_reg(&process->params[0], regs.ebx);
+                get_i386_reg(&process->params[1], regs.ecx);
+                get_i386_reg(&process->params[2], regs.edx);
+                get_i386_reg(&process->params[3], regs.esi);
+                get_i386_reg(&process->params[4], regs.edi);
+                get_i386_reg(&process->params[5], regs.ebp);
             }
 #elif defined(X86_64)
             /* On x86_64, process might be 32 or 64 bits */
-#ifndef __X32_SYSCALL_BIT
-#define __X32_SYSCALL_BIT 0x40000000
-#endif
             /* If len is known (not 0) and not that of x86_64 registers,
              * or if len is not known (0) and CS is 0x23 (not as reliable) */
             if( (len != 0 && len != sizeof(regs))
              || (len == 0 && regs.cs == 0x23) )
             {
                 /* 32 bit mode */
+                struct i386_regs *x86regs = (struct i386_regs*)&regs;
                 process->current_syscall =
-                        regs.orig_rax & __X32_SYSCALL_BIT;
+                        x86regs->orig_eax | __X32_SYSCALL_BIT;
                 /* TODO : This is the correct syscall number, but the rest of
                  * the code assumes it's a 64bit syscall
                  * trace_handle_syscall() needs to be updated to handle
                  * __X32_SYSCALL_BIT correctly! */
                 if(process->in_syscall)
-                    process->retvalue = regs.rax;
+                    get_i386_reg(&process->retvalue, x86regs->eax);
                 else
                 {
-                    process->params[0] = regs.rbx; /* ebx */
-                    process->params[1] = regs.rcx; /* ecx */
-                    process->params[2] = regs.rdx; /* edx */
-                    process->params[3] = regs.rsi; /* esi */
-                    process->params[4] = regs.rdi; /* edi */
-                    process->params[5] = regs.rbp; /* ebp */
+                    get_i386_reg(&process->params[0], x86regs->ebx);
+                    get_i386_reg(&process->params[1], x86regs->ecx);
+                    get_i386_reg(&process->params[2], x86regs->edx);
+                    get_i386_reg(&process->params[3], x86regs->esi);
+                    get_i386_reg(&process->params[4], x86regs->edi);
+                    get_i386_reg(&process->params[5], x86regs->ebp);
                 }
             }
             else
@@ -728,15 +824,15 @@ int trace(pid_t first_proc, int *first_exit_code)
                 /* 64 bit mode */
                 process->current_syscall = regs.orig_rax;
                 if(process->in_syscall)
-                    process->retvalue = regs.rax;
+                    get_x86_64_reg(&process->retvalue, regs.rax);
                 else
                 {
-                    process->params[0] = regs.rdi;
-                    process->params[1] = regs.rsi;
-                    process->params[2] = regs.rdx;
-                    process->params[3] = regs.r10;
-                    process->params[4] = regs.r8;
-                    process->params[5] = regs.r9;
+                    get_x86_64_reg(&process->params[0], regs.rdi);
+                    get_x86_64_reg(&process->params[1], regs.rsi);
+                    get_x86_64_reg(&process->params[2], regs.rdx);
+                    get_x86_64_reg(&process->params[3], regs.r10);
+                    get_x86_64_reg(&process->params[4], regs.r8);
+                    get_x86_64_reg(&process->params[5], regs.r9);
                 }
             }
 #endif
