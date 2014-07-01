@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/remram44/reprozip-ptrace.svg?branch=master)](https://travis-ci.org/remram44/reprozip-ptrace)
+[![Build Status](https://travis-ci.org/remram44/reprozip.svg?branch=master)](https://travis-ci.org/remram44/reprozip)
 
-reprozip-ptrace
-===============
+reprozip
+========
 
-This is a rework of [ReproZip][fc] using ptrace instead of [systemtap][stap],
-since it is difficult to setup and use.
+This is a rework of the original [ReproZip][fc], using ptrace instead of
+[systemtap][stap], since it was difficult to setup and use.
 
 ReproZip
 --------
