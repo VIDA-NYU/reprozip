@@ -20,7 +20,7 @@ utility).
 req = [
     'PyYAML',
     'rpaths>=0.4']
-if sys.version_info <= (2, 6):
+if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip',
       version='0.2',
