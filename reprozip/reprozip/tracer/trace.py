@@ -42,6 +42,8 @@ class TracedFile(File):
         if path.exists():
             if path.is_link():
                 self.comment = "Link to %s" % path.read_link(absolute=True)
+            elif path.is_dir():
+                self.comment = "Directory"
             else:
                 size = path.size()
                 self.comment = hsize(size)
