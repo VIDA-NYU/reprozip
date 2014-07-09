@@ -60,16 +60,9 @@ class TracedFile(File):
             self.what = TracedFile.READ_THEN_WRITTEN
 
 
-def get_files(database):
+def get_files(conn):
     """Find all the files used by the experiment by reading the trace.
     """
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
-    conn.row_factory = sqlite3.Row
-
     files = {}
 
     # Adds dynamic linkers
@@ -130,7 +123,6 @@ def get_files(database):
                 f.read()
     exec_cursor.close()
     open_cursor.close()
-    conn.close()
 
     return [fi
             for fi in files.values()
@@ -158,7 +150,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
-def trace(binary, argv, directory, append, sort_packages, verbosity=1):
+def trace(binary, argv, directory, append, verbosity=1):
     """Main function for the trace subcommand.
     """
     cwd = Path.cwd()
@@ -194,8 +186,19 @@ def trace(binary, argv, directory, append, sort_packages, verbosity=1):
             logging.warning("Program exited with non-zero code %d" % c)
     logging.info("Program completed")
 
+
+def write_configuration(directory, sort_packages, overwrite=False):
+    database = directory / 'trace.sqlite3'
+
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+
     # Reads info from database
-    files = get_files(database)
+    files = get_files(conn)
 
     # Identifies which file comes from which package
     if sort_packages:
@@ -205,25 +208,58 @@ def trace(binary, argv, directory, append, sort_packages, verbosity=1):
 
     # Writes configuration file
     config = directory / 'config.yml'
-    oldconfig = config.exists()
+    distribution = platform.linux_distribution()[0:2]
+    oldconfig = not overwrite and config.exists()
+    cur = conn.cursor()
     if oldconfig:
         # Loads in previous config
         runs, oldpkgs, oldfiles = load_config(config, File=TracedFile)
-    else:
-        runs, oldpkgs, oldfiles = [], [], []
-    distribution = platform.linux_distribution()[0:2]
-    runs.append({'binary': binary, 'argv': argv, 'workingdir': cwd.path,
-                 'architecture': platform.machine(),
-                 'distribution': distribution, 'hostname': platform.node(),
-                 'system': [platform.system(), platform.release()],
-                 'environ': dict(os.environ),
-                 'uid': os.getuid(),
-                 'gid': os.getgid(),
-                 'signal' if c & 0x0100 else 'exitcode': c & 0xFF})
-    if oldconfig:
+
+        executions = cur.execute(
+                '''
+                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+                FROM executed_files e
+                INNER JOIN processes p on p.id=e.id
+                WHERE p.parent ISNULL
+                ORDER BY p.id DESC
+                LIMIT 1;
+                ''')
+
         files, packages = merge_files(files, packages,
                                       oldfiles,
                                       oldpkgs)
+    else:
+        runs = []
+        executions = cur.execute(
+                '''
+                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+                FROM executed_files e
+                INNER JOIN processes p on p.id=e.id
+                WHERE p.parent ISNULL
+                ORDER BY p.id;
+                ''')
+    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
+        argv = r_argv.split('\0')
+        if not argv[-1]:
+            argv = argv[:-1]
+        envp = r_envp.split('\0')
+        if not envp[-1]:
+            envp = envp[:-1]
+        environ = dict(v.split('=', 1) for v in envp)
+        runs.append({'binary': r_name, 'argv': argv,
+                     'workingdir': Path(r_workingdir).path,
+                     'architecture': platform.machine(),
+                     'distribution': distribution,
+                     'hostname': platform.node(),
+                     'system': [platform.system(), platform.release()],
+                     'environ': environ,
+                     'uid': os.getuid(),
+                     'gid': os.getgid(),
+                     'signal' if r_exitcode & 0x0100 else 'exitcode':
+                         r_exitcode & 0xFF})
+    cur.close()
+
+    conn.close()
 
     save_config(config, runs, packages, files, reprozip_version)
 

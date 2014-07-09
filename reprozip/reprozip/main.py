@@ -148,8 +148,22 @@ def trace(args):
                                 argv,
                                 Path(args.dir),
                                 args.append,
-                                args.identify_packages,
                                 args.verbosity)
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              overwrite=False)
+
+
+def reset(args):
+    """reset subcommand.
+
+    Just regenerates the configuration (config.yml) from the trace
+    (trace.sqlite3).
+    """
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              args.verbosity,
+                                              overwrite=True)
 
 
 def pack(args):
@@ -219,6 +233,16 @@ def main():
             help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
+
+    # reset command
+    parser_reset = subparsers.add_parser(
+            'reset', parents=[options],
+            help="Resets the configuration file")
+    parser_reset.add_argument(
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
+    parser_reset.set_defaults(func=reset)
 
     # pack command
     parser_pack = subparsers.add_parser(
