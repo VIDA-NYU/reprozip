@@ -28,22 +28,26 @@ def print_db(database):
     cur = conn.cursor()
     processes = cur.execute(
             '''
-            SELECT id, parent, timestamp
+            SELECT id, parent, timestamp, exitcode
             FROM processes;
             ''')
     print("\nProcesses:")
-    header = "+------+--------+------------------+"
+    header = "+------+--------+-------+------------------+"
     print(header)
-    print("|  id  | parent |     timestamp    |")
+    print("|  id  | parent |  exit |     timestamp    |")
     print(header)
-    for r_id, r_parent, r_timestamp in processes:
+    for r_id, r_parent, r_timestamp, r_exit in processes:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
         else:
             f_parent = "        "
+        if r_exit & 0x0100:
+            f_exit = " sig{0: <2d} ".format(r_exit)
+        else:
+            f_exit = "    {0: <2d} ".format(r_exit)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
-        print('|'.join(('', f_id, f_parent, f_timestamp, '')))
+        print('|'.join(('', f_id, f_parent, f_exit, f_timestamp, '')))
         print(header)
     cur.close()
 

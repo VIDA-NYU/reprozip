@@ -29,6 +29,7 @@ static sqlite3_uint64 gettime(void)
 static sqlite3 *db;
 static sqlite3_stmt *stmt_last_rowid;
 static sqlite3_stmt *stmt_insert_process;
+static sqlite3_stmt *stmt_set_exitcode;
 static sqlite3_stmt *stmt_insert_file;
 static sqlite3_stmt *stmt_insert_exec;
 
@@ -80,9 +81,9 @@ int db_init(const char *filename)
             "CREATE TABLE processes("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    parent INTEGER,"
-            "    timestamp INTEGER NOT NULL"
+            "    timestamp INTEGER NOT NULL,"
+            "    exitcode INTEGER"
             "    );",
-
             "CREATE TABLE opened_files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    name TEXT NOT NULL,"
@@ -120,6 +121,13 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
+                "UPDATE processes SET exitcode=?"
+                "WHERE id=?";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_set_exitcode, NULL));
+    }
+
+    {
+        const char *sql = ""
                 "INSERT INTO opened_files(name, timestamp, mode, process)"
                 "VALUES(?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
@@ -145,6 +153,7 @@ int db_close(void)
 {
     check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
+    check(sqlite3_finalize(stmt_set_exitcode));
     check(sqlite3_finalize(stmt_insert_file));
     check(sqlite3_finalize(stmt_insert_exec));
     check(sqlite3_close(db));
@@ -194,6 +203,23 @@ sqlerror:
 int db_add_first_process(unsigned int *id, const char *working_dir)
 {
     return db_add_process(id, DB_NO_PARENT, working_dir);
+}
+
+int db_add_exit(unsigned int id, int exitcode)
+{
+    check(sqlite3_bind_int(stmt_set_exitcode, 1, exitcode));
+    check(sqlite3_bind_int(stmt_set_exitcode, 2, id));
+
+    if(sqlite3_step(stmt_set_exitcode) != SQLITE_DONE)
+        goto sqlerror;
+    sqlite3_reset(stmt_set_exitcode);
+
+    return 0;
+
+sqlerror:
+    fprintf(stderr, "sqlite3 error setting exitcode: %s\n",
+            sqlite3_errmsg(db));
+    return -1;
 }
 
 int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
@@ -248,7 +274,8 @@ int db_add_exec(unsigned int process, const char *binary,
                 const char *const *argv, const char *const *envp,
                 const char *workingdir)
 {
-    check(sqlite3_bind_text(stmt_insert_exec, 1, binary, -1, SQLITE_TRANSIENT));
+    check(sqlite3_bind_text(stmt_insert_exec, 1, binary,
+                            -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
     check(sqlite3_bind_int64(stmt_insert_exec, 2, gettime()));
     check(sqlite3_bind_int(stmt_insert_exec, 3, process));
@@ -266,7 +293,8 @@ int db_add_exec(unsigned int process, const char *binary,
                                 SQLITE_TRANSIENT));
         free(envlist);
     }
-    check(sqlite3_bind_text(stmt_insert_exec, 6, workingdir));
+    check(sqlite3_bind_text(stmt_insert_exec, 6, workingdir,
+                            -1, SQLITE_TRANSIENT));
 
     if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)
         goto sqlerror;
