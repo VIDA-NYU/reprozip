@@ -607,7 +607,6 @@ int trace_handle_syscall(struct Process *process)
 
 int trace(pid_t first_proc, int *first_exit_code)
 {
-    int nprocs = 0;
     for(;;)
     {
         int status;
@@ -623,9 +622,7 @@ int trace(pid_t first_proc, int *first_exit_code)
         }
         if(WIFEXITED(status))
         {
-            if(verbosity >= 2)
-                fprintf(stderr, "Process %d exited, %d processes remain\n",
-                        pid, nprocs-1);
+            size_t nprocs = 0, i;
             if(pid == first_proc && first_exit_code != NULL)
             {
                 if(WIFSIGNALED(status))
@@ -640,7 +637,23 @@ int trace(pid_t first_proc, int *first_exit_code)
                 free(process->wd);
                 process->status = PROCESS_FREE;
             }
-            --nprocs;
+            for(i = 0; i < processes_size; ++i)
+            {
+                switch(processes[i]->status)
+                {
+                case PROCESS_FREE:
+                    break;
+                case PROCESS_ALLOCATED:
+                    /* Not yet attached but it will show up eventually */
+                case PROCESS_ATTACHED:
+                    /* Running */
+                    ++nprocs;
+                    break;
+                }
+            }
+            if(verbosity >= 2)
+                fprintf(stderr, "Process %d exited, %d processes remain\n",
+                        pid, nprocs-1);
             if(nprocs <= 0)
                 break;
             continue;
@@ -665,7 +678,6 @@ int trace(pid_t first_proc, int *first_exit_code)
 
             if(verbosity >= 2)
                 fprintf(stderr, "Process %d attached\n", pid);
-            ++nprocs;
             ptrace(PTRACE_SETOPTIONS, pid, 0,
                    PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
                                              * if paused because of syscall */
