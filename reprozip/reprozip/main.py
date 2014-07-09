@@ -54,11 +54,11 @@ def print_db(database):
             FROM executed_files;
             ''')
     print("\nExecuted files:")
-    header = ("+--------+------------------+---------+------+-----------------"
+    header = ("+--------+------------------+---------+------------------------"
               "---------------+")
     print(header)
     print("|   id   |     timestamp    | process | name and argv              "
-          "    |")
+          "           |")
     print(header)
     for r_id, r_name, r_timestamp, r_process, r_argv in processes:
         f_id = "{0: 7d} ".format(r_id)
