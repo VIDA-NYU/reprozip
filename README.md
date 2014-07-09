@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/remram44/reprozip.svg?branch=master)](https://travis-ci.org/remram44/reprozip)
+[![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=master)](https://travis-ci.org/ViDA-NYU/reprozip)
 
 reprozip
 ========
