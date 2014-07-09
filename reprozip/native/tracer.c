@@ -33,9 +33,11 @@ int trace_verbosity = 0;
 #define verbosity trace_verbosity
 
 
-#define PROCESS_FREE        0
-#define PROCESS_ALLOCATED   1
-#define PROCESS_ATTACHED    2
+#define PROCESS_FREE        0   /* unallocated entry in table */
+#define PROCESS_ALLOCATED   1   /* fork() done but not yet attached */
+#define PROCESS_ATTACHED    2   /* running process */
+#define PROCESS_UNKNOWN     3   /* attached but no corresponding fork() call
+                                 * has finished yet */
 
 struct Process {
     unsigned int identifier;
@@ -78,6 +80,21 @@ struct Process *trace_get_empty_process(void)
             return processes[i];
     }
 
+    /* Count unknown processes */
+    {
+        size_t unknown = 0;
+        for(i = 0; i < processes_size; ++i)
+            if(processes[i]->status == PROCESS_UNKNOWN)
+                ++unknown;
+        {
+            int many_unknown = unknown * 2 >= processes_size;
+            if(verbosity >= 2 || (verbosity >= 1 && many_unknown) )
+                fprintf(stderr, "%sthere are %u/%u UNKNOWN processes\n",
+                        many_unknown?"Warning: ":"",
+                        (unsigned int)unknown, (unsigned int)processes_size);
+        }
+    }
+
     /* Allocate more! */
     if(verbosity >= 3)
         fprintf(stderr, "Process table full (%d), reallocating\n",
@@ -92,9 +109,6 @@ struct Process *trace_get_empty_process(void)
         {
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
-            processes[i]->in_syscall = 0;
-            processes[i]->current_syscall = -1;
-            processes[i]->syscall_info = NULL;
         }
         return processes[prev_size];
     }
@@ -552,7 +566,7 @@ int trace_handle_syscall(struct Process *process)
         {
             pid_t new_pid = process->retvalue;
             struct Process *new_process;
-            if(verbosity >= 3)
+            if(verbosity >= 2)
                 fprintf(stderr,
                         "Process %d created by %d via %s\n"
                         "    (working directory: %s)\n",
@@ -561,12 +575,34 @@ int trace_handle_syscall(struct Process *process)
                         (syscall == SYS_vfork)?"vfork()":
                         "clone()",
                         process->wd);
-            new_process = trace_get_empty_process();
-            new_process->status = PROCESS_ALLOCATED;
-            /* New process gets a SIGSTOP, but we resume on attach */
-            new_process->pid = new_pid;
-            new_process->in_syscall = 0;
-            new_process->wd = strdup(process->wd);
+
+            /* At this point, the process might have been seen by waitpid in
+             * trace() or not. */
+            new_process = trace_find_process(new_pid);
+            if(new_process != NULL)
+            {
+                /* Process has been seen before and options were set */
+                if(new_process->status != PROCESS_UNKNOWN)
+                {
+                    fprintf(stderr, "Critical: just created process that is "
+                            "already running (status=%d)\n",
+                            new_process->status);
+                    return -1;
+                }
+                new_process->status = PROCESS_ATTACHED;
+                new_process->wd = strdup(process->wd);
+                ptrace(PTRACE_SYSCALL, new_process->pid, NULL, NULL);
+            }
+            else
+            {
+                /* Process hasn't been seen before (syscall returned first) */
+                new_process = trace_get_empty_process();
+                new_process->status = PROCESS_ALLOCATED;
+                /* New process gets a SIGSTOP, but we resume on attach */
+                new_process->pid = new_pid;
+                new_process->in_syscall = 0;
+                new_process->wd = strdup(process->wd);
+            }
 
             /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
 
@@ -605,6 +641,16 @@ int trace_handle_syscall(struct Process *process)
     return 0;
 }
 
+void trace_set_options(pid_t pid)
+{
+    ptrace(PTRACE_SETOPTIONS, pid, 0,
+           PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
+                                     * if paused because of syscall */
+           PTRACE_O_TRACECLONE |
+           PTRACE_O_TRACEFORK |
+           PTRACE_O_TRACEVFORK);
+}
+
 int trace(pid_t first_proc, int *first_exit_code)
 {
     for(;;)
@@ -622,7 +668,7 @@ int trace(pid_t first_proc, int *first_exit_code)
         }
         if(WIFEXITED(status))
         {
-            size_t nprocs = 0, i;
+            size_t nprocs = 0, unknown = 0, i;
             if(pid == first_proc && first_exit_code != NULL)
             {
                 if(WIFSIGNALED(status))
@@ -643,6 +689,9 @@ int trace(pid_t first_proc, int *first_exit_code)
                 {
                 case PROCESS_FREE:
                     break;
+                case PROCESS_UNKNOWN:
+                    /* Exists but no corresponding syscall has returned yet */
+                    ++unknown;
                 case PROCESS_ALLOCATED:
                     /* Not yet attached but it will show up eventually */
                 case PROCESS_ATTACHED:
@@ -653,37 +702,40 @@ int trace(pid_t first_proc, int *first_exit_code)
             }
             if(verbosity >= 2)
                 fprintf(stderr, "Process %d exited, %d processes remain\n",
-                        pid, nprocs-1);
+                        pid, (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
+            if(unknown >= nprocs)
+            {
+                fprintf(stderr, "Critical: only UNKNOWN processes remaining "
+                        "(%d)\n", (unsigned int)nprocs);
+                return -1;
+            }
             continue;
         }
 
         process = trace_find_process(pid);
         if(process == NULL)
         {
-            if(verbosity >= 1)
-                fprintf(stderr, "Warning: found unexpected process %d\n", pid);
+            if(verbosity >= 3)
+                fprintf(stderr, "Process %d appeared\n", pid);
             process = trace_get_empty_process();
-            process->status = PROCESS_ALLOCATED;
+            process->status = PROCESS_UNKNOWN;
             process->pid = pid;
             process->in_syscall = 0;
-            process->wd = get_p_wd(pid);
-            if(db_add_first_process(&process->identifier, process->wd) != 0)
-                return -1;
+            process->wd = NULL;
+            trace_set_options(pid);
+            /* Don't resume, it will be set to ATTACHED and resumed when fork()
+             * returns */
+            continue;
         }
-        if(process->status != PROCESS_ATTACHED)
+        else if(process->status == PROCESS_ALLOCATED)
         {
             process->status = PROCESS_ATTACHED;
 
-            if(verbosity >= 2)
+            if(verbosity >= 3)
                 fprintf(stderr, "Process %d attached\n", pid);
-            ptrace(PTRACE_SETOPTIONS, pid, 0,
-                   PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
-                                             * if paused because of syscall */
-                   PTRACE_O_TRACECLONE |
-                   PTRACE_O_TRACEFORK |
-                   PTRACE_O_TRACEVFORK);
+            trace_set_options(pid);
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
             continue;
         }
