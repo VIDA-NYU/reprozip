@@ -530,6 +530,7 @@ int trace_handle_syscall(struct Process *process)
             if(verbosity >= 3)
                 fprintf(stderr, "Proc %d successfully exec'd %s\n",
                         process->pid, execi->binary);
+            /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
             if(trace_add_files_from_proc(process->identifier, process->pid,
                                          execi->binary) != 0)
                 return -1;
@@ -562,9 +563,12 @@ int trace_handle_syscall(struct Process *process)
                         process->wd);
             new_process = trace_get_empty_process();
             new_process->status = PROCESS_ALLOCATED;
+            /* New process gets a SIGSTOP, but we resume on attach */
             new_process->pid = new_pid;
             new_process->in_syscall = 0;
             new_process->wd = strdup(process->wd);
+
+            /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
 
             if(db_add_process(&new_process->identifier,
                               process->identifier,
@@ -612,6 +616,11 @@ int trace(pid_t first_proc, int *first_exit_code)
 
         /* Wait for a process */
         pid = waitpid(-1, &status, __WALL);
+        if(pid == -1)
+        {
+            perror("waitpid failed");
+            return -1;
+        }
         if(WIFEXITED(status))
         {
             if(verbosity >= 2)
@@ -736,13 +745,42 @@ int trace(pid_t first_proc, int *first_exit_code)
             if(trace_handle_syscall(process) != 0)
                 return -1;
         }
-        /* Continue on SIGTRAP */
+        /* Handle signals */
         else if(WIFSTOPPED(status))
         {
-            /* FIXME : This is bogus. We resume processes that shouldn't be */
+            int signum = WSTOPSIG(status) & 0x7F;
+
             if(verbosity >= 3)
-                fprintf(stderr, "Resuming %d on signal\n", pid);
-            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+                fprintf(stderr, "%d got signal %d\n", pid, signum);
+
+            /* Synthetic signal for ptrace event: resume */
+            if(signum == SIGTRAP && status & 0xFF0000)
+                ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            else if(signum == SIGTRAP)
+            {
+                /* Probably doesn't happen? Then, remove */
+                fprintf(stderr, "NOT delivering SIGTRAP to %d\n",
+                        pid);
+                fprintf(stderr, "    waitstatus=0x%X\n", status);
+                ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            }
+            /* Other signal, let the process handle it */
+            else
+            {
+                siginfo_t si;
+                if(verbosity >= 2)
+                    fprintf(stderr, "Process %d caught signal %d\n",
+                            pid, signum);
+                if(ptrace(PTRACE_GETSIGINFO, pid, 0, (long)&si) >= 0)
+                    ptrace(PTRACE_SYSCALL, pid, NULL, signum);
+                else
+                {
+                    /* Not sure what this is for */
+                    perror("    NOT delivering");
+                    if(signum != SIGSTOP)
+                        ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+                }
+            }
         }
     }
 
@@ -842,6 +880,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         struct Process *process = trace_get_empty_process();
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
+        /* We sent a SIGSTOP, but we resume on attach */
         process->pid = child;
         process->in_syscall = 0;
         process->wd = get_wd();
