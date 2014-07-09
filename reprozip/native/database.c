@@ -96,7 +96,8 @@ int db_init(const char *filename)
             "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
             "    argv TEXT NOT NULL,"
-            "    envp TEXT NOT NULL"
+            "    envp TEXT NOT NULL,"
+            "    workingdir TEXT NOT NULL"
             "    );",
         };
         size_t i;
@@ -127,8 +128,8 @@ int db_init(const char *filename)
     {
         const char *sql = ""
                 "INSERT INTO executed_files(name, timestamp, process, "
-                "        argv, envp)"
-                "VALUES(?, ?, ?, ?, ?)";
+                "        argv, envp, workingdir)"
+                "VALUES(?, ?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
     }
 
@@ -244,7 +245,8 @@ static char *strarray2nulsep(const char *const *array, size_t *plen)
 }
 
 int db_add_exec(unsigned int process, const char *binary,
-                const char *const *argv, const char *const *envp)
+                const char *const *argv, const char *const *envp,
+                const char *workingdir)
 {
     check(sqlite3_bind_text(stmt_insert_exec, 1, binary, -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
@@ -264,6 +266,7 @@ int db_add_exec(unsigned int process, const char *binary,
                                 SQLITE_TRANSIENT));
         free(envlist);
     }
+    check(sqlite3_bind_text(stmt_insert_exec, 6, workingdir));
 
     if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)
         goto sqlerror;

@@ -525,7 +525,8 @@ int trace_handle_syscall(struct Process *process)
              * G++ accepts it, GCC issues a warning. */
             if(db_add_exec(process->identifier, execi->binary,
                            (const char *const*)execi->argv,
-                           (const char *const*)execi->envp) != 0)
+                           (const char *const*)execi->envp,
+                           process->wd) != 0)
                 return -1;
             if(verbosity >= 3)
                 fprintf(stderr, "Proc %d successfully exec'd %s\n",
