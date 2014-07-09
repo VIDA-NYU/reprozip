@@ -65,6 +65,8 @@ def print_db(database):
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
         argv = r_argv.split('\0')
+        if not argv[-1]:
+            argv = argv[:-1]
         cmdline = ' '.join(repr(a) for a in argv)
         if argv[0] != os.path.basename(r_name):
             cmdline = "(%s) %s" % (r_name, cmdline)

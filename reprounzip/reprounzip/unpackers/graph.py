@@ -156,6 +156,8 @@ def generate(target, directory, all_forks=False):
                 all_programs.append(process)
                 processes[r_process] = process
             argv = tuple(r_argv.split('\0'))
+            if not argv[-1]:
+                argv = argv[:-1]
             edges.add((process, r_name, None, argv))
 
     process_cursor.close()
