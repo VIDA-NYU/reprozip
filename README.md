@@ -61,12 +61,12 @@ Once done editing `.reprozip/config.yml`, or if you left everything as-is, simpl
     $ mydirectory/script.sh
 
     # Building a chroot environment
-    $ reprounzip chroot my_experiment mychroot
+    $ reprounzip chroot my_experiment.rpz mychroot
     $ sudo mychroot/script.sh
 
     # Building a virtual machine (requires Vagrant)
     $ pip install reprounzip-vagrant
-    $ reprounzip vagrant --use-chroot mytemplate
+    $ reprounzip vagrant --use-chroot my_experiment.rpz mytemplate
     $ cd mytemplate; vagrant up
     $ vagrant ssh
     vagrant@vm$ sh /vagrant/script.sh
