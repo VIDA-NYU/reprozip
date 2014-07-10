@@ -114,6 +114,33 @@ struct Process *trace_get_empty_process(void)
     }
 }
 
+void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
+{
+    unsigned int nproc = 0, unknown = 0;
+    size_t i;
+    for(i = 0; i < processes_size; ++i)
+    {
+        switch(processes[i]->status)
+        {
+        case PROCESS_FREE:
+            break;
+        case PROCESS_UNKNOWN:
+            /* Exists but no corresponding syscall has returned yet */
+            ++unknown;
+        case PROCESS_ALLOCATED:
+            /* Not yet attached but it will show up eventually */
+        case PROCESS_ATTACHED:
+            /* Running */
+            ++nproc;
+            break;
+        }
+    }
+    if(p_nproc != NULL)
+        *p_nproc = nproc;
+    if(p_unknown != NULL)
+        *p_unknown = unknown;
+}
+
 int trace_add_files_from_proc(unsigned int process, pid_t pid,
                               const char *binary)
 {
@@ -592,6 +619,13 @@ int trace_handle_syscall(struct Process *process)
                 new_process->status = PROCESS_ATTACHED;
                 new_process->wd = strdup(process->wd);
                 ptrace(PTRACE_SYSCALL, new_process->pid, NULL, NULL);
+                if(verbosity >= 2)
+                {
+                    unsigned int nproc, unknown;
+                    trace_count_processes(&nproc, &unknown);
+                    fprintf(stderr, "%d processes (inc. %d unattached)\n",
+                            nproc, unknown);
+                }
             }
             else
             {
@@ -669,7 +703,7 @@ int trace(pid_t first_proc, int *first_exit_code)
         }
         if(WIFEXITED(status))
         {
-            size_t nprocs = 0, unknown = 0, i;
+            unsigned int nprocs, unknown;
             if(pid == first_proc && first_exit_code != NULL)
             {
                 if(WIFSIGNALED(status))
@@ -684,23 +718,7 @@ int trace(pid_t first_proc, int *first_exit_code)
                 free(process->wd);
                 process->status = PROCESS_FREE;
             }
-            for(i = 0; i < processes_size; ++i)
-            {
-                switch(processes[i]->status)
-                {
-                case PROCESS_FREE:
-                    break;
-                case PROCESS_UNKNOWN:
-                    /* Exists but no corresponding syscall has returned yet */
-                    ++unknown;
-                case PROCESS_ALLOCATED:
-                    /* Not yet attached but it will show up eventually */
-                case PROCESS_ATTACHED:
-                    /* Running */
-                    ++nprocs;
-                    break;
-                }
-            }
+            trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
                 fprintf(stderr, "Process %d exited, %d processes remain\n",
                         pid, (unsigned int)nprocs);
@@ -738,6 +756,13 @@ int trace(pid_t first_proc, int *first_exit_code)
                 fprintf(stderr, "Process %d attached\n", pid);
             trace_set_options(pid);
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            if(verbosity >= 2)
+            {
+                unsigned int nproc, unknown;
+                trace_count_processes(&nproc, &unknown);
+                fprintf(stderr, "%d processes (inc. %d unattached)\n",
+                        nproc, unknown);
+            }
             continue;
         }
 
