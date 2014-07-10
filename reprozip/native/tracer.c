@@ -648,7 +648,8 @@ void trace_set_options(pid_t pid)
                                      * if paused because of syscall */
            PTRACE_O_TRACECLONE |
            PTRACE_O_TRACEFORK |
-           PTRACE_O_TRACEVFORK);
+           PTRACE_O_TRACEVFORK |
+           PTRACE_O_TRACEEXEC);
 }
 
 int trace(pid_t first_proc, int *first_exit_code)
@@ -813,9 +814,6 @@ int trace(pid_t first_proc, int *first_exit_code)
         else if(WIFSTOPPED(status))
         {
             int signum = WSTOPSIG(status) & 0x7F;
-
-            if(verbosity >= 3)
-                fprintf(stderr, "%d got signal %d\n", pid, signum);
 
             /* Synthetic signal for ptrace event: resume */
             if(signum == SIGTRAP && status & 0xFF0000)

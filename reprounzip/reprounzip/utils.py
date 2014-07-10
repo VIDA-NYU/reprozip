@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 # This file is shared:
 #   reprozip/reprozip/utils.py
 #   reprounzip/reprounzip/utils.py
@@ -142,6 +146,11 @@ def download_file(url, dest, cachename=None):
             return
         else:
             raise
+
+    if response is None:
+        logging.info("Cached file %s is up to date" % cachename)
+        cache.copy(dest)
+        return
 
     logging.info("Downloading %s" % url)
     try:

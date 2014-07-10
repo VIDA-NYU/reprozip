@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 # This file is shared:
 #   reprozip/reprozip/utils.py
 #   reprounzip/reprounzip/utils.py
@@ -14,10 +18,10 @@ PY3 = sys.version_info[0] == 3
 
 
 if PY3:
-    from urllib.error import URLError
+    from urllib.error import HTTPError, URLError
     from urllib.request import Request, urlopen
 else:
-    from urllib2 import Request, URLError, urlopen
+    from urllib2 import Request, HTTPError, URLError, urlopen
 
 
 if PY3:
@@ -134,7 +138,10 @@ def download_file(url, dest, cachename=None):
         response = urlopen(request)
     except URLError as e:
         if cache.exists():
-            logging.warning("Couldn't download %s: %s" % (url, e))
+            if isinstance(e, HTTPError) and e.code == 304:
+                logging.info("Cached file %s is up to date" % cachename)
+            else:
+                logging.warning("Couldn't download %s: %s" % (url, e))
             cache.copy(dest)
             return
         else:
@@ -148,6 +155,7 @@ def download_file(url, dest, cachename=None):
     logging.info("Downloading %s" % url)
     try:
         CHUNK_SIZE = 4096
+        cache.parent.mkdir(parents=True)
         with cache.open('wb') as f:
             while True:
                 chunk = response.read(CHUNK_SIZE)
