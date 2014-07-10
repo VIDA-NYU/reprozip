@@ -143,6 +143,11 @@ def download_file(url, dest, cachename=None):
         else:
             raise
 
+    if response is None:
+        logging.info("Cached file %s is up to date" % cachename)
+        cache.copy(dest)
+        return
+
     logging.info("Downloading %s" % url)
     try:
         CHUNK_SIZE = 4096
