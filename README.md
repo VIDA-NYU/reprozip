@@ -6,6 +6,8 @@ reprozip
 This is a rework of the original [ReproZip][fc], using ptrace instead of
 [systemtap][stap], since it was difficult to setup and use.
 
+It is being developed at the Engineering School of New York University.
+
 ReproZip
 --------
 
