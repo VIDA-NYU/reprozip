@@ -663,9 +663,10 @@ int trace(pid_t first_proc, int *first_exit_code)
         {
             process->status = PROCESS_ATTACHED;
 
-            if(verbosity >= 2)
-                fprintf(stderr, "Process %d attached\n", pid);
             ++nprocs;
+            if(verbosity >= 2)
+                fprintf(stderr, "Process %d attached, %d total\n",
+                        pid, nprocs);
             ptrace(PTRACE_SETOPTIONS, pid, 0,
                    PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
                                              * if paused because of syscall */
@@ -750,9 +751,6 @@ int trace(pid_t first_proc, int *first_exit_code)
         else if(WIFSTOPPED(status))
         {
             int signum = WSTOPSIG(status) & 0x7F;
-
-            if(verbosity >= 3)
-                fprintf(stderr, "%d got signal %d\n", pid, signum);
 
             /* Synthetic signal for ptrace event: resume */
             if(signum == SIGTRAP && status & 0xFF0000)
