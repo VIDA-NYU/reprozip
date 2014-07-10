@@ -671,7 +671,8 @@ int trace(pid_t first_proc, int *first_exit_code)
                                              * if paused because of syscall */
                    PTRACE_O_TRACECLONE |
                    PTRACE_O_TRACEFORK |
-                   PTRACE_O_TRACEVFORK);
+                   PTRACE_O_TRACEVFORK |
+                   PTRACE_O_TRACEEXEC);
             ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
             continue;
         }
