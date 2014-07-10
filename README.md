@@ -22,7 +22,11 @@ Then, it can pack these files in a package to allow for easy reproducibility
 elsewhere, either by unpacking and running on a compatible machine or by
 creating a virtual machine through [Vagrant][vagrant].
 
-ReproZip is split in several components which are all hosted here, and also available on PyPI: [reprozip](https://pypi.python.org/pypi/reprozip) (the packer, that generates a .rpz file by tracing a piece of software), [reprounzip](https://pypi.python.org/pypi/reprounzip) (the unpacker, that takes a .rpz file and allows you to run it), and [reprounzip-vagrant](https://pypi.python.org/pypi/reprounzip-vagrant) (the plugin that does Vagrant-related things in reprounzip).
+ReproZip is split in several components which are all hosted here, and also
+available on PyPI: [reprozip][pz] (the packer, that generates a .rpz file by
+tracing a piece of software), [reprounzip][puz] (the unpacker, that takes a
+.rpz file and allows you to run it), and [reprounzip-vagrant][puzv] (the plugin
+that does Vagrant-related things in reprounzip).
 
 Quickstart
 ----------
@@ -49,6 +53,9 @@ Once done editing `.reprozip/config.yml`, or if you left everything as-is, simpl
 
     $ pip install reprounzip
 
+    # Installing the packages on the host machine
+    $ reprounzip installpkgs my_experiment.rpz
+
     # Unpacking in a directory
     $ reprounzip directory my_experiment.rpz mydirectory
     $ mydirectory/script.sh
@@ -67,3 +74,6 @@ Once done editing `.reprozip/config.yml`, or if you left everything as-is, simpl
 [fc]: https://github.com/fchirigati/reprozip
 [stap]: https://sourceware.org/systemtap/
 [vagrant]: http://www.vagrantup.com/
+[pz]: https://pypi.python.org/pypi/reprozip
+[puz]: https://pypi.python.org/pypi/reprounzip
+[puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
