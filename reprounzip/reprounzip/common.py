@@ -78,7 +78,7 @@ def load_config(filename, File=File, Package=Package):
     keys_ = set(config.keys())
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
-    elif config['version'] != '0.2':
+    elif config['version'] not in ('0.2', '0.2.1'):
         raise InvalidConfig("Unknown version")
     elif not keys_.issubset(set(['version', 'runs',
                                  'packages', 'other_files'])):

@@ -4,14 +4,14 @@ from setuptools import setup
 with open('README.rst') as fp:
     description = fp.read()
 setup(name='reprounzip-vagrant',
-      version='0.2',
+      version='0.2.1',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
               'vagrant = reprounzip.unpackers.vagrant:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
-          'reprounzip>=0.2',
+          'reprounzip>=0.2.1',
           'rpaths>=0.4'],
       description="Allows the ReproZip unpacker to create virtual machines",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
