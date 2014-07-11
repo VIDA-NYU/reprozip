@@ -162,7 +162,6 @@ def reset(args):
     """
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
-                                              args.verbosity,
                                               overwrite=True)
 
 
