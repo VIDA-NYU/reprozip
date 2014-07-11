@@ -32,22 +32,26 @@ def print_db(database):
     cur = conn.cursor()
     processes = cur.execute(
             '''
-            SELECT id, parent, timestamp
+            SELECT id, parent, timestamp, exitcode
             FROM processes;
             ''')
     print("\nProcesses:")
-    header = "+------+--------+------------------+"
+    header = "+------+--------+-------+------------------+"
     print(header)
-    print("|  id  | parent |     timestamp    |")
+    print("|  id  | parent |  exit |     timestamp    |")
     print(header)
-    for r_id, r_parent, r_timestamp in processes:
+    for r_id, r_parent, r_timestamp, r_exit in processes:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
         else:
             f_parent = "        "
+        if r_exit & 0x0100:
+            f_exit = " sig{0: <2d} ".format(r_exit)
+        else:
+            f_exit = "    {0: <2d} ".format(r_exit)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
-        print('|'.join(('', f_id, f_parent, f_timestamp, '')))
+        print('|'.join(('', f_id, f_parent, f_exit, f_timestamp, '')))
         print(header)
     cur.close()
 
@@ -148,8 +152,21 @@ def trace(args):
                                 argv,
                                 Path(args.dir),
                                 args.append,
-                                args.identify_packages,
                                 args.verbosity)
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              overwrite=False)
+
+
+def reset(args):
+    """reset subcommand.
+
+    Just regenerates the configuration (config.yml) from the trace
+    (trace.sqlite3).
+    """
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              overwrite=True)
 
 
 def pack(args):
@@ -219,6 +236,16 @@ def main():
             help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
+
+    # reset command
+    parser_reset = subparsers.add_parser(
+            'reset', parents=[options],
+            help="Resets the configuration file")
+    parser_reset.add_argument(
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
+    parser_reset.set_defaults(func=reset)
 
     # pack command
     parser_pack = subparsers.add_parser(

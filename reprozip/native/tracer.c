@@ -525,7 +525,8 @@ int trace_handle_syscall(struct Process *process)
              * G++ accepts it, GCC issues a warning. */
             if(db_add_exec(process->identifier, execi->binary,
                            (const char *const*)execi->argv,
-                           (const char *const*)execi->envp) != 0)
+                           (const char *const*)execi->envp,
+                           process->wd) != 0)
                 return -1;
             if(verbosity >= 3)
                 fprintf(stderr, "Proc %d successfully exec'd %s\n",
@@ -623,20 +624,32 @@ int trace(pid_t first_proc, int *first_exit_code)
         }
         if(WIFEXITED(status))
         {
-            if(verbosity >= 2)
-                fprintf(stderr, "Process %d exited, %d processes remain\n",
-                        pid, nprocs-1);
-            if(pid == first_proc && first_exit_code != NULL)
+            int exitcode;
+            if(WIFSIGNALED(status))
             {
-                if(WIFSIGNALED(status))
-                    /* exit codes are 8 bits */
-                    *first_exit_code = 0x0100 | WTERMSIG(status);
-                else
-                    *first_exit_code = WEXITSTATUS(status);
+                /* exit codes are 8 bits */
+                exitcode = 0x0100 | WTERMSIG(status);
+                if(verbosity >= 2)
+                    fprintf(stderr, "Process %d exited (signal %d), %d "
+                            "processes remain\n",
+                            pid, WTERMSIG(status), nprocs-1);
             }
+            else
+            {
+                exitcode = WEXITSTATUS(status);
+                if(verbosity >= 2)
+                    fprintf(stderr, "Process %d exited (code %d), %d "
+                            "processes remain\n",
+                            pid, WEXITSTATUS(status), nprocs-1);
+            }
+
+            if(pid == first_proc && first_exit_code != NULL)
+                *first_exit_code = exitcode;
             process = trace_find_process(pid);
             if(process != NULL)
             {
+                if(db_add_exit(process->identifier, exitcode) != 0)
+                    return -1;
                 free(process->wd);
                 process->status = PROCESS_FREE;
             }

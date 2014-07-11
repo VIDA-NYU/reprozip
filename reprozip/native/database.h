@@ -10,10 +10,12 @@ int db_init(const char *filename);
 int db_close(void);
 int db_add_process(unsigned int *id, unsigned int parent_id,
                    const char *working_dir);
+int db_add_exit(unsigned int id, int exitcode);
 int db_add_first_process(unsigned int *id, const char *working_dir);
 int db_add_file_open(unsigned int process,
                      const char *name, unsigned int mode);
 int db_add_exec(unsigned int process, const char *binary,
-                const char *const *argv, const char *const *envp);
+                const char *const *argv, const char *const *envp,
+                const char *workingdir);
 
 #endif
