@@ -211,7 +211,8 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
 #ifdef DEBUG_PROC_PARSER
                 fprintf(stderr, "    adding to database\n");
 #endif
-                if(db_add_file_open(process, pathname, FILE_READ) != 0)
+                if(db_add_file_open(process, pathname,
+                                    FILE_READ, path_is_dir(pathname)) != 0)
                     return -1;
                 strncpy(previous_path, pathname, 4096);
             }
@@ -401,7 +402,8 @@ int trace_handle_syscall(struct Process *process)
 
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                mode) != 0)
+                                mode,
+                                path_is_dir(pathname)) != 0)
                 return -1;
         }
         free(pathname);
@@ -451,7 +453,8 @@ int trace_handle_syscall(struct Process *process)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_STAT) != 0)
+                                FILE_STAT,
+                                path_is_dir(pathname)) != 0)
                 return -1;
         }
         free(pathname);
@@ -479,7 +482,8 @@ int trace_handle_syscall(struct Process *process)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_STAT) != 0)
+                                FILE_STAT,
+                                0) != 0)
                 return -1;
         }
         free(pathname);
@@ -508,7 +512,8 @@ int trace_handle_syscall(struct Process *process)
             process->wd = pathname;
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_WDIR) != 0)
+                                FILE_WDIR,
+                                1) != 0)
                 return -1;
         }
         else

@@ -19,4 +19,6 @@ char *get_p_wd(pid_t pid);
 
 char *read_line(char *buffer, size_t *size, FILE *fp);
 
+int path_is_dir(const char *pathname);
+
 #endif

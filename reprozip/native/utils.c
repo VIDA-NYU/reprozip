@@ -12,6 +12,9 @@
 #include "database.h"
 
 
+extern int trace_verbosity;
+
+
 unsigned int flags2mode(int flags)
 {
     unsigned int mode = 0;
@@ -171,4 +174,19 @@ char *read_line(char *buffer, size_t *size, FILE *fp)
             buffer[pos++] = c;
         }
     }
+}
+
+int path_is_dir(const char *pathname)
+{
+    struct stat buf;
+    if(lstat(pathname, &buf) != 0)
+    {
+        if(trace_verbosity >= 1)
+        {
+            fprintf(stderr, "Error stat()ing %s", pathname);
+            perror("");
+        }
+        return 0;
+    }
+    return S_ISDIR(buf.st_mode)?1:0;
 }

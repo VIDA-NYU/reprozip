@@ -89,6 +89,7 @@ int db_init(const char *filename)
             "    name TEXT NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    mode INTEGER NOT NULL,"
+            "    is_directory BOOLEAN NOT NULL,"
             "    process INTEGER NOT NULL"
             "    );",
             "CREATE TABLE executed_files("
@@ -128,8 +129,9 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO opened_files(name, timestamp, mode, process)"
-                "VALUES(?, ?, ?, ?)";
+                "INSERT INTO opened_files(name, timestamp, "
+                "        mode, is_directory, process)"
+                "VALUES(?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
 
@@ -192,7 +194,7 @@ int db_add_process(unsigned int *id, unsigned int parent_id,
         goto sqlerror;
     sqlite3_reset(stmt_last_rowid);
 
-    return db_add_file_open(*id, working_dir, FILE_WDIR);
+    return db_add_file_open(*id, working_dir, FILE_WDIR, 1);
 
 sqlerror:
     fprintf(stderr, "sqlite3 error inserting process: %s\n",
@@ -222,13 +224,15 @@ sqlerror:
     return -1;
 }
 
-int db_add_file_open(unsigned int process, const char *name, unsigned int mode)
+int db_add_file_open(unsigned int process, const char *name,
+                     unsigned int mode, int is_dir)
 {
     check(sqlite3_bind_text(stmt_insert_file, 1, name, -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
     check(sqlite3_bind_int64(stmt_insert_file, 2, gettime()));
     check(sqlite3_bind_int(stmt_insert_file, 3, mode));
-    check(sqlite3_bind_int(stmt_insert_file, 4, process));
+    check(sqlite3_bind_int(stmt_insert_file, 4, is_dir));
+    check(sqlite3_bind_int(stmt_insert_file, 5, process));
 
     if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
         goto sqlerror;
