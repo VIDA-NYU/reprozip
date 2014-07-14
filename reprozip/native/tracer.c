@@ -274,11 +274,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         name = "mq_unlink";
         break;
 
-    /* Path as second argument */
-    case SYS_symlink:
-        name = "symlink"; type = 1;
-        break;
-
     /* Functions that use open descriptors, which we currently don't track */
     case SYS_linkat:
         name = "linkat"; type = 2;
@@ -335,10 +330,10 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 
     if(name == NULL)
         return NULL;
-    else if(type == 0 || type == 1)
+    else if(type == 0)
     {
         char *pathname = tracee_strdup(process->pid,
-                                       (void*)process->params[type]);
+                                       (void*)process->params[0]);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -500,6 +495,33 @@ int trace_handle_syscall(struct Process *process)
         if(verbosity >= 3)
         {
             fprintf(stderr, "mkdir(\"%s\") = %d (%s)\n", pathname,
+                    (int)process->retvalue,
+                    (process->retvalue >= 0)?"success":"failure");
+        }
+        if(process->retvalue >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_WRITE,
+                                1) != 0)
+                return -1;
+        }
+    }
+    /* ********************
+     * symlink()
+     */
+    else if(process->in_syscall && syscall == SYS_symlink)
+    {
+        char *pathname = tracee_strdup(pid, (void*)process->params[1]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        if(verbosity >= 3)
+        {
+            fprintf(stderr, "symlink(\"%s\") = %d (%s)\n", pathname,
                     (int)process->retvalue,
                     (process->retvalue >= 0)?"success":"failure");
         }
