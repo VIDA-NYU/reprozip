@@ -9,6 +9,8 @@ Then, it can pack these files in a package to allow for easy reproducibility
 elsewhere, either by unpacking and running on a compatible machine or by
 creating a virtual machine through Vagrant.
 
+http://vida-nyu.github.io/reprozip/
+
 Quickstart
 ==========
 
@@ -75,5 +77,5 @@ ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. T
 
 Publications:
 
-* SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf?
-* TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf
+* TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/chirigati-tapp2013.pdf
+* SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/chirigati-sigmod2013.pdf
