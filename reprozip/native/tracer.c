@@ -228,9 +228,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     switch(syscall)
     {
     /* Path as first argument */
-    case SYS_mkdir:
-        name = "mkdir";
-        break;
     case SYS_rename:
         name = "rename";
         break;
@@ -487,6 +484,33 @@ int trace_handle_syscall(struct Process *process)
                 return -1;
         }
         free(pathname);
+    }
+    /* ********************
+     * mkdir()
+     */
+    else if(process->in_syscall && syscall == SYS_mkdir)
+    {
+        char *pathname = tracee_strdup(pid, (void*)process->params[0]);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        if(verbosity >= 3)
+        {
+            fprintf(stderr, "mkdir(\"%s\") = %d (%s)\n", pathname,
+                    (int)process->retvalue,
+                    (process->retvalue >= 0)?"success":"failure");
+        }
+        if(process->retvalue >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_WRITE,
+                                1) != 0)
+                return -1;
+        }
     }
     /* ********************
      * chdir()
