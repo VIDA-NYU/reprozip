@@ -373,31 +373,55 @@ int trace_handle_syscall(struct Process *process)
             pathname = abspath(process->wd, oldpath);
             free(oldpath);
         }
+
+        if(syscall == SYS_access)
+            mode = FILE_STAT;
+        else if(syscall == SYS_creat)
+            mode = flags2mode(process->params[1] |
+                              O_CREAT | O_WRONLY | O_TRUNC);
+        else /* syscall == SYS_open */
+            mode = flags2mode(process->params[1]);
+
         if(verbosity >= 3)
         {
-            fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                    (syscall == SYS_open)?"open":
-                        (syscall == SYS_creat)?"creat":"access",
-                    pathname,
-                    (int)process->retvalue,
-                    (process->retvalue >= 0)?"success":"failure");
+            /* Converts mode to string s_mode */
+            char mode_buf[42] = "";
+            const char *s_mode;
+            if(mode & FILE_READ)
+                strcat(mode_buf, "|FILE_READ");
+            if(mode & FILE_WRITE)
+                strcat(mode_buf, "|FILE_WRITE");
+            if(mode & FILE_WDIR)
+                strcat(mode_buf, "|FILE_WDIR");
+            if(mode & FILE_STAT)
+                strcat(mode_buf, "|FILE_STAT");
+            s_mode = mode_buf[0]?mode_buf + 1:"0";
+
+            if(syscall == SYS_open)
+                fprintf(stderr, "open(\"%s\", mode=%s) = %d (%s)\n",
+                        pathname,
+                        s_mode,
+                        (int)process->retvalue,
+                        (process->retvalue >= 0)?"success":"failure");
+            else /* SYS_creat or SYS_access */
+                fprintf(stderr, "%s(\"%s\") (mode=%s) = %d (%s)\n",
+                        (syscall == SYS_open)?"open":
+                            (syscall == SYS_creat)?"creat":"access",
+                        pathname,
+                        s_mode,
+                        (int)process->retvalue,
+                        (process->retvalue >= 0)?"success":"failure");
         }
+
         if(process->retvalue >= 0)
         {
-            if(syscall == SYS_access)
-                mode = FILE_STAT;
-            else if(syscall == SYS_creat)
-                mode = flags2mode(process->params[1] |
-                                  O_CREAT | O_WRONLY | O_TRUNC);
-            else /* syscall == SYS_open */
-                mode = flags2mode(process->params[1]);
-
             if(db_add_file_open(process->identifier,
                                 pathname,
                                 mode,
                                 path_is_dir(pathname)) != 0)
                 return -1;
         }
+
         free(pathname);
     }
     /* ********************
