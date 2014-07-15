@@ -47,9 +47,9 @@ def select_box(runs):
         sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
                          "\n" % version)
     if architecture == 'i686':
-        return 'debian', 'remram/debian-7.5-i386'
+        return 'debian', 'remram/debian-7-i386'
     else:  # architecture == 'x86_64':
-        return 'debian', 'remram/debian-7.5-amd64'
+        return 'debian', 'remram/debian-7-amd64'
 
 
 def create_vagrant(args):
