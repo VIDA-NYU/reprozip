@@ -174,7 +174,11 @@ def pack(args):
 
     Reads in the configuration file and writes out a tarball.
     """
-    reprozip.pack.pack(Path(args.target), Path(args.dir))
+    target = Path(args.target)
+    if not target.unicodename.lower().endswith('.rpz'):
+        target = Path(target.path + '.rpz')
+        logging.warning("Changing output filename to %s" % target.unicodename)
+    reprozip.pack.pack(target, Path(args.dir))
 
 
 def main():
