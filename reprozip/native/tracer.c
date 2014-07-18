@@ -3,9 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/param.h>
 #include <sys/ptrace.h>
 #include <sys/reg.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -352,6 +357,28 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     }
     else /* type == 2 */
         return strdup(name);
+}
+
+static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
+{
+    const short family = ((struct sockaddr*)address)->sa_family;
+    if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
+    {
+        struct sockaddr_in *address_ = address;
+        fprintf(stream, "%s:%d",
+                inet_ntoa(address_->sin_addr),
+                ntohs(address_->sin_port));
+    }
+    else if(family == AF_INET6
+          && addrlen >= sizeof(struct sockaddr_in6))
+    {
+        struct sockaddr_in6 *address_ = address;
+        char buf[50];
+        inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
+        fprintf(stream, "[%s]:%d", buf, ntohs(address_->sin6_port));
+    }
+    else
+        fprintf(stream, "<unknown destination, sa_family=%d>", family);
 }
 
 int trace_handle_syscall(struct Process *process)
@@ -720,6 +747,82 @@ int trace_handle_syscall(struct Process *process)
                               process->identifier,
                               process->wd) != 0)
                 return -1;
+        }
+    }
+    /* ********************
+     * Network connections
+     */
+    else if(verbosity >= 1 && process->in_syscall && process->retvalue >= 0
+          && (0
+#ifdef SYS_socketcall
+            || (syscall == SYS_socketcall && process->params[0] == SYS_ACCEPT)
+#endif
+#ifdef SYS_accept
+            || syscall == SYS_accept
+#endif
+#ifdef SYS_accept4
+            || syscall == SYS_accept4
+#endif
+              ) )
+    {
+        socklen_t addrlen;
+        register_type arg1;
+        register_type arg2;
+#ifdef SYS_socketcall
+        if(syscall == SYS_socketcall)
+        {
+            arg1 = process->params[2];
+            arg2 = process->params[3];
+        }
+        else
+#endif
+        {
+            arg1 = process->params[1];
+            arg2 = process->params[2];
+        }
+        tracee_read(pid, (void*)&addrlen, (void*)arg2, sizeof(addrlen));
+        if(addrlen >= sizeof(short))
+        {
+            void *address = malloc(addrlen);
+            tracee_read(pid, address, (void*)arg1, addrlen);
+            fprintf(stderr, "Warning: process accepted a connection from ");
+            print_sockaddr(stderr, address, addrlen);
+            fprintf(stderr, "\n");
+            free(address);
+        }
+    }
+    else if(verbosity >= 1 && process->in_syscall && process->retvalue >= 0
+          && (0
+#ifdef SYS_socketcall
+            || (syscall == SYS_socketcall && process->params[0] == SYS_CONNECT)
+#endif
+#ifdef SYS_connect
+            || syscall == SYS_connect
+#endif
+              ) )
+    {
+        socklen_t addrlen;
+        register_type arg1;
+#ifdef SYS_socketcall
+        if(syscall == SYS_socketcall)
+        {
+             arg1 = process->params[2];
+             addrlen = process->params[3];
+        }
+        else
+#endif
+        {
+             arg1 = process->params[1];
+             addrlen = process->params[2];
+        }
+        if(addrlen >= sizeof(short))
+        {
+            void *address = malloc(addrlen);
+            tracee_read(pid, address, (void*)arg1, addrlen);
+            fprintf(stderr, "Warning: process connected to ");
+            print_sockaddr(stderr, address, addrlen);
+            fprintf(stderr, "\n");
+            free(address);
         }
     }
     /* ********************
