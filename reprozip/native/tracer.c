@@ -782,22 +782,10 @@ int trace(pid_t first_proc, int *first_exit_code)
             unsigned int nprocs, unknown;
             int exitcode;
             if(WIFSIGNALED(status))
-            {
                 /* exit codes are 8 bits */
                 exitcode = 0x0100 | WTERMSIG(status);
-                if(verbosity >= 2)
-                    fprintf(stderr, "Process %d exited (signal %d), %d "
-                            "processes remain\n",
-                            pid, WTERMSIG(status), nprocs-1);
-            }
             else
-            {
                 exitcode = WEXITSTATUS(status);
-                if(verbosity >= 2)
-                    fprintf(stderr, "Process %d exited (code %d), %d "
-                            "processes remain\n",
-                            pid, WEXITSTATUS(status), nprocs-1);
-            }
 
             if(pid == first_proc && first_exit_code != NULL)
                 *first_exit_code = exitcode;
@@ -811,8 +799,11 @@ int trace(pid_t first_proc, int *first_exit_code)
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
-                fprintf(stderr, "Process %d exited, %d processes remain\n",
-                        pid, (unsigned int)nprocs);
+                fprintf(stderr,
+                        "Process %d exited (%s %d), %d processes remain\n",
+                        pid,
+                        (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
+                        (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
