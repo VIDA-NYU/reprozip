@@ -930,7 +930,8 @@ int trace(pid_t first_proc, int *first_exit_code)
         tid = waitpid(-1, &status, __WALL);
         if(tid == -1)
         {
-            perror("waitpid failed");
+            log_critical_("waitpid failed");
+            perror("");
             return -1;
         }
         if(WIFEXITED(status))
@@ -1185,7 +1186,8 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(binary, args);
-        perror("Couldn't execute the target command (execvp returned)");
+        log_critical_("Couldn't execute the target command (execvp returned)");
+        perror("");
         exit(1);
     }
 
