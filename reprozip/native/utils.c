@@ -10,6 +10,10 @@
 
 #include "config.h"
 #include "database.h"
+#include "log.h"
+
+
+extern int trace_verbosity;
 
 
 unsigned int flags2mode(int flags)
@@ -36,8 +40,7 @@ unsigned int flags2mode(int flags)
     else
     {
         if( (flags & (O_RDONLY | O_WRONLY)) == (O_RDONLY | O_WRONLY) )
-            fprintf(stderr, "Error: encountered bogus open() flags "
-                    "O_RDONLY|O_WRONLY\n");
+            log_error("encountered bogus open() flags O_RDONLY|O_WRONLY");
             /* Carry on anyway */
         if(flags & O_RDONLY)
             mode |= FILE_READ;
@@ -53,7 +56,7 @@ char *abspath(const char *wd, const char *path)
 {
     size_t len_wd = strlen(wd);
 #ifdef DEBUG
-    fprintf(stderr, "abspath(%s, %s) = ", wd, path);
+    log_info_("abspath(%s, %s) = ", wd, path);
 #endif
     if(wd[len_wd-1] == '/')
     {
@@ -102,16 +105,16 @@ char *get_wd(void)
     }
 }
 
-char *get_p_wd(pid_t pid)
+char *get_p_wd(pid_t tid)
 {
     /* PATH_MAX has issues, don't use it */
     size_t size = 1024;
     char *path;
     char dummy;
     char *proclink;
-    int len = snprintf(&dummy, 1, "/proc/%d/cwd", pid);
+    int len = snprintf(&dummy, 1, "/proc/%d/cwd", tid);
     proclink = malloc(len + 1);
-    snprintf(proclink, len + 1, "/proc/%d/cwd", pid);
+    snprintf(proclink, len + 1, "/proc/%d/cwd", tid);
     for(;;)
     {
         int ret;
@@ -171,4 +174,19 @@ char *read_line(char *buffer, size_t *size, FILE *fp)
             buffer[pos++] = c;
         }
     }
+}
+
+int path_is_dir(const char *pathname)
+{
+    struct stat buf;
+    if(lstat(pathname, &buf) != 0)
+    {
+        if(trace_verbosity >= 1)
+        {
+            log_error_("Error stat()ing %s", pathname);
+            perror("");
+        }
+        return 0;
+    }
+    return S_ISDIR(buf.st_mode)?1:0;
 }

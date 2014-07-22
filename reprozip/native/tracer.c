@@ -4,9 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sched.h>
+#include <sys/param.h>
 #include <sys/ptrace.h>
 #include <sys/reg.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -17,8 +23,18 @@
 
 #include "config.h"
 #include "database.h"
+#include "log.h"
 #include "ptrace_utils.h"
 #include "utils.h"
+
+
+#ifndef __X32_SYSCALL_BIT
+#define __X32_SYSCALL_BIT 0x40000000
+#endif
+
+#ifndef NT_PRSTATUS
+#define NT_PRSTATUS 1
+#endif
 
 
 /* Static assertion trick */
@@ -107,13 +123,16 @@ int trace_verbosity = 0;
 #define verbosity trace_verbosity
 
 
-#define PROCESS_FREE        0
-#define PROCESS_ALLOCATED   1
-#define PROCESS_ATTACHED    2
+#define PROCESS_FREE        0   /* unallocated entry in table */
+#define PROCESS_ALLOCATED   1   /* fork() done but not yet attached */
+#define PROCESS_ATTACHED    2   /* running process */
+#define PROCESS_UNKNOWN     3   /* attached but no corresponding fork() call
+                                 * has finished yet */
 
 struct Process {
     unsigned int identifier;
-    pid_t pid;
+    pid_t tid;
+    pid_t tgid;
     int status;
     int in_syscall;
     int current_syscall;
@@ -132,12 +151,12 @@ struct ExecveInfo {
 struct Process **processes = NULL;
 size_t processes_size;
 
-struct Process *trace_find_process(pid_t pid)
+struct Process *trace_find_process(pid_t tid)
 {
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i]->status != PROCESS_FREE && processes[i]->pid == pid)
+        if(processes[i]->status != PROCESS_FREE && processes[i]->tid == tid)
             return processes[i];
     }
     return NULL;
@@ -152,10 +171,26 @@ struct Process *trace_get_empty_process(void)
             return processes[i];
     }
 
+    /* Count unknown processes */
+    {
+        size_t unknown = 0;
+        for(i = 0; i < processes_size; ++i)
+            if(processes[i]->status == PROCESS_UNKNOWN)
+                ++unknown;
+        {
+            int many_unknown = unknown * 2 >= processes_size;
+            if(many_unknown && verbosity >= 1)
+                log_warn("there are %u/%u UNKNOWN processes",
+                         (unsigned int)unknown, (unsigned int)processes_size);
+            else if(verbosity >= 2)
+                log_info("there are %u/%u UNKNOWN processes",
+                         (unsigned int)unknown, (unsigned int)processes_size);
+        }
+    }
+
     /* Allocate more! */
     if(verbosity >= 3)
-        fprintf(stderr, "Process table full (%d), reallocating\n",
-                (int)processes_size);
+        log_info("Process table full (%d), reallocating", (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -166,15 +201,39 @@ struct Process *trace_get_empty_process(void)
         {
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
-            processes[i]->in_syscall = 0;
-            processes[i]->current_syscall = -1;
-            processes[i]->syscall_info = NULL;
         }
         return processes[prev_size];
     }
 }
 
-int trace_add_files_from_proc(unsigned int process, pid_t pid,
+void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
+{
+    unsigned int nproc = 0, unknown = 0;
+    size_t i;
+    for(i = 0; i < processes_size; ++i)
+    {
+        switch(processes[i]->status)
+        {
+        case PROCESS_FREE:
+            break;
+        case PROCESS_UNKNOWN:
+            /* Exists but no corresponding syscall has returned yet */
+            ++unknown;
+        case PROCESS_ALLOCATED:
+            /* Not yet attached but it will show up eventually */
+        case PROCESS_ATTACHED:
+            /* Running */
+            ++nproc;
+            break;
+        }
+    }
+    if(p_nproc != NULL)
+        *p_nproc = nproc;
+    if(p_unknown != NULL)
+        *p_unknown = unknown;
+}
+
+int trace_add_files_from_proc(unsigned int process, pid_t tid,
                               const char *binary)
 {
     FILE *fp;
@@ -184,9 +243,9 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
     char previous_path[4096] = "";
 
     const char *const fmt = "/proc/%d/maps";
-    int len = snprintf(&dummy, 1, fmt, pid);
+    int len = snprintf(&dummy, 1, fmt, tid);
     char *procfile = malloc(len + 1);
-    snprintf(procfile, len + 1, fmt, pid);
+    snprintf(procfile, len + 1, fmt, tid);
 
     /* Loops on lines
      * Format:
@@ -197,7 +256,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
      */
 
 #ifdef DEBUG_PROC_PARSER
-    fprintf(stderr, "Parsing %s\n", procfile);
+    log_info("Parsing %s", procfile);
 #endif
     fp = fopen(procfile, "r");
 
@@ -219,22 +278,21 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
                pathname);
 
 #ifdef DEBUG_PROC_PARSER
-        fprintf(stderr,
-                "proc line:\n"
-                "    addr_start: %lx\n"
-                "    addr_end: %lx\n"
-                "    perms: %s\n"
-                "    offset: %lx\n"
-                "    dev_major: %x\n"
-                "    dev_minor: %x\n"
-                "    inode: %lu\n"
-                "    pathname: %s\n",
-                addr_start, addr_end,
-                perms,
-                offset,
-                dev_major, dev_minor,
-                inode,
-                pathname);
+        log_info("proc line:\n"
+                 "    addr_start: %lx\n"
+                 "    addr_end: %lx\n"
+                 "    perms: %s\n"
+                 "    offset: %lx\n"
+                 "    dev_major: %x\n"
+                 "    dev_minor: %x\n"
+                 "    inode: %lu\n"
+                 "    pathname: %s",
+                 addr_start, addr_end,
+                 perms,
+                 offset,
+                 dev_major, dev_minor,
+                 inode,
+                 pathname);
 #endif
         if(inode > 0)
         {
@@ -242,9 +300,10 @@ int trace_add_files_from_proc(unsigned int process, pid_t pid,
              && strncmp(previous_path, pathname, 4096) != 0)
             {
 #ifdef DEBUG_PROC_PARSER
-                fprintf(stderr, "    adding to database\n");
+                log_info("    adding to database");
 #endif
-                if(db_add_file_open(process, pathname, FILE_READ) != 0)
+                if(db_add_file_open(process, pathname,
+                                    FILE_READ, path_is_dir(pathname)) != 0)
                     return -1;
                 strncpy(previous_path, pathname, 4096);
             }
@@ -260,9 +319,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
     switch(syscall)
     {
     /* Path as first argument */
-    case SYS_mkdir:
-        name = "mkdir";
-        break;
     case SYS_rename:
         name = "rename";
         break;
@@ -296,9 +352,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 #endif
         name = "lchown";
         break;
-    case SYS_faccessat:
-        name = "faccessat";
-        break;
     case SYS_utime:
         name = "utime";
         break;
@@ -310,11 +363,6 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         break;
     case SYS_mq_unlink:
         name = "mq_unlink";
-        break;
-
-    /* Path as second argument */
-    case SYS_symlink:
-        name = "symlink"; type = 1;
         break;
 
     /* Functions that use open descriptors, which we currently don't track */
@@ -341,6 +389,9 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         break;
     case SYS_fchownat:
         name = "fchownat"; type = 2;
+        break;
+    case SYS_faccessat:
+        name = "faccessat"; type = 2;
         break;
     case SYS_readlinkat:
         name = "readlinkat"; type = 2;
@@ -370,10 +421,10 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
 
     if(name == NULL)
         return NULL;
-    else if(type == 0 || type == 1)
+    else if(type == 0)
     {
-        char *pathname = tracee_strdup(process->pid,
-                                       process->params[type].p);
+        char *pathname = tracee_strdup(process->tid,
+                                       process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -394,9 +445,31 @@ char *trace_unhandled_syscall(int syscall, struct Process *process)
         return strdup(name);
 }
 
+static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
+{
+    const short family = ((struct sockaddr*)address)->sa_family;
+    if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
+    {
+        struct sockaddr_in *address_ = address;
+        fprintf(stream, "%s:%d",
+                inet_ntoa(address_->sin_addr),
+                ntohs(address_->sin_port));
+    }
+    else if(family == AF_INET6
+          && addrlen >= sizeof(struct sockaddr_in6))
+    {
+        struct sockaddr_in6 *address_ = address;
+        char buf[50];
+        inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
+        fprintf(stream, "[%s]:%d", buf, ntohs(address_->sin6_port));
+    }
+    else
+        fprintf(stream, "<unknown destination, sa_family=%d>", family);
+}
+
 int trace_handle_syscall(struct Process *process)
 {
-    pid_t pid = process->pid;
+    pid_t tid = process->tid;
     const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
     if(verbosity >= 4)
     {
@@ -417,37 +490,62 @@ int trace_handle_syscall(struct Process *process)
         || syscall == SYS_access) )
     {
         unsigned int mode;
-        char *pathname = tracee_strdup(pid, process->params[0].p);
+        char *pathname = tracee_strdup(tid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
             pathname = abspath(process->wd, oldpath);
             free(oldpath);
         }
+
+        if(syscall == SYS_access)
+            mode = FILE_STAT;
+        else if(syscall == SYS_creat)
+            mode = flags2mode(process->params[1].u |
+                              O_CREAT | O_WRONLY | O_TRUNC);
+        else /* syscall == SYS_open */
+            mode = flags2mode(process->params[1].u);
+
         if(verbosity >= 3)
         {
-            fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                    (syscall == SYS_open)?"open":
-                        (syscall == SYS_creat)?"creat":"access",
-                    pathname,
-                    (int)process->retvalue.i,
-                    (process->retvalue.i >= 0)?"success":"failure");
+            /* Converts mode to string s_mode */
+            char mode_buf[42] = "";
+            const char *s_mode;
+            if(mode & FILE_READ)
+                strcat(mode_buf, "|FILE_READ");
+            if(mode & FILE_WRITE)
+                strcat(mode_buf, "|FILE_WRITE");
+            if(mode & FILE_WDIR)
+                strcat(mode_buf, "|FILE_WDIR");
+            if(mode & FILE_STAT)
+                strcat(mode_buf, "|FILE_STAT");
+            s_mode = mode_buf[0]?mode_buf + 1:"0";
+
+            if(syscall == SYS_open)
+                log_info("open(\"%s\", mode=%s) = %d (%s)",
+                         pathname,
+                         s_mode,
+                         (int)process->retvalue.i,
+                         (process->retvalue.i >= 0)?"success":"failure");
+            else /* SYS_creat or SYS_access */
+                log_info("%s(\"%s\") (mode=%s) = %d (%s)",
+                         (syscall == SYS_open)?"open":
+                             (syscall == SYS_creat)?"creat":"access",
+                         pathname,
+                         s_mode,
+                         (int)process->retvalue.i,
+                         (process->retvalue.i >= 0)?"success":"failure");
         }
+
         if(process->retvalue.i >= 0)
         {
-            if(syscall == SYS_access)
-                mode = FILE_STAT;
-            else if(syscall == SYS_creat)
-                mode = flags2mode(process->params[1].u |
-                                  O_CREAT | O_WRONLY | O_TRUNC);
-            else /* syscall == SYS_open */
-                mode = flags2mode(process->params[1].u);
-
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                mode) != 0)
+                                mode,
+                                path_is_dir(pathname)) != 0)
                 return -1;
         }
+
         free(pathname);
     }
     /* ********************
@@ -469,7 +567,7 @@ int trace_handle_syscall(struct Process *process)
 #endif
               ) )
     {
-        char *pathname = tracee_strdup(pid, process->params[0].p);
+        char *pathname = tracee_strdup(tid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -478,24 +576,25 @@ int trace_handle_syscall(struct Process *process)
         }
         if(verbosity >= 3)
         {
-            fprintf(stderr, "%s(\"%s\") = %d (%s)\n",
-                    (syscall == SYS_stat
+            log_info("%s(\"%s\") = %d (%s)",
+                     (syscall == SYS_stat
 #ifdef SYS_stat64
-                   || syscall == SYS_stat64
+                    || syscall == SYS_stat64
 #endif
 #ifdef SYS_oldstat
-                   || syscall == SYS_oldstat
+                    || syscall == SYS_oldstat
 #endif
-                     )?"stat":"lstat",
-                    pathname,
-                    (int)process->retvalue.i,
-                    (process->retvalue.i >= 0)?"success":"failure");
+                      )?"stat":"lstat",
+                     pathname,
+                     (int)process->retvalue.i,
+                     (process->retvalue.i >= 0)?"success":"failure");
         }
         if(process->retvalue.i >= 0)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_STAT) != 0)
+                                FILE_STAT,
+                                path_is_dir(pathname)) != 0)
                 return -1;
         }
         free(pathname);
@@ -505,7 +604,7 @@ int trace_handle_syscall(struct Process *process)
      */
     else if(process->in_syscall && syscall == SYS_readlink)
     {
-        char *pathname = tracee_strdup(pid, process->params[0].p);
+        char *pathname = tracee_strdup(tid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -514,26 +613,81 @@ int trace_handle_syscall(struct Process *process)
         }
         if(verbosity >= 3)
         {
-            fprintf(stderr, "readlink(\"%s\") = %d (%s)\n",
-                    pathname,
-                    (int)process->retvalue.i,
-                    (process->retvalue.i >= 0)?"success":"failure");
+            log_info("readlink(\"%s\") = %d (%s)",
+                     pathname,
+                     (int)process->retvalue.i,
+                     (process->retvalue.i >= 0)?"success":"failure");
         }
         if(process->retvalue.i >= 0)
         {
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_STAT) != 0)
+                                FILE_STAT,
+                                0) != 0)
                 return -1;
         }
         free(pathname);
+    }
+    /* ********************
+     * mkdir()
+     */
+    else if(process->in_syscall && syscall == SYS_mkdir)
+    {
+        char *pathname = tracee_strdup(tid, process->params[0].p);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        if(verbosity >= 3)
+        {
+            log_info("mkdir(\"%s\") = %d (%s)", pathname,
+                     (int)process->retvalue.i,
+                     (process->retvalue.i >= 0)?"success":"failure");
+        }
+        if(process->retvalue.i >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_WRITE,
+                                1) != 0)
+                return -1;
+        }
+    }
+    /* ********************
+     * symlink()
+     */
+    else if(process->in_syscall && syscall == SYS_symlink)
+    {
+        char *pathname = tracee_strdup(tid, process->params[1].p);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        if(verbosity >= 3)
+        {
+            log_info("symlink(\"%s\") = %d (%s)", pathname,
+                     (int)process->retvalue.i,
+                     (process->retvalue.i >= 0)?"success":"failure");
+        }
+        if(process->retvalue.i >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                FILE_WRITE,
+                                1) != 0)
+                return -1;
+        }
     }
     /* ********************
      * chdir()
      */
     else if(process->in_syscall && syscall == SYS_chdir)
     {
-        char *pathname = tracee_strdup(pid, process->params[0].p);
+        char *pathname = tracee_strdup(tid, process->params[0].p);
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
@@ -542,9 +696,9 @@ int trace_handle_syscall(struct Process *process)
         }
         if(verbosity >= 3)
         {
-            fprintf(stderr, "chdir(\"%s\") = %d (%s)\n", pathname,
-                    (int)process->retvalue.i,
-                    (process->retvalue.i >= 0)?"success":"failure");
+            log_info("chdir(\"%s\") = %d (%s)", pathname,
+                     (int)process->retvalue.i,
+                     (process->retvalue.i >= 0)?"success":"failure");
         }
         if(process->retvalue.i >= 0)
         {
@@ -552,7 +706,8 @@ int trace_handle_syscall(struct Process *process)
             process->wd = pathname;
             if(db_add_file_open(process->identifier,
                                 pathname,
-                                FILE_WDIR) != 0)
+                                FILE_WDIR,
+                                1) != 0)
                 return -1;
         }
         else
@@ -567,19 +722,19 @@ int trace_handle_syscall(struct Process *process)
          *            char *const argv[],
          *            char *const envp[]); */
         struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
-        execi->binary = tracee_strdup(pid, process->params[0].p);
+        execi->binary = tracee_strdup(tid, process->params[0].p);
         if(execi->binary[0] != '/')
         {
             char *oldbin = execi->binary;
             execi->binary = abspath(process->wd, oldbin);
             free(oldbin);
         }
-        execi->argv = tracee_strarraydup(pid, process->params[1].p);
-        execi->envp = tracee_strarraydup(pid, process->params[2].p);
+        execi->argv = tracee_strarraydup(tid, process->params[1].p);
+        execi->envp = tracee_strarraydup(tid, process->params[2].p);
         if(verbosity >= 3)
         {
-            fprintf(stderr, "execve called:\n  binary=%s\n  argv:\n",
-                    execi->binary);
+            log_info("execve called by %d:\n  binary=%s\n  argv:",
+                     tid, execi->binary);
             {
                 /* Note: this conversion is correct and shouldn't need a
                  * cast */
@@ -601,7 +756,44 @@ int trace_handle_syscall(struct Process *process)
     }
     else if(process->in_syscall && syscall == SYS_execve)
     {
-        struct ExecveInfo *execi = process->syscall_info;
+        struct Process *exec_process = process;
+        struct ExecveInfo *execi = exec_process->syscall_info;
+        if(execi == NULL)
+        {
+            /* On Linux, execve changes tid to the thread leader's tid, no
+             * matter which thread made the call. This means that the process
+             * that just returned from execve might not be the one which
+             * called.
+             * So we start by finding the one which called execve.
+             * Possible confusion here if two threads call execve at the same
+             * time, but that would be very bad code. */
+            size_t i;
+            for(i = 0; i < processes_size; ++i)
+            {
+                if(processes[i]->status == PROCESS_ATTACHED
+                 && processes[i]->tgid == process->tgid
+                 && processes[i]->in_syscall
+                 && processes[i]->current_syscall == SYS_execve
+                 && processes[i]->syscall_info != NULL)
+                {
+                    exec_process = processes[i];
+                    break;
+                }
+            }
+            if(exec_process == NULL)
+            {
+                log_critical("process %d completing execve() but call wasn't "
+                             "recorded", tid);
+                return -1;
+            }
+            execi = exec_process->syscall_info;
+
+            /* The process that called execve() disappears without any trace */
+            if(db_add_exit(exec_process->identifier, 0) != 0)
+                return -1;
+            free(exec_process->wd);
+            exec_process->status = PROCESS_FREE;
+        }
         if(process->retvalue.i >= 0)
         {
             /* Note: execi->argv needs a cast to suppress a bogus warning
@@ -610,12 +802,16 @@ int trace_handle_syscall(struct Process *process)
              * G++ accepts it, GCC issues a warning. */
             if(db_add_exec(process->identifier, execi->binary,
                            (const char *const*)execi->argv,
-                           (const char *const*)execi->envp) != 0)
+                           (const char *const*)execi->envp,
+                           process->wd) != 0)
                 return -1;
-            if(verbosity >= 3)
-                fprintf(stderr, "Proc %d successfully exec'd %s\n",
-                        process->pid, execi->binary);
-            if(trace_add_files_from_proc(process->identifier, process->pid,
+            /* Note that here, the database records that the thread leader
+             * called execve, instead of thread exec_process->tid. */
+            if(verbosity >= 2)
+                log_info("Proc %d successfully exec'd %s",
+                         exec_process->tid, execi->binary);
+            /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
+            if(trace_add_files_from_proc(process->identifier, process->tid,
                                          execi->binary) != 0)
                 return -1;
         }
@@ -624,6 +820,7 @@ int trace_handle_syscall(struct Process *process)
         free_strarray(execi->envp);
         free(execi->binary);
         free(execi);
+        exec_process->syscall_info = NULL;
     }
     /* ********************
      * fork(), clone(), ...
@@ -632,29 +829,145 @@ int trace_handle_syscall(struct Process *process)
           && (syscall == SYS_fork || syscall == SYS_vfork
             || syscall == SYS_clone) )
     {
+#ifndef CLONE_THREAD
+#define CLONE_THREAD 0x00010000
+#endif
         if(process->retvalue.i > 0)
         {
-            pid_t new_pid = process->retvalue.i;
+            int is_thread = 0;
+            pid_t new_tid = process->retvalue.i;
             struct Process *new_process;
-            if(verbosity >= 3)
-                fprintf(stderr,
-                        "Process %d created by %d via %s\n"
-                        "    (working directory: %s)\n",
-                        new_pid, process->pid,
-                        (syscall == SYS_fork)?"fork()":
-                        (syscall == SYS_vfork)?"vfork()":
-                        "clone()",
-                        process->wd);
-            new_process = trace_get_empty_process();
-            new_process->status = PROCESS_ALLOCATED;
-            new_process->pid = new_pid;
-            new_process->in_syscall = 0;
+            if(syscall == SYS_clone)
+                is_thread = process->params[0].u & CLONE_THREAD;
+            if(verbosity >= 2)
+                log_info("Process %d created by %d via %s\n"
+                         "    (thread: %s) (working directory: %s)",
+                         new_tid, process->tid,
+                         (syscall == SYS_fork)?"fork()":
+                         (syscall == SYS_vfork)?"vfork()":
+                         "clone()",
+                         is_thread?"yes":"no",
+                         process->wd);
+
+            /* At this point, the process might have been seen by waitpid in
+             * trace() or not. */
+            new_process = trace_find_process(new_tid);
+            if(new_process != NULL)
+            {
+                /* Process has been seen before and options were set */
+                if(new_process->status != PROCESS_UNKNOWN)
+                {
+                    log_critical("just created process that is already "
+                                 "running (status=%d)", new_process->status);
+                    return -1;
+                }
+                new_process->status = PROCESS_ATTACHED;
+                ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
+                if(verbosity >= 2)
+                {
+                    unsigned int nproc, unknown;
+                    trace_count_processes(&nproc, &unknown);
+                    log_info("%d processes (inc. %d unattached)",
+                             nproc, unknown);
+                }
+            }
+            else
+            {
+                /* Process hasn't been seen before (syscall returned first) */
+                new_process = trace_get_empty_process();
+                new_process->status = PROCESS_ALLOCATED;
+                /* New process gets a SIGSTOP, but we resume on attach */
+                new_process->tid = new_tid;
+                new_process->in_syscall = 0;
+            }
+            if(is_thread)
+                new_process->tgid = process->tgid;
+            else
+                new_process->tgid = new_process->tid;
             new_process->wd = strdup(process->wd);
+
+            /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
 
             if(db_add_process(&new_process->identifier,
                               process->identifier,
                               process->wd) != 0)
                 return -1;
+        }
+    }
+    /* ********************
+     * Network connections
+     */
+    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+          && (0
+#ifdef SYS_socketcall
+            || (syscall == SYS_socketcall && process->params[0] == SYS_ACCEPT)
+#endif
+#ifdef SYS_accept
+            || syscall == SYS_accept
+#endif
+#ifdef SYS_accept4
+            || syscall == SYS_accept4
+#endif
+              ) )
+    {
+        socklen_t addrlen;
+        void *arg1;
+        void *arg2;
+#ifdef SYS_socketcall
+        if(syscall == SYS_socketcall)
+        {
+            arg1 = process->params[2].p;
+            arg2 = process->params[3].p;
+        }
+        else
+#endif
+        {
+            arg1 = process->params[1].p;
+            arg2 = process->params[2].p;
+        }
+        tracee_read(tid, (void*)&addrlen, arg2, sizeof(addrlen));
+        if(addrlen >= sizeof(short))
+        {
+            void *address = malloc(addrlen);
+            tracee_read(tid, address, arg1, addrlen);
+            log_warn_("process accepted a connection from ");
+            print_sockaddr(stderr, address, addrlen);
+            fprintf(stderr, "\n");
+            free(address);
+        }
+    }
+    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+          && (0
+#ifdef SYS_socketcall
+            || (syscall == SYS_socketcall && process->params[0] == SYS_CONNECT)
+#endif
+#ifdef SYS_connect
+            || syscall == SYS_connect
+#endif
+              ) )
+    {
+        socklen_t addrlen;
+        void *arg1;
+#ifdef SYS_socketcall
+        if(syscall == SYS_socketcall)
+        {
+             arg1 = process->params[2].p;
+             addrlen = process->params[3].u;
+        }
+        else
+#endif
+        {
+             arg1 = process->params[1].p;
+             addrlen = process->params[2].u;
+        }
+        if(addrlen >= sizeof(short))
+        {
+            void *address = malloc(addrlen);
+            tracee_read(tid, address, arg1, addrlen);
+            log_warn_("process connected to ");
+            print_sockaddr(stderr, address, addrlen);
+            fprintf(stderr, "\n");
+            free(address);
         }
     }
     /* ********************
@@ -665,9 +978,8 @@ int trace_handle_syscall(struct Process *process)
         char *desc = trace_unhandled_syscall(syscall, process);
         if(desc != NULL)
         {
-            fprintf(stderr,
-                    "WARNING: process %d used unhandled system call %s\n",
-                    process->pid, desc);
+            log_warn("process %d used unhandled system call %s",
+                     process->tid, desc);
             free(desc);
         }
     }
@@ -681,74 +993,107 @@ int trace_handle_syscall(struct Process *process)
     }
     else
         process->in_syscall = 1;
-    ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+    ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
 
     return 0;
 }
 
+void trace_set_options(pid_t tid)
+{
+    ptrace(PTRACE_SETOPTIONS, tid, 0,
+           PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
+                                     * if paused because of syscall */
+#ifdef PTRACE_O_EXITKILL
+           PTRACE_O_EXITKILL |
+#endif
+           PTRACE_O_TRACECLONE |
+           PTRACE_O_TRACEFORK |
+           PTRACE_O_TRACEVFORK |
+           PTRACE_O_TRACEEXEC);
+}
+
 int trace(pid_t first_proc, int *first_exit_code)
 {
-    int nprocs = 0;
     for(;;)
     {
         int status;
-        pid_t pid;
+        pid_t tid;
         struct Process *process;
 
         /* Wait for a process */
-        pid = waitpid(-1, &status, __WALL);
+        tid = waitpid(-1, &status, __WALL);
+        if(tid == -1)
+        {
+            log_critical_("waitpid failed");
+            perror("");
+            return -1;
+        }
         if(WIFEXITED(status))
         {
-            if(verbosity >= 2)
-                fprintf(stderr, "Process %d exited, %d processes remain\n",
-                        pid, nprocs-1);
-            if(pid == first_proc && first_exit_code != NULL)
-            {
-                if(WIFSIGNALED(status))
-                    /* exit codes are 8 bits */
-                    *first_exit_code = 0x0100 | WTERMSIG(status);
-                else
-                    *first_exit_code = WEXITSTATUS(status);
-            }
-            process = trace_find_process(pid);
+            unsigned int nprocs, unknown;
+            int exitcode;
+            if(WIFSIGNALED(status))
+                /* exit codes are 8 bits */
+                exitcode = 0x0100 | WTERMSIG(status);
+            else
+                exitcode = WEXITSTATUS(status);
+
+            if(tid == first_proc && first_exit_code != NULL)
+                *first_exit_code = exitcode;
+            process = trace_find_process(tid);
             if(process != NULL)
             {
+                if(db_add_exit(process->identifier, exitcode) != 0)
+                    return -1;
                 free(process->wd);
                 process->status = PROCESS_FREE;
             }
-            --nprocs;
+            trace_count_processes(&nprocs, &unknown);
+            if(verbosity >= 2)
+                log_info("Process %d exited (%s %d), %d processes remain",
+                         tid,
+                         (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
+                         (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
+            if(unknown >= nprocs)
+            {
+                log_critical("only UNKNOWN processes remaining (%d)",
+                             (unsigned int)nprocs);
+                return -1;
+            }
             continue;
         }
 
-        process = trace_find_process(pid);
+        process = trace_find_process(tid);
         if(process == NULL)
         {
-            if(verbosity >= 1)
-                fprintf(stderr, "Warning: found unexpected process %d\n", pid);
+            if(verbosity >= 3)
+                log_info("Process %d appeared", tid);
             process = trace_get_empty_process();
-            process->status = PROCESS_ALLOCATED;
-            process->pid = pid;
+            process->status = PROCESS_UNKNOWN;
+            process->tid = tid;
             process->in_syscall = 0;
-            process->wd = get_p_wd(pid);
-            if(db_add_first_process(&process->identifier, process->wd) != 0)
-                return -1;
+            process->wd = NULL;
+            trace_set_options(tid);
+            /* Don't resume, it will be set to ATTACHED and resumed when fork()
+             * returns */
+            continue;
         }
-        if(process->status != PROCESS_ATTACHED)
+        else if(process->status == PROCESS_ALLOCATED)
         {
             process->status = PROCESS_ATTACHED;
 
+            if(verbosity >= 3)
+                log_info("Process %d attached", tid);
+            trace_set_options(tid);
+            ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(verbosity >= 2)
-                fprintf(stderr, "Process %d attached\n", pid);
-            ++nprocs;
-            ptrace(PTRACE_SETOPTIONS, pid, 0,
-                   PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
-                                             * if paused because of syscall */
-                   PTRACE_O_TRACECLONE |
-                   PTRACE_O_TRACEFORK |
-                   PTRACE_O_TRACEVFORK);
-            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            {
+                unsigned int nproc, unknown;
+                trace_count_processes(&nproc, &unknown);
+                log_info("%d processes (inc. %d unattached)", nproc, unknown);
+            }
             continue;
         }
 
@@ -770,14 +1115,14 @@ int trace(pid_t first_proc, int *first_exit_code)
                 struct iovec iov;
                 iov.iov_base = &regs;
                 iov.iov_len = sizeof(regs);
-                if(ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &iov) == 0)
+                if(ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov) == 0)
                     len = iov.iov_len;
             }
             if(len == 0)
 #endif
             /* GETREGSET undefined or call failed, fallback on GETREGS */
             {
-                ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+                ptrace(PTRACE_GETREGS, tid, NULL, &regs);
             }
 #if defined(I386)
             process->current_syscall = regs.orig_eax;
@@ -839,13 +1184,37 @@ int trace(pid_t first_proc, int *first_exit_code)
             if(trace_handle_syscall(process) != 0)
                 return -1;
         }
-        /* Continue on SIGTRAP */
+        /* Handle signals */
         else if(WIFSTOPPED(status))
         {
-            /* FIXME : This is bogus. We resume processes that shouldn't be */
-            if(verbosity >= 3)
-                fprintf(stderr, "Resuming %d on signal\n", pid);
-            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            int signum = WSTOPSIG(status) & 0x7F;
+
+            /* Synthetic signal for ptrace event: resume */
+            if(signum == SIGTRAP && status & 0xFF0000)
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+            else if(signum == SIGTRAP)
+            {
+                /* Probably doesn't happen? Then, remove */
+                log_warn("NOT delivering SIGTRAP to %d\n"
+                         "    waitstatus=0x%X", tid, status);
+                ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+            }
+            /* Other signal, let the process handle it */
+            else
+            {
+                siginfo_t si;
+                if(verbosity >= 2)
+                    log_info("Process %d caught signal %d", tid, signum);
+                if(ptrace(PTRACE_GETSIGINFO, tid, 0, (long)&si) >= 0)
+                    ptrace(PTRACE_SYSCALL, tid, NULL, signum);
+                else
+                {
+                    /* Not sure what this is for */
+                    perror("    NOT delivering");
+                    if(signum != SIGSTOP)
+                        ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                }
+            }
         }
     }
 
@@ -862,14 +1231,13 @@ void cleanup(void)
                 ++nb;
         /* size_t size is implementation dependent; %u for size_t can trigger
          * a warning */
-        fprintf(stderr, "Cleaning up, %u processes to kill...\n",
-                (unsigned int)nb);
+        log_info("Cleaning up, %u processes to kill...", (unsigned int)nb);
     }
     for(i = 0; i < processes_size; ++i)
     {
         if(processes[i]->status != PROCESS_FREE)
         {
-            kill(processes[i]->pid, SIGKILL);
+            kill(processes[i]->tid, SIGKILL);
             free(processes[i]->wd);
         }
     }
@@ -878,7 +1246,7 @@ void cleanup(void)
 void sigint_handler(int signo)
 {
     if(verbosity >= 1)
-        fprintf(stderr, "Cleaning up on SIGINT\n");
+        log_info("Cleaning up on SIGINT");
     (void)signo;
     cleanup();
     exit(1);
@@ -918,7 +1286,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     child = fork();
 
     if(child != 0 && verbosity >= 2)
-        fprintf(stderr, "Child created, pid=%d\n", child);
+        log_info("Child created, pid=%d", child);
 
     if(child == 0)
     {
@@ -931,8 +1299,9 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(binary, args);
-        perror("Couldn't execute the target command (execvp returned)");
-        return 1;
+        log_critical_("Couldn't execute the target command (execvp returned)");
+        perror("");
+        exit(1);
     }
 
     if(db_init(database_path) != 0)
@@ -945,12 +1314,14 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         struct Process *process = trace_get_empty_process();
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
-        process->pid = child;
+        /* We sent a SIGSTOP, but we resume on attach */
+        process->tid = child;
+        process->tgid = child;
         process->in_syscall = 0;
         process->wd = get_wd();
 
         if(verbosity >= 2)
-            fprintf(stderr, "Process %d created by initial fork()\n", child);
+            log_info("Process %d created by initial fork()", child);
         if(db_add_first_process(&process->identifier, process->wd) != 0)
         {
             cleanup();

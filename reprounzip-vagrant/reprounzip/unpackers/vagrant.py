@@ -1,10 +1,16 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 from __future__ import unicode_literals
 
+import logging
 from rpaths import PosixPath, Path
 import sys
+import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer,\
-    shell_escape, join_root
+    shell_escape, busybox_url, join_root
 from reprounzip.utils import unicode_
 
 
@@ -41,9 +47,9 @@ def select_box(runs):
         sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
                          "\n" % version)
     if architecture == 'i686':
-        return 'debian', 'remram/debian-7.5-i386'
+        return 'debian', 'remram/debian-7-i386'
     else:  # architecture == 'x86_64':
-        return 'debian', 'remram/debian-7.5-amd64'
+        return 'debian', 'remram/debian-7-amd64'
 
 
 def create_vagrant(args):
@@ -127,6 +133,9 @@ def create_vagrant(args):
             paths = set()
             pathlist = []
             dataroot = PosixPath('DATA')
+            # Adds intermediate directories, and checks for existence in the
+            # tar
+            tar = tarfile.open(str(pack), 'r:*')
             for f in other_files:
                 path = PosixPath('/')
                 for c in f.path.components[1:]:
@@ -134,29 +143,36 @@ def create_vagrant(args):
                     if path in paths:
                         continue
                     paths.add(path)
-                    pathlist.append(unicode_(join_root(dataroot, path)))
+                    datapath = join_root(dataroot, path)
+                    try:
+                        tar.getmember(str(datapath))
+                    except KeyError:
+                        logging.info("Missing file %s" % datapath)
+                    else:
+                        pathlist.append(unicode_(datapath))
+            tar.close()
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
-            fp.write('tar zpxf /vagrant/experiment.rpz '
+            # TAR bug: --no-overwrite-dir removes --keep-old-files
+            fp.write('tar zpxf /vagrant/experiment.rpz --keep-old-files '
                      '--numeric-owner --strip=1 %s\n' %
                      ' '.join(shell_escape(p) for p in reversed(pathlist)))
 
         # Copies /bin/sh + dependencies
         if use_chroot:
-            regex = r'^\t(?:[^ ]+ => )?([^ ]+) \([x0-9a-z]+\)$'
+            url = busybox_url(runs[0]['architecture'])
             fp.write(r'''
-for i in $(ldd /bin/sh /usr/bin/env |
-           perl -n -e '/{regex}/ && print "$1\n"'); do
-    if [ -e "$i" ] ; then
-        mkdir -p "$(dirname /experimentroot/$i)"
-        cp -L "$i" "/experimentroot/$i"
-    fi
-done
 mkdir -p /experimentroot/bin
-cp -L /bin/sh /experimentroot/bin/sh
 mkdir -p /experimentroot/usr/bin
-cp -L /usr/bin/env /experimentroot/usr/bin/env
-'''.format(regex=regex))
+if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
+    wget -O /experimentroot/bin/busybox {url}
+    chmod +x /experimentroot/bin/busybox
+fi
+[ -e /experimentroot/bin/sh ] || \
+    ln -s /bin/busybox /experimentroot/bin/sh
+[ -e /experimentroot/usr/bin/env ] || \
+    ln -s /bin/busybox /experimentroot/usr/bin/env
+'''.format(url=url))
 
     # Copies pack
     pack.copyfile(target / 'experiment.rpz')

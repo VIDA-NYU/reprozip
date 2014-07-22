@@ -9,17 +9,17 @@
 #include "ptrace_utils.h"
 
 
-static void *tracee_getptr(pid_t pid, const void *addr)
+static void *tracee_getptr(pid_t tid, const void *addr)
 {
-    return (void*)ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
+    return (void*)ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
 }
 
-static long tracee_getword(pid_t pid, const void *addr)
+static long tracee_getword(pid_t tid, const void *addr)
 {
-    return ptrace(PTRACE_PEEKDATA, pid, addr, NULL);
+    return ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
 }
 
-size_t tracee_strlen(pid_t pid, const char *str)
+size_t tracee_strlen(pid_t tid, const char *str)
 {
     uintptr_t ptr = (uintptr_t)str;
     size_t j = ptr % WORD_SIZE;
@@ -28,7 +28,7 @@ size_t tracee_strlen(pid_t pid, const char *str)
     int done = 0;
     for(; !done; i += WORD_SIZE)
     {
-        unsigned long data = tracee_getword(pid, (const void*)i);
+        unsigned long data = tracee_getword(tid, (const void*)i);
         for(; !done && j < WORD_SIZE; ++j)
         {
             unsigned char byte = data >> (8 * j);
@@ -42,7 +42,7 @@ size_t tracee_strlen(pid_t pid, const char *str)
     return size;
 }
 
-void tracee_read(pid_t pid, char *dst, const char *src, size_t size)
+void tracee_read(pid_t tid, char *dst, const char *src, size_t size)
 {
     uintptr_t ptr = (uintptr_t)src;
     size_t j = ptr % WORD_SIZE;
@@ -50,23 +50,23 @@ void tracee_read(pid_t pid, char *dst, const char *src, size_t size)
     uintptr_t end = ptr + size;
     for(; i < end; i += WORD_SIZE)
     {
-        unsigned long data = tracee_getword(pid, (const void*)i);
+        unsigned long data = tracee_getword(tid, (const void*)i);
         for(; j < WORD_SIZE && i + j < end; ++j)
             *dst++ = data >> (8 * j);
         j = 0;
     }
 }
 
-char *tracee_strdup(pid_t pid, const char *str)
+char *tracee_strdup(pid_t tid, const char *str)
 {
-    size_t length = tracee_strlen(pid, str);
+    size_t length = tracee_strlen(tid, str);
     char *res = malloc(length + 1);
-    tracee_read(pid, res, str, length);
+    tracee_read(tid, res, str, length);
     res[length] = '\0';
     return res;
 }
 
-char **tracee_strarraydup(pid_t pid, const char *const *argv)
+char **tracee_strarraydup(pid_t tid, const char *const *argv)
 {
     char **array;
     /* Reads number of pointers in pointer array */
@@ -74,12 +74,12 @@ char **tracee_strarraydup(pid_t pid, const char *const *argv)
     {
         const char *const *a = argv;
         /* xargv = *a */
-        const char *xargv = tracee_getptr(pid, a);
+        const char *xargv = tracee_getptr(tid, a);
         while(xargv != NULL)
         {
             ++nb_args;
             ++a;
-            xargv = tracee_getptr(pid, a);
+            xargv = tracee_getptr(tid, a);
         }
     }
     /* Allocs pointer array */
@@ -88,13 +88,13 @@ char **tracee_strarraydup(pid_t pid, const char *const *argv)
     {
         size_t i = 0;
         /* xargv = argv[0] */
-        const char *xargv = tracee_getptr(pid, argv);
+        const char *xargv = tracee_getptr(tid, argv);
         while(xargv != NULL)
         {
-            array[i] = tracee_strdup(pid, xargv);
+            array[i] = tracee_strdup(tid, xargv);
             ++i;
             /* xargv = argv[i] */
-            xargv = tracee_getptr(pid, argv + i);
+            xargv = tracee_getptr(tid, argv + i);
         }
         array[i] = NULL;
     }

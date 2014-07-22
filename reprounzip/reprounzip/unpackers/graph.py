@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 from __future__ import unicode_literals
 
 import argparse
@@ -156,6 +160,8 @@ def generate(target, directory, all_forks=False):
                 all_programs.append(process)
                 processes[r_process] = process
             argv = tuple(r_argv.split('\0'))
+            if not argv[-1]:
+                argv = argv[:-1]
             edges.add((process, r_name, None, argv))
 
     process_cursor.close()

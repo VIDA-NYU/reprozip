@@ -15,8 +15,10 @@ char *abspath(const char *wd, const char *path);
 
 char *get_wd(void);
 
-char *get_p_wd(pid_t pid);
+char *get_p_wd(pid_t tid);
 
 char *read_line(char *buffer, size_t *size, FILE *fp);
+
+int path_is_dir(const char *pathname);
 
 #endif

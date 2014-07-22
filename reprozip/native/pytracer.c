@@ -21,7 +21,6 @@ static char *get_string(PyObject *obj)
         PyObject *pyutf8 = PyUnicode_AsUTF8String(obj);
         if(pyutf8 == NULL)
             return NULL;
-        fprintf(stderr, "\n");
 #if PY_MAJOR_VERSION >= 3
         str = PyBytes_AsString(pyutf8);
 #else

@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 from __future__ import unicode_literals
 
 import argparse
@@ -8,7 +12,7 @@ from pkg_resources import iter_entry_points
 import sys
 
 
-__version__ = '0.2'
+__version__ = '0.2.1'
 
 
 def main():

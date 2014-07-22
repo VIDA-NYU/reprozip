@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 # This file is shared:
 #   reprozip/reprozip/common.py
 #   reprounzip/reprounzip/common.py
@@ -74,7 +78,7 @@ def load_config(filename, File=File, Package=Package):
     keys_ = set(config.keys())
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
-    elif config['version'] != '0.2':
+    elif config['version'] not in ('0.2', '0.2.1'):
         raise InvalidConfig("Unknown version")
     elif not keys_.issubset(set(['version', 'runs',
                                  'packages', 'other_files'])):
@@ -132,7 +136,6 @@ version: "{version!s}"
            date=datetime.now().isoformat()))
         fp.write(dump({'runs': runs}).decode('utf-8'))
         fp.write("""\
-
 
 # Files to pack
 # All the files below were used by the program; they will be included in the

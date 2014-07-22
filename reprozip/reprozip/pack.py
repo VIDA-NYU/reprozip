@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 from __future__ import unicode_literals
 
 import logging
@@ -62,7 +66,10 @@ class PackBuilder(object):
         from rpaths import PosixPath
         assert isinstance(name, PosixPath)
         assert isinstance(arcname, PosixPath)
-        self.tar.add(str(name), str(arcname), *args, **kwargs)
+        try:
+            self.tar.add(str(name), str(arcname), *args, **kwargs)
+        except OSError:
+            logging.warning("Missing file %s" % name)
 
     def add_data(self, filename):
         if filename in self.seen:
@@ -73,7 +80,10 @@ class PackBuilder(object):
             if path in self.seen:
                 continue
             logging.debug("%s -> %s" % (path, data_path(path)))
-            self.tar.add(str(path), str(data_path(path)), recursive=False)
+            try:
+                self.tar.add(str(path), str(data_path(path)), recursive=False)
+            except OSError:
+                logging.warning("Missing file %s" % path)
             self.seen.add(path)
 
     def close(self):

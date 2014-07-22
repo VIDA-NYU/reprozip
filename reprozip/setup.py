@@ -18,40 +18,30 @@ pytracer = Extension('reprozip._pytracer',
                      sources=sources,
                      libraries=libraries)
 
-description = """\
-ReproZip is a tool aimed at scientists using Linux distributions, that
-simplifies the process of creating reproducible experiments from programs.
-
-It uses the ptrace facilities of Linux to trace the processes and files that
-are part of the experiment and build a comprehensive provenance graph for the
-user to review.
-
-Then, it can pack these files in a package to allow for easy reproducibility
-elsewhere, either by unpacking and running on a compatible machine or by
-creating a virtual machine through Vagrant.
-
-This package holds the tracer and packer components (and the 'reprozip'
-command-line utility).
-"""
+with open('README.rst') as fp:
+    description = fp.read()
 req = [
     'PyYAML',
     'rpaths>=0.4']
-if sys.version_info <= (2, 6):
+if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprozip',
-      version='0.2',
+      version='0.2.1',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [
           'reprozip = reprozip.main:main']},
       install_requires=req,
-      description='Linux tool enabling reproducible experiments (packer)',
-      author="Remi Rampin",
-      author_email='remirampin@gmail.com',
-      url='http://github.com/remram44/reprozip',
+      description="Linux tool enabling reproducible experiments (packer)",
+      author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
+      author_email='reprozip-users@vgc.poly.edu',
+      maintainer="Remi Rampin",
+      maintainer_email='remirampin@gmail.com',
+      url='http://vida-nyu.github.io/reprozip/',
       long_description=description,
       license='BSD',
-      keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance'],
+      keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
+                'vida', 'nyu'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',

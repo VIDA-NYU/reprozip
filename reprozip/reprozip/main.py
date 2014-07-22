@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 from __future__ import unicode_literals
 
 import argparse
@@ -28,22 +32,26 @@ def print_db(database):
     cur = conn.cursor()
     processes = cur.execute(
             '''
-            SELECT id, parent, timestamp
+            SELECT id, parent, timestamp, exitcode
             FROM processes;
             ''')
     print("\nProcesses:")
-    header = "+------+--------+--------------------+"
+    header = "+------+--------+-------+------------------+"
     print(header)
-    print("|  id  | parent |      timestamp     |")
+    print("|  id  | parent |  exit |     timestamp    |")
     print(header)
-    for r_id, r_parent, r_timestamp in processes:
+    for r_id, r_parent, r_timestamp, r_exit in processes:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
         else:
             f_parent = "        "
-        f_timestamp = "{0: 19d} ".format(r_timestamp)
-        print('|'.join(('', f_id, f_parent, f_timestamp, '')))
+        if r_exit & 0x0100:
+            f_exit = " sig{0: <2d} ".format(r_exit)
+        else:
+            f_exit = "    {0: <2d} ".format(r_exit)
+        f_timestamp = "{0: 17d} ".format(r_timestamp)
+        print('|'.join(('', f_id, f_parent, f_exit, f_timestamp, '')))
         print(header)
     cur.close()
 
@@ -54,21 +62,23 @@ def print_db(database):
             FROM executed_files;
             ''')
     print("\nExecuted files:")
-    header = ("+--------+--------------------+---------+------+---------------"
+    header = ("+--------+------------------+---------+------------------------"
               "---------------+")
     print(header)
-    print("|   id   |      timestamp     | process | name and argv            "
-          "    |")
+    print("|   id   |     timestamp    | process | name and argv              "
+          "           |")
     print(header)
     for r_id, r_name, r_timestamp, r_process, r_argv in processes:
         f_id = "{0: 7d} ".format(r_id)
-        f_timestamp = "{0: 19d} ".format(r_timestamp)
+        f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
         argv = r_argv.split('\0')
+        if not argv[-1]:
+            argv = argv[:-1]
         cmdline = ' '.join(repr(a) for a in argv)
         if argv[0] != os.path.basename(r_name):
             cmdline = "(%s) %s" % (r_name, cmdline)
-        f_cmdline = " {0: <28s} ".format(cmdline)
+        f_cmdline = " {0: <37s} ".format(cmdline)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
         print(header)
     cur.close()
@@ -80,18 +90,18 @@ def print_db(database):
             FROM opened_files;
             ''')
     print("\nFiles:")
-    header = ("+--------+--------------------+---------+------+---------------"
+    header = ("+--------+------------------+---------+------+-----------------"
               "---------------+")
     print(header)
-    print("|   id   |      timestamp     | process | mode | name              "
+    print("|   id   |     timestamp    | process | mode | name                "
           "           |")
     print(header)
     for r_id, r_name, r_timestamp, r_mode, r_process in processes:
         f_id = "{0: 7d} ".format(r_id)
-        f_timestamp = "{0: 19d} ".format(r_timestamp)
+        f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
         f_mode = "{0: 5d} ".format(r_mode)
-        f_name = " {0: <28s} ".format(r_name)
+        f_name = " {0: <30s} ".format(r_name)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()
@@ -142,8 +152,21 @@ def trace(args):
                                 argv,
                                 Path(args.dir),
                                 args.append,
-                                args.identify_packages,
                                 args.verbosity)
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              overwrite=False)
+
+
+def reset(args):
+    """reset subcommand.
+
+    Just regenerates the configuration (config.yml) from the trace
+    (trace.sqlite3).
+    """
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              overwrite=True)
 
 
 def pack(args):
@@ -151,7 +174,11 @@ def pack(args):
 
     Reads in the configuration file and writes out a tarball.
     """
-    reprozip.pack.pack(Path(args.target), Path(args.dir))
+    target = Path(args.target)
+    if not target.unicodename.lower().endswith('.rpz'):
+        target = Path(target.path + '.rpz')
+        logging.warning("Changing output filename to %s" % target.unicodename)
+    reprozip.pack.pack(target, Path(args.dir))
 
 
 def main():
@@ -213,6 +240,16 @@ def main():
             help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
+
+    # reset command
+    parser_reset = subparsers.add_parser(
+            'reset', parents=[options],
+            help="Resets the configuration file")
+    parser_reset.add_argument(
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
+    parser_reset.set_defaults(func=reset)
 
     # pack command
     parser_pack = subparsers.add_parser(
