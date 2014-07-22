@@ -137,7 +137,6 @@ version: "{version!s}"
         fp.write(dump({'runs': runs}).decode('utf-8'))
         fp.write("""\
 
-
 # Files to pack
 # All the files below were used by the program; they will be included in the
 # generated package

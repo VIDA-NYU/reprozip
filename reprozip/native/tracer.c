@@ -859,6 +859,9 @@ void trace_set_options(pid_t pid)
     ptrace(PTRACE_SETOPTIONS, pid, 0,
            PTRACE_O_TRACESYSGOOD |  /* Adds 0x80 bit to SIGTRAP signals
                                      * if paused because of syscall */
+#ifdef PTRACE_O_EXITKILL
+           PTRACE_O_EXITKILL |
+#endif
            PTRACE_O_TRACECLONE |
            PTRACE_O_TRACEFORK |
            PTRACE_O_TRACEVFORK |
