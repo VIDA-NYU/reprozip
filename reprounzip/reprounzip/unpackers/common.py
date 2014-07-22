@@ -43,7 +43,7 @@ def load_config(pack):
         tar.extract('METADATA/config.yml', path=str(tmp))
         tar.close()
         configfile = tmp / 'METADATA/config.yml'
-        ret = reprounzip.common.load_config(configfile)
+        ret = reprounzip.common.load_config(configfile, canonical=True)
     finally:
         tmp.rmtree()
 

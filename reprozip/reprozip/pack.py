@@ -11,7 +11,9 @@ import sqlite3
 import sys
 import tarfile
 
-from reprozip.common import FILE_WRITE, FILE_WDIR, load_config
+from reprozip import __version__ as reprozip_version
+from reprozip.common import FILE_WRITE, FILE_WDIR, load_config, save_config
+from reprozip.tracer.canonicalize import canonicalize_config
 from reprozip.utils import PY3
 
 
@@ -107,7 +109,9 @@ def pack(target, directory):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.\n")
         sys.exit(1)
-    runs, packages, other_files = load_config(configfile)
+    runs, packages, other_files, additional_patterns = load_config(
+            configfile,
+            canonical=False)
 
     logging.info("Creating pack %s..." % target)
     tar = PackBuilder(target)
@@ -123,8 +127,18 @@ def pack(target, directory):
     finally:
         manifest.remove()
 
-    # Stores the configuration file
-    tar.add(configfile, Path('METADATA/config.yml'))
+    # Canonicalize config file (re-sort, expand 'additional_files' patterns)
+    runs, packages, other_files = canonicalize_config(
+            runs, packages, other_files, additional_patterns)
+    fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
+    os.close(fd)
+    try:
+        save_config(can_configfile, runs, packages, other_files,
+                    reprozip_version, canonical=True)
+
+        tar.add(can_configfile, Path('METADATA/config.yml'))
+    finally:
+        can_configfile.remove()
 
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
