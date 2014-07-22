@@ -4,11 +4,6 @@
 #include "config.h"
 
 
-#ifndef __X32_SYSCALL_BIT
-#define __X32_SYSCALL_BIT 0x40000000
-#endif
-
-
 int fork_and_trace(const char *binary, int argc, char **argv,
                    const char *database_path, int *exit_status);
 
@@ -27,6 +22,9 @@ typedef struct S_register_type {
 
 struct Process {
     unsigned int identifier;
+#ifdef X86_64
+    unsigned int mode;
+#endif
     pid_t tid;
     pid_t tgid;
     int status;
@@ -43,6 +41,10 @@ struct Process {
 #define PROCESS_ATTACHED    2   /* running process */
 #define PROCESS_UNKNOWN     3   /* attached but no corresponding fork() call
                                  * has finished yet */
+
+#define MODE_I386           1
+#define MODE_X86_64         2   /* In x86_64 mode, syscalls might be native x64
+                                 * or x32 */
 
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;

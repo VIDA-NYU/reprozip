@@ -23,6 +23,11 @@
 #include "utils.h"
 
 
+#ifndef __X32_SYSCALL_BIT
+#define __X32_SYSCALL_BIT 0x40000000
+#endif
+
+
 #define verbosity trace_verbosity
 
 struct ExecveInfo {
@@ -190,16 +195,19 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
 int syscall_handle(struct Process *process)
 {
     pid_t tid = process->tid;
-    const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
+    const int syscall = process->current_syscall;
     if(verbosity >= 4)
     {
 #ifdef I386
         fprintf(stderr, "syscall %d (I386)\n", syscall);
 #else
-        fprintf(stderr, "syscall %d (%s)\n", syscall,
-                (process->current_syscall & __X32_SYSCALL_BIT)?
-                    "x32 mode":
-                    "x64 mode");
+        if(process->mode == MODE_I386)
+            fprintf(stderr, "syscall %d (i386)\n", syscall);
+        else
+            fprintf(stderr, "syscall %d (%s)\n", syscall,
+                    (process->current_syscall & __X32_SYSCALL_BIT)?
+                        "x32":
+                        "x64");
 #endif
     }
 

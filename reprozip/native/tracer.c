@@ -408,8 +408,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             {
                 /* 32 bit mode */
                 struct i386_regs *x86regs = (struct i386_regs*)&regs;
-                process->current_syscall =
-                        x86regs->orig_eax | __X32_SYSCALL_BIT;
+                process->current_syscall = x86regs->orig_eax;
                 if(process->in_syscall)
                     get_i386_reg(&process->retvalue, x86regs->eax);
                 else
@@ -421,6 +420,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     get_i386_reg(&process->params[4], x86regs->edi);
                     get_i386_reg(&process->params[5], x86regs->ebp);
                 }
+                process->mode = MODE_I386;
             }
             else
             {
@@ -437,6 +437,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     get_x86_64_reg(&process->params[4], regs.r8);
                     get_x86_64_reg(&process->params[5], regs.r9);
                 }
+                /* Might still be either native x64 or Linux's x32 layer */
+                process->mode = MODE_X86_64;
             }
 #endif
             if(syscall_handle(process) != 0)
