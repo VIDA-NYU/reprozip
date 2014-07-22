@@ -636,8 +636,8 @@ int trace_handle_syscall(struct Process *process)
         execi->envp = tracee_strarraydup(pid, (void*)process->params[2]);
         if(verbosity >= 3)
         {
-            fprintf(stderr, "execve called:\n  binary=%s\n  argv:\n",
-                    execi->binary);
+            fprintf(stderr, "execve called by %d:\n  binary=%s\n  argv:\n",
+                    pid, execi->binary);
             {
                 /* Note: this conversion is correct and shouldn't need a
                  * cast */
@@ -671,7 +671,7 @@ int trace_handle_syscall(struct Process *process)
                            (const char *const*)execi->envp,
                            process->wd) != 0)
                 return -1;
-            if(verbosity >= 3)
+            if(verbosity >= 2)
                 fprintf(stderr, "Proc %d successfully exec'd %s\n",
                         process->pid, execi->binary);
             /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
