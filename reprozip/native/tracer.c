@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sched.h>
 #include <sys/param.h>
 #include <sys/ptrace.h>
 #include <sys/reg.h>
@@ -47,6 +48,7 @@ int trace_verbosity = 0;
 struct Process {
     unsigned int identifier;
     pid_t tid;
+    pid_t tgid;
     int status;
     int in_syscall;
     int current_syscall;
@@ -692,18 +694,25 @@ int trace_handle_syscall(struct Process *process)
           && (syscall == SYS_fork || syscall == SYS_vfork
             || syscall == SYS_clone) )
     {
+#ifndef CLONE_THREAD
+#define CLONE_THREAD 0x00010000
+#endif
         if(process->retvalue > 0)
         {
+            int is_thread = 0;
             pid_t new_tid = process->retvalue;
             struct Process *new_process;
+            if(syscall == SYS_clone)
+                is_thread = ((unsigned int)process->params[0]) & CLONE_THREAD;
             if(verbosity >= 2)
                 fprintf(stderr,
                         "Process %d created by %d via %s\n"
-                        "    (working directory: %s)\n",
+                        "    (thread: %s) (working directory: %s)\n",
                         new_tid, process->tid,
                         (syscall == SYS_fork)?"fork()":
                         (syscall == SYS_vfork)?"vfork()":
                         "clone()",
+                        is_thread?"yes":"no",
                         process->wd);
 
             /* At this point, the process might have been seen by waitpid in
@@ -720,7 +729,6 @@ int trace_handle_syscall(struct Process *process)
                     return -1;
                 }
                 new_process->status = PROCESS_ATTACHED;
-                new_process->wd = strdup(process->wd);
                 ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
                 if(verbosity >= 2)
                 {
@@ -738,8 +746,12 @@ int trace_handle_syscall(struct Process *process)
                 /* New process gets a SIGSTOP, but we resume on attach */
                 new_process->tid = new_tid;
                 new_process->in_syscall = 0;
-                new_process->wd = strdup(process->wd);
             }
+            if(is_thread)
+                new_process->tgid = process->tgid;
+            else
+                new_process->tgid = new_process->tid;
+            new_process->wd = strdup(process->wd);
 
             /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
 
@@ -1157,6 +1169,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
         /* We sent a SIGSTOP, but we resume on attach */
         process->tid = child;
+        process->tgid = child;
         process->in_syscall = 0;
         process->wd = get_wd();
 
