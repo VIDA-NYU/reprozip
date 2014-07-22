@@ -105,16 +105,16 @@ char *get_wd(void)
     }
 }
 
-char *get_p_wd(pid_t pid)
+char *get_p_wd(pid_t tid)
 {
     /* PATH_MAX has issues, don't use it */
     size_t size = 1024;
     char *path;
     char dummy;
     char *proclink;
-    int len = snprintf(&dummy, 1, "/proc/%d/cwd", pid);
+    int len = snprintf(&dummy, 1, "/proc/%d/cwd", tid);
     proclink = malloc(len + 1);
-    snprintf(proclink, len + 1, "/proc/%d/cwd", pid);
+    snprintf(proclink, len + 1, "/proc/%d/cwd", tid);
     for(;;)
     {
         int ret;
