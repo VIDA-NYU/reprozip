@@ -10,6 +10,7 @@
 
 #include "config.h"
 #include "database.h"
+#include "log.h"
 
 
 extern int trace_verbosity;
@@ -39,8 +40,7 @@ unsigned int flags2mode(int flags)
     else
     {
         if( (flags & (O_RDONLY | O_WRONLY)) == (O_RDONLY | O_WRONLY) )
-            fprintf(stderr, "Error: encountered bogus open() flags "
-                    "O_RDONLY|O_WRONLY\n");
+            log_error("encountered bogus open() flags O_RDONLY|O_WRONLY");
             /* Carry on anyway */
         if(flags & O_RDONLY)
             mode |= FILE_READ;
@@ -56,7 +56,7 @@ char *abspath(const char *wd, const char *path)
 {
     size_t len_wd = strlen(wd);
 #ifdef DEBUG
-    fprintf(stderr, "abspath(%s, %s) = ", wd, path);
+    log_info_("abspath(%s, %s) = ", wd, path);
 #endif
     if(wd[len_wd-1] == '/')
     {
@@ -183,7 +183,7 @@ int path_is_dir(const char *pathname)
     {
         if(trace_verbosity >= 1)
         {
-            fprintf(stderr, "Error stat()ing %s", pathname);
+            log_error_("Error stat()ing %s", pathname);
             perror("");
         }
         return 0;
