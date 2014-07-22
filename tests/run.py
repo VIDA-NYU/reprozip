@@ -26,9 +26,11 @@ def in_temp_dir():
 tests = Path(__file__).parent.absolute()
 
 
-def build(target, *sources):
-    subprocess.check_call(['cc', '-o', target] + [(tests / s).path
-                                                  for s in sources])
+def build(target, sources, args=[]):
+    subprocess.check_call(['cc', '-o', target] +
+                          [(tests / s).path
+                           for s in sources] +
+                          args)
 
 
 if len(sys.argv) == 2 and sys.argv[1] == '--interactive':
@@ -41,8 +43,12 @@ else:
 
 
 with in_temp_dir():
+    # ########################################
+    # 'simple' program: trace, pack, unpack
+    #
+
     # Build
-    build('simple', 'simple.c')
+    build('simple', ['simple.c'])
     # Trace
     subprocess.check_call(['reprozip', '-v', '-v', '-v', 'trace',
                            '-d', 'rpz-simple',
@@ -112,3 +118,13 @@ with in_temp_dir():
             sys.stdin.readline()
     finally:
         Path('/vagrant/simplevagrant').rmtree()
+
+    # ########################################
+    # 'threads' program: testrun
+    #
+
+    # Build
+    build('threads', ['threads.c'], ['-lpthread'])
+    # Trace
+    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
+                           './threads'])
