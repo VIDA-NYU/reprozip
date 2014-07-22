@@ -661,7 +661,44 @@ int trace_handle_syscall(struct Process *process)
     }
     else if(process->in_syscall && syscall == SYS_execve)
     {
-        struct ExecveInfo *execi = process->syscall_info;
+        struct Process *exec_process = process;
+        struct ExecveInfo *execi = exec_process->syscall_info;
+        if(execi == NULL)
+        {
+            /* On Linux, execve changes tid to the thread leader's tid, no
+             * matter which thread made the call. This means that the process
+             * that just returned from execve might not be the one which
+             * called.
+             * So we start by finding the one which called execve.
+             * Possible confusion here if two threads call execve at the same
+             * time, but that would be very bad code. */
+            size_t i;
+            for(i = 0; i < processes_size; ++i)
+            {
+                if(processes[i]->status == PROCESS_ATTACHED
+                 && processes[i]->tgid == process->tgid
+                 && processes[i]->in_syscall
+                 && processes[i]->current_syscall == SYS_execve
+                 && processes[i]->syscall_info != NULL)
+                {
+                    exec_process = processes[i];
+                    break;
+                }
+            }
+            if(exec_process == NULL)
+            {
+                fprintf(stderr, "Critical: Process %d completing execve() "
+                        "but call wasn't recorded\n", tid);
+                return -1;
+            }
+            execi = exec_process->syscall_info;
+
+            /* The process that called execve() disappears without any trace */
+            if(db_add_exit(exec_process->identifier, 0) != 0)
+                return -1;
+            free(exec_process->wd);
+            exec_process->status = PROCESS_FREE;
+        }
         if(process->retvalue >= 0)
         {
             /* Note: execi->argv needs a cast to suppress a bogus warning
@@ -673,9 +710,11 @@ int trace_handle_syscall(struct Process *process)
                            (const char *const*)execi->envp,
                            process->wd) != 0)
                 return -1;
+            /* Note that here, the database records that the thread leader
+             * called execve, instead of thread exec_process->tid. */
             if(verbosity >= 2)
                 fprintf(stderr, "Proc %d successfully exec'd %s\n",
-                        process->tid, execi->binary);
+                        exec_process->tid, execi->binary);
             /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
             if(trace_add_files_from_proc(process->identifier, process->tid,
                                          execi->binary) != 0)
@@ -686,6 +725,7 @@ int trace_handle_syscall(struct Process *process)
         free_strarray(execi->envp);
         free(execi->binary);
         free(execi);
+        exec_process->syscall_info = NULL;
     }
     /* ********************
      * fork(), clone(), ...
