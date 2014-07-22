@@ -13,8 +13,9 @@
 #   endif
 #endif
 
-#ifndef __X32_SYSCALL_BIT
-#define __X32_SYSCALL_BIT 0x40000000
-#endif
+/* Static assertion trick */
+enum { ASSERT_POINTER_FITS_IN_LONG_INT = 1/(!!(
+        sizeof(long int) >= sizeof(void*)
+)) };
 
 #endif
