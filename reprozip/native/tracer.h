@@ -3,6 +3,12 @@
 
 #include "config.h"
 
+
+#ifndef __X32_SYSCALL_BIT
+#define __X32_SYSCALL_BIT 0x40000000
+#endif
+
+
 int fork_and_trace(const char *binary, int argc, char **argv,
                    const char *database_path, int *exit_status);
 
@@ -41,6 +47,7 @@ struct Process {
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;
 extern size_t processes_size;
+
 
 struct Process *trace_find_process(pid_t tid);
 

@@ -20,16 +20,8 @@
 #include "utils.h"
 
 
-#ifndef __X32_SYSCALL_BIT
-#define __X32_SYSCALL_BIT 0x40000000
-#endif
-
 #ifndef NT_PRSTATUS
 #define NT_PRSTATUS 1
-#endif
-
-#ifndef __X32_SYSCALL_BIT
-#define __X32_SYSCALL_BIT 0x40000000
 #endif
 
 
