@@ -26,6 +26,17 @@
 #ifndef __X32_SYSCALL_BIT
 #define __X32_SYSCALL_BIT 0x40000000
 #endif
+#ifndef SYS_CONNECT
+#define SYS_CONNECT 3
+#endif
+#ifndef SYS_ACCEPT
+#define SYS_ACCEPT 5
+#endif
+
+
+#define SYSCALL_I386        0
+#define SYSCALL_X86_64      1
+#define SYSCALL_X86_64_x32  2
 
 
 #define verbosity trace_verbosity
@@ -37,138 +48,33 @@ struct ExecveInfo {
 };
 
 
-static char *syscall_unhandled(int syscall, struct Process *process)
+struct syscall_table_entry {
+    const char *name;
+    int (*proc_entry)(const char*, struct Process *, unsigned int);
+    int (*proc_exit)(const char*, struct Process *, unsigned int);
+    unsigned int udata;
+};
+
+struct syscall_table {
+    size_t length;
+    struct syscall_table_entry *entries;
+};
+
+struct syscall_table *syscall_tables = NULL;
+
+
+static char *abs_path_arg(const struct Process *process, size_t arg)
 {
-    const char *name = NULL;
-    int type = 0;
-    switch(syscall)
+    char *pathname = tracee_strdup(process->tid, process->params[arg].p);
+    if(pathname[0] != '/')
     {
-    /* Path as first argument */
-    case SYS_rename:
-        name = "rename";
-        break;
-    case SYS_rmdir:
-        name = "rmdir";
-        break;
-    case SYS_link:
-        name = "link";
-        break;
-    case SYS_truncate:
-#ifdef SYS_truncate64
-    case SYS_truncate64: /* added for big file support on x86 */
-#endif
-        name = "truncate";
-        break;
-    case SYS_unlink:
-        name = "unlink";
-        break;
-    case SYS_chmod:
-        name = "chmod";
-        break;
-    case SYS_chown:
-#ifdef SYS_chown32
-    case SYS_chown32: /* added for 32-bit ids on x86 */
-#endif
-        name = "chown";
-        break;
-    case SYS_lchown:
-#ifdef SYS_lchown32
-    case SYS_lchown32: /* added for 32-bit ids on x86 */
-#endif
-        name = "lchown";
-        break;
-    case SYS_utime:
-        name = "utime";
-        break;
-    case SYS_utimes:
-        name = "utimes";
-        break;
-    case SYS_mq_open:
-        name = "mq_open";
-        break;
-    case SYS_mq_unlink:
-        name = "mq_unlink";
-        break;
-
-    /* Functions that use open descriptors, which we currently don't track */
-    case SYS_linkat:
-        name = "linkat"; type = 2;
-        break;
-    case SYS_mkdirat:
-        name = "mkdirat"; type = 2;
-        break;
-    case SYS_openat:
-        name = "openat"; type = 2;
-        break;
-    case SYS_renameat:
-        name = "renameat"; type = 2;
-        break;
-    case SYS_symlinkat:
-        name = "symlinkat"; type = 2;
-        break;
-    case SYS_unlinkat:
-        name = "unlinkat"; type = 2;
-        break;
-    case SYS_fchmodat:
-        name = "fchmodat"; type = 2;
-        break;
-    case SYS_fchownat:
-        name = "fchownat"; type = 2;
-        break;
-    case SYS_faccessat:
-        name = "faccessat"; type = 2;
-        break;
-    case SYS_readlinkat:
-        name = "readlinkat"; type = 2;
-        break;
-#ifdef SYS_fstatat
-    case SYS_fstatat:
-#endif
-#ifdef SYS_fstatat64
-    case SYS_fstatat64:
-#endif
-#ifdef SYS_newfstatat
-    case SYS_newfstatat:
-#endif
-        name = "fstatat"; type = 2;
-        break;
-
-    /* Others */
-    case SYS_ptrace:
-        name = "ptrace"; type = 2;
-        break;
-#ifdef SYS_name_to_handle_at
-    case SYS_name_to_handle_at:
-        name = "name_to_handle_at"; type = 2;
-        break;
-#endif
+        char *oldpath = pathname;
+        pathname = abspath(process->wd, oldpath);
+        free(oldpath);
     }
-
-    if(name == NULL)
-        return NULL;
-    else if(type == 0)
-    {
-        char *pathname = tracee_strdup(process->tid,
-                                       process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        {
-            const char *fmt = "%s(\"%s\")";
-            char dummy;
-            int len = snprintf(&dummy, 1, fmt, name, pathname);
-            char *s = malloc(len + 1);
-            snprintf(s, len + 1, fmt, name, pathname);
-            free(pathname);
-            return s;
-        }
-    }
-    else /* type == 2 */
-        return strdup(name);
+    return pathname;
 }
+
 
 static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
 {
@@ -192,523 +98,785 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
         fprintf(stream, "<unknown destination, sa_family=%d>", family);
 }
 
-int syscall_handle(struct Process *process)
+
+/* ********************
+ * open(), creat(), access()
+ */
+
+#define SYSCALL_OPENING_OPEN    1
+#define SYSCALL_OPENING_ACCESS  2
+#define SYSCALL_OPENING_CREAT   3
+
+static int syscall_fileopening(const char *name, struct Process *process,
+                                unsigned int syscall)
 {
-    pid_t tid = process->tid;
-    const int syscall = process->current_syscall;
-    if(verbosity >= 4)
+    unsigned int mode;
+    char *pathname = abs_path_arg(process, 0);
+
+    if(syscall == SYSCALL_OPENING_ACCESS)
+        mode = FILE_STAT;
+    else if(syscall == SYSCALL_OPENING_CREAT)
+        mode = flags2mode(process->params[1].u |
+                          O_CREAT | O_WRONLY | O_TRUNC);
+    else /* syscall == SYSCALL_OPENING_OPEN */
+        mode = flags2mode(process->params[1].u);
+
+    if(verbosity >= 3)
     {
-#ifdef I386
-        fprintf(stderr, "syscall %d (I386)\n", syscall);
-#else
-        if(process->mode == MODE_I386)
-            fprintf(stderr, "syscall %d (i386)\n", syscall);
-        else
-            fprintf(stderr, "syscall %d (%s)\n", syscall,
-                    (process->current_syscall & __X32_SYSCALL_BIT)?
-                        "x32":
-                        "x64");
-#endif
-    }
+        /* Converts mode to string s_mode */
+        char mode_buf[42] = "";
+        const char *s_mode;
+        if(mode & FILE_READ)
+            strcat(mode_buf, "|FILE_READ");
+        if(mode & FILE_WRITE)
+            strcat(mode_buf, "|FILE_WRITE");
+        if(mode & FILE_WDIR)
+            strcat(mode_buf, "|FILE_WDIR");
+        if(mode & FILE_STAT)
+            strcat(mode_buf, "|FILE_STAT");
+        s_mode = mode_buf[0]?mode_buf + 1:"0";
 
-    /* ********************
-     * open(), creat(), access()
-     */
-    if(process->in_syscall && (syscall == SYS_open || syscall == SYS_creat
-        || syscall == SYS_access) )
-    {
-        unsigned int mode;
-        char *pathname = tracee_strdup(tid, process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-
-        if(syscall == SYS_access)
-            mode = FILE_STAT;
-        else if(syscall == SYS_creat)
-            mode = flags2mode(process->params[1].u |
-                              O_CREAT | O_WRONLY | O_TRUNC);
-        else /* syscall == SYS_open */
-            mode = flags2mode(process->params[1].u);
-
-        if(verbosity >= 3)
-        {
-            /* Converts mode to string s_mode */
-            char mode_buf[42] = "";
-            const char *s_mode;
-            if(mode & FILE_READ)
-                strcat(mode_buf, "|FILE_READ");
-            if(mode & FILE_WRITE)
-                strcat(mode_buf, "|FILE_WRITE");
-            if(mode & FILE_WDIR)
-                strcat(mode_buf, "|FILE_WDIR");
-            if(mode & FILE_STAT)
-                strcat(mode_buf, "|FILE_STAT");
-            s_mode = mode_buf[0]?mode_buf + 1:"0";
-
-            if(syscall == SYS_open)
-                log_info("open(\"%s\", mode=%s) = %d (%s)",
-                         pathname,
-                         s_mode,
-                         (int)process->retvalue.i,
-                         (process->retvalue.i >= 0)?"success":"failure");
-            else /* SYS_creat or SYS_access */
-                log_info("%s(\"%s\") (mode=%s) = %d (%s)",
-                         (syscall == SYS_open)?"open":
-                             (syscall == SYS_creat)?"creat":"access",
-                         pathname,
-                         s_mode,
-                         (int)process->retvalue.i,
-                         (process->retvalue.i >= 0)?"success":"failure");
-        }
-
-        if(process->retvalue.i >= 0)
-        {
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                mode,
-                                path_is_dir(pathname)) != 0)
-                return -1;
-        }
-
-        free(pathname);
-    }
-    /* ********************
-     * stat(), lstat()
-     */
-    else if(process->in_syscall
-          && (syscall == SYS_stat || syscall == SYS_lstat
-#ifdef SYS_stat64
-             || syscall == SYS_stat64
-#endif
-#ifdef SYS_oldstat
-             || syscall == SYS_oldstat
-#endif
-#ifdef SYS_lstat64
-             || syscall == SYS_lstat64
-#endif
-#ifdef SYS_oldlstat
-             || syscall == SYS_oldlstat
-#endif
-              ) )
-    {
-        char *pathname = tracee_strdup(tid, process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        if(verbosity >= 3)
-        {
-            log_info("%s(\"%s\") = %d (%s)",
-                     (syscall == SYS_stat
-#ifdef SYS_stat64
-                    || syscall == SYS_stat64
-#endif
-#ifdef SYS_oldstat
-                    || syscall == SYS_oldstat
-#endif
-                      )?"stat":"lstat",
+        if(syscall == SYSCALL_OPENING_OPEN)
+            log_info("open(\"%s\", mode=%s) = %d (%s)",
                      pathname,
+                     s_mode,
                      (int)process->retvalue.i,
                      (process->retvalue.i >= 0)?"success":"failure");
-        }
-        if(process->retvalue.i >= 0)
-        {
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                FILE_STAT,
-                                path_is_dir(pathname)) != 0)
-                return -1;
-        }
-        free(pathname);
-    }
-    /* ********************
-     * readlink()
-     */
-    else if(process->in_syscall && syscall == SYS_readlink)
-    {
-        char *pathname = tracee_strdup(tid, process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        if(verbosity >= 3)
-        {
-            log_info("readlink(\"%s\") = %d (%s)",
+        else /* creat or access */
+            log_info("%s(\"%s\") (mode=%s) = %d (%s)",
+                     (syscall == SYSCALL_OPENING_OPEN)?"open":
+                         (syscall == SYSCALL_OPENING_CREAT)?"creat":"access",
                      pathname,
+                     s_mode,
                      (int)process->retvalue.i,
                      (process->retvalue.i >= 0)?"success":"failure");
-        }
-        if(process->retvalue.i >= 0)
-        {
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                FILE_STAT,
-                                0) != 0)
-                return -1;
-        }
+    }
+
+    if(process->retvalue.i >= 0)
+    {
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            mode,
+                            path_is_dir(pathname)) != 0)
+            return -1;
+    }
+
+    free(pathname);
+    return 0;
+}
+
+
+/* ********************
+ * stat(), lstat()
+ */
+
+static int syscall_filestat(const char *name, struct Process *process,
+                        unsigned int udata)
+{
+    char *pathname = abs_path_arg(process, 0);
+    if(process->retvalue.i >= 0)
+    {
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            FILE_STAT,
+                            path_is_dir(pathname)) != 0)
+            return -1;
+    }
+    free(pathname);
+    return 0;
+}
+
+
+/* ********************
+ * readlink()
+ */
+
+static int syscall_readlink(const char *name, struct Process *process,
+                            unsigned int udata)
+{
+    char *pathname = abs_path_arg(process, 0);
+    if(process->retvalue.i >= 0)
+    {
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            FILE_STAT,
+                            0) != 0)
+            return -1;
+    }
+    free(pathname);
+    return 0;
+}
+
+
+/* ********************
+ * mkdir()
+ */
+
+static int syscall_mkdir(const char *name, struct Process *process,
+                         unsigned int udata)
+{
+    char *pathname = abs_path_arg(process, 0);
+    if(process->retvalue.i >= 0)
+    {
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            FILE_WRITE,
+                            1) != 0)
+            return -1;
+    }
+    return 0;
+}
+
+
+/* ********************
+ * symlink()
+ */
+
+static int syscall_symlink(const char *name, struct Process *process,
+                           unsigned int udata)
+{
+    char *pathname = abs_path_arg(process, 1);
+    if(process->retvalue.i >= 0)
+    {
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            FILE_WRITE,
+                            1) != 0)
+            return -1;
+    }
+    return 0;
+}
+
+
+/* ********************
+ * chdir()
+ */
+
+static int syscall_chdir(const char *name, struct Process *process,
+                         unsigned int udata)
+{
+    char *pathname = abs_path_arg(process, 0);
+    if(process->retvalue.i >= 0)
+    {
+        free(process->wd);
+        process->wd = pathname;
+        if(db_add_file_open(process->identifier,
+                            pathname,
+                            FILE_WDIR,
+                            1) != 0)
+            return -1;
+    }
+    else
         free(pathname);
-    }
-    /* ********************
-     * mkdir()
-     */
-    else if(process->in_syscall && syscall == SYS_mkdir)
-    {
-        char *pathname = tracee_strdup(tid, process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        if(verbosity >= 3)
-        {
-            log_info("mkdir(\"%s\") = %d (%s)", pathname,
-                     (int)process->retvalue.i,
-                     (process->retvalue.i >= 0)?"success":"failure");
-        }
-        if(process->retvalue.i >= 0)
-        {
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                FILE_WRITE,
-                                1) != 0)
-                return -1;
-        }
-    }
-    /* ********************
-     * symlink()
-     */
-    else if(process->in_syscall && syscall == SYS_symlink)
-    {
-        char *pathname = tracee_strdup(tid, process->params[1].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        if(verbosity >= 3)
-        {
-            log_info("symlink(\"%s\") = %d (%s)", pathname,
-                     (int)process->retvalue.i,
-                     (process->retvalue.i >= 0)?"success":"failure");
-        }
-        if(process->retvalue.i >= 0)
-        {
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                FILE_WRITE,
-                                1) != 0)
-                return -1;
-        }
-    }
-    /* ********************
-     * chdir()
-     */
-    else if(process->in_syscall && syscall == SYS_chdir)
-    {
-        char *pathname = tracee_strdup(tid, process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        if(verbosity >= 3)
-        {
-            log_info("chdir(\"%s\") = %d (%s)", pathname,
-                     (int)process->retvalue.i,
-                     (process->retvalue.i >= 0)?"success":"failure");
-        }
-        if(process->retvalue.i >= 0)
-        {
-            free(process->wd);
-            process->wd = pathname;
-            if(db_add_file_open(process->identifier,
-                                pathname,
-                                FILE_WDIR,
-                                1) != 0)
-                return -1;
-        }
-        else
-            free(pathname);
-    }
-    /* ********************
-     * execve()
-     */
-    else if(!process->in_syscall && syscall == SYS_execve)
-    {
-        /* int execve(const char *filename,
-         *            char *const argv[],
-         *            char *const envp[]); */
-        struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
-        execi->binary = tracee_strdup(tid, process->params[0].p);
-        if(execi->binary[0] != '/')
-        {
-            char *oldbin = execi->binary;
-            execi->binary = abspath(process->wd, oldbin);
-            free(oldbin);
-        }
-        execi->argv = tracee_strarraydup(tid, process->params[1].p);
-        execi->envp = tracee_strarraydup(tid, process->params[2].p);
-        if(verbosity >= 3)
-        {
-            log_info("execve called by %d:\n  binary=%s\n  argv:",
-                     tid, execi->binary);
-            {
-                /* Note: this conversion is correct and shouldn't need a
-                 * cast */
-                const char *const *v = (const char* const*)execi->argv;
-                while(*v)
-                {
-                    fprintf(stderr, "    %s\n", *v);
-                    ++v;
-                }
-            }
-            {
-                size_t nb = 0;
-                while(execi->envp[nb] != NULL)
-                    ++nb;
-                fprintf(stderr, "  envp: (%u entries)\n", (unsigned int)nb);
-            }
-        }
-        process->syscall_info = execi;
-    }
-    else if(process->in_syscall && syscall == SYS_execve)
-    {
-        struct Process *exec_process = process;
-        struct ExecveInfo *execi = exec_process->syscall_info;
-        if(execi == NULL)
-        {
-            /* On Linux, execve changes tid to the thread leader's tid, no
-             * matter which thread made the call. This means that the process
-             * that just returned from execve might not be the one which
-             * called.
-             * So we start by finding the one which called execve.
-             * Possible confusion here if two threads call execve at the same
-             * time, but that would be very bad code. */
-            size_t i;
-            for(i = 0; i < processes_size; ++i)
-            {
-                if(processes[i]->status == PROCESS_ATTACHED
-                 && processes[i]->tgid == process->tgid
-                 && processes[i]->in_syscall
-                 && processes[i]->current_syscall == SYS_execve
-                 && processes[i]->syscall_info != NULL)
-                {
-                    exec_process = processes[i];
-                    break;
-                }
-            }
-            if(exec_process == NULL)
-            {
-                log_critical("process %d completing execve() but call wasn't "
-                             "recorded", tid);
-                return -1;
-            }
-            execi = exec_process->syscall_info;
+    return 0;
+}
 
-            /* The process that called execve() disappears without any trace */
-            if(db_add_exit(exec_process->identifier, 0) != 0)
-                return -1;
-            free(exec_process->wd);
-            exec_process->status = PROCESS_FREE;
-        }
-        if(process->retvalue.i >= 0)
-        {
-            /* Note: execi->argv needs a cast to suppress a bogus warning
-             * While conversion from char** to const char** is invalid,
-             * conversion from char** to const char*const* is, in fact, safe.
-             * G++ accepts it, GCC issues a warning. */
-            if(db_add_exec(process->identifier, execi->binary,
-                           (const char *const*)execi->argv,
-                           (const char *const*)execi->envp,
-                           process->wd) != 0)
-                return -1;
-            /* Note that here, the database records that the thread leader
-             * called execve, instead of thread exec_process->tid. */
-            if(verbosity >= 2)
-                log_info("Proc %d successfully exec'd %s",
-                         exec_process->tid, execi->binary);
-            /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
-            if(trace_add_files_from_proc(process->identifier, process->tid,
-                                         execi->binary) != 0)
-                return -1;
-        }
 
-        free_strarray(execi->argv);
-        free_strarray(execi->envp);
-        free(execi->binary);
-        free(execi);
-        exec_process->syscall_info = NULL;
-    }
-    /* ********************
-     * fork(), clone(), ...
-     */
-    else if(process->in_syscall
-          && (syscall == SYS_fork || syscall == SYS_vfork
-            || syscall == SYS_clone) )
+/* ********************
+ * execve()
+ */
+
+static int syscall_execve_in(const char *name, struct Process *process,
+                             unsigned int udata)
+{
+    /* int execve(const char *filename,
+     *            char *const argv[],
+     *            char *const envp[]); */
+    struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
+    execi->binary = abs_path_arg(process, 0);
+    execi->argv = tracee_strarraydup(process->tid, process->params[1].p);
+    execi->envp = tracee_strarraydup(process->tid, process->params[2].p);
+    if(verbosity >= 3)
     {
+        log_info("execve called by %d:\n  binary=%s\n  argv:",
+                 process->tid, execi->binary);
+        {
+            /* Note: this conversion is correct and shouldn't need a
+             * cast */
+            const char *const *v = (const char* const*)execi->argv;
+            while(*v)
+            {
+                fprintf(stderr, "    %s\n", *v);
+                ++v;
+            }
+        }
+        {
+            size_t nb = 0;
+            while(execi->envp[nb] != NULL)
+                ++nb;
+            fprintf(stderr, "  envp: (%u entries)\n", (unsigned int)nb);
+        }
+    }
+    process->syscall_info = execi;
+    return 0;
+}
+
+static int syscall_execve_out(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    struct Process *exec_process = process;
+    struct ExecveInfo *execi = exec_process->syscall_info;
+    if(execi == NULL)
+    {
+        /* On Linux, execve changes tid to the thread leader's tid, no
+         * matter which thread made the call. This means that the process
+         * that just returned from execve might not be the one which
+         * called.
+         * So we start by finding the one which called execve.
+         * Possible confusion here if two threads call execve at the same
+         * time, but that would be very bad code. */
+        size_t i;
+        for(i = 0; i < processes_size; ++i)
+        {
+            if(processes[i]->status == PROCESS_ATTACHED
+             && processes[i]->tgid == process->tgid
+             && processes[i]->in_syscall
+             && processes[i]->current_syscall == SYS_execve /* OH NO */
+             && processes[i]->syscall_info != NULL)
+            {
+                exec_process = processes[i];
+                break;
+            }
+        }
+        if(exec_process == NULL)
+        {
+            log_critical("process %d completing execve() but call wasn't "
+                         "recorded", process->tid);
+            return -1;
+        }
+        execi = exec_process->syscall_info;
+
+        /* The process that called execve() disappears without any trace */
+        if(db_add_exit(exec_process->identifier, 0) != 0)
+            return -1;
+        free(exec_process->wd);
+        exec_process->status = PROCESS_FREE;
+    }
+    if(process->retvalue.i >= 0)
+    {
+        /* Note: execi->argv needs a cast to suppress a bogus warning
+         * While conversion from char** to const char** is invalid,
+         * conversion from char** to const char*const* is, in fact, safe.
+         * G++ accepts it, GCC issues a warning. */
+        if(db_add_exec(process->identifier, execi->binary,
+                       (const char *const*)execi->argv,
+                       (const char *const*)execi->envp,
+                       process->wd) != 0)
+            return -1;
+        /* Note that here, the database records that the thread leader
+         * called execve, instead of thread exec_process->tid. */
+        if(verbosity >= 2)
+            log_info("Proc %d successfully exec'd %s",
+                     exec_process->tid, execi->binary);
+        /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
+        if(trace_add_files_from_proc(process->identifier, process->tid,
+                                     execi->binary) != 0)
+            return -1;
+    }
+
+    free_strarray(execi->argv);
+    free_strarray(execi->envp);
+    free(execi->binary);
+    free(execi);
+    exec_process->syscall_info = NULL;
+    return 0;
+}
+
+
+/* ********************
+ * fork(), clone(), ...
+ */
+
+#define SYSCALL_FORK_FORK   1
+#define SYSCALL_FORK_VFORK  2
+#define SYSCALL_FORK_CLONE  3
+
+static int syscall_forking(const char *name, struct Process *process,
+                           unsigned int syscall)
+{
 #ifndef CLONE_THREAD
 #define CLONE_THREAD 0x00010000
 #endif
-        if(process->retvalue.i > 0)
+    if(process->retvalue.i > 0)
+    {
+        int is_thread = 0;
+        pid_t new_tid = process->retvalue.i;
+        struct Process *new_process;
+        if(syscall == SYSCALL_FORK_CLONE)
+            is_thread = process->params[0].u & CLONE_THREAD;
+        if(verbosity >= 2)
+            log_info("Process %d created by %d via %s\n"
+                     "    (thread: %s) (working directory: %s)",
+                     new_tid, process->tid,
+                     (syscall == SYSCALL_FORK_FORK)?"fork()":
+                     (syscall == SYSCALL_FORK_VFORK)?"vfork()":
+                     "clone()",
+                     is_thread?"yes":"no",
+                     process->wd);
+
+        /* At this point, the process might have been seen by waitpid in
+         * trace() or not. */
+        new_process = trace_find_process(new_tid);
+        if(new_process != NULL)
         {
-            int is_thread = 0;
-            pid_t new_tid = process->retvalue.i;
-            struct Process *new_process;
-            if(syscall == SYS_clone)
-                is_thread = process->params[0].u & CLONE_THREAD;
-            if(verbosity >= 2)
-                log_info("Process %d created by %d via %s\n"
-                         "    (thread: %s) (working directory: %s)",
-                         new_tid, process->tid,
-                         (syscall == SYS_fork)?"fork()":
-                         (syscall == SYS_vfork)?"vfork()":
-                         "clone()",
-                         is_thread?"yes":"no",
-                         process->wd);
-
-            /* At this point, the process might have been seen by waitpid in
-             * trace() or not. */
-            new_process = trace_find_process(new_tid);
-            if(new_process != NULL)
+            /* Process has been seen before and options were set */
+            if(new_process->status != PROCESS_UNKNOWN)
             {
-                /* Process has been seen before and options were set */
-                if(new_process->status != PROCESS_UNKNOWN)
-                {
-                    log_critical("just created process that is already "
-                                 "running (status=%d)", new_process->status);
-                    return -1;
-                }
-                new_process->status = PROCESS_ATTACHED;
-                ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
-                if(verbosity >= 2)
-                {
-                    unsigned int nproc, unknown;
-                    trace_count_processes(&nproc, &unknown);
-                    log_info("%d processes (inc. %d unattached)",
-                             nproc, unknown);
-                }
-            }
-            else
-            {
-                /* Process hasn't been seen before (syscall returned first) */
-                new_process = trace_get_empty_process();
-                new_process->status = PROCESS_ALLOCATED;
-                /* New process gets a SIGSTOP, but we resume on attach */
-                new_process->tid = new_tid;
-                new_process->in_syscall = 0;
-            }
-            if(is_thread)
-                new_process->tgid = process->tgid;
-            else
-                new_process->tgid = new_process->tid;
-            new_process->wd = strdup(process->wd);
-
-            /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
-
-            if(db_add_process(&new_process->identifier,
-                              process->identifier,
-                              process->wd) != 0)
+                log_critical("just created process that is already "
+                             "running (status=%d)", new_process->status);
                 return -1;
-        }
-    }
-    /* ********************
-     * Network connections
-     */
-    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-          && (0
-#ifdef SYS_socketcall
-            || (syscall == SYS_socketcall && process->params[0] == SYS_ACCEPT)
-#endif
-#ifdef SYS_accept
-            || syscall == SYS_accept
-#endif
-#ifdef SYS_accept4
-            || syscall == SYS_accept4
-#endif
-              ) )
-    {
-        socklen_t addrlen;
-        void *arg1;
-        void *arg2;
-#ifdef SYS_socketcall
-        if(syscall == SYS_socketcall)
-        {
-            arg1 = process->params[2].p;
-            arg2 = process->params[3].p;
+            }
+            new_process->status = PROCESS_ATTACHED;
+            ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
+            if(verbosity >= 2)
+            {
+                unsigned int nproc, unknown;
+                trace_count_processes(&nproc, &unknown);
+                log_info("%d processes (inc. %d unattached)",
+                         nproc, unknown);
+            }
         }
         else
-#endif
         {
-            arg1 = process->params[1].p;
-            arg2 = process->params[2].p;
+            /* Process hasn't been seen before (syscall returned first) */
+            new_process = trace_get_empty_process();
+            new_process->status = PROCESS_ALLOCATED;
+            /* New process gets a SIGSTOP, but we resume on attach */
+            new_process->tid = new_tid;
+            new_process->in_syscall = 0;
         }
-        tracee_read(tid, (void*)&addrlen, arg2, sizeof(addrlen));
-        if(addrlen >= sizeof(short))
-        {
-            void *address = malloc(addrlen);
-            tracee_read(tid, address, arg1, addrlen);
-            log_warn_("process accepted a connection from ");
-            print_sockaddr(stderr, address, addrlen);
-            fprintf(stderr, "\n");
-            free(address);
-        }
-    }
-    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-          && (0
-#ifdef SYS_socketcall
-            || (syscall == SYS_socketcall && process->params[0] == SYS_CONNECT)
-#endif
-#ifdef SYS_connect
-            || syscall == SYS_connect
-#endif
-              ) )
-    {
-        socklen_t addrlen;
-        void *arg1;
-#ifdef SYS_socketcall
-        if(syscall == SYS_socketcall)
-        {
-             arg1 = process->params[2].p;
-             addrlen = process->params[3].u;
-        }
+        if(is_thread)
+            new_process->tgid = process->tgid;
         else
-#endif
+            new_process->tgid = new_process->tid;
+        new_process->wd = strdup(process->wd);
+
+        /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
+
+        if(db_add_process(&new_process->identifier,
+                          process->identifier,
+                          process->wd) != 0)
+            return -1;
+    }
+    return 0;
+}
+
+
+/* ********************
+ * Network connections
+ */
+
+static int handle_accept(struct Process *process,
+                         void *arg1, void *arg2)
+{
+    socklen_t addrlen;
+    tracee_read(process->tid, (void*)&addrlen, arg2, sizeof(addrlen));
+    if(addrlen >= sizeof(short))
+    {
+        void *address = malloc(addrlen);
+        tracee_read(process->tid, address, arg1, addrlen);
+        log_warn_("process accepted a connection from ");
+        print_sockaddr(stderr, address, addrlen);
+        fprintf(stderr, "\n");
+        free(address);
+    }
+    return 0;
+}
+
+static int handle_connect(struct Process *process,
+                          void *arg1, socklen_t addrlen)
+{
+    if(addrlen >= sizeof(short))
+    {
+        void *address = malloc(addrlen);
+        tracee_read(process->tid, address, arg1, addrlen);
+        log_warn_("process connected to ");
+        print_sockaddr(stderr, address, addrlen);
+        fprintf(stderr, "\n");
+        free(address);
+    }
+    return 0;
+}
+
+static int syscall_socketcall(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    if(process->params[0].u == SYS_ACCEPT)
+        return handle_accept(process,
+                             process->params[2].p, process->params[3].p);
+    else if(process->params[0].u == SYS_CONNECT)
+        return handle_connect(process,
+                              process->params[2].p, process->params[3].u);
+    else
+        return 0;
+}
+
+static int syscall_accept(const char *name, struct Process *process,
+                          unsigned int udata)
+{
+    return handle_accept(process, process->params[1].p, process->params[2].p);
+}
+
+static int syscall_connect(const char *name, struct Process *process,
+                           unsigned int udata)
+{
+    return handle_connect(process, process->params[1].p, process->params[2].u);
+}
+
+
+/* ********************
+ * Other syscalls that might be of interest but that we don't handle yet
+ */
+
+static int syscall_unhandled_path1(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+    {
+        char *pathname = tracee_strdup(process->tid,
+                                       process->params[0].p);
+        if(pathname[0] != '/')
         {
-             arg1 = process->params[1].p;
-             addrlen = process->params[2].u;
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
         }
-        if(addrlen >= sizeof(short))
+        log_warn("process %d used unhandled system call %s(\"%s\")",
+                 process->tid, name, pathname);
+    }
+    return 0;
+}
+
+static int syscall_unhandled_other(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+        log_warn("process %d used unhandled system call %s",
+                 process->tid, name);
+    return 0;
+}
+
+
+/* ********************
+ * Building the syscall table
+ */
+
+struct unprocessed_table_entry {
+    unsigned int n;
+    const char *name;
+    int (*proc_entry)(const char*, struct Process *, unsigned int);
+    int (*proc_exit)(const char*, struct Process *, unsigned int);
+    unsigned int udata;
+
+};
+
+struct syscall_table *process_table(struct syscall_table *table,
+                                    const struct unprocessed_table_entry *orig)
+{
+    size_t i, length = 0;
+    const struct unprocessed_table_entry *pos;
+
+    /* Measure required table */
+    pos = orig;
+    while(pos->proc_entry || pos->proc_exit)
+    {
+        if(pos->n + 1 > length)
+            length = pos->n + 1;
+        ++pos;
+    }
+
+    /* Allocate table */
+    table->length = length;
+    table->entries = malloc(sizeof(struct syscall_table_entry) * length);
+
+    /* Initialize to NULL */
+    for(i = 0; i < length; ++i)
+    {
+        table->entries[i].name = NULL;
+        table->entries[i].proc_entry = NULL;
+        table->entries[i].proc_exit = NULL;
+    }
+
+    /* Copy from unordered list */
+    {
+        pos = orig;
+        while(pos->proc_entry || pos->proc_exit)
         {
-            void *address = malloc(addrlen);
-            tracee_read(tid, address, arg1, addrlen);
-            log_warn_("process connected to ");
-            print_sockaddr(stderr, address, addrlen);
-            fprintf(stderr, "\n");
-            free(address);
+            table->entries[pos->n].name = orig->name;
+            table->entries[pos->n].proc_entry = orig->proc_entry;
+            table->entries[pos->n].proc_exit = orig->proc_exit;
+            table->entries[pos->n].udata = orig->udata;
+            ++pos;
         }
     }
-    /* ********************
-     * Other syscalls that might be of interest but that we don't handle yet
-     */
-    else if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0)
+
+    return table;
+}
+
+void syscall_build_table(void)
+{
+    if(syscall_tables != NULL)
+        return ;
+
+#if defined(I386)
+    syscall_tables = malloc(1 * sizeof(struct syscall_table));
+#elif defined(X86_64)
+    syscall_tables = malloc(3 * sizeof(struct syscall_table));
+#else
+#   error Unrecognized architecture!
+#endif
+
+    /* i386 */
     {
-        char *desc = syscall_unhandled(syscall, process);
-        if(desc != NULL)
+        struct unprocessed_table_entry list[] = {
+            {  5, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
+            {  8, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
+            { 33, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+
+            {106, "stat", NULL, syscall_filestat, 0},
+            {107, "lstat", NULL, syscall_filestat, 0},
+            {195, "stat64", NULL, syscall_filestat, 0},
+            { 18, "oldstat", NULL, syscall_filestat, 0},
+            {196, "lstat64", NULL, syscall_filestat, 0},
+            { 84, "oldlstat", NULL, syscall_filestat, 0},
+
+            { 85, "readlink", NULL, syscall_readlink, 0},
+
+            { 39, "mkdir", NULL, syscall_mkdir, 0},
+
+            { 83, "symlink", NULL, syscall_symlink, 0},
+
+            { 12, "chdir", NULL, syscall_chdir, 0},
+
+            {  1, "execve", syscall_execve_in, syscall_execve_out, 0},
+
+            {  2, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
+            {190, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
+            {120, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+
+            {102, "socketcall", NULL, syscall_socketcall, 0},
+
+            /* Unhandled with path as first argument */
+            { 38, "rename", NULL, syscall_unhandled_path1, 0},
+            { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
+            {  9, "link", NULL, syscall_unhandled_path1, 0},
+            { 92, "truncate", NULL, syscall_unhandled_path1, 0},
+            {193, "truncate64", NULL, syscall_unhandled_path1, 0},
+            { 10, "unlink", NULL, syscall_unhandled_path1, 0},
+            { 15, "chmod", NULL, syscall_unhandled_path1, 0},
+            {182, "chown", NULL, syscall_unhandled_path1, 0},
+            {212, "chown32", NULL, syscall_unhandled_path1, 0},
+            { 16, "lchown", NULL, syscall_unhandled_path1, 0},
+            {198, "lchown32", NULL, syscall_unhandled_path1, 0},
+            { 30, "utime", NULL, syscall_unhandled_path1, 0},
+            {271, "utimes", NULL, syscall_unhandled_path1, 0},
+            {277, "mq_open", NULL, syscall_unhandled_path1, 0},
+            {278, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+
+            /* Unhandled which use open descriptors */
+            {303, "linkat", NULL, syscall_unhandled_other, 0},
+            {296, "mkdirat", NULL, syscall_unhandled_other, 0},
+            {295, "openat", NULL, syscall_unhandled_other, 0},
+            {302, "renameat", NULL, syscall_unhandled_other, 0},
+            {304, "symlinkat", NULL, syscall_unhandled_other, 0},
+            {301, "unlinkat", NULL, syscall_unhandled_other, 0},
+            {306, "fchmodat", NULL, syscall_unhandled_other, 0},
+            {298, "fchownat", NULL, syscall_unhandled_other, 0},
+            {307, "faccessat", NULL, syscall_unhandled_other, 0},
+            {305, "readlinkat", NULL, syscall_unhandled_other, 0},
+            {300, "fstatat64", NULL, syscall_unhandled_other, 0},
+
+            /* Other unhandled */
+            { 26, "ptrace", NULL, syscall_unhandled_other, 0},
+            {341, "name_to_handle_at", NULL, syscall_unhandled_other, 0},
+
+            /* Sentinel */
+            {0, NULL, NULL, NULL, 0}
+        };
+        process_table(&syscall_tables[SYSCALL_I386], list);
+    }
+
+#ifdef X86_64
+    /* x64 */
+    {
+        struct unprocessed_table_entry list[] = {
+            {  2, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
+            { 85, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
+            { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+
+            {  4, "stat", NULL, syscall_filestat, 0},
+            {  6, "lstat", NULL, syscall_filestat, 0},
+
+            { 89, "readlink", NULL, syscall_readlink, 0},
+
+            { 83, "mkdir", NULL, syscall_mkdir, 0},
+
+            { 88, "symlink", NULL, syscall_symlink, 0},
+
+            { 80, "chdir", NULL, syscall_chdir, 0},
+
+            { 59, "execve", syscall_execve_in, syscall_execve_out, 0},
+
+            { 59, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
+            { 59, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
+            { 59, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+
+            { 43, "accept", NULL, syscall_accept, 0},
+            {288, "accept4", NULL, syscall_accept, 0},
+            { 42, "connect", NULL, syscall_connect, 0},
+
+            /* Unhandled with path as first argument */
+            { 82, "rename", NULL, syscall_unhandled_path1, 0},
+            { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
+            { 86, "link", NULL, syscall_unhandled_path1, 0},
+            { 76, "truncate", NULL, syscall_unhandled_path1, 0},
+            { 87, "unlink", NULL, syscall_unhandled_path1, 0},
+            { 90, "chmod", NULL, syscall_unhandled_path1, 0},
+            { 92, "chown", NULL, syscall_unhandled_path1, 0},
+            { 94, "lchown", NULL, syscall_unhandled_path1, 0},
+            {132, "utime", NULL, syscall_unhandled_path1, 0},
+            {235, "utimes", NULL, syscall_unhandled_path1, 0},
+            {240, "mq_open", NULL, syscall_unhandled_path1, 0},
+            {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+
+            /* Unhandled which use open descriptors */
+            {265, "linkat", NULL, syscall_unhandled_other, 0},
+            {258, "mkdirat", NULL, syscall_unhandled_other, 0},
+            {257, "openat", NULL, syscall_unhandled_other, 0},
+            {264, "renameat", NULL, syscall_unhandled_other, 0},
+            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
+            {263, "unlinkat", NULL, syscall_unhandled_other, 0},
+            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
+            {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            {269, "faccessat", NULL, syscall_unhandled_other, 0},
+            {267, "readlinkat", NULL, syscall_unhandled_other, 0},
+            {262, "newfstatat", NULL, syscall_unhandled_other, 0},
+
+            /* Other unhandled */
+            {101, "ptrace", NULL, syscall_unhandled_other, 0},
+            {303, "name_to_handle_at", NULL, syscall_unhandled_other, 0},
+
+            /* Sentinel */
+            {0, NULL, NULL, NULL, 0}
+        };
+        process_table(&syscall_tables[SYSCALL_X86_64], list);
+    }
+
+    /* x32 */
+    {
+        struct unprocessed_table_entry list[] = {
+            {  2, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
+            { 85, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
+            { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+
+            {  4, "stat", NULL, syscall_filestat, 0},
+            {  6, "lstat", NULL, syscall_filestat, 0},
+
+            { 89, "readlink", NULL, syscall_readlink, 0},
+
+            { 83, "mkdir", NULL, syscall_mkdir, 0},
+
+            { 88, "symlink", NULL, syscall_symlink, 0},
+
+            { 80, "chdir", NULL, syscall_chdir, 0},
+
+            {520, "execve", syscall_execve_in, syscall_execve_out, 0},
+
+            { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
+            { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
+            { 56, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+
+            { 43, "accept", NULL, syscall_accept, 0},
+            {288, "accept4", NULL, syscall_accept, 0},
+            { 42, "connect", NULL, syscall_connect, 0},
+
+            /* Unhandled with path as first argument */
+            { 82, "rename", NULL, syscall_unhandled_path1, 0},
+            { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
+            { 86, "link", NULL, syscall_unhandled_path1, 0},
+            { 76, "truncate", NULL, syscall_unhandled_path1, 0},
+            { 87, "unlink", NULL, syscall_unhandled_path1, 0},
+            { 90, "chmod", NULL, syscall_unhandled_path1, 0},
+            { 92, "chown", NULL, syscall_unhandled_path1, 0},
+            { 94, "lchown", NULL, syscall_unhandled_path1, 0},
+            {132, "utime", NULL, syscall_unhandled_path1, 0},
+            {235, "utimes", NULL, syscall_unhandled_path1, 0},
+            {240, "mq_open", NULL, syscall_unhandled_path1, 0},
+            {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+
+            /* Unhandled which use open descriptors */
+            {265, "linkat", NULL, syscall_unhandled_other, 0},
+            {258, "mkdirat", NULL, syscall_unhandled_other, 0},
+            {257, "openat", NULL, syscall_unhandled_other, 0},
+            {264, "renameat", NULL, syscall_unhandled_other, 0},
+            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
+            {263, "unlinkat", NULL, syscall_unhandled_other, 0},
+            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
+            {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            {269, "faccessat", NULL, syscall_unhandled_other, 0},
+            {267, "readlinkat", NULL, syscall_unhandled_other, 0},
+            {262, "newfstatat", NULL, syscall_unhandled_other, 0},
+
+            /* Other unhandled */
+            {521, "ptrace", NULL, syscall_unhandled_other, 0},
+            {303, "name_to_handle_at", NULL, syscall_unhandled_other, 0},
+
+            /* Sentinel */
+            {0, NULL, NULL, NULL, 0}
+        };
+        process_table(&syscall_tables[SYSCALL_X86_64_x32], list);
+    }
+#endif
+}
+
+
+/* ********************
+ * Handle a syscall via the table
+ */
+
+int syscall_handle(struct Process *process)
+{
+    pid_t tid = process->tid;
+    const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
+    size_t syscall_type;
+#ifdef I386
+    syscall_type = SYSCALL_I386;
+    if(verbosity >= 4)
+        log_info("syscall %d (I386)", syscall);
+#else
+    if(process->mode == MODE_I386)
+    {
+        syscall_type = SYSCALL_I386;
+        if(verbosity >= 4)
+            log_info("syscall %d (i386)", syscall);
+    }
+    else if(process->current_syscall & __X32_SYSCALL_BIT)
+    {
+        syscall_type = SYSCALL_X86_64_x32;
+        if(verbosity >= 4)
+            log_info("syscall %d (x32)", syscall);
+    }
+    else
+    {
+        syscall_type = SYSCALL_X86_64;
+        if(verbosity >= 4)
+            log_info("syscall %d (x64)", syscall);
+    }
+#endif
+
+    {
+        struct syscall_table *tbl = &syscall_tables[syscall_type];
+        if(syscall < tbl->length)
         {
-            log_warn("process %d used unhandled system call %s",
-                     process->tid, desc);
-            free(desc);
+            struct syscall_table_entry *entry = &tbl->entries[syscall];
+            if(entry->name && verbosity >= 3)
+                log_info("%s()", entry->name);
+            if(!process->in_syscall && entry->proc_entry)
+                entry->proc_entry(entry->name, process, entry->udata);
+            else if(process->in_syscall && entry->proc_exit)
+                entry->proc_exit(entry->name, process, entry->udata);
         }
     }
 

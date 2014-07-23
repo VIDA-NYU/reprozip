@@ -534,6 +534,8 @@ static void trace_init(void)
             processes[i]->wd = NULL;
         }
     }
+
+    syscall_build_table();
 }
 
 int fork_and_trace(const char *binary, int argc, char **argv,
