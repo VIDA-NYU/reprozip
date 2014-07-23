@@ -142,6 +142,7 @@ static PyMethodDef methods[] = {
      "\n"
      "Runs the specified binary with the argument list argv under trace and "
      "writes\nthe captured events to SQLite3 database databasepath."},
+    { NULL, NULL, 0, NULL }
 };
 
 #if PY_MAJOR_VERSION >= 3
