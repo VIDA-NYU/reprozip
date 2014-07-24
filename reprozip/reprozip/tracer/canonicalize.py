@@ -1,5 +1,7 @@
+import itertools
 from rpaths import Path
 
+from reprozip.common import File
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.tracer.trace import merge_files
 
@@ -25,11 +27,12 @@ def expand_patterns(patterns):
             non_empty_dirs.add(path)
 
     # Builds the final list
-    return list(dirs - non_empty_dirs) + list(files)
+    return [File(p) for p in itertools.chain(dirs - non_empty_dirs, files)]
 
 
 def canonicalize_config(runs, packages, other_files, additional_patterns):
     add_files = expand_patterns(additional_patterns)
     add_files, add_packages = identify_packages(add_files)
-    merge_files(add_files, add_packages, other_files, packages)
+    other_files, packages = merge_files(add_files, add_packages,
+                                        other_files, packages)
     return runs, packages, other_files

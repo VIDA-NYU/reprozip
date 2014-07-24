@@ -85,7 +85,8 @@ def load_config(filename, canonical, File=File, Package=Package):
     elif config['version'] not in ('0.2', '0.2.1'):
         raise InvalidConfig("Unknown version")
     elif not keys_.issubset(set(['version', 'runs',
-                                 'packages', 'other_files'])):
+                                 'packages', 'other_files',
+                                 'additional_patterns'])):
         raise InvalidConfig("Unrecognized sections")
 
     runs = config.get('runs', [])

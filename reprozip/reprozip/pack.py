@@ -107,6 +107,10 @@ def pack(target, directory):
             configfile,
             canonical=False)
 
+    # Canonicalize config (re-sort, expand 'additional_files' patterns)
+    runs, packages, other_files = canonicalize_config(
+            runs, packages, other_files, additional_patterns)
+
     logging.info("Creating pack %s..." % target)
     tar = PackBuilder(target)
 
@@ -159,9 +163,7 @@ def pack(target, directory):
     finally:
         manifest.remove()
 
-    # Canonicalize config file (re-sort, expand 'additional_files' patterns)
-    runs, packages, other_files = canonicalize_config(
-            runs, packages, other_files, additional_patterns)
+    # Stores canonical config
     fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
     os.close(fd)
     try:
