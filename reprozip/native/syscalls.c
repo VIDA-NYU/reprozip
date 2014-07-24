@@ -604,10 +604,10 @@ struct syscall_table *process_table(struct syscall_table *table,
         pos = orig;
         while(pos->proc_entry || pos->proc_exit)
         {
-            table->entries[pos->n].name = orig->name;
-            table->entries[pos->n].proc_entry = orig->proc_entry;
-            table->entries[pos->n].proc_exit = orig->proc_exit;
-            table->entries[pos->n].udata = orig->udata;
+            table->entries[pos->n].name = pos->name;
+            table->entries[pos->n].proc_entry = pos->proc_entry;
+            table->entries[pos->n].proc_exit = pos->proc_exit;
+            table->entries[pos->n].udata = pos->udata;
             ++pos;
         }
     }
@@ -719,9 +719,9 @@ void syscall_build_table(void)
 
             { 59, "execve", syscall_execve_in, syscall_execve_out, 0},
 
-            { 59, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
-            { 59, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
-            { 59, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+            { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
+            { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
+            { 56, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
