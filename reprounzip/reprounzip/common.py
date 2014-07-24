@@ -42,7 +42,7 @@ class Package(CommonEqualityMixin):
     def __init__(self, name, version, files=[], packfiles=True, size=None):
         self.name = name
         self.version = version
-        self.files = list(files)
+        self.files = list(files) if files is not None else []
         self.packfiles = packfiles
         self.size = size
 
@@ -60,10 +60,14 @@ class InvalidConfig(ValueError):
 
 
 def read_files(files, File=File):
+    if files is None:
+        return []
     return [File(PosixPath(f)) for f in files]
 
 
 def read_packages(packages, File=File, Package=Package):
+    if packages is None:
+        return []
     new_pkgs = []
     for pkg in packages:
         pkg['files'] = read_files(pkg['files'], File)
