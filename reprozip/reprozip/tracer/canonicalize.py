@@ -30,9 +30,13 @@ def expand_patterns(patterns):
     return [File(p) for p in itertools.chain(dirs - non_empty_dirs, files)]
 
 
-def canonicalize_config(runs, packages, other_files, additional_patterns):
+def canonicalize_config(runs, packages, other_files, additional_patterns,
+                        sort_packages):
     add_files = expand_patterns(additional_patterns)
-    add_files, add_packages = identify_packages(add_files)
+    if sort_packages:
+        add_files, add_packages = identify_packages(add_files)
+    else:
+        add_packages = []
     other_files, packages = merge_files(add_files, add_packages,
                                         other_files, packages)
     return runs, packages, other_files

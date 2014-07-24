@@ -87,7 +87,7 @@ class PackBuilder(object):
         self.seen = None
 
 
-def pack(target, directory):
+def pack(target, directory, sort_packages):
     """Main function for the pack subcommand.
     """
     if target.exists():
@@ -109,7 +109,7 @@ def pack(target, directory):
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     runs, packages, other_files = canonicalize_config(
-            runs, packages, other_files, additional_patterns)
+            runs, packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s..." % target)
     tar = PackBuilder(target)
