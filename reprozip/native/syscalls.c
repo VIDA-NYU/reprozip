@@ -868,7 +868,9 @@ int syscall_handle(struct Process *process)
 
     {
         struct syscall_table *tbl = &syscall_tables[syscall_type];
-        if(syscall < 0 || (size_t)syscall < tbl->length)
+        if(syscall < 0 || syscall >= 2000)
+            log_error("INVALID SYSCALL %d", syscall);
+        if(syscall >= 0 || (size_t)syscall < tbl->length)
         {
             struct syscall_table_entry *entry = &tbl->entries[syscall];
             int ret = 0;

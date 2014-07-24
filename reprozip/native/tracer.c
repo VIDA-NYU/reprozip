@@ -387,7 +387,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 ptrace(PTRACE_GETREGS, tid, NULL, &regs);
             }
 #if defined(I386)
-            process->current_syscall = regs.orig_eax;
+            if(!process->in_syscall || regs.orig_eax >= 0)
+                process->current_syscall = regs.orig_eax;
             if(process->in_syscall)
                 get_i386_reg(&process->retvalue, regs.eax);
             else
@@ -408,7 +409,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
             {
                 /* 32 bit mode */
                 struct i386_regs *x86regs = (struct i386_regs*)&regs;
-                process->current_syscall = x86regs->orig_eax;
+                if(!process->in_syscall || x86regs->orig_eax >= 0)
+                    process->current_syscall = x86regs->orig_eax;
                 if(process->in_syscall)
                     get_i386_reg(&process->retvalue, x86regs->eax);
                 else
@@ -425,7 +427,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
             else
             {
                 /* 64 bit mode */
-                process->current_syscall = regs.orig_rax;
+                if(!process->in_syscall || regs.orig_rax >= 0)
+                    process->current_syscall = regs.orig_rax;
                 if(process->in_syscall)
                     get_x86_64_reg(&process->retvalue, regs.rax);
                 else
