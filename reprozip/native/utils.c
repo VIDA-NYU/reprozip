@@ -183,8 +183,8 @@ int path_is_dir(const char *pathname)
     {
         if(trace_verbosity >= 1)
         {
-            log_error_("Error stat()ing %s", pathname);
-            perror("");
+            log_error_("Error stat()ing %s: ", pathname);
+            perror(NULL);
         }
         return 0;
     }

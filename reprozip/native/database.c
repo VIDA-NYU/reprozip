@@ -18,8 +18,8 @@ static sqlite3_uint64 gettime(void)
     struct timespec now;
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
     {
-        log_critical_("Getting time failed (clock_gettime)");
-        perror("");
+        log_critical_("Getting time failed (clock_gettime): ");
+        perror(NULL);
         exit(1);
     }
     timestamp = now.tv_sec;
