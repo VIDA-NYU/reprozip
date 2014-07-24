@@ -18,7 +18,7 @@ static sqlite3_uint64 gettime(void)
     struct timespec now;
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
     {
-        log_critical_("Getting time failed (clock_gettime): ");
+        log_critical_(0, "getting time failed (clock_gettime): ");
         perror(NULL);
         exit(1);
     }
@@ -69,7 +69,7 @@ int db_init(const char *filename)
         else
         {
         wrongschema:
-            log_critical("Database schema is wrong");
+            log_critical(0, "database schema is wrong");
             return -1;
         }
         sqlite3_finalize(stmt_get_tables);
@@ -148,7 +148,7 @@ int db_init(const char *filename)
     return 0;
 
 sqlerror:
-    log_critical("sqlite3 error creating database: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error creating database: %s", sqlite3_errmsg(db));
     return -1;
 }
 
@@ -163,7 +163,7 @@ int db_close(void)
     return 0;
 
 sqlerror:
-    log_critical("sqlite3 error on exit: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error on exit: %s", sqlite3_errmsg(db));
     return -1;
 }
 
@@ -198,7 +198,7 @@ int db_add_process(unsigned int *id, unsigned int parent_id,
     return db_add_file_open(*id, working_dir, FILE_WDIR, 1);
 
 sqlerror:
-    log_critical("sqlite3 error inserting process: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error inserting process: %s", sqlite3_errmsg(db));
     return -1;
 }
 
@@ -219,7 +219,7 @@ int db_add_exit(unsigned int id, int exitcode)
     return 0;
 
 sqlerror:
-    log_critical("sqlite3 error setting exitcode: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error setting exitcode: %s", sqlite3_errmsg(db));
     return -1;
 }
 
@@ -239,7 +239,7 @@ int db_add_file_open(unsigned int process, const char *name,
     return 0;
 
 sqlerror:
-    log_critical("sqlite3 error inserting file: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error inserting file: %s", sqlite3_errmsg(db));
     return -1;
 }
 
@@ -304,6 +304,6 @@ int db_add_exec(unsigned int process, const char *binary,
     return 0;
 
 sqlerror:
-    log_critical("sqlite3 error inserting exec: %s", sqlite3_errmsg(db));
+    log_critical(0, "sqlite3 error inserting exec: %s", sqlite3_errmsg(db));
     return -1;
 }

@@ -128,17 +128,18 @@ struct Process *trace_get_empty_process(void)
         {
             int many_unknown = unknown * 2 >= processes_size;
             if(many_unknown && verbosity >= 1)
-                log_warn("there are %u/%u UNKNOWN processes",
+                log_warn(0, "there are %u/%u UNKNOWN processes",
                          (unsigned int)unknown, (unsigned int)processes_size);
             else if(verbosity >= 2)
-                log_info("there are %u/%u UNKNOWN processes",
+                log_info(0, "there are %u/%u UNKNOWN processes",
                          (unsigned int)unknown, (unsigned int)processes_size);
         }
     }
 
     /* Allocate more! */
     if(verbosity >= 3)
-        log_info("Process table full (%d), reallocating", (int)processes_size);
+        log_info(0, "process table full (%d), reallocating",
+                 (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -204,7 +205,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
      */
 
 #ifdef DEBUG_PROC_PARSER
-    log_info("Parsing %s", procfile);
+    log_info(tid, "parsing %s", procfile);
 #endif
     fp = fopen(procfile, "r");
 
@@ -226,7 +227,8 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
                pathname);
 
 #ifdef DEBUG_PROC_PARSER
-        log_info("proc line:\n"
+        log_info(tid,
+                 "proc line:\n"
                  "    addr_start: %lx\n"
                  "    addr_end: %lx\n"
                  "    perms: %s\n"
@@ -248,7 +250,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
              && strncmp(previous_path, pathname, 4096) != 0)
             {
 #ifdef DEBUG_PROC_PARSER
-                log_info("    adding to database");
+                log_info(tid, "    adding to database");
 #endif
                 if(db_add_file_open(process, pathname,
                                     FILE_READ, path_is_dir(pathname)) != 0)
@@ -286,7 +288,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         tid = waitpid(-1, &status, __WALL);
         if(tid == -1)
         {
-            log_critical_("waitpid failed: ");
+            log_critical_(0, "waitpid failed: ");
             perror(NULL);
             return -1;
         }
@@ -312,15 +314,14 @@ static int trace(pid_t first_proc, int *first_exit_code)
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
-                log_info("Process %d exited (%s %d), %d processes remain",
-                         tid,
+                log_info(tid, "process exited (%s %d), %d processes remain",
                          (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
                          (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
             {
-                log_critical("only UNKNOWN processes remaining (%d)",
+                log_critical(0, "only UNKNOWN processes remaining (%d)",
                              (unsigned int)nprocs);
                 return -1;
             }
@@ -331,7 +332,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         if(process == NULL)
         {
             if(verbosity >= 3)
-                log_info("Process %d appeared", tid);
+                log_info(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCESS_UNKNOWN;
             process->tid = tid;
@@ -347,14 +348,15 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ATTACHED;
 
             if(verbosity >= 3)
-                log_info("Process %d attached", tid);
+                log_info(tid, "process attached");
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(verbosity >= 2)
             {
                 unsigned int nproc, unknown;
                 trace_count_processes(&nproc, &unknown);
-                log_info("%d processes (inc. %d unattached)", nproc, unknown);
+                log_info(0, "%d processes (inc. %d unattached)",
+                         nproc, unknown);
             }
             continue;
         }
@@ -458,7 +460,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
             else if(signum == SIGTRAP)
             {
                 /* Probably doesn't happen? Then, remove */
-                log_warn("NOT delivering SIGTRAP to %d\n"
+                log_warn(0,
+                         "NOT delivering SIGTRAP to %d\n"
                          "    waitstatus=0x%X", tid, status);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             }
@@ -467,7 +470,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             {
                 siginfo_t si;
                 if(verbosity >= 2)
-                    log_info("Process %d caught signal %d", tid, signum);
+                    log_info(tid, "caught signal %d", signum);
                 if(ptrace(PTRACE_GETSIGINFO, tid, 0, (long)&si) >= 0)
                     ptrace(PTRACE_SYSCALL, tid, NULL, signum);
                 else
@@ -494,7 +497,7 @@ static void cleanup(void)
                 ++nb;
         /* size_t size is implementation dependent; %u for size_t can trigger
          * a warning */
-        log_info("Cleaning up, %u processes to kill...", (unsigned int)nb);
+        log_info(0, "cleaning up, %u processes to kill...", (unsigned int)nb);
     }
     for(i = 0; i < processes_size; ++i)
     {
@@ -509,7 +512,7 @@ static void cleanup(void)
 static void sigint_handler(int signo)
 {
     if(verbosity >= 1)
-        log_info("Cleaning up on SIGINT");
+        log_info(0, "cleaning up on SIGINT");
     (void)signo;
     cleanup();
     exit(1);
@@ -551,7 +554,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     child = fork();
 
     if(child != 0 && verbosity >= 2)
-        log_info("Child created, pid=%d", child);
+        log_info(0, "child created, pid=%d", child);
 
     if(child == 0)
     {
@@ -564,7 +567,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(binary, args);
-        log_critical_("Couldn't execute the target command (execvp "
+        log_critical_(0, "couldn't execute the target command (execvp "
                       "returned): ");
         perror(NULL);
         exit(1);
@@ -587,7 +590,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->wd = get_wd();
 
         if(verbosity >= 2)
-            log_info("Process %d created by initial fork()", child);
+            log_info(0, "process %d created by initial fork()", child);
         if(db_add_first_process(&process->identifier, process->wd) != 0)
         {
             cleanup();

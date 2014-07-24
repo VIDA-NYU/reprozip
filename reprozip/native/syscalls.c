@@ -137,13 +137,15 @@ static int syscall_fileopening(const char *name, struct Process *process,
         s_mode = mode_buf[0]?mode_buf + 1:"0";
 
         if(syscall == SYSCALL_OPENING_OPEN)
-            log_info("open(\"%s\", mode=%s) = %d (%s)",
+            log_info(process->tid,
+                     "open(\"%s\", mode=%s) = %d (%s)",
                      pathname,
                      s_mode,
                      (int)process->retvalue.i,
                      (process->retvalue.i >= 0)?"success":"failure");
         else /* creat or access */
-            log_info("%s(\"%s\") (mode=%s) = %d (%s)",
+            log_info(process->tid,
+                     "%s(\"%s\") (mode=%s) = %d (%s)",
                      (syscall == SYSCALL_OPENING_OPEN)?"open":
                          (syscall == SYSCALL_OPENING_CREAT)?"creat":"access",
                      pathname,
@@ -288,8 +290,8 @@ static int syscall_execve_in(const char *name, struct Process *process,
     execi->envp = tracee_strarraydup(process->tid, process->params[2].p);
     if(verbosity >= 3)
     {
-        log_info("execve called by %d:\n  binary=%s\n  argv:",
-                 process->tid, execi->binary);
+        log_info(process->tid, "execve called:\n  binary=%s\n  argv:",
+                 execi->binary);
         {
             /* Note: this conversion is correct and shouldn't need a
              * cast */
@@ -340,8 +342,8 @@ static int syscall_execve_out(const char *name, struct Process *process,
         }
         if(exec_process == NULL)
         {
-            log_critical("process %d completing execve() but call wasn't "
-                         "recorded", process->tid);
+            log_critical(process->tid,
+                         "execve() completed but call wasn't recorded");
             return -1;
         }
         execi = exec_process->syscall_info;
@@ -366,8 +368,8 @@ static int syscall_execve_out(const char *name, struct Process *process,
         /* Note that here, the database records that the thread leader
          * called execve, instead of thread exec_process->tid. */
         if(verbosity >= 2)
-            log_info("Proc %d successfully exec'd %s",
-                     exec_process->tid, execi->binary);
+            log_info(exec_process->tid, "successfully exec'd %s",
+                     execi->binary);
         /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
         if(trace_add_files_from_proc(process->identifier, process->tid,
                                      execi->binary) != 0)
@@ -405,9 +407,9 @@ static int syscall_forking(const char *name, struct Process *process,
         if(syscall == SYSCALL_FORK_CLONE)
             is_thread = process->params[0].u & CLONE_THREAD;
         if(verbosity >= 2)
-            log_info("Process %d created by %d via %s\n"
+            log_info(new_tid, "process created by %d via %s\n"
                      "    (thread: %s) (working directory: %s)",
-                     new_tid, process->tid,
+                     process->tid,
                      (syscall == SYSCALL_FORK_FORK)?"fork()":
                      (syscall == SYSCALL_FORK_VFORK)?"vfork()":
                      "clone()",
@@ -422,8 +424,9 @@ static int syscall_forking(const char *name, struct Process *process,
             /* Process has been seen before and options were set */
             if(new_process->status != PROCESS_UNKNOWN)
             {
-                log_critical("just created process that is already "
-                             "running (status=%d)", new_process->status);
+                log_critical(new_tid,
+                             "just created process that is already running "
+                             "(status=%d)", new_process->status);
                 return -1;
             }
             new_process->status = PROCESS_ATTACHED;
@@ -432,7 +435,7 @@ static int syscall_forking(const char *name, struct Process *process,
             {
                 unsigned int nproc, unknown;
                 trace_count_processes(&nproc, &unknown);
-                log_info("%d processes (inc. %d unattached)",
+                log_info(0, "%d processes (inc. %d unattached)",
                          nproc, unknown);
             }
         }
@@ -475,7 +478,7 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_("process accepted a connection from ");
+        log_warn_(process->tid, "process accepted a connection from ");
         print_sockaddr(stderr, address, addrlen);
         fprintf(stderr, "\n");
         free(address);
@@ -490,7 +493,7 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_("process connected to ");
+        log_warn_(process->tid, "process connected to ");
         print_sockaddr(stderr, address, addrlen);
         fprintf(stderr, "\n");
         free(address);
@@ -542,8 +545,8 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
             pathname = abspath(process->wd, oldpath);
             free(oldpath);
         }
-        log_warn("process %d used unhandled system call %s(\"%s\")",
-                 process->tid, name, pathname);
+        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
+                 name, pathname);
     }
     return 0;
 }
@@ -553,8 +556,7 @@ static int syscall_unhandled_other(const char *name, struct Process *process,
 {
     if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
      && name != NULL)
-        log_warn("process %d used unhandled system call %s",
-                 process->tid, name);
+        log_warn(process->tid, "process used unhandled system call %s", name);
     return 0;
 }
 
@@ -844,38 +846,38 @@ int syscall_handle(struct Process *process)
 #ifdef I386
     syscall_type = SYSCALL_I386;
     if(verbosity >= 4)
-        log_info("syscall %d (I386)", syscall);
+        log_info(process->tid, "syscall %d (i386)", syscall);
 #else
     if(process->mode == MODE_I386)
     {
         syscall_type = SYSCALL_I386;
         if(verbosity >= 4)
-            log_info("syscall %d (i386)", syscall);
+            log_info(process->tid, "syscall %d (i386)", syscall);
     }
     else if(process->current_syscall & __X32_SYSCALL_BIT)
     {
         syscall_type = SYSCALL_X86_64_x32;
         if(verbosity >= 4)
-            log_info("syscall %d (x32)", syscall);
+            log_info(process->tid, "syscall %d (x32)", syscall);
     }
     else
     {
         syscall_type = SYSCALL_X86_64;
         if(verbosity >= 4)
-            log_info("syscall %d (x64)", syscall);
+            log_info(process->tid, "syscall %d (x64)", syscall);
     }
 #endif
 
     {
         struct syscall_table *tbl = &syscall_tables[syscall_type];
         if(syscall < 0 || syscall >= 2000)
-            log_error("INVALID SYSCALL %d", syscall);
+            log_error(process->tid, "INVALID SYSCALL %d", syscall);
         if(syscall >= 0 || (size_t)syscall < tbl->length)
         {
             struct syscall_table_entry *entry = &tbl->entries[syscall];
             int ret = 0;
             if(entry->name && verbosity >= 3)
-                log_info("%s()", entry->name);
+                log_info(process->tid, "%s()", entry->name);
             if(!process->in_syscall && entry->proc_entry)
                 ret = entry->proc_entry(entry->name, process, entry->udata);
             else if(process->in_syscall && entry->proc_exit)

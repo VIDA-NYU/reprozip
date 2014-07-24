@@ -18,7 +18,7 @@ static long tracee_getword(pid_t tid, const void *addr)
     res = ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
     if(errno)
     {
-        log_error_("tracee_getword() failed: ");
+        log_error_(tid, "tracee_getword() failed: ");
         perror(NULL);
         return 0;
     }
