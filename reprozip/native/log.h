@@ -1,6 +1,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <stdio.h>
+
 #ifdef __GNUC__
 
 #define log_critical(s, ...) log_critical_(s "\n", ## __VA_ARGS__)
