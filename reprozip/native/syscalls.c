@@ -108,7 +108,7 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
 #define SYSCALL_OPENING_CREAT   3
 
 static int syscall_fileopening(const char *name, struct Process *process,
-                                unsigned int syscall)
+                               unsigned int syscall)
 {
     unsigned int mode;
     char *pathname = abs_path_arg(process, 0);
@@ -873,10 +873,13 @@ int syscall_handle(struct Process *process)
             struct syscall_table_entry *entry = &tbl->entries[syscall];
             if(entry->name && verbosity >= 3)
                 log_info("%s()", entry->name);
+            int ret = 0;
             if(!process->in_syscall && entry->proc_entry)
-                entry->proc_entry(entry->name, process, entry->udata);
+                ret = entry->proc_entry(entry->name, process, entry->udata);
             else if(process->in_syscall && entry->proc_exit)
-                entry->proc_exit(entry->name, process, entry->udata);
+                ret = entry->proc_exit(entry->name, process, entry->udata);
+            if(ret != 0)
+                return -1;
         }
     }
 
