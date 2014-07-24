@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,17 +7,27 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "log.h"
 #include "ptrace_utils.h"
 
 
-static void *tracee_getptr(pid_t tid, const void *addr)
-{
-    return (void*)ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
-}
-
 static long tracee_getword(pid_t tid, const void *addr)
 {
-    return ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
+    long res;
+    errno = 0;
+    res = ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
+    if(errno)
+    {
+        log_error_("tracee_getword() failed: ");
+        perror(NULL);
+        return 0;
+    }
+    return res;
+}
+
+static void *tracee_getptr(pid_t tid, const void *addr)
+{
+    return (void*)tracee_getword(tid, addr);
 }
 
 size_t tracee_strlen(pid_t tid, const char *str)
