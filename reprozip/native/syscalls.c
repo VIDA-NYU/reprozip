@@ -868,12 +868,12 @@ int syscall_handle(struct Process *process)
 
     {
         struct syscall_table *tbl = &syscall_tables[syscall_type];
-        if(syscall < tbl->length)
+        if(syscall < 0 || (size_t)syscall < tbl->length)
         {
             struct syscall_table_entry *entry = &tbl->entries[syscall];
+            int ret = 0;
             if(entry->name && verbosity >= 3)
                 log_info("%s()", entry->name);
-            int ret = 0;
             if(!process->in_syscall && entry->proc_entry)
                 ret = entry->proc_entry(entry->name, process, entry->udata);
             else if(process->in_syscall && entry->proc_exit)
