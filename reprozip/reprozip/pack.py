@@ -68,10 +68,7 @@ class PackBuilder(object):
         from rpaths import PosixPath
         assert isinstance(name, PosixPath)
         assert isinstance(arcname, PosixPath)
-        try:
-            self.tar.add(str(name), str(arcname), *args, **kwargs)
-        except OSError:
-            logging.warning("Missing file %s" % name)
+        self.tar.add(str(name), str(arcname), *args, **kwargs)
 
     def add_data(self, filename):
         if filename in self.seen:
@@ -82,10 +79,7 @@ class PackBuilder(object):
             if path in self.seen:
                 continue
             logging.debug("%s -> %s" % (path, data_path(path)))
-            try:
-                self.tar.add(str(path), str(data_path(path)), recursive=False)
-            except OSError:
-                logging.warning("Missing file %s" % path)
+            self.tar.add(str(path), str(data_path(path)), recursive=False)
             self.seen.add(path)
 
     def close(self):
@@ -116,6 +110,44 @@ def pack(target, directory):
     logging.info("Creating pack %s..." % target)
     tar = PackBuilder(target)
 
+    # Stores the original trace
+    trace = directory / 'trace.sqlite3'
+    if trace.is_file():
+        tar.add(trace, Path('METADATA/trace.sqlite3'))
+
+    # Add the files from the packages
+    for pkg in packages:
+        if pkg.packfiles:
+            logging.info("Adding files from package %s..." % pkg.name)
+            files = []
+            for f in pkg.files:
+                if not Path(f.path).exists():
+                    logging.warning("Missing file %s from package %s" % (
+                                    f.path, pkg.name))
+                else:
+                    tar.add_data(f.path)
+                    files.append(f)
+            pkg.files = files
+        else:
+            logging.info("NOT adding files from package %s" % pkg.name)
+
+    # Add the rest of the files
+    logging.info("Adding other files...")
+    files = []
+    for f in other_files:
+        if not Path(f.path).exists():
+            logging.warning("Missing file %s" % f.path)
+        else:
+            tar.add_data(f.path)
+            files.append(f)
+    other_files = files
+
+    # Makes sure all the directories used as working directories are packed
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    for directory in list_directories(trace):
+        tar.add_data(directory)
+
     logging.info("Adding metadata...")
     # Stores pack version
     fd, manifest = Path.tempfile(prefix='reprozip_', suffix='.txt')
@@ -139,30 +171,5 @@ def pack(target, directory):
         tar.add(can_configfile, Path('METADATA/config.yml'))
     finally:
         can_configfile.remove()
-
-    # Stores the original trace
-    trace = directory / 'trace.sqlite3'
-    if trace.is_file():
-        tar.add(trace, Path('METADATA/trace.sqlite3'))
-
-    # Add the files from the packages
-    for pkg in packages:
-        if pkg.packfiles:
-            logging.info("Adding files from package %s..." % pkg.name)
-            for f in pkg.files:
-                tar.add_data(f.path)
-        else:
-            logging.info("NOT adding files from package %s" % pkg.name)
-
-    # Add the rest of the files
-    logging.info("Adding other files...")
-    for f in other_files:
-        tar.add_data(f.path)
-
-    # Makes sure all the directories used as working directories are packed
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    for directory in list_directories(trace):
-        tar.add_data(directory)
 
     tar.close()
