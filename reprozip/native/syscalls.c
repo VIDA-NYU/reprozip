@@ -286,8 +286,10 @@ static int syscall_execve_in(const char *name, struct Process *process,
      *            char *const envp[]); */
     struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
     execi->binary = abs_path_arg(process, 0);
-    execi->argv = tracee_strarraydup(process->tid, process->params[1].p);
-    execi->envp = tracee_strarraydup(process->tid, process->params[2].p);
+    execi->argv = tracee_strarraydup(process->mode, process->tid,
+                                     process->params[1].p);
+    execi->envp = tracee_strarraydup(process->mode, process->tid,
+                                     process->params[2].p);
     if(verbosity >= 3)
     {
         log_info(process->tid, "execve called:\n  binary=%s\n  argv:",
