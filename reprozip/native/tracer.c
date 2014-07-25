@@ -939,7 +939,7 @@ int trace(pid_t first_proc, int *first_exit_code)
             perror(NULL);
             return -1;
         }
-        if(WIFEXITED(status))
+        if(WIFEXITED(status) || WIFSIGNALED(status))
         {
             unsigned int nprocs, unknown;
             int exitcode;

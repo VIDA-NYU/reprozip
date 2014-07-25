@@ -128,3 +128,13 @@ with in_temp_dir():
     # Trace
     subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
                            './threads'])
+
+    # ########################################
+    # 'segv' program: testrun
+    #
+
+    # Build
+    build('segv', ['segv.c'])
+    # Trace
+    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
+                           './segv'])
