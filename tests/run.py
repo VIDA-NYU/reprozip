@@ -5,12 +5,12 @@
 # See file LICENSE for full license details.
 
 from contextlib import contextmanager
+from rpaths import Path
 import subprocess
-import yaml
 import sys
+import yaml
 
 from reprounzip.unpackers.common import join_root
-from rpaths import Path
 
 
 @contextmanager
@@ -138,3 +138,18 @@ with in_temp_dir():
     # Trace
     subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
                            './segv'])
+
+    # ########################################
+    # 'exec_echo' program: testrun
+    # This is built with -m32 so that we transition:
+    #   python (x64) -> exec_echo (i386) -> echo (x64)
+    #
+
+    if sys.maxsize > 2 ** 32:
+        # Build
+        build('exec_echo', ['exec_echo.c'], ['-m32'])
+        # Trace
+        subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
+                               './exec_echo'])
+    else:
+        print("Can't try exec_echo transitions: not running on 64bits")
