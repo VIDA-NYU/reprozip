@@ -100,6 +100,40 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
 
 
 /* ********************
+ * Other syscalls that might be of interest but that we don't handle yet
+ */
+
+static int syscall_unhandled_path1(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+    {
+        char *pathname = tracee_strdup(process->tid,
+                                       process->params[0].p);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
+                 name, pathname);
+    }
+    return 0;
+}
+
+static int syscall_unhandled_other(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+        log_warn(process->tid, "process used unhandled system call %s", name);
+    return 0;
+}
+
+
+/* ********************
  * open(), creat(), access()
  */
 
@@ -526,40 +560,6 @@ static int syscall_connect(const char *name, struct Process *process,
                            unsigned int udata)
 {
     return handle_connect(process, process->params[1].p, process->params[2].u);
-}
-
-
-/* ********************
- * Other syscalls that might be of interest but that we don't handle yet
- */
-
-static int syscall_unhandled_path1(const char *name, struct Process *process,
-                                   unsigned int udata)
-{
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
-    {
-        char *pathname = tracee_strdup(process->tid,
-                                       process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
-        }
-        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
-                 name, pathname);
-    }
-    return 0;
-}
-
-static int syscall_unhandled_other(const char *name, struct Process *process,
-                                   unsigned int udata)
-{
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
-        log_warn(process->tid, "process used unhandled system call %s", name);
-    return 0;
 }
 
 
