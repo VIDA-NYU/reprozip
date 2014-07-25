@@ -652,7 +652,7 @@ void syscall_build_table(void)
 
             { 12, "chdir", NULL, syscall_chdir, 0},
 
-            {  1, "execve", syscall_execve_in, syscall_execve_out, 1},
+            { 11, "execve", syscall_execve_in, syscall_execve_out, 11},
 
             {  2, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
             {190, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
