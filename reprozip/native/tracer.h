@@ -22,9 +22,7 @@ typedef struct S_register_type {
 
 struct Process {
     unsigned int identifier;
-#ifdef X86_64
     unsigned int mode;
-#endif
     pid_t tid;
     pid_t tgid;
     int status;

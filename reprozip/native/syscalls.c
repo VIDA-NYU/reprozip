@@ -844,11 +844,6 @@ int syscall_handle(struct Process *process)
     pid_t tid = process->tid;
     const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
     size_t syscall_type;
-#ifdef I386
-    syscall_type = SYSCALL_I386;
-    if(verbosity >= 4)
-        log_info(process->tid, "syscall %d (i386)", syscall);
-#else
     if(process->mode == MODE_I386)
     {
         syscall_type = SYSCALL_I386;
@@ -867,7 +862,6 @@ int syscall_handle(struct Process *process)
         if(verbosity >= 4)
             log_info(process->tid, "syscall %d (x64)", syscall);
     }
-#endif
 
     {
         struct syscall_table_entry *entry = NULL;

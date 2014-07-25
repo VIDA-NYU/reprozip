@@ -402,6 +402,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 get_i386_reg(&process->params[4], regs.edi);
                 get_i386_reg(&process->params[5], regs.ebp);
             }
+            process->mode = MODE_I386;
 #elif defined(X86_64)
             /* On x86_64, process might be 32 or 64 bits */
             /* If len is known (not 0) and not that of x86_64 registers,
