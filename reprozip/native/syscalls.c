@@ -314,7 +314,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
 }
 
 static int syscall_execve_out(const char *name, struct Process *process,
-                              unsigned int udata)
+                              unsigned int execve_syscall)
 {
     struct Process *exec_process = process;
     struct ExecveInfo *execi = exec_process->syscall_info;
@@ -333,7 +333,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
             if(processes[i]->status == PROCESS_ATTACHED
              && processes[i]->tgid == process->tgid
              && processes[i]->in_syscall
-             && processes[i]->current_syscall == SYS_execve /* OH NO */
+             && processes[i]->current_syscall == (int)execve_syscall
              && processes[i]->syscall_info != NULL)
             {
                 exec_process = processes[i];
@@ -652,7 +652,7 @@ void syscall_build_table(void)
 
             { 12, "chdir", NULL, syscall_chdir, 0},
 
-            {  1, "execve", syscall_execve_in, syscall_execve_out, 0},
+            {  1, "execve", syscall_execve_in, syscall_execve_out, 1},
 
             {  2, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
             {190, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
@@ -719,7 +719,7 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            { 59, "execve", syscall_execve_in, syscall_execve_out, 0},
+            { 59, "execve", syscall_execve_in, syscall_execve_out, 59},
 
             { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
             { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
@@ -784,7 +784,8 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            {520, "execve", syscall_execve_in, syscall_execve_out, 0},
+            {520, "execve", syscall_execve_in, syscall_execve_out,
+                     __X32_SYSCALL_BIT + 520},
 
             { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
             { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
