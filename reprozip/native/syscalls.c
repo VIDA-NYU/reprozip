@@ -269,9 +269,15 @@ static int syscall_mkdir(const char *name, struct Process *process,
  */
 
 static int syscall_symlink(const char *name, struct Process *process,
-                           unsigned int udata)
+                           unsigned int is_symlinkat)
 {
-    char *pathname = abs_path_arg(process, 1);
+    char *pathname;
+    if(is_symlinkat && process->params[1].i != AT_FDCWD)
+        return syscall_unhandled_other(name, process, 0);
+    else if(is_symlinkat)
+        pathname = abs_path_arg(process, 2);
+    else /* symlink */
+        pathname = abs_path_arg(process, 1);
     if(process->retvalue.i >= 0)
     {
         if(db_add_file_open(process->identifier,
@@ -715,6 +721,8 @@ void syscall_build_table(void)
             {305, "readlinkat", NULL, syscall_xxx_at, 85},
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
 
+            {304, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 38, "rename", NULL, syscall_unhandled_path1, 0},
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -735,7 +743,6 @@ void syscall_build_table(void)
             /* Unhandled which use open descriptors */
             {303, "linkat", NULL, syscall_unhandled_other, 0},
             {302, "renameat", NULL, syscall_unhandled_other, 0},
-            {304, "symlinkat", NULL, syscall_unhandled_other, 0},
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
             {306, "fchmodat", NULL, syscall_unhandled_other, 0},
             {298, "fchownat", NULL, syscall_unhandled_other, 0},
@@ -786,6 +793,8 @@ void syscall_build_table(void)
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
 
+            {266, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -803,7 +812,6 @@ void syscall_build_table(void)
             /* Unhandled which use open descriptors */
             {265, "linkat", NULL, syscall_unhandled_other, 0},
             {264, "renameat", NULL, syscall_unhandled_other, 0},
-            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
@@ -854,6 +862,8 @@ void syscall_build_table(void)
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
 
+            {266, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -871,7 +881,6 @@ void syscall_build_table(void)
             /* Unhandled which use open descriptors */
             {265, "linkat", NULL, syscall_unhandled_other, 0},
             {264, "renameat", NULL, syscall_unhandled_other, 0},
-            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
