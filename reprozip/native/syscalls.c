@@ -891,6 +891,26 @@ int syscall_handle(struct Process *process)
                 }
             }
         }
+        /* Workaround for execve() transition i386 -> x64 */
+        else if(syscall == 11 && process->in_syscall)
+        {
+            size_t i;
+            for(i = 0; i < processes_size; ++i)
+            {
+                if(processes[i]->status == PROCESS_ATTACHED
+                 && processes[i]->tgid == process->tgid
+                 && processes[i]->in_syscall
+                 && processes[i]->current_syscall == 11
+                 && processes[i]->syscall_info != NULL)
+                {
+                    if(verbosity >= 3)
+                        log_info(process->tid,
+                                 "transition i386 -> x64, syscall 11 is still "
+                                 "execve");
+                    entry = &syscall_tables[SYSCALL_I386].entries[11];
+                }
+            }
+        }
         else
 #endif
         if(entry == NULL && (syscall >= 0 || (size_t)syscall < tbl->length) )
