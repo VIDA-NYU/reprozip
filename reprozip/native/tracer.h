@@ -20,6 +20,8 @@ typedef struct S_register_type {
 } register_type;
 
 
+#define PROCESS_ARGS 6
+
 struct Process {
     unsigned int identifier;
     unsigned int mode;
@@ -30,7 +32,7 @@ struct Process {
     int current_syscall;
     char *wd;
     register_type retvalue;
-    register_type params[6];
+    register_type params[PROCESS_ARGS];
     void *syscall_info;
 };
 

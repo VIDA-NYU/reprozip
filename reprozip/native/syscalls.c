@@ -100,6 +100,40 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
 
 
 /* ********************
+ * Other syscalls that might be of interest but that we don't handle yet
+ */
+
+static int syscall_unhandled_path1(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+    {
+        char *pathname = tracee_strdup(process->tid,
+                                       process->params[0].p);
+        if(pathname[0] != '/')
+        {
+            char *oldpath = pathname;
+            pathname = abspath(process->wd, oldpath);
+            free(oldpath);
+        }
+        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
+                 name, pathname);
+    }
+    return 0;
+}
+
+static int syscall_unhandled_other(const char *name, struct Process *process,
+                                   unsigned int udata)
+{
+    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+     && name != NULL)
+        log_warn(process->tid, "process used unhandled system call %s", name);
+    return 0;
+}
+
+
+/* ********************
  * open(), creat(), access()
  */
 
@@ -235,9 +269,15 @@ static int syscall_mkdir(const char *name, struct Process *process,
  */
 
 static int syscall_symlink(const char *name, struct Process *process,
-                           unsigned int udata)
+                           unsigned int is_symlinkat)
 {
-    char *pathname = abs_path_arg(process, 1);
+    char *pathname;
+    if(is_symlinkat && process->params[1].i != AT_FDCWD)
+        return syscall_unhandled_other(name, process, 0);
+    else if(is_symlinkat)
+        pathname = abs_path_arg(process, 2);
+    else /* symlink */
+        pathname = abs_path_arg(process, 1);
     if(process->retvalue.i >= 0)
     {
         if(db_add_file_open(process->identifier,
@@ -530,36 +570,48 @@ static int syscall_connect(const char *name, struct Process *process,
 
 
 /* ********************
- * Other syscalls that might be of interest but that we don't handle yet
+ * *at variants, handled if dirfd is AT_FDCWD
  */
-
-static int syscall_unhandled_path1(const char *name, struct Process *process,
-                                   unsigned int udata)
+static int syscall_xxx_at(const char *name, struct Process *process,
+                          unsigned int real_syscall)
 {
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
+    if(process->params[0].i == AT_FDCWD)
     {
-        char *pathname = tracee_strdup(process->tid,
-                                       process->params[0].p);
-        if(pathname[0] != '/')
+        struct syscall_table_entry *entry = NULL;
+        struct syscall_table *tbl;
+        size_t syscall_type;
+        if(process->mode == MODE_I386)
+            syscall_type = SYSCALL_I386;
+        else if(process->current_syscall & __X32_SYSCALL_BIT)
+            syscall_type = SYSCALL_X86_64_x32;
+        else
+            syscall_type = SYSCALL_X86_64;
+        tbl = &syscall_tables[syscall_type];
+        if(real_syscall < tbl->length)
+            entry = &tbl->entries[real_syscall];
+        if(entry == NULL || entry->name == NULL || entry->proc_exit == NULL)
         {
-            char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
-            free(oldpath);
+            log_critical(process->tid, "INVALID SYSCALL in *at dispatch: %d",
+                         real_syscall);
+            return 0;
         }
-        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
-                 name, pathname);
+        else
+        {
+            int ret;
+            /* Shifts arguments */
+            size_t i;
+            register_type arg0 = process->params[0];
+            for(i = 0; i < PROCESS_ARGS - 1; ++i)
+                process->params[i] = process->params[i + 1];
+            ret = entry->proc_exit(name, process, entry->udata);
+            for(i = PROCESS_ARGS; i > 1; --i)
+                process->params[i - 1] = process->params[i - 2];
+            process->params[0] = arg0;
+            return ret;
+        }
     }
-    return 0;
-}
-
-static int syscall_unhandled_other(const char *name, struct Process *process,
-                                   unsigned int udata)
-{
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
-        log_warn(process->tid, "process used unhandled system call %s", name);
-    return 0;
+    else
+        return syscall_unhandled_other(name, process, 0);
 }
 
 
@@ -662,6 +714,15 @@ void syscall_build_table(void)
 
             {102, "socketcall", NULL, syscall_socketcall, 0},
 
+            /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {296, "mkdirat", NULL, syscall_xxx_at, 39},
+            {295, "openat", NULL, syscall_xxx_at, 5},
+            {307, "faccessat", NULL, syscall_xxx_at, 33},
+            {305, "readlinkat", NULL, syscall_xxx_at, 85},
+            {300, "fstatat64", NULL, syscall_xxx_at, 195},
+
+            {304, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 38, "rename", NULL, syscall_unhandled_path1, 0},
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -681,16 +742,10 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {303, "linkat", NULL, syscall_unhandled_other, 0},
-            {296, "mkdirat", NULL, syscall_unhandled_other, 0},
-            {295, "openat", NULL, syscall_unhandled_other, 0},
             {302, "renameat", NULL, syscall_unhandled_other, 0},
-            {304, "symlinkat", NULL, syscall_unhandled_other, 0},
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
             {306, "fchmodat", NULL, syscall_unhandled_other, 0},
             {298, "fchownat", NULL, syscall_unhandled_other, 0},
-            {307, "faccessat", NULL, syscall_unhandled_other, 0},
-            {305, "readlinkat", NULL, syscall_unhandled_other, 0},
-            {300, "fstatat64", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             { 26, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -731,6 +786,15 @@ void syscall_build_table(void)
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
 
+            /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {258, "mkdirat", NULL, syscall_xxx_at, 83},
+            {257, "openat", NULL, syscall_xxx_at, 2},
+            {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {267, "readlinkat", NULL, syscall_xxx_at, 89},
+            {262, "newfstatat", NULL, syscall_xxx_at, 4},
+
+            {266, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -747,16 +811,10 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {265, "linkat", NULL, syscall_unhandled_other, 0},
-            {258, "mkdirat", NULL, syscall_unhandled_other, 0},
-            {257, "openat", NULL, syscall_unhandled_other, 0},
             {264, "renameat", NULL, syscall_unhandled_other, 0},
-            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
-            {269, "faccessat", NULL, syscall_unhandled_other, 0},
-            {267, "readlinkat", NULL, syscall_unhandled_other, 0},
-            {262, "newfstatat", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {101, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -797,6 +855,15 @@ void syscall_build_table(void)
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
 
+            /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {258, "mkdirat", NULL, syscall_xxx_at, 83},
+            {257, "openat", NULL, syscall_xxx_at, 2},
+            {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {267, "readlinkat", NULL, syscall_xxx_at, 89},
+            {262, "newfstatat", NULL, syscall_xxx_at, 4},
+
+            {266, "symlinkat", NULL, syscall_symlink, 1},
+
             /* Unhandled with path as first argument */
             { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -813,16 +880,10 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {265, "linkat", NULL, syscall_unhandled_other, 0},
-            {258, "mkdirat", NULL, syscall_unhandled_other, 0},
-            {257, "openat", NULL, syscall_unhandled_other, 0},
             {264, "renameat", NULL, syscall_unhandled_other, 0},
-            {266, "symlinkat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
-            {269, "faccessat", NULL, syscall_unhandled_other, 0},
-            {267, "readlinkat", NULL, syscall_unhandled_other, 0},
-            {262, "newfstatat", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {521, "ptrace", NULL, syscall_unhandled_other, 0},
