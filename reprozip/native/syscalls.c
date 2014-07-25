@@ -870,12 +870,37 @@ int syscall_handle(struct Process *process)
 #endif
 
     {
+        struct syscall_table_entry *entry = NULL;
         struct syscall_table *tbl = &syscall_tables[syscall_type];
         if(syscall < 0 || syscall >= 2000)
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
-        if(syscall >= 0 || (size_t)syscall < tbl->length)
+#ifdef X86_64
+        /* Workaround for execve() transition x64 -> i386 */
+        if(syscall == 59 && process->in_syscall)
         {
-            struct syscall_table_entry *entry = &tbl->entries[syscall];
+            size_t i;
+            for(i = 0; i < processes_size; ++i)
+            {
+                if(processes[i]->status == PROCESS_ATTACHED
+                 && processes[i]->tgid == process->tgid
+                 && processes[i]->in_syscall
+                 && processes[i]->current_syscall == 59
+                 && processes[i]->syscall_info != NULL)
+                {
+                    if(verbosity >= 3)
+                        log_info(process->tid,
+                                 "transition x64 -> i386, syscall 59 is still "
+                                 "execve");
+                    entry = &syscall_tables[SYSCALL_X86_64].entries[59];
+                }
+            }
+        }
+        else
+#endif
+        if(entry == NULL && (syscall >= 0 || (size_t)syscall < tbl->length) )
+            entry = &tbl->entries[syscall];
+        if(entry != NULL)
+        {
             int ret = 0;
             if(entry->name && verbosity >= 3)
                 log_info(process->tid, "%s()", entry->name);
