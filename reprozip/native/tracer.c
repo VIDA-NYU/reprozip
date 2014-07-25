@@ -77,11 +77,11 @@ struct x86_64_regs {
 };
 
 
-static void get_i386_reg(register_type *reg, uint64_t value)
+static void get_i386_reg(register_type *reg, uint32_t value)
 {
     reg->i = (int32_t)value;
     reg->u = value;
-    reg->p = (void*)value;
+    reg->p = (void*)(uint64_t)value;
 }
 
 static void get_x86_64_reg(register_type *reg, uint64_t value)
