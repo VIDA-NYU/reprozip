@@ -51,3 +51,7 @@ def main():
     logging.basicConfig(level=levels[min(args.verbosity, 3)])
     args.func(args)
     sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()

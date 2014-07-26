@@ -266,3 +266,7 @@ def main():
         parser.error("missing command-line")
     args.func(args)
     sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
