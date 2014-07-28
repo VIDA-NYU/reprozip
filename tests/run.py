@@ -6,12 +6,12 @@
 
 from contextlib import contextmanager
 import os
+from rpaths import Path, unicode
 import subprocess
-import yaml
 import sys
+import yaml
 
 from reprounzip.unpackers.common import join_root
-from rpaths import Path, unicode
 
 
 tests = Path(__file__).parent.absolute()
@@ -158,6 +158,21 @@ with in_temp_dir():
     build('segv', ['segv.c'])
     # Trace
     check_call(programs['reprozip'] + ['-v', '-v', '-v', 'testrun', './segv'])
+
+    # ########################################
+    # 'exec_echo' program: testrun
+    # This is built with -m32 so that we transition:
+    #   python (x64) -> exec_echo (i386) -> echo (x64)
+    #
+
+    if sys.maxsize > 2 ** 32:
+        # Build
+        build('exec_echo', ['exec_echo.c'], ['-m32'])
+        # Trace
+        check_call(programs['reprozip'] + ['-v', '-v', '-v', 'testrun',
+                                           './exec_echo'])
+    else:
+        print("Can't try exec_echo transitions: not running on 64bits")
 
     # ########################################
     # Copies back coverage report

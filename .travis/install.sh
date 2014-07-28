@@ -11,6 +11,8 @@ in
             export CFLAGS="-fprofile-arcs -ftest-coverage"
         fi
         run_lines<<'EOF'
+        sudo apt-get update -qq
+        sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
         if [ $TEST_MODE = "coverage_c" ]; then pip install cpp-coveralls; fi
         cd reprozip && python setup.py install
@@ -20,6 +22,8 @@ EOF
         ;;
     coverage_py)
         run_lines<<'EOF'
+        sudo apt-get update -qq
+        sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
         pip install coveralls
         cd reprozip && python setup.py develop

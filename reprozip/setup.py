@@ -4,8 +4,8 @@ import sys
 
 
 # List the source files
-sources = ['pytracer.c', 'tracer.c', 'database.c', 'ptrace_utils.c', 'utils.c',
-           'log.c']
+sources = ['pytracer.c', 'tracer.c', 'syscalls.c', 'database.c',
+           'ptrace_utils.c', 'utils.c', 'log.c']
 # They can be found under native/
 sources = [os.path.join('native', n) for n in sources]
 

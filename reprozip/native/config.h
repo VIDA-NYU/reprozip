@@ -14,10 +14,12 @@
 #endif
 
 /* Static assertion trick */
-enum { ASSERT_POINTER_FITS_IN_LONG_INT = 1/(!!(
-        sizeof(long int) >= sizeof(void*)
-)) };
+#define STATIC_ASSERT(name, condition) \
+    enum { name = 1/(!!( \
+            condition \
+    )) }
 
-typedef signed long int register_type;
+STATIC_ASSERT(ASSERT_POINTER_FITS_IN_LONG_INT,
+              sizeof(long int) >= sizeof(void*));
 
 #endif

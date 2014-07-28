@@ -9,6 +9,7 @@
 #include "config.h"
 #include "log.h"
 #include "ptrace_utils.h"
+#include "tracer.h"
 
 
 static long tracee_getword(pid_t tid, const void *addr)
@@ -25,9 +26,22 @@ static long tracee_getword(pid_t tid, const void *addr)
     return res;
 }
 
-static void *tracee_getptr(pid_t tid, const void *addr)
+static void *tracee_getptr(int mode, pid_t tid, const void *addr)
 {
-    return (void*)tracee_getword(tid, addr);
+    if(mode == MODE_I386)
+    {
+        /* Pointers are 32 bits */
+        uint32_t ptr;
+        tracee_read(tid, (void*)&ptr, addr, sizeof(ptr));
+        return (void*)(uint64_t)ptr;
+    }
+    else /* mode == MODE_X86_64 */
+    {
+        /* Pointers are 64 bits */
+        uint64_t ptr;
+        tracee_read(tid, (void*)&ptr, addr, sizeof(ptr));
+        return (void*)ptr;
+    }
 }
 
 size_t tracee_strlen(pid_t tid, const char *str)
@@ -77,20 +91,21 @@ char *tracee_strdup(pid_t tid, const char *str)
     return res;
 }
 
-char **tracee_strarraydup(pid_t tid, const char *const *argv)
+char **tracee_strarraydup(int mode, pid_t tid, const char *const *argv)
 {
+    /* FIXME : This is probably broken on x32 */
     char **array;
     /* Reads number of pointers in pointer array */
     size_t nb_args = 0;
     {
         const char *const *a = argv;
         /* xargv = *a */
-        const char *xargv = tracee_getptr(tid, a);
+        const char *xargv = tracee_getptr(mode, tid, a);
         while(xargv != NULL)
         {
             ++nb_args;
             ++a;
-            xargv = tracee_getptr(tid, a);
+            xargv = tracee_getptr(mode, tid, a);
         }
     }
     /* Allocs pointer array */
@@ -99,13 +114,13 @@ char **tracee_strarraydup(pid_t tid, const char *const *argv)
     {
         size_t i = 0;
         /* xargv = argv[0] */
-        const char *xargv = tracee_getptr(tid, argv);
+        const char *xargv = tracee_getptr(mode, tid, argv);
         while(xargv != NULL)
         {
             array[i] = tracee_strdup(tid, xargv);
             ++i;
             /* xargv = argv[i] */
-            xargv = tracee_getptr(tid, argv + i);
+            xargv = tracee_getptr(mode, tid, argv + i);
         }
         array[i] = NULL;
     }

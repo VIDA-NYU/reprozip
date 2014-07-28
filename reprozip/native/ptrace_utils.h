@@ -7,7 +7,7 @@ void tracee_read(pid_t tid, char *dst, const char *src, size_t size);
 
 char *tracee_strdup(pid_t tid, const char *str);
 
-char **tracee_strarraydup(pid_t tid, const char *const *argv);
+char **tracee_strarraydup(int mode, pid_t tid, const char *const *argv);
 void free_strarray(char **array);
 
 #endif
