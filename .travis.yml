@@ -12,7 +12,7 @@ after_success: .travis/finish.sh
 notifications:
   email:
     recipients:
-       - reprozip-dev@vgc.poly.edu
+       - reprozip.gate@gmail.com
     on_success: change
     on_failure: always
 matrix:
