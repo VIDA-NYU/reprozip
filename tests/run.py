@@ -5,12 +5,29 @@
 # See file LICENSE for full license details.
 
 from contextlib import contextmanager
+import os
 import subprocess
 import yaml
 import sys
 
 from reprounzip.unpackers.common import join_root
-from rpaths import Path
+from rpaths import Path, unicode
+
+
+tests = Path(__file__).parent.absolute()
+
+
+if 'COVER' in os.environ:
+    python = os.environ['COVER'].split(' ')
+else:
+    python = [sys.executable]
+
+reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
+reprounzip_main = tests.parent / 'reprounzip/reprounzip/reprounzip.py'
+
+programs = {
+    'reprozip': python + [reprozip_main.absolute().path],
+    'reprounzip': python + [reprounzip_main.absolute().path]}
 
 
 @contextmanager
@@ -23,7 +40,11 @@ def in_temp_dir():
         tmp.rmtree(ignore_errors=True)
 
 
-tests = Path(__file__).parent.absolute()
+def check_call(args):
+    print(" ".join(a if isinstance(a, unicode)
+                   else a.decode('utf-8', 'replace')
+                   for a in args))
+    return subprocess.check_call(args)
 
 
 def build(target, sources, args=[]):
@@ -50,11 +71,11 @@ with in_temp_dir():
     # Build
     build('simple', ['simple.c'])
     # Trace
-    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'trace',
-                           '-d', 'rpz-simple',
-                           './simple',
-                           (tests / 'simple_input.txt').path,
-                           'simple_output.txt'])
+    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'trace',
+                                       '-d', 'rpz-simple',
+                                       './simple',
+                                       (tests / 'simple_input.txt').path,
+                                       'simple_output.txt'])
     orig_output_location = Path('simple_output.txt').absolute()
     assert orig_output_location.is_file()
     with orig_output_location.open(encoding='utf-8') as fp:
@@ -67,25 +88,25 @@ with in_temp_dir():
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
     # Pack
-    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'pack',
-                           '-d', 'rpz-simple',
-                           'simple.rpz'])
+    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'pack',
+                                       '-d', 'rpz-simple',
+                                       'simple.rpz'])
     # Unpack directory
-    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'directory',
-                           'simple.rpz', 'simpledir'])
+    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'directory',
+                                         'simple.rpz', 'simpledir'])
     # Run script
-    subprocess.check_call(['cat', 'simpledir/script.sh'])
-    subprocess.check_call(['sh', 'simpledir/script.sh'])
+    check_call(['cat', 'simpledir/script.sh'])
+    check_call(['sh', 'simpledir/script.sh'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
     assert output_in_dir.is_file()
     with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     output_in_dir.remove()
     # Unpack chroot
-    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'chroot',
-                           'simple.rpz', 'simplechroot'])
+    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'chroot',
+                                         'simple.rpz', 'simplechroot'])
     # Run chroot
-    subprocess.check_call(['sudo', 'sh', 'simplechroot/script.sh'])
+    check_call(['sudo', 'sh', 'simplechroot/script.sh'])
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
     assert output_in_chroot.is_file()
@@ -94,13 +115,12 @@ with in_temp_dir():
     output_in_chroot.remove()
 
     if not Path('/vagrant').exists():
-        subprocess.check_call(['sudo', 'sh', '-c',
-                               'mkdir /vagrant; chmod 777 /vagrant'])
+        check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    subprocess.check_call(['reprounzip', '-v', '-v', '-v',
-                           'vagrant', '--use-chroot',
-                           'simple.rpz', '/vagrant/simplevagrantchroot'])
+    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'vagrant',
+                                         '--use-chroot', 'simple.rpz',
+                                         '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
         if interactive:
@@ -109,8 +129,9 @@ with in_temp_dir():
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack usual Vagrant
-    subprocess.check_call(['reprounzip', '-v', '-v', '-v', 'vagrant',
-                           'simple.rpz', '/vagrant/simplevagrant'])
+    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'vagrant',
+                                         'simple.rpz',
+                                         '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
         if interactive:
@@ -126,8 +147,8 @@ with in_temp_dir():
     # Build
     build('threads', ['threads.c'], ['-lpthread'])
     # Trace
-    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
-                           './threads'])
+    check_call(programs['reprozip'] + ['-v', '-v', '-v',
+                                       'testrun', './threads'])
 
     # ########################################
     # 'segv' program: testrun
@@ -136,5 +157,12 @@ with in_temp_dir():
     # Build
     build('segv', ['segv.c'])
     # Trace
-    subprocess.check_call(['reprozip', '-v', '-v', '-v', 'testrun',
-                           './segv'])
+    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'testrun', './segv'])
+
+    # ########################################
+    # Copies back coverage report
+    #
+
+    coverage = Path('.coverage')
+    if coverage.exists():
+        coverage.copyfile(tests.parent / '.coverage.runpy')
