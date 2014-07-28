@@ -217,7 +217,9 @@ def write_configuration(directory, sort_packages, overwrite=False):
     cur = conn.cursor()
     if oldconfig:
         # Loads in previous config
-        runs, oldpkgs, oldfiles = load_config(config, File=TracedFile)
+        runs, oldpkgs, oldfiles, patterns = load_config(config,
+                                                        canonical=False,
+                                                        File=TracedFile)
 
         executions = cur.execute(
                 '''

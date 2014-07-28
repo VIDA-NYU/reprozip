@@ -11,7 +11,9 @@ import sqlite3
 import sys
 import tarfile
 
-from reprozip.common import FILE_WRITE, FILE_WDIR, load_config
+from reprozip import __version__ as reprozip_version
+from reprozip.common import FILE_WRITE, FILE_WDIR, load_config, save_config
+from reprozip.tracer.canonicalize import canonicalize_config
 from reprozip.utils import PY3
 
 
@@ -66,10 +68,7 @@ class PackBuilder(object):
         from rpaths import PosixPath
         assert isinstance(name, PosixPath)
         assert isinstance(arcname, PosixPath)
-        try:
-            self.tar.add(str(name), str(arcname), *args, **kwargs)
-        except OSError:
-            logging.warning("Missing file %s" % name)
+        self.tar.add(str(name), str(arcname), *args, **kwargs)
 
     def add_data(self, filename):
         if filename in self.seen:
@@ -80,10 +79,7 @@ class PackBuilder(object):
             if path in self.seen:
                 continue
             logging.debug("%s -> %s" % (path, data_path(path)))
-            try:
-                self.tar.add(str(path), str(data_path(path)), recursive=False)
-            except OSError:
-                logging.warning("Missing file %s" % path)
+            self.tar.add(str(path), str(data_path(path)), recursive=False)
             self.seen.add(path)
 
     def close(self):
@@ -91,7 +87,7 @@ class PackBuilder(object):
         self.seen = None
 
 
-def pack(target, directory):
+def pack(target, directory, sort_packages):
     """Main function for the pack subcommand.
     """
     if target.exists():
@@ -107,10 +103,54 @@ def pack(target, directory):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.\n")
         sys.exit(1)
-    runs, packages, other_files = load_config(configfile)
+    runs, packages, other_files, additional_patterns = load_config(
+            configfile,
+            canonical=False)
+
+    # Canonicalize config (re-sort, expand 'additional_files' patterns)
+    runs, packages, other_files = canonicalize_config(
+            runs, packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s..." % target)
     tar = PackBuilder(target)
+
+    # Stores the original trace
+    trace = directory / 'trace.sqlite3'
+    if trace.is_file():
+        tar.add(trace, Path('METADATA/trace.sqlite3'))
+
+    # Add the files from the packages
+    for pkg in packages:
+        if pkg.packfiles:
+            logging.info("Adding files from package %s..." % pkg.name)
+            files = []
+            for f in pkg.files:
+                if not Path(f.path).exists():
+                    logging.warning("Missing file %s from package %s" % (
+                                    f.path, pkg.name))
+                else:
+                    tar.add_data(f.path)
+                    files.append(f)
+            pkg.files = files
+        else:
+            logging.info("NOT adding files from package %s" % pkg.name)
+
+    # Add the rest of the files
+    logging.info("Adding other files...")
+    files = []
+    for f in other_files:
+        if not Path(f.path).exists():
+            logging.warning("Missing file %s" % f.path)
+        else:
+            tar.add_data(f.path)
+            files.append(f)
+    other_files = files
+
+    # Makes sure all the directories used as working directories are packed
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    for directory in list_directories(trace):
+        tar.add_data(directory)
 
     logging.info("Adding metadata...")
     # Stores pack version
@@ -123,32 +163,15 @@ def pack(target, directory):
     finally:
         manifest.remove()
 
-    # Stores the configuration file
-    tar.add(configfile, Path('METADATA/config.yml'))
+    # Stores canonical config
+    fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
+    os.close(fd)
+    try:
+        save_config(can_configfile, runs, packages, other_files,
+                    reprozip_version, canonical=True)
 
-    # Stores the original trace
-    trace = directory / 'trace.sqlite3'
-    if trace.is_file():
-        tar.add(trace, Path('METADATA/trace.sqlite3'))
-
-    # Add the files from the packages
-    for pkg in packages:
-        if pkg.packfiles:
-            logging.info("Adding files from package %s..." % pkg.name)
-            for f in pkg.files:
-                tar.add_data(f.path)
-        else:
-            logging.info("NOT adding files from package %s" % pkg.name)
-
-    # Add the rest of the files
-    logging.info("Adding other files...")
-    for f in other_files:
-        tar.add_data(f.path)
-
-    # Makes sure all the directories used as working directories are packed
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    for directory in list_directories(trace):
-        tar.add_data(directory)
+        tar.add(can_configfile, Path('METADATA/config.yml'))
+    finally:
+        can_configfile.remove()
 
     tar.close()

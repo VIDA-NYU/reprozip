@@ -178,7 +178,7 @@ def pack(args):
     if not target.unicodename.lower().endswith('.rpz'):
         target = Path(target.path + '.rpz')
         logging.warning("Changing output filename to %s" % target.unicodename)
-    reprozip.pack.pack(target, Path(args.dir))
+    reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 
 def main():
@@ -203,6 +203,10 @@ def main():
     options.add_argument('-d', '--dir', default='.reprozip',
                          help="where to store database and configuration file "
                          "(default: ./.reprozip)")
+    options.add_argument(
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
 
     parser = argparse.ArgumentParser(
             description="Reproducible experiments tool.",
@@ -224,10 +228,6 @@ def main():
             help="add to the previous run instead of replacing it")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER,
                               help="command-line to run under trace")
-    parser_trace.add_argument(
-            '--dont-identify-packages', action='store_false', default=True,
-            dest='identify_packages',
-            help="do not try identify which package each file comes from")
     parser_trace.set_defaults(func=trace)
 
     # testrun command
@@ -245,10 +245,6 @@ def main():
     parser_reset = subparsers.add_parser(
             'reset', parents=[options],
             help="Resets the configuration file")
-    parser_reset.add_argument(
-            '--dont-identify-packages', action='store_false', default=True,
-            dest='identify_packages',
-            help="do not try identify which package each file comes from")
     parser_reset.set_defaults(func=reset)
 
     # pack command
