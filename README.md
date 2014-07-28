@@ -1,4 +1,7 @@
 [![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=master)](https://travis-ci.org/ViDA-NYU/reprozip)
+[![Coverage Status]
+(https://coveralls.io/repos/ViDA-NYU/reprozip/badge.png?branch=master)]
+(https://coveralls.io/r/ViDA-NYU/reprozip?branch=master)
 
 reprozip
 ========
