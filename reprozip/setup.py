@@ -23,11 +23,11 @@ with open('README.rst') as fp:
     description = fp.read()
 req = [
     'PyYAML',
-    'rpaths']
+    'rpaths>=0.7']
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprozip',
-      version='0.2.1',
+      version='0.3',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [
