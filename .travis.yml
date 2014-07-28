@@ -8,6 +8,7 @@ python:
   - "3.4"
 install: .travis/install.sh
 script: .travis/test.sh
+after_success: .travis/finish.sh
 notifications:
   email:
     recipients:
@@ -20,3 +21,7 @@ matrix:
       env: TEST_MODE=check_style
     - python: "2.7"
       env: TEST_MODE=check_shared
+    - python: "2.7"
+      env: TEST_MODE=coverage_py
+    - python: "2.7"
+      env: TEST_MODE=coverage_c
