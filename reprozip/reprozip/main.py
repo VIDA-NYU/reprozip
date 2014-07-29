@@ -2,6 +2,14 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Entry point for the reprozip utility.
+
+This contains :func:`~reprozip.main.main`, which is the entry point declared to
+setuptools. It is also callable directly.
+
+It dispatchs to other routines, or handles the testrun command.
+"""
+
 from __future__ import unicode_literals
 
 import argparse

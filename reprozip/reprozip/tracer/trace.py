@@ -2,6 +2,13 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Tracing logic for reprozip.
+
+This module contains the :func:`~reprozip.tracer.tracer.tracer` function that
+invokes the C tracer (_pytracer) to build the SQLite trace file, and the
+generation logic for the config YAML file.
+"""
+
 from __future__ import unicode_literals
 
 import heapq

@@ -6,6 +6,13 @@
 #   reprozip/reprozip/utils.py
 #   reprounzip/reprounzip/utils.py
 
+"""Utility functions.
+
+These functions are shared between reprozip and reprounzip but are not specific
+to this software (more utilities).
+
+"""
+
 from __future__ import unicode_literals
 
 import email.utils

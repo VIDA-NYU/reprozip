@@ -6,6 +6,18 @@
 #   reprozip/reprozip/common.py
 #   reprounzip/reprounzip/common.py
 
+"""Common functions between reprozip and reprounzip.
+
+This module contains functions that are specific to the reprozip software and
+its data formats, but that are shared between the reprozip and reprounzip
+packages. Because the packages can be installed separately, these functions are
+in a separate module which is duplicated between the packages.
+
+As long as these are small in number, they are not worth putting in a separate
+package that reprozip and reprounzip would both depend on.
+
+"""
+
 from __future__ import unicode_literals
 
 from datetime import datetime
@@ -86,7 +98,7 @@ def load_config(filename, canonical, File=File, Package=Package):
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
     # Accepts versions from 0.2 to 0.3 inclusive
-    elif not (LooseVersion('0.2') <= ver < LooseVersion('0.4')):
+    elif not LooseVersion('0.2') <= ver < LooseVersion('0.4'):
         raise InvalidConfig("Unknown version")
     elif not keys_.issubset(set(['version', 'runs',
                                  'packages', 'other_files',

@@ -2,6 +2,12 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Utility functions for unpacker plugins.
+
+This contains functions related to shell scripts, package managers, and the
+pack files.
+"""
+
 from __future__ import unicode_literals
 
 import logging

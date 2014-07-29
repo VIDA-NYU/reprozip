@@ -2,6 +2,13 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Packing logic for reprozip.
+
+This module contains the :func:`~reprozip.pack.pack` function and associated
+utilities that are used to build the .rpz pack file from the trace SQLite file
+and config YAML.
+"""
+
 from __future__ import unicode_literals
 
 import logging

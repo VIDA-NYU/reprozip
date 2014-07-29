@@ -2,6 +2,18 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Default unpackers for reprounzip.
+
+This file contains the default plugins that come with reprounzip:
+- ``directory`` puts all the files in a simple directory. This is simple but
+  can be unreliable.
+- ``chroot`` creates a chroot environment. This is more reliable as you get a
+  harder isolation from the host system.
+- ``installpkgs`` installs on your distribution the packages that were used by
+  the experiment on the original machine. This is useful if some of them were
+  not packed and you do not have them installed.
+"""
+
 from __future__ import unicode_literals
 
 from rpaths import PosixPath, Path

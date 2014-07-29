@@ -2,6 +2,18 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+"""Graph plugin for reprounzip.
+
+This is not actually an unpacker, it just creates a graph from the metadata
+collected by the reprozip tracer (either from a pack file or the initial .rpz
+directory).
+
+It creates a file in GraphViz DOT format, which can be turned into an image by
+using the dot utility.
+
+See http://www.graphviz.org/
+"""
+
 from __future__ import unicode_literals
 
 import argparse

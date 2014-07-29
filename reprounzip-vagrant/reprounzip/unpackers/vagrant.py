@@ -1,3 +1,12 @@
+"""Vagrant plugin for reprounzip.
+
+This files contains the 'vagrant' unpacker, which builds a Vagrant template
+from a reprozip pack. That template can then be run as a virtual machine via
+Vagrant (``vagrant up``).
+
+See http://www.vagrantup.com/
+"""
+
 # Copyright (C) 2014 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
