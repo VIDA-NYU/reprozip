@@ -142,7 +142,7 @@ def get_files(conn):
             logging.warning(
                     "The file %s was read and then written. We will only pack "
                     "the final version of the file; reproducible experiments "
-                    "shouldn't change their input files.")
+                    "shouldn't change their input files." % fi.path)
 
     return [fi
             for fi in files.values()
