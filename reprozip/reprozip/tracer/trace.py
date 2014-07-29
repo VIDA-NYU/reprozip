@@ -128,6 +128,15 @@ def get_files(conn):
     exec_cursor.close()
     open_cursor.close()
 
+    # Displays a warning for READ_THEN_WRITTEN files
+    for fi in files.values():
+        if (fi.what == TracedFile.READ_THEN_WRITTEN and
+                not any(fi.path.lies_under(m) for m in magic_dirs)):
+            logging.warning(
+                    "The file %s was read and then written. We will only pack "
+                    "the final version of the file; reproducible experiments "
+                    "shouldn't change their input files.")
+
     return [fi
             for fi in files.values()
             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
