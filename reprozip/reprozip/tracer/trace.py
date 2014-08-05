@@ -127,7 +127,7 @@ def get_files(conn):
                 f = TracedFile(r_name)
                 files[f.path] = f
             else:
-                f = files[f.path]
+                f = files[r_name]
             if r_mode & FILE_WRITE:
                 f.write()
             elif r_mode & FILE_READ:
