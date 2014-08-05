@@ -106,32 +106,28 @@ def get_files(conn):
     for ts, event_type, data in rows:
         if event_type == 'exec':
             r_name, r_timestamp = data
-            for filename in find_all_links(r_name, True):
-                if filename not in files:
-                    f = TracedFile(filename)
-                    f.read()
-                    files[f.path] = f
-
-        elif event_type == 'open':
+            r_mode = FILE_READ
+        else:  # event_type == 'open'
             r_name, r_mode, r_timestamp = data
-            r_name = Path(r_name)
-            # Adds symbolic links as read files
-            for filename in find_all_links(r_name, False):
-                if filename not in files:
-                    f = TracedFile(filename)
-                    f.read()
-                    files[f.path] = f
-            # Adds final target
-            r_name = r_name.resolve()
-            if r_name not in files:
-                f = TracedFile(r_name)
-                files[f.path] = f
-            else:
-                f = files[r_name]
-            if r_mode & FILE_WRITE:
-                f.write()
-            elif r_mode & FILE_READ:
+        r_name = Path(r_name)
+
+        # Adds symbolic links as read files
+        for filename in find_all_links(r_name, False):
+            if filename not in files:
+                f = TracedFile(filename)
                 f.read()
+                files[f.path] = f
+        # Adds final target
+        r_name = r_name.resolve()
+        if r_name not in files:
+            f = TracedFile(r_name)
+            files[f.path] = f
+        else:
+            f = files[r_name]
+        if r_mode & FILE_WRITE:
+            f.write()
+        elif r_mode & FILE_READ:
+            f.read()
     exec_cursor.close()
     open_cursor.close()
 
