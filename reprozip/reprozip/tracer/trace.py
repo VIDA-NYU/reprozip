@@ -316,7 +316,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         # Gets files from command line
         command_line_files = {}
         for i, arg in enumerate(argv):
-            p = Path(r_workingdir, arg).absolute()
+            p = Path(r_workingdir, arg).resolve()
             if p.is_file():
                 command_line_files[p] = i
         input_files_dict = {}
