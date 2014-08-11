@@ -154,7 +154,7 @@ def get_files(conn):
     open_cursor.close()
 
     # Further filters input files
-    inputs = [[fi
+    inputs = [[fi.path
                for fi in lst
                # Input files are regular files,
                if fi.path.is_file() and
@@ -301,13 +301,48 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ''')
     for (r_name, r_argv, r_envp, r_workingdir, r_exitcode), input_files in (
             izip(executions, inputs)):
+        # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
             argv = argv[:-1]
+
+        # Decodes environment
         envp = r_envp.split('\0')
         if not envp[-1]:
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
+
+        # Labels input files
+        # Gets files from command line
+        command_line_files = {}
+        for i, arg in enumerate(argv):
+            p = Path(r_workingdir, arg).absolute()
+            if p.is_file():
+                command_line_files[p] = i
+        input_files_dict = {}
+        command_line_args = len([in_file
+                                 for in_file in input_files
+                                 if in_file in command_line_files])
+        for in_file in input_files:
+            # If file is on the command line
+            if in_file in command_line_files:
+                if command_line_args > 1:
+                    label = "arg_%d" % command_line_files[in_file]
+                else:
+                    label = "arg"
+            # Else, use file's name
+            else:
+                label = in_file.unicodename
+            # Make labels unique
+            uniquelabel = label
+            i = 1
+            while uniquelabel in input_files_dict:
+                i += 1
+                uniquelabel = '%s_%d' % (label, i)
+            input_files_dict[uniquelabel] = in_file.path
+        # TODO : Note that right now, we keep as input files the ones that
+        # don't appear on the command line
+
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': Path(r_workingdir).path,
                      'architecture': platform.machine(),
@@ -319,7 +354,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                      'gid': os.getgid(),
                      'signal' if r_exitcode & 0x0100 else 'exitcode':
                          r_exitcode & 0xFF,
-                     'input_files': [fi.path.path for fi in input_files]})
+                     'input_files': input_files_dict})
     cur.close()
 
     conn.close()
