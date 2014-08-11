@@ -25,7 +25,7 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, hsize, find_all_links
+from reprozip.utils import PY3, izip, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -284,6 +284,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ORDER BY p.id DESC
                 LIMIT 1;
                 ''')
+        inputs = inputs[-1:]
 
         files, packages = merge_files(files, packages,
                                       oldfiles,
@@ -298,7 +299,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 WHERE p.parent ISNULL
                 ORDER BY p.id;
                 ''')
-    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
+    for (r_name, r_argv, r_envp, r_workingdir, r_exitcode), input_files in (
+            izip(executions, inputs)):
         argv = r_argv.split('\0')
         if not argv[-1]:
             argv = argv[:-1]
@@ -316,7 +318,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
                      'uid': os.getuid(),
                      'gid': os.getgid(),
                      'signal' if r_exitcode & 0x0100 else 'exitcode':
-                         r_exitcode & 0xFF})
+                         r_exitcode & 0xFF,
+                     'input_files': [fi.path.path for fi in input_files]})
     cur.close()
 
     conn.close()
