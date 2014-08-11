@@ -132,13 +132,17 @@ def get_files(conn):
     open_cursor.close()
 
     # Displays a warning for READ_THEN_WRITTEN files
-    for fi in files.values():
-        if (fi.what == TracedFile.READ_THEN_WRITTEN and
-                not any(fi.path.lies_under(m) for m in magic_dirs)):
-            logging.warning(
-                    "The file %s was read and then written. We will only pack "
-                    "the final version of the file; reproducible experiments "
-                    "shouldn't change their input files." % fi.path)
+    read_then_written_files = [
+            fi
+            for fi in files.values()
+            if fi.what == TracedFile.READ_THEN_WRITTEN and
+            not any(fi.path.lies_under(m) for m in magic_dirs)]
+    if read_then_written_files:
+        logging.warning(
+                "Some files were read and then written. We will only pack the "
+                "final version of the file; reproducible experiments "
+                "shouldn't change their input files:\n%s" %
+                ", ".join(fi.path for fi in read_then_written_files))
 
     return [fi
             for fi in files.values()
