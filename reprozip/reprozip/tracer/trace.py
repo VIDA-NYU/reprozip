@@ -75,6 +75,19 @@ def get_files(conn):
     """Find all the files used by the experiment by reading the trace.
     """
     files = {}
+    inputs = [set()]
+
+    # Finds run timestamps, so we can sort input files by run
+    proc_cursor = conn.cursor()
+    executions = proc_cursor.execute(
+            '''
+            SELECT timestamp
+            FROM processes
+            WHERE parent ISNULL
+            ORDER BY id;
+            ''')
+    run_timestamps = [r_timestamp for r_timestamp, in executions][1:]
+    proc_cursor.close()
 
     # Adds dynamic linkers
     for libdir in (Path('/lib'), Path('/lib64')):
@@ -111,6 +124,11 @@ def get_files(conn):
             r_name, r_mode, r_timestamp = data
         r_name = Path(r_name)
 
+        # Stays on the current run
+        while run_timestamps and r_timestamp > run_timestamps[0]:
+            del run_timestamps[0]
+            inputs.append(set())
+
         # Adds symbolic links as read files
         for filename in find_all_links(r_name, False):
             if filename not in files:
@@ -128,8 +146,27 @@ def get_files(conn):
             f.write()
         elif r_mode & FILE_READ:
             f.read()
+
+        # Identifies input files
+        if r_name.is_file():
+            inputs[-1].add(f)
     exec_cursor.close()
     open_cursor.close()
+
+    # Further filters input files
+    inputs = [[fi
+               for fi in lst
+               # Input files are regular files,
+               if fi.path.is_file() and
+               # ONLY_READ,
+               fi.what == TracedFile.ONLY_READ and
+               # not executable,
+               # FIXME : currently disabled. Maybe only remove executed files?
+               # not fi.path.stat().st_mode & 0b111 and
+               # not in a system directory
+               not any(fi.path.lies_under(m)
+                       for m in magic_dirs + system_dirs)]
+              for lst in inputs]
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
@@ -144,10 +181,11 @@ def get_files(conn):
                 "shouldn't change their input files:\n%s" %
                 ", ".join(fi.path for fi in read_then_written_files))
 
-    return [fi
-            for fi in files.values()
-            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                         for m in magic_dirs)]
+    files = [fi
+             for fi in files.values()
+             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                          for m in magic_dirs)]
+    return files, inputs
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -218,7 +256,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
     conn.row_factory = sqlite3.Row
 
     # Reads info from database
-    files = get_files(conn)
+    files, inputs = get_files(conn)
 
     # Identifies which file comes from which package
     if sort_packages:
