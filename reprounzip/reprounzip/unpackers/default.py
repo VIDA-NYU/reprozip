@@ -218,7 +218,7 @@ def test_same_pkgmngr(pack, config, **kwargs):
 
     orig_distribution = runs[0]['distribution'][0].lower()
     if THIS_DISTRIBUTION == orig_distribution:
-        return COMPAT_OK, None
+        return COMPAT_OK
     else:
         return COMPAT_NO, "Different distributions. Then: %s, now: %s" % (
                 orig_distribution, THIS_DISTRIBUTION)
@@ -231,7 +231,7 @@ def test_linux_same_arch(pack, config, **kwargs):
     current_architecture = platform.machine()
     if (orig_architecture == current_architecture or
             (orig_architecture == 'i386' and current_architecture == 'amd64')):
-        return COMPAT_OK, None
+        return COMPAT_OK
     else:
         return COMPAT_NO, "Different architectures. Then: %s, now: %s" % (
                 orig_architecture, current_architecture)

@@ -295,5 +295,4 @@ def setup(subparsers, general_options):
             help="Pack to extract (defaults to reading from --dir)")
     parser_graph.set_defaults(func=graph)
 
-    return [{'name': 'graph',
-             'test_compatibility': lambda pack, **kw: (COMPAT_OK, None)}]
+    return [{'name': 'graph', 'test_compatibility': COMPAT_OK}]

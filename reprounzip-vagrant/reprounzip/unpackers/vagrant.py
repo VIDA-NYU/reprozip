@@ -244,7 +244,7 @@ def test_has_vagrant(pack, **kwargs):
         for ext in pathexts:
             fullpath = os.path.join(path, 'vagrant') + ext
             if os.path.isfile(fullpath):
-                return COMPAT_OK, None
+                return COMPAT_OK
     return COMPAT_MAYBE, "vagrant not found in PATH"
 
 
