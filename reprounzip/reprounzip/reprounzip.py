@@ -133,8 +133,14 @@ def print_info(args):
     unpacker_status = {}
     for upk in unpackers:
         if 'test_compatibility' in upk:
-            res, msg = upk['test_compatibility'](pack, config=config)
-            unpacker_status.setdefault(res, []).append((upk['name'], msg))
+            compat = upk['test_compatibility']
+            if callable(compat):
+                compat = compat(pack, config=config)
+            if isinstance(compat, (tuple, list)):
+                compat, msg = compat
+            else:
+                msg = None
+            unpacker_status.setdefault(compat, []).append((upk['name'], msg))
         else:
             unpacker_status.setdefault(None, []).append((upk['name'], None))
     for s, n in [(COMPAT_OK, "Compatible"), (COMPAT_MAYBE, "Unknown"),
