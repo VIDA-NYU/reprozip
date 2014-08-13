@@ -23,7 +23,8 @@ from rpaths import Path
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config
+from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
+    COMPAT_NO
 from reprounzip.utils import hsize
 
 
@@ -39,7 +40,7 @@ def print_info(args):
     pack = Path(args.pack[0])
 
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = config = load_config(pack)
 
     pack_total_size = 0
     pack_total_paths = 0
@@ -118,7 +119,7 @@ def print_info(args):
                                                   current_architecture))
         print("Distribution: %s (current: %s)" % (meta_distribution,
                                                   current_distribution))
-        print("Executions: %d:" % len(runs))
+        print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(r['argv']))
             print("        wd: %s" % r['workingdir'])
@@ -126,6 +127,27 @@ def print_info(args):
                 print("        signal: %d" % r['signal'])
             else:
                 print("        exitcode: %d" % r['exitcode'])
+
+    # Unpacker compatibility
+    print("----- Unpackers -----")
+    unpacker_status = {}
+    for upk in unpackers:
+        if 'test_compatibility' in upk:
+            res, msg = upk['test_compatibility'](pack, config=config)
+            unpacker_status.setdefault(res, []).append((upk['name'], msg))
+        else:
+            unpacker_status.setdefault(None, []).append((upk['name'], None))
+    for s, n in [(COMPAT_OK, "Compatible"), (COMPAT_MAYBE, "Unknown"),
+                 (COMPAT_NO, "Incompatible")]:
+        if s not in unpacker_status:
+            continue
+        upks = unpacker_status[s]
+        print("%s (%d):" % (n, len(upks)))
+        for upk_name, msg in upks:
+            if msg is not None:
+                print("    %s (%s)" % (upk_name, msg))
+            else:
+                print("    %s" % upk_name)
 
 
 def main():
