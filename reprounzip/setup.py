@@ -14,7 +14,7 @@ setup(name='reprounzip',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'console_scripts': [
-              'reprounzip = reprounzip.reprounzip:main'],
+              'reprounzip = reprounzip.main:main'],
           'reprounzip.unpackers': [
               'graph = reprounzip.unpackers.graph:setup',
               'default = reprounzip.unpackers.default:setup']},
