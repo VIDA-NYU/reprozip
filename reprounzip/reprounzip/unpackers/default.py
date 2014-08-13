@@ -16,14 +16,16 @@ This file contains the default plugins that come with reprounzip:
 
 from __future__ import unicode_literals
 
+import platform
 from rpaths import PosixPath, Path
 import subprocess
 import sys
 import tarfile
 
 from reprounzip.utils import unicode_, download_file
-from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape, busybox_url, join_root
+from reprounzip.unpackers.common import THIS_DISTRIBUTION, COMPAT_OK, \
+    COMPAT_NO, load_config, select_installer, shell_escape, busybox_url, \
+    join_root
 
 
 def installpkgs(args):
@@ -211,6 +213,30 @@ def create_chroot(args):
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
+def test_same_pkgmngr(pack, config, **kwargs):
+    runs, packages, other_files = config
+
+    orig_distribution = runs[0]['distribution'][0].lower()
+    if THIS_DISTRIBUTION == orig_distribution:
+        return COMPAT_OK, None
+    else:
+        return COMPAT_NO, "Different distributions. Then: %s, now: %s" % (
+                orig_distribution, THIS_DISTRIBUTION)
+
+
+def test_linux_same_arch(pack, config, **kwargs):
+    runs, packages, other_files = config
+
+    orig_architecture = runs[0]['architecture']
+    current_architecture = platform.machine()
+    if (orig_architecture == current_architecture or
+            (orig_architecture == 'i386' and current_architecture == 'amd64')):
+        return COMPAT_OK, None
+    else:
+        return COMPAT_NO, "Different architectures. Then: %s, now: %s" % (
+                orig_architecture, current_architecture)
+
+
 def setup(subparsers, general_options):
     # Install the required packages
     parser_installpkgs = subparsers.add_parser(
@@ -243,3 +269,7 @@ def setup(subparsers, general_options):
     parser_chroot.add_argument('target', nargs=1,
                                help="Directory to create")
     parser_chroot.set_defaults(func=create_chroot)
+
+    return [{'name': 'installpkgs', 'test_compatibility': test_same_pkgmngr},
+            {'name': 'directory', 'test_compatibility': test_linux_same_arch},
+            {'name': 'chroot', 'test_compatibility': test_linux_same_arch}]

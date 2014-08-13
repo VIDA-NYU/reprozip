@@ -25,6 +25,7 @@ import tarfile
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
+from reprounzip.unpackers.common import COMPAT_OK
 from reprounzip.utils import PY3, CommonEqualityMixin, escape, unicode_
 
 
@@ -293,3 +294,6 @@ def setup(subparsers, general_options):
             'pack', nargs=argparse.OPTIONAL,
             help="Pack to extract (defaults to reading from --dir)")
     parser_graph.set_defaults(func=graph)
+
+    return [{'name': 'graph',
+             'test_compatibility': lambda pack, **kw: (COMPAT_OK, None)}]
