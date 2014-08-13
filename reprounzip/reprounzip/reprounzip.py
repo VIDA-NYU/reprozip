@@ -11,7 +11,7 @@ It dispatchs to plugins registered through pkg_resources as entry point
 ``reprounzip.unpackers``.
 """
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import argparse
 import codecs
@@ -24,9 +24,14 @@ import sys
 __version__ = '0.3'
 
 
+unpackers = []
+
+
 def main():
     """Entry point when called on the command line.
     """
+    global unpackers
+
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 
@@ -53,7 +58,16 @@ def main():
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
         setup_function = entry_point.load()
-        setup_function(subparsers=subparsers, general_options=options)
+        info = setup_function(subparsers=subparsers, general_options=options)
+        if info is None:
+            info = [{}]
+        for upk in info:
+            upk['project'] = entry_point.dist.project_name
+            upk['ep_name'] = '%s/%s' % (entry_point.dist.project_name,
+                                        entry_point.name)
+            if 'name' not in upk:
+                upk['name'] = upk['ep_name']
+        unpackers += info
 
     args = parser.parse_args()
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]

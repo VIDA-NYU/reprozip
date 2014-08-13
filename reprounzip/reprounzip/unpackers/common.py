@@ -24,6 +24,11 @@ import reprounzip.common
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
+COMPAT_OK = 0
+COMPAT_NO = 1
+COMPAT_MAYBE = 2
+
+
 def shell_escape(s):
     if isinstance(s, bytes):
         s = s.decode('utf-8')
