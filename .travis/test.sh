@@ -26,7 +26,7 @@ EOF
         $COVER reprozip/reprozip/main.py testrun bash -c "cat ../../../../../etc/passwd;cd /var/lib;cat ../../etc/group"
         $COVER reprozip/reprozip/main.py trace bash -c "cat /etc/passwd;echo"
         $COVER reprozip/reprozip/main.py trace --continue sh -c "cat /etc/group;/usr/bin/id"
-        $COVER reprounzip/reprounzip/reprounzip.py graph graph.dot
+        $COVER reprounzip/reprounzip/main.py graph graph.dot
         $COVER reprozip/reprozip/main.py pack
         python tests/run.py
 EOF

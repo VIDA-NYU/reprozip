@@ -23,7 +23,7 @@ else:
     python = [sys.executable]
 
 reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
-reprounzip_main = tests.parent / 'reprounzip/reprounzip/reprounzip.py'
+reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
 
 programs = {
     'reprozip': python + [reprozip_main.absolute().path],
