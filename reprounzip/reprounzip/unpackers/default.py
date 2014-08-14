@@ -214,10 +214,14 @@ def create_chroot(args):
 
 
 def test_same_pkgmngr(pack, config, **kwargs):
+    """Compatibility test: platform is Linux and uses same package manager.
+    """
     runs, packages, other_files = config
 
     orig_distribution = runs[0]['distribution'][0].lower()
-    if THIS_DISTRIBUTION == orig_distribution:
+    if not THIS_DISTRIBUTION:
+        return COMPAT_NO, "This machine is not running Linux"
+    elif THIS_DISTRIBUTION == orig_distribution:
         return COMPAT_OK
     else:
         return COMPAT_NO, "Different distributions. Then: %s, now: %s" % (
@@ -225,11 +229,15 @@ def test_same_pkgmngr(pack, config, **kwargs):
 
 
 def test_linux_same_arch(pack, config, **kwargs):
+    """Compatibility test: this platform is Linux and arch is compatible.
+    """
     runs, packages, other_files = config
 
     orig_architecture = runs[0]['architecture']
-    current_architecture = platform.machine()
-    if (orig_architecture == current_architecture or
+    current_architecture = platform.machine().lower()
+    if platform.system().lower() != 'linux':
+        return COMPAT_NO, "This machine is not running Linux"
+    elif (orig_architecture == current_architecture or
             (orig_architecture == 'i386' and current_architecture == 'amd64')):
         return COMPAT_OK
     else:

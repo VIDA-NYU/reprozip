@@ -91,7 +91,7 @@ def print_info(args):
                for r in runs):
             logging.warning("Runs have different distributions")
 
-    current_architecture = platform.machine()
+    current_architecture = platform.machine().lower()
     current_distribution = platform.linux_distribution()[0:2]
 
     print("Pack file: %s" % pack)
