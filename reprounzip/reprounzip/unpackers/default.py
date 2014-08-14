@@ -30,11 +30,16 @@ def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """
     pack = args.pack[0]
+    missing = args.missing
 
     # Loads config
     runs, packages, other_files = load_config(pack)
 
     installer = select_installer(pack, runs)
+
+    if missing:
+        # With --missing, ignore packages whose files were packed
+        packages = [pkg for pkg in packages if not pkg.packfiles]
 
     # Installs packages
     r = installer.install(packages, assume_yes=args.assume_yes)
@@ -221,6 +226,9 @@ def setup(subparsers, general_options):
     parser_installpkgs.add_argument(
             '-y', '--assume-yes',
             help="Assumes yes for package manager's questions (if supported)")
+    parser_installpkgs.add_argument(
+            '--missing', action='store_true',
+            help="Only install packages that weren't packed")
     parser_installpkgs.set_defaults(func=installpkgs)
 
     # Unpacks all the file in a directory to be run with changed PATH and
