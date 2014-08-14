@@ -17,7 +17,7 @@ This file contains the default plugins that come with reprounzip:
 from __future__ import unicode_literals
 
 import platform
-from rpaths import PosixPath, Path
+from rpaths import PosixPath, DefaultAbstractPath, Path
 import subprocess
 import sys
 import tarfile
@@ -54,6 +54,10 @@ def create_directory(args):
     target = Path(args.target[0])
     if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    if DefaultAbstractPath is not PosixPath:
+        sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
 
     # Loads config
@@ -132,6 +136,10 @@ def create_chroot(args):
     target = Path(args.target[0])
     if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    if DefaultAbstractPath is not PosixPath:
+        sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
 
     # Loads config
