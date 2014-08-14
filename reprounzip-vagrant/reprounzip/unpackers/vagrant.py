@@ -13,6 +13,7 @@ See http://www.vagrantup.com/
 
 from __future__ import unicode_literals
 
+import argparse
 import logging
 from rpaths import PosixPath, Path
 import sys
@@ -248,7 +249,13 @@ def setup(subparsers, general_options):
                                 help="Directory to create")
     parser_vagrant.add_argument(
             '--use-chroot', action='store_true',
-            help="Use a chroot and the original files in the virtual machine")
+            default=True,
+            help=argparse.SUPPRESS)
+    parser_vagrant.add_argument(
+            '--no-use-chroot', action='store_false', dest='use_chroot',
+            default=True,
+            help=("Don't prefer original files nor use chroot in the virtual "
+                  "machine"))
     parser_vagrant.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',

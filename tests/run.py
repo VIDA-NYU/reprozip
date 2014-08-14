@@ -130,7 +130,7 @@ with in_temp_dir():
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack usual Vagrant
     check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'vagrant',
-                                         'simple.rpz',
+                                         '--no-use-chroot', 'simple.rpz',
                                          '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
