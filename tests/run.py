@@ -91,6 +91,9 @@ with in_temp_dir():
     check_call(programs['reprozip'] + ['-v', '-v', '-v', 'pack',
                                        '-d', 'rpz-simple',
                                        'simple.rpz'])
+    # Lists packages
+    check_call(programs['reprounzip'] + ['installpkgs', '--summary',
+                                         'simple.rpz'])
     # Unpack directory
     check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'directory',
                                          'simple.rpz', 'simpledir'])

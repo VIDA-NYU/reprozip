@@ -10,7 +10,6 @@ pack files.
 
 from __future__ import unicode_literals
 
-import logging
 import platform
 from rpaths import Path
 import string
@@ -22,6 +21,10 @@ import reprounzip.common
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
+
+
+PKG_NOT_INSTALLED = "(not installed)"
+PKG_DOESNT_EXIST = "(doesn't exist)"
 
 
 def shell_escape(s):
@@ -65,39 +68,49 @@ class AptInstaller(object):
         options = []
         if assume_yes:
             options.append('-y')
-        returncode = subprocess.call([self.bin, 'install'] +
-                                     options +
-                                     [pkg.name for pkg in packages])
-        if returncode != 0:
-            return returncode
+        required_pkgs = set(pkg.name for pkg in packages)
+        r = subprocess.call([self.bin, 'install'] +
+                            options + list(required_pkgs))
 
-        # Checks package versions
-        pkgs_dict = dict((pkg.name, pkg) for pkg in packages)
+        # Checks on packages
+        pkgs_status = self.get_packages_info(packages)
+        for pkg, status in pkgs_status.itervalues():
+            if status is not None:
+                required_pkgs.discard(pkg.name)
+        if required_pkgs:
+            sys.stderr.write("Error: some packages could not be installed:\n")
+            for pkg in required_pkgs:
+                sys.stderr.write("    %s\n" % pkg)
+
+        return r, pkgs_status
+
+    def get_packages_info(self, packages):
+        if not packages:
+            return {}
+
         p = subprocess.Popen(['dpkg-query',
                               '--showformat=${Package;-50}\t${Version}\n',
                               '-W'] +
                              [pkg.name for pkg in packages],
                              stdout=subprocess.PIPE)
+        # name -> (pkg, installed_version)
+        pkgs_dict = dict((pkg.name, (pkg, PKG_DOESNT_EXIST))
+                         for pkg in packages)
         try:
             for l in p.stdout:
                 fields = l.split()
                 if len(fields) == 2:
                     name = fields[0].decode('ascii')
-                    pkg = pkgs_dict.pop(name)
-                    version = fields[1].decode('ascii')
-                    if pkg.version != version:
-                        sys.stderr.write("Warning: version %s of %s was "
-                                         "installed, instead of %s\n" % (
-                                             version, name, pkg.version))
-                    logging.info("Installed %s %s (original: %s)" % (
-                                 name, version, pkg.version))
+                    status = fields[1].decode('ascii')
+                else:
+                    name = fields[0].decode('ascii')
+                    status = PKG_NOT_INSTALLED
+                pkg, _s = pkgs_dict[name]
+                pkgs_dict[name] = pkg, status
         finally:
             p.wait()
-        if pkgs_dict:
-            sys.stderr.write("Error: some packages could not be installed:\n")
-            for pkg in pkgs_dict.keys():
-                sys.stderr.write("    %s\n" % pkg)
-        assert p.returncode == 0
+
+        return pkgs_dict
 
     def update_script(self):
         return '%s update' % self.bin

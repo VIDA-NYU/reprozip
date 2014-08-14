@@ -23,7 +23,7 @@ import tarfile
 
 from reprounzip.utils import unicode_, download_file
 from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape, busybox_url, join_root
+    shell_escape, busybox_url, join_root, PKG_NOT_INSTALLED, PKG_DOESNT_EXIST
 
 
 def installpkgs(args):
@@ -37,14 +37,38 @@ def installpkgs(args):
 
     installer = select_installer(pack, runs)
 
-    if missing:
-        # With --missing, ignore packages whose files were packed
-        packages = [pkg for pkg in packages if not pkg.packfiles]
+    if args.summary:
+        # Print out a list of packages with their status
+        if missing:
+            print("Packages not present in pack:")
+            packages = [pkg for pkg in packages if not pkg.packfiles]
+        else:
+            print("All packages:")
+        pkgs = installer.get_packages_info(packages)
+        for pkg in packages:
+            print("    %s (required version: %s, status: %s)" % (
+                  pkg.name, pkg.version, pkgs[pkg.name][1]))
+    else:
+        if missing:
+            # With --missing, ignore packages whose files were packed
+            packages = [pkg for pkg in packages if not pkg.packfiles]
 
-    # Installs packages
-    r = installer.install(packages, assume_yes=args.assume_yes)
-    if r != 0:
-        sys.exit(r)
+        # Installs packages
+        r, pkgs = installer.install(packages, assume_yes=args.assume_yes)
+        for pkg in packages:
+            req = pkg.version
+            real = pkgs[pkg.name][1]
+            if real == PKG_NOT_INSTALLED:
+                sys.stderr.write("Warning: package %s was not installed\n" %
+                                 pkg.name)
+            elif real == PKG_DOESNT_EXIST:
+                sys.stderr.write("Warning: package %s does not exist\n" %
+                                 pkg.name)
+            else:
+                sys.stderr.write("Warning: version %s of %s was installed, "
+                                 "instead or %s\n" % (real, pkg.name, req))
+        if r != 0:
+            sys.exit(r)
 
 
 def create_directory(args):
@@ -229,6 +253,9 @@ def setup(subparsers, general_options):
     parser_installpkgs.add_argument(
             '--missing', action='store_true',
             help="Only install packages that weren't packed")
+    parser_installpkgs.add_argument(
+            '--summary', action='store_true',
+            help="Don't install, print which packages are installed or not")
     parser_installpkgs.set_defaults(func=installpkgs)
 
     # Unpacks all the file in a directory to be run with changed PATH and
