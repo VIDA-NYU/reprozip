@@ -1,5 +1,10 @@
+import os
 from setuptools import setup
 import sys
+
+
+# pip workaround
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
 with open('README.rst') as fp:

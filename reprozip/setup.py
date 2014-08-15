@@ -3,6 +3,10 @@ from setuptools import setup, Extension
 import sys
 
 
+# pip workaround
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
+
 # List the source files
 sources = ['pytracer.c', 'tracer.c', 'syscalls.c', 'database.c',
            'ptrace_utils.c', 'utils.c', 'log.c']
