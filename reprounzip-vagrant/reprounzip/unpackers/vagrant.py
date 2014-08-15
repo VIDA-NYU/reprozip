@@ -114,22 +114,13 @@ def create_vagrant(args):
             fp.write('\n')
             # Installs necessary packages
             fp.write(installer.install_script(packages))
-            fp.write('\n\n')
-
-            if use_chroot:
-                for pkg in packages:
-                    fp.write('# Copies files from package %s\n' % pkg.name)
-                    for f in pkg.files:
-                        dest = join_root(PosixPath('root'), f)
-                        fp.write('cp -L %s %s\n' % (
-                                 shell_escape(unicode_(f)),
-                                 shell_escape(unicode_(dest))))
-                    fp.write('\n')
+            fp.write('\n')
             # TODO : Compare package versions (painful because of sh)
 
         # Untar
         if use_chroot:
-            fp.write('mkdir /experimentroot; cd /experimentroot\n')
+            fp.write('\n'
+                     'mkdir /experimentroot; cd /experimentroot\n')
             fp.write('tar zpxf /vagrant/experiment.rpz '
                      '--numeric-owner --strip=1 DATA\n')
             if mount_bind:
@@ -138,8 +129,19 @@ def create_vagrant(args):
                          'mount --bind /dev /experimentroot/dev\n'
                          'mkdir -p /experimentroot/proc\n'
                          'mount --bind /proc /experimentroot/proc\n')
+
+            for pkg in packages:
+                fp.write('\n# Copies files from package %s\n' % pkg.name)
+                for f in pkg.files:
+                    f = f.path
+                    dest = join_root(PosixPath('/experimentroot'), f)
+                    fp.write('mkdir -p %s\n' %
+                             shell_escape(unicode_(f.parent)))
+                    fp.write('cp -L %s %s\n' % (
+                             shell_escape(unicode_(f)),
+                             shell_escape(unicode_(dest))))
         else:
-            fp.write('cd /\n')
+            fp.write('\ncd /\n')
             paths = set()
             pathlist = []
             dataroot = PosixPath('DATA')
