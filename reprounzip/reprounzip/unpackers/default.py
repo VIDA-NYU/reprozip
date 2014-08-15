@@ -140,7 +140,7 @@ def create_directory(args):
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
-                    for a in [run['binary']] + run['argv'][1:])
+                    for a in run['argv'])
             fp.write('%s\n' % cmd)
 
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
