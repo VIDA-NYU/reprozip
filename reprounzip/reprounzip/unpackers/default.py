@@ -176,6 +176,7 @@ def create_chroot(args):
         sys.stderr.write("Will copy files from HOST SYSTEM\n")
         for pkg in packages_not_packed:
             for f in pkg.files:
+                f = Path(f.path)
                 if not f.exists():
                     sys.stderr.write(
                             "Missing file %s (from package %s) on host, "
