@@ -23,7 +23,7 @@ import tarfile
 
 from reprounzip.utils import unicode_, download_file
 from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape, busybox_url, join_root, PKG_NOT_INSTALLED, PKG_DOESNT_EXIST
+    shell_escape, busybox_url, join_root, PKG_NOT_INSTALLED
 
 
 def installpkgs(args):
@@ -60,9 +60,6 @@ def installpkgs(args):
             real = pkgs[pkg.name][1]
             if real == PKG_NOT_INSTALLED:
                 sys.stderr.write("Warning: package %s was not installed\n" %
-                                 pkg.name)
-            elif real == PKG_DOESNT_EXIST:
-                sys.stderr.write("Warning: package %s does not exist\n" %
                                  pkg.name)
             else:
                 sys.stderr.write("Warning: version %s of %s was installed, "

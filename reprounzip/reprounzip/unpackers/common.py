@@ -24,7 +24,6 @@ THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
 PKG_NOT_INSTALLED = "(not installed)"
-PKG_DOESNT_EXIST = "(doesn't exist)"
 
 
 def shell_escape(s):
@@ -94,7 +93,7 @@ class AptInstaller(object):
                              [pkg.name for pkg in packages],
                              stdout=subprocess.PIPE)
         # name -> (pkg, installed_version)
-        pkgs_dict = dict((pkg.name, (pkg, PKG_DOESNT_EXIST))
+        pkgs_dict = dict((pkg.name, (pkg, PKG_NOT_INSTALLED))
                          for pkg in packages)
         try:
             for l in p.stdout:
