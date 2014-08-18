@@ -75,9 +75,9 @@ def get_files(conn):
     """Find all the files used by the experiment by reading the trace.
     """
     files = {}
-    inputs = [set()]
+    access_files = [set()]
 
-    # Finds run timestamps, so we can sort input files by run
+    # Finds run timestamps, so we can sort input/output files by run
     proc_cursor = conn.cursor()
     executions = proc_cursor.execute(
             '''
@@ -127,7 +127,7 @@ def get_files(conn):
         # Stays on the current run
         while run_timestamps and r_timestamp > run_timestamps[0]:
             del run_timestamps[0]
-            inputs.append(set())
+            access_files.append(set())
 
         # Adds symbolic links as read files
         for filename in find_all_links(r_name, False):
@@ -149,7 +149,7 @@ def get_files(conn):
 
         # Identifies input files
         if r_name.is_file():
-            inputs[-1].add(f)
+            access_files[-1].add(f)
     exec_cursor.close()
     open_cursor.close()
 
@@ -166,7 +166,21 @@ def get_files(conn):
                # not in a system directory
                not any(fi.path.lies_under(m)
                        for m in magic_dirs + system_dirs)]
-              for lst in inputs]
+              for lst in access_files]
+
+    # Identify output files
+    outputs = [[fi.path
+                for fi in lst
+                # Output files are regular files,
+                if fi.path.is_file() and
+                # WRITTEN
+                fi.what == TracedFile.WRITTEN and
+                # not in /tmp
+                not fi.path.lies_under('/tmp') and
+                # not in a system directory
+                not any(fi.path.lies_under(m)
+                        for m in magic_dirs + system_dirs)]
+               for lst in access_files]
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
@@ -185,7 +199,7 @@ def get_files(conn):
              for fi in files.values()
              if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                           for m in magic_dirs)]
-    return files, inputs
+    return files, inputs, outputs
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -256,7 +270,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
     conn.row_factory = sqlite3.Row
 
     # Reads info from database
-    files, inputs = get_files(conn)
+    files, inputs, outputs = get_files(conn)
 
     # Identifies which file comes from which package
     if sort_packages:
@@ -299,8 +313,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 WHERE p.parent ISNULL
                 ORDER BY p.id;
                 ''')
-    for (r_name, r_argv, r_envp, r_workingdir, r_exitcode), input_files in (
-            izip(executions, inputs)):
+    for ((r_name, r_argv, r_envp, r_workingdir, r_exitcode),
+            input_files, output_files) in (izip(executions, inputs, outputs)):
         # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
@@ -312,21 +326,25 @@ def write_configuration(directory, sort_packages, overwrite=False):
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        # Labels input files
         # Gets files from command line
         command_line_files = {}
         for i, arg in enumerate(argv):
             p = Path(r_workingdir, arg).resolve()
             if p.is_file():
                 command_line_files[p] = i
+        input_files_on_cmdline = sum(1
+                                     for in_file in input_files
+                                     if in_file in command_line_files)
+        output_files_on_cmdline = sum(1
+                                      for out_file in input_files
+                                      if out_file in command_line_files)
+
+        # Labels input files
         input_files_dict = {}
-        command_line_args = len([in_file
-                                 for in_file in input_files
-                                 if in_file in command_line_files])
         for in_file in input_files:
             # If file is on the command line
             if in_file in command_line_files:
-                if command_line_args > 1:
+                if input_files_on_cmdline > 1:
                     label = "arg_%d" % command_line_files[in_file]
                 else:
                     label = "arg"
@@ -343,6 +361,28 @@ def write_configuration(directory, sort_packages, overwrite=False):
         # TODO : Note that right now, we keep as input files the ones that
         # don't appear on the command line
 
+        # Labels output files
+        output_files_dict = {}
+        for out_file in output_files:
+            # If file is on the command line
+            if out_file in command_line_files:
+                if output_files_on_cmdline > 1:
+                    label = "arg_%d" % command_line_files[out_file]
+                else:
+                    label = "arg"
+            # Else, use file's name
+            else:
+                label = out_file.unicodename
+            # Make labels unique
+            uniquelabel = label
+            i = 1
+            while uniquelabel in output_files_dict:
+                i += 1
+                uniquelabel = '%s_%d' % (label, i)
+            output_files_dict[uniquelabel] = out_file.path
+        # TODO : Note that right now, we keep as output files the ones that
+        # don't appear on the command line
+
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': Path(r_workingdir).path,
                      'architecture': platform.machine().lower(),
@@ -354,7 +394,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
                      'gid': os.getgid(),
                      'signal' if r_exitcode & 0x0100 else 'exitcode':
                          r_exitcode & 0xFF,
-                     'input_files': input_files_dict})
+                     'input_files': input_files_dict,
+                     'output_files': output_files_dict})
     cur.close()
 
     conn.close()
