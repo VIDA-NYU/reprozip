@@ -65,7 +65,7 @@ else:
 
 with in_temp_dir():
     # ########################################
-    # 'simple' program: trace, pack, unpack
+    # 'simple' program: trace, pack, info, unpack
     #
 
     # Build
@@ -91,6 +91,8 @@ with in_temp_dir():
     check_call(programs['reprozip'] + ['-v', '-v', '-v', 'pack',
                                        '-d', 'rpz-simple',
                                        'simple.rpz'])
+    # Info
+    check_call(programs['reprounzip'] + ['info', 'simple.rpz'])
     # Lists packages
     check_call(programs['reprounzip'] + ['installpkgs', '--summary',
                                          'simple.rpz'])

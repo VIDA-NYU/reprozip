@@ -16,14 +16,16 @@ This file contains the default plugins that come with reprounzip:
 
 from __future__ import unicode_literals
 
-from rpaths import PosixPath, Path
+import platform
+from rpaths import PosixPath, DefaultAbstractPath, Path
 import subprocess
 import sys
 import tarfile
 
+from reprounzip.unpackers.common import THIS_DISTRIBUTION, COMPAT_OK, \
+    COMPAT_NO, load_config, select_installer, shell_escape, busybox_url, \
+    join_root, PKG_NOT_INSTALLED
 from reprounzip.utils import unicode_, download_file
-from reprounzip.unpackers.common import load_config, select_installer, \
-    shell_escape, busybox_url, join_root, PKG_NOT_INSTALLED
 
 
 def installpkgs(args):
@@ -78,6 +80,10 @@ def create_directory(args):
     target = Path(args.target[0])
     if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    if DefaultAbstractPath is not PosixPath:
+        sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
 
     # Loads config
@@ -156,6 +162,10 @@ def create_chroot(args):
     target = Path(args.target[0])
     if target.exists():
         sys.stderr.write("Error: Target directory exists\n")
+        sys.exit(1)
+
+    if DefaultAbstractPath is not PosixPath:
+        sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
 
     # Loads config
@@ -238,41 +248,71 @@ def create_chroot(args):
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
-def setup(subparsers, general_options):
-    # Install the required packages
-    parser_installpkgs = subparsers.add_parser(
-            'installpkgs', parents=[general_options],
-            help="Installs the required packages on this system")
-    parser_installpkgs.add_argument('pack', nargs=1,
-                                    help="Pack to process")
-    parser_installpkgs.add_argument(
+def test_same_pkgmngr(pack, config, **kwargs):
+    """Compatibility test: platform is Linux and uses same package manager.
+    """
+    runs, packages, other_files = config
+
+    orig_distribution = runs[0]['distribution'][0].lower()
+    if not THIS_DISTRIBUTION:
+        return COMPAT_NO, "This machine is not running Linux"
+    elif THIS_DISTRIBUTION == orig_distribution:
+        return COMPAT_OK
+    else:
+        return COMPAT_NO, "Different distributions. Then: %s, now: %s" % (
+                orig_distribution, THIS_DISTRIBUTION)
+
+
+def test_linux_same_arch(pack, config, **kwargs):
+    """Compatibility test: this platform is Linux and arch is compatible.
+    """
+    runs, packages, other_files = config
+
+    orig_architecture = runs[0]['architecture']
+    current_architecture = platform.machine().lower()
+    if platform.system().lower() != 'linux':
+        return COMPAT_NO, "This machine is not running Linux"
+    elif (orig_architecture == current_architecture or
+            (orig_architecture == 'i386' and current_architecture == 'amd64')):
+        return COMPAT_OK
+    else:
+        return COMPAT_NO, "Different architectures. Then: %s, now: %s" % (
+                orig_architecture, current_architecture)
+
+
+def setup_installpkgs(parser):
+    """"Installs the required packages on this system
+    """
+    parser.add_argument('pack', nargs=1, help="Pack to process")
+    parser.add_argument(
             '-y', '--assume-yes',
             help="Assumes yes for package manager's questions (if supported)")
-    parser_installpkgs.add_argument(
+    parser.add_argument(
             '--missing', action='store_true',
             help="Only install packages that weren't packed")
-    parser_installpkgs.add_argument(
+    parser.add_argument(
             '--summary', action='store_true',
             help="Don't install, print which packages are installed or not")
-    parser_installpkgs.set_defaults(func=installpkgs)
+    parser.set_defaults(func=installpkgs)
 
-    # Unpacks all the file in a directory to be run with changed PATH and
-    # LD_LIBRARY_PATH
-    parser_directory = subparsers.add_parser(
-            'directory', parents=[general_options],
-            help="Unpacks the files in a directory")
-    parser_directory.add_argument('pack', nargs=1,
-                                  help="Pack to extract")
-    parser_directory.add_argument('target', nargs=1,
-                                  help="Directory to create")
-    parser_directory.set_defaults(func=create_directory)
+    return {'test_compatibility': test_same_pkgmngr}
 
-    # Unpacks all the file so the experiment can be run with chroot
-    parser_chroot = subparsers.add_parser(
-            'chroot', parents=[general_options],
-            help="Unpacks the files so the experiment can be run with chroot")
-    parser_chroot.add_argument('pack', nargs=1,
-                               help="Pack to extract")
-    parser_chroot.add_argument('target', nargs=1,
-                               help="Directory to create")
-    parser_chroot.set_defaults(func=create_chroot)
+
+def setup_directory(parser):
+    """Unpacks the files in a directory
+    """
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.set_defaults(func=create_directory)
+
+    return {'test_compatibility': test_linux_same_arch}
+
+
+def setup_chroot(parser):
+    """Unpacks the files so the experiment can be run with chroot
+    """
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.set_defaults(func=create_chroot)
+
+    return {'test_compatibility': test_linux_same_arch}

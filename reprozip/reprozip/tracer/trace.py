@@ -270,7 +270,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         environ = dict(v.split('=', 1) for v in envp)
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': Path(r_workingdir).path,
-                     'architecture': platform.machine(),
+                     'architecture': platform.machine().lower(),
                      'distribution': distribution,
                      'hostname': platform.node(),
                      'system': [platform.system(), platform.release()],

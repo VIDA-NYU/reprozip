@@ -15,12 +15,13 @@ from __future__ import unicode_literals
 
 import argparse
 import logging
+import os
 from rpaths import PosixPath, Path
 import sys
 import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer,\
-    shell_escape, busybox_url, join_root
+    shell_escape, busybox_url, join_root, COMPAT_OK, COMPAT_MAYBE
 from reprounzip.utils import unicode_
 
 
@@ -239,28 +240,37 @@ fi
           "'sh /vagrant/script.sh'" % target_readable)
 
 
-def setup(subparsers, general_options):
+def test_has_vagrant(pack, **kwargs):
+    pathlist = os.environ['PATH'].split(os.pathsep) + ['.']
+    pathexts = os.environ.get('PATHEXT', '').split(os.pathsep)
+    for path in pathlist:
+        for ext in pathexts:
+            fullpath = os.path.join(path, 'vagrant') + ext
+            if os.path.isfile(fullpath):
+                return COMPAT_OK
+    return COMPAT_MAYBE, "vagrant not found in PATH"
+
+
+def setup(parser):
+    """Unpacks the files and sets up the experiment to be run in Vagrant
+    """
     # Creates a virtual machine with Vagrant
-    parser_vagrant = subparsers.add_parser(
-            'vagrant', parents=[general_options],
-            help="Unpacks the files and sets up the experiment to be run in "
-            "Vagrant")
-    parser_vagrant.add_argument('pack', nargs=1,
-                                help="Pack to extract")
-    parser_vagrant.add_argument('target', nargs=1,
-                                help="Directory to create")
-    parser_vagrant.add_argument(
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.add_argument(
             '--use-chroot', action='store_true',
             default=True,
             help=argparse.SUPPRESS)
-    parser_vagrant.add_argument(
+    parser.add_argument(
             '--no-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
-    parser_vagrant.add_argument(
+    parser.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (if "
             "--use-chroot is set)")
-    parser_vagrant.set_defaults(func=create_vagrant)
+    parser.set_defaults(func=create_vagrant)
+
+    return {'test_compatibility': test_has_vagrant}
