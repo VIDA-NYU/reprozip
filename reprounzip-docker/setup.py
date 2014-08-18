@@ -8,17 +8,17 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 with open('README.rst') as fp:
     description = fp.read()
-setup(name='reprounzip-vagrant',
+setup(name='reprounzip-docker',
       version='0.3',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
-              'vagrant = reprounzip.unpackers.vagrant:setup']},
+              'docker = reprounzip.unpackers.docker:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
           'reprounzip>=0.3',
           'rpaths>=0.4'],
-      description="Allows the ReproZip unpacker to create virtual machines",
+      description="Allows the ReproZip unpacker to create Docker containers",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
@@ -27,7 +27,7 @@ setup(name='reprounzip-vagrant',
       long_description=description,
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
-                'vida', 'nyu', 'vagrant'],
+                'vida', 'nyu', 'docker'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
