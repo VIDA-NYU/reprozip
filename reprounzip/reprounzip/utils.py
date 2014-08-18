@@ -27,8 +27,11 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.request import Request, urlopen
+    izip = zip
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
+    import itertools
+    izip = itertools.izip
 
 
 if PY3:

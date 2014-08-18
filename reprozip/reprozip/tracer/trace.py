@@ -25,7 +25,7 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, hsize, find_all_links
+from reprozip.utils import PY3, izip, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -75,6 +75,19 @@ def get_files(conn):
     """Find all the files used by the experiment by reading the trace.
     """
     files = {}
+    inputs = [set()]
+
+    # Finds run timestamps, so we can sort input files by run
+    proc_cursor = conn.cursor()
+    executions = proc_cursor.execute(
+            '''
+            SELECT timestamp
+            FROM processes
+            WHERE parent ISNULL
+            ORDER BY id;
+            ''')
+    run_timestamps = [r_timestamp for r_timestamp, in executions][1:]
+    proc_cursor.close()
 
     # Adds dynamic linkers
     for libdir in (Path('/lib'), Path('/lib64')):
@@ -111,6 +124,11 @@ def get_files(conn):
             r_name, r_mode, r_timestamp = data
         r_name = Path(r_name)
 
+        # Stays on the current run
+        while run_timestamps and r_timestamp > run_timestamps[0]:
+            del run_timestamps[0]
+            inputs.append(set())
+
         # Adds symbolic links as read files
         for filename in find_all_links(r_name, False):
             if filename not in files:
@@ -128,8 +146,27 @@ def get_files(conn):
             f.write()
         elif r_mode & FILE_READ:
             f.read()
+
+        # Identifies input files
+        if r_name.is_file():
+            inputs[-1].add(f)
     exec_cursor.close()
     open_cursor.close()
+
+    # Further filters input files
+    inputs = [[fi.path
+               for fi in lst
+               # Input files are regular files,
+               if fi.path.is_file() and
+               # ONLY_READ,
+               fi.what == TracedFile.ONLY_READ and
+               # not executable,
+               # FIXME : currently disabled. Maybe only remove executed files?
+               # not fi.path.stat().st_mode & 0b111 and
+               # not in a system directory
+               not any(fi.path.lies_under(m)
+                       for m in magic_dirs + system_dirs)]
+              for lst in inputs]
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
@@ -144,10 +181,11 @@ def get_files(conn):
                 "shouldn't change their input files:\n%s" %
                 ", ".join(fi.path for fi in read_then_written_files))
 
-    return [fi
-            for fi in files.values()
-            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                         for m in magic_dirs)]
+    files = [fi
+             for fi in files.values()
+             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                          for m in magic_dirs)]
+    return files, inputs
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -218,7 +256,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
     conn.row_factory = sqlite3.Row
 
     # Reads info from database
-    files = get_files(conn)
+    files, inputs = get_files(conn)
 
     # Identifies which file comes from which package
     if sort_packages:
@@ -246,6 +284,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ORDER BY p.id DESC
                 LIMIT 1;
                 ''')
+        inputs = inputs[-1:]
 
         files, packages = merge_files(files, packages,
                                       oldfiles,
@@ -260,14 +299,50 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 WHERE p.parent ISNULL
                 ORDER BY p.id;
                 ''')
-    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
+    for (r_name, r_argv, r_envp, r_workingdir, r_exitcode), input_files in (
+            izip(executions, inputs)):
+        # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
             argv = argv[:-1]
+
+        # Decodes environment
         envp = r_envp.split('\0')
         if not envp[-1]:
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
+
+        # Labels input files
+        # Gets files from command line
+        command_line_files = {}
+        for i, arg in enumerate(argv):
+            p = Path(r_workingdir, arg).resolve()
+            if p.is_file():
+                command_line_files[p] = i
+        input_files_dict = {}
+        command_line_args = len([in_file
+                                 for in_file in input_files
+                                 if in_file in command_line_files])
+        for in_file in input_files:
+            # If file is on the command line
+            if in_file in command_line_files:
+                if command_line_args > 1:
+                    label = "arg_%d" % command_line_files[in_file]
+                else:
+                    label = "arg"
+            # Else, use file's name
+            else:
+                label = in_file.unicodename
+            # Make labels unique
+            uniquelabel = label
+            i = 1
+            while uniquelabel in input_files_dict:
+                i += 1
+                uniquelabel = '%s_%d' % (label, i)
+            input_files_dict[uniquelabel] = in_file.path
+        # TODO : Note that right now, we keep as input files the ones that
+        # don't appear on the command line
+
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': Path(r_workingdir).path,
                      'architecture': platform.machine().lower(),
@@ -278,7 +353,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
                      'uid': os.getuid(),
                      'gid': os.getgid(),
                      'signal' if r_exitcode & 0x0100 else 'exitcode':
-                         r_exitcode & 0xFF})
+                         r_exitcode & 0xFF,
+                     'input_files': input_files_dict})
     cur.close()
 
     conn.close()
