@@ -31,7 +31,7 @@ from reprounzip.utils import hsize
 __version__ = '0.3'
 
 
-unpackers = []
+unpackers = {}
 
 
 def print_info(args):
@@ -131,7 +131,7 @@ def print_info(args):
     # Unpacker compatibility
     print("----- Unpackers -----")
     unpacker_status = {}
-    for upk in unpackers:
+    for name, upk in unpackers.items():
         if 'test_compatibility' in upk:
             compat = upk['test_compatibility']
             if callable(compat):
@@ -140,9 +140,9 @@ def print_info(args):
                 compat, msg = compat
             else:
                 msg = None
-            unpacker_status.setdefault(compat, []).append((upk['name'], msg))
+            unpacker_status.setdefault(compat, []).append((name, msg))
         else:
-            unpacker_status.setdefault(None, []).append((upk['name'], None))
+            unpacker_status.setdefault(None, []).append((name, None))
     for s, n in [(COMPAT_OK, "Compatible"), (COMPAT_MAYBE, "Unknown"),
                  (COMPAT_NO, "Incompatible")]:
         if s not in unpacker_status:
@@ -194,16 +194,15 @@ def main():
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
         setup_function = entry_point.load()
-        info = setup_function(subparsers=subparsers, general_options=options)
+        name = entry_point.name
+        descr = setup_function.__doc__.strip()
+        plugin_parser = subparsers.add_parser(name,
+                                              parents=[options],
+                                              help=descr)
+        info = setup_function(plugin_parser)
         if info is None:
-            info = [{}]
-        for upk in info:
-            upk['project'] = entry_point.dist.project_name
-            upk['ep_name'] = '%s/%s' % (entry_point.dist.project_name,
-                                        entry_point.name)
-            if 'name' not in upk:
-                upk['name'] = upk['ep_name']
-        unpackers += info
+            info = {}
+        unpackers[name] = info
 
     args = parser.parse_args()
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
