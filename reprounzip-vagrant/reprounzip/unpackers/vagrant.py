@@ -20,7 +20,7 @@ from rpaths import PosixPath, Path
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config, select_installer,\
+from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, busybox_url, join_root, COMPAT_OK, COMPAT_MAYBE
 from reprounzip.utils import unicode_
 
@@ -42,7 +42,7 @@ def select_box(runs):
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.01 'Precise' instead "
+            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
                              "of '%s'\n" % version)
         if architecture == 'i686':
             return 'ubuntu', 'hashicorp/precise32'
@@ -53,9 +53,9 @@ def select_box(runs):
     elif distribution != 'debian':
         sys.stderr.write("Warning: unsupported distribution %s, using Debian"
                          "\n" % distribution)
-    if (distribution == 'debian' and
-            version != '7' and not version.startswith('jessie')):
-        sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
+
+    elif version != '7' and not version.startswith('wheezy'):
+        sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
                          "\n" % version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
