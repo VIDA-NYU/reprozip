@@ -211,35 +211,29 @@ def create_chroot(args):
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
-def setup(subparsers, general_options):
-    # Install the required packages
-    parser_installpkgs = subparsers.add_parser(
-            'installpkgs', parents=[general_options],
-            help="Installs the required packages on this system")
-    parser_installpkgs.add_argument('pack', nargs=1,
-                                    help="Pack to process")
-    parser_installpkgs.add_argument(
+def setup_installpkgs(parser):
+    """Installs the required packages on this system
+    """
+    parser.add_argument('pack', nargs=1, help="Pack to process")
+    parser.add_argument(
             '-y', '--assume-yes',
             help="Assumes yes for package manager's questions (if supported)")
-    parser_installpkgs.set_defaults(func=installpkgs)
+    parser.set_defaults(func=installpkgs)
 
+
+def setup_directory(parser):
+    """Unpacks the files in a directory
+    """
     # Unpacks all the file in a directory to be run with changed PATH and
     # LD_LIBRARY_PATH
-    parser_directory = subparsers.add_parser(
-            'directory', parents=[general_options],
-            help="Unpacks the files in a directory")
-    parser_directory.add_argument('pack', nargs=1,
-                                  help="Pack to extract")
-    parser_directory.add_argument('target', nargs=1,
-                                  help="Directory to create")
-    parser_directory.set_defaults(func=create_directory)
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.set_defaults(func=create_directory)
 
-    # Unpacks all the file so the experiment can be run with chroot
-    parser_chroot = subparsers.add_parser(
-            'chroot', parents=[general_options],
-            help="Unpacks the files so the experiment can be run with chroot")
-    parser_chroot.add_argument('pack', nargs=1,
-                               help="Pack to extract")
-    parser_chroot.add_argument('target', nargs=1,
-                               help="Directory to create")
-    parser_chroot.set_defaults(func=create_chroot)
+
+def setup_chroot(parser):
+    """Unpacks the files so the experiment can be run with chroot
+    """
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.set_defaults(func=create_chroot)

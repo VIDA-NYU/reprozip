@@ -236,22 +236,18 @@ fi
           "'sh /vagrant/script.sh'" % target_readable)
 
 
-def setup(subparsers, general_options):
+def setup(parser):
+    """Unpacks the files and sets up the experiment to be run in Vagrant
+    """
     # Creates a virtual machine with Vagrant
-    parser_vagrant = subparsers.add_parser(
-            'vagrant', parents=[general_options],
-            help="Unpacks the files and sets up the experiment to be run in "
-            "Vagrant")
-    parser_vagrant.add_argument('pack', nargs=1,
-                                help="Pack to extract")
-    parser_vagrant.add_argument('target', nargs=1,
-                                help="Directory to create")
-    parser_vagrant.add_argument(
+    parser.add_argument('pack', nargs=1, help="Pack to extract")
+    parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.add_argument(
             '--use-chroot', action='store_true',
             help="Use a chroot and the original files in the virtual machine")
-    parser_vagrant.add_argument(
+    parser.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (if "
             "--use-chroot is set)")
-    parser_vagrant.set_defaults(func=create_vagrant)
+    parser.set_defaults(func=create_vagrant)

@@ -53,7 +53,11 @@ def main():
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
         setup_function = entry_point.load()
-        setup_function(subparsers=subparsers, general_options=options)
+        descr = setup_function.__doc__.strip()
+        plugin_parser = subparsers.add_parser(entry_point.name,
+                                              parents=[options],
+                                              help=descr)
+        setup_function(plugin_parser)
 
     args = parser.parse_args()
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]

@@ -277,19 +277,17 @@ def graph(args):
         generate(Path(args.target[0]), Path(args.dir), args.all_forks)
 
 
-def setup(subparsers, general_options):
-    parser_graph = subparsers.add_parser(
-            'graph', parents=[general_options],
-            help="Generates a provenance graph from the trace data")
-    parser_graph.add_argument('target', nargs=1,
-                              help="Destination DOT file")
-    parser_graph.add_argument('-F', '--all-forks', action='store_true',
-                              help="Show forked processes before they exec")
-    parser_graph.add_argument(
+def setup(parser):
+    """Generates a provenance graph from the trace data
+    """
+    parser.add_argument('target', nargs=1, help="Destination DOT file")
+    parser.add_argument('-F', '--all-forks', action='store_true',
+                        help="Show forked processes before they exec")
+    parser.add_argument(
             '-d', '--dir', default='.reprozip',
             help="where the database and configuration file are stored "
             "(default: ./.reprozip)")
-    parser_graph.add_argument(
+    parser.add_argument(
             'pack', nargs=argparse.OPTIONAL,
             help="Pack to extract (defaults to reading from --dir)")
-    parser_graph.set_defaults(func=graph)
+    parser.set_defaults(func=graph)
