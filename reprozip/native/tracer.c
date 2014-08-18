@@ -321,6 +321,10 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 break;
             if(unknown >= nprocs)
             {
+                /* This can happen because UNKNOWN processes are the forked
+                 * processes whose creator has not returned yet. Therefore, if
+                 * there is an UNKNOWN process, its creator has to exist as
+                 * well (and it is not UNKNOWN). */
                 log_critical(0, "only UNKNOWN processes remaining (%d)",
                              (unsigned int)nprocs);
                 return -1;
