@@ -6,6 +6,7 @@
 
 from contextlib import contextmanager
 import os
+import re
 from rpaths import Path, unicode
 import subprocess
 import sys
@@ -184,6 +185,21 @@ with in_temp_dir():
     #
 
     check_call(programs['reprozip'] + ['-v', '-v', 'testrun', './doesntexist'])
+
+    # ########################################
+    # 'connect' program: testrun
+    #
+
+    # Build
+    build('connect', ['connect.c'])
+    # Trace
+    p = subprocess.Popen(programs['reprozip'] + ['-v', 'testrun', './connect'],
+                         stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    stderr = stderr.split('\n')
+    assert not any('program exited with non-zero code' in l for l in stderr)
+    assert any(l for l in stderr
+               if re.search(r'process connected to [0-9.]+:80', l))
 
     # ########################################
     # Copies back coverage report
