@@ -180,6 +180,12 @@ with in_temp_dir():
         print("Can't try exec_echo transitions: not running on 64bits")
 
     # ########################################
+    # Tracing non-existing program
+    #
+
+    check_call(programs['reprozip'] + ['-v', '-v', 'testrun', './doesntexist'])
+
+    # ########################################
     # Copies back coverage report
     #
 

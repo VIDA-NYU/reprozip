@@ -105,40 +105,6 @@ char *get_wd(void)
     }
 }
 
-char *get_p_wd(pid_t tid)
-{
-    /* PATH_MAX has issues, don't use it */
-    size_t size = 1024;
-    char *path;
-    char dummy;
-    char *proclink;
-    int len = snprintf(&dummy, 1, "/proc/%d/cwd", tid);
-    proclink = malloc(len + 1);
-    snprintf(proclink, len + 1, "/proc/%d/cwd", tid);
-    for(;;)
-    {
-        int ret;
-        path = malloc(size);
-        ret = readlink(proclink, path, size);
-        if(ret < 0)
-        {
-            free(path);
-            perror("readlink failed");
-            return strdup("/UNKNOWN");
-        }
-        else if((size_t)ret >= size)
-        {
-            free(path);
-            size <<= 1;
-        }
-        else
-        {
-            path[ret] = '\0';
-            return path;
-        }
-    }
-}
-
 char *read_line(char *buffer, size_t *size, FILE *fp)
 {
     size_t pos = 0;
@@ -183,6 +149,7 @@ int path_is_dir(const char *pathname)
     {
         if(trace_verbosity >= 1)
         {
+            /* shouldn't happen because a tracer process just accessed it */
             log_error_(0, "error stat()ing %s: ", pathname);
             perror(NULL);
         }
