@@ -19,6 +19,7 @@ import locale
 import logging
 from pkg_resources import iter_entry_points
 import sys
+import textwrap
 
 from reprounzip.pack_info import print_info
 
@@ -27,6 +28,21 @@ __version__ = '0.3'
 
 
 unpackers = {}
+
+
+# FIXME : argparse notes that we shouldn't subclass this...
+# "Only the name of this class is considered a public API. All the methods
+# provided by the class are considered an implementation detail."
+
+class DescriptionHelpFormatter(argparse.HelpFormatter):
+    """Variant of HelpFormatter that keeps paragraphs in descriptions.
+    """
+    def _fill_text(self, text, width, indent):
+        # Splits into paragraphs and text-wraps
+        paragraphs = [textwrap.fill(p.strip(), width)
+                      for p in text.split('\n\n')]
+        # Rebuilds description
+        return '\n\n'.join(paragraphs)
 
 
 def main():
@@ -68,10 +84,14 @@ def main():
     for entry_point in iter_entry_points('reprounzip.unpackers'):
         setup_function = entry_point.load()
         name = entry_point.name
+        # Docstring is used as description (used for detailed help)
         descr = setup_function.__doc__.strip()
-        plugin_parser = subparsers.add_parser(name,
-                                              parents=[options],
-                                              help=descr)
+        # First line of docstring is the help (used for general help)
+        descr_1 = descr.split('\n', 1)[0]
+        plugin_parser = subparsers.add_parser(
+                name, parents=[options],
+                help=descr_1, description=descr,
+                formatter_class=DescriptionHelpFormatter)
         info = setup_function(plugin_parser)
         if info is None:
             info = {}
