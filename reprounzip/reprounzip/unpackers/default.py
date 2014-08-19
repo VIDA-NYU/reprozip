@@ -31,6 +31,10 @@ from reprounzip.utils import unicode_, download_file
 def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """
+    if not THIS_DISTRIBUTION:
+        sys.stderr.write("Error: Not running on Linux\n")
+        sys.exit(1)
+
     pack = args.pack[0]
     missing = args.missing
 
