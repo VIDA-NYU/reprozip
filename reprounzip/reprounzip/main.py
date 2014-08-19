@@ -19,7 +19,6 @@ import locale
 import logging
 from pkg_resources import iter_entry_points
 import sys
-import textwrap
 
 from reprounzip.pack_info import print_info
 
@@ -28,21 +27,6 @@ __version__ = '0.3'
 
 
 unpackers = {}
-
-
-# FIXME : argparse notes that we shouldn't subclass this...
-# "Only the name of this class is considered a public API. All the methods
-# provided by the class are considered an implementation detail."
-
-class DescriptionHelpFormatter(argparse.HelpFormatter):
-    """Variant of HelpFormatter that keeps paragraphs in descriptions.
-    """
-    def _fill_text(self, text, width, indent):
-        # Splits into paragraphs and text-wraps
-        paragraphs = [textwrap.fill(p.strip(), width)
-                      for p in text.split('\n\n')]
-        # Rebuilds description
-        return '\n\n'.join(paragraphs)
 
 
 def main():
@@ -91,7 +75,7 @@ def main():
         plugin_parser = subparsers.add_parser(
                 name, parents=[options],
                 help=descr_1, description=descr,
-                formatter_class=DescriptionHelpFormatter)
+                formatter_class=argparse.RawDescriptionHelpFormatter)
         info = setup_function(plugin_parser)
         if info is None:
             info = {}
