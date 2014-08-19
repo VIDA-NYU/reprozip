@@ -31,6 +31,13 @@ COMPAT_NO = 1
 COMPAT_MAYBE = 2
 
 
+def composite_action(*functions):
+    def wrapper(args):
+        for function in functions:
+            function(args)
+    return wrapper
+
+
 def shell_escape(s):
     if isinstance(s, bytes):
         s = s.decode('utf-8')
