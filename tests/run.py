@@ -4,6 +4,7 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+import argparse
 from contextlib import contextmanager
 import os
 import re
@@ -26,9 +27,9 @@ else:
 reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
 reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
 
-programs = {
-    'reprozip': python + [reprozip_main.absolute().path],
-    'reprounzip': python + [reprounzip_main.absolute().path]}
+verbose = ['-v'] * 3
+rpz = python + [reprozip_main.absolute().path] + verbose
+rpuz = python + [reprounzip_main.absolute().path] + verbose
 
 
 @contextmanager
@@ -55,13 +56,10 @@ def build(target, sources, args=[]):
                           args)
 
 
-if len(sys.argv) == 2 and sys.argv[1] == '--interactive':
-    interactive = True
-elif len(sys.argv) == 1:
-    interactive = False
-else:
-    print("Usage: run.py [--interactive]")
-    sys.exit(1)
+parser = argparse.ArgumentParser(description="reprozip tests")
+parser.add_argument('--interactive', action='store_true')
+args = parser.parse_args()
+interactive = args.interactive
 
 
 with in_temp_dir():
@@ -72,11 +70,10 @@ with in_temp_dir():
     # Build
     build('simple', ['simple.c'])
     # Trace
-    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'trace',
-                                       '-d', 'rpz-simple',
-                                       './simple',
-                                       (tests / 'simple_input.txt').path,
-                                       'simple_output.txt'])
+    check_call(rpz + ['trace', '-d', 'rpz-simple',
+                      './simple',
+                      (tests / 'simple_input.txt').path,
+                      'simple_output.txt'])
     orig_output_location = Path('simple_output.txt').absolute()
     assert orig_output_location.is_file()
     with orig_output_location.open(encoding='utf-8') as fp:
@@ -89,17 +86,13 @@ with in_temp_dir():
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
     # Pack
-    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'pack',
-                                       '-d', 'rpz-simple',
-                                       'simple.rpz'])
+    check_call(rpz + ['pack', '-d', 'rpz-simple', 'simple.rpz'])
     # Info
-    check_call(programs['reprounzip'] + ['info', 'simple.rpz'])
+    check_call(rpuz + ['info', 'simple.rpz'])
     # Lists packages
-    check_call(programs['reprounzip'] + ['installpkgs', '--summary',
-                                         'simple.rpz'])
+    check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
     # Unpack directory
-    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'directory',
-                                         'simple.rpz', 'simpledir'])
+    check_call(rpuz + ['directory', 'simple.rpz', 'simpledir'])
     # Run script
     check_call(['cat', 'simpledir/script.sh'])
     check_call(['sh', 'simpledir/script.sh'])
@@ -109,8 +102,7 @@ with in_temp_dir():
         assert fp.read().strip() == '42'
     output_in_dir.remove()
     # Unpack chroot
-    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'chroot',
-                                         'simple.rpz', 'simplechroot'])
+    check_call(rpuz + ['chroot', 'simple.rpz', 'simplechroot'])
     # Run chroot
     check_call(['sudo', 'sh', 'simplechroot/script.sh'])
     output_in_chroot = join_root(Path('simplechroot/root'),
@@ -124,9 +116,8 @@ with in_temp_dir():
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'vagrant',
-                                         '--use-chroot', 'simple.rpz',
-                                         '/vagrant/simplevagrantchroot'])
+    check_call(rpuz + ['vagrant', '--use-chroot', 'simple.rpz',
+                       '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
         if interactive:
@@ -134,10 +125,9 @@ with in_temp_dir():
             sys.stdin.readline()
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
-    # Unpack usual Vagrant
-    check_call(programs['reprounzip'] + ['-v', '-v', '-v', 'vagrant',
-                                         '--no-use-chroot', 'simple.rpz',
-                                         '/vagrant/simplevagrant'])
+    # Unpack Vagrant without chroot
+    check_call(rpuz + ['vagrant', '--no-use-chroot', 'simple.rpz',
+                       '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
         if interactive:
@@ -153,8 +143,7 @@ with in_temp_dir():
     # Build
     build('threads', ['threads.c'], ['-lpthread'])
     # Trace
-    check_call(programs['reprozip'] + ['-v', '-v', '-v',
-                                       'testrun', './threads'])
+    check_call(rpz + ['testrun', './threads'])
 
     # ########################################
     # 'segv' program: testrun
@@ -163,7 +152,7 @@ with in_temp_dir():
     # Build
     build('segv', ['segv.c'])
     # Trace
-    check_call(programs['reprozip'] + ['-v', '-v', '-v', 'testrun', './segv'])
+    check_call(rpz + ['testrun', './segv'])
 
     # ########################################
     # 'exec_echo' program: testrun
@@ -175,8 +164,7 @@ with in_temp_dir():
         # Build
         build('exec_echo', ['exec_echo.c'], ['-m32'])
         # Trace
-        check_call(programs['reprozip'] + ['-v', '-v', '-v', 'testrun',
-                                           './exec_echo'])
+        check_call(rpz + ['testrun', './exec_echo'])
     else:
         print("Can't try exec_echo transitions: not running on 64bits")
 
@@ -184,7 +172,7 @@ with in_temp_dir():
     # Tracing non-existing program
     #
 
-    check_call(programs['reprozip'] + ['-v', '-v', 'testrun', './doesntexist'])
+    check_call(rpz + ['testrun', './doesntexist'])
 
     # ########################################
     # 'connect' program: testrun
@@ -193,7 +181,7 @@ with in_temp_dir():
     # Build
     build('connect', ['connect.c'])
     # Trace
-    p = subprocess.Popen(programs['reprozip'] + ['-v', 'testrun', './connect'],
+    p = subprocess.Popen(rpz + ['testrun', './connect'],
                          stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     stderr = stderr.split(b'\n')
