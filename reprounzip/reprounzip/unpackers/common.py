@@ -10,6 +10,7 @@ pack files.
 
 from __future__ import unicode_literals
 
+import functools
 import platform
 from rpaths import Path
 import string
@@ -35,6 +36,17 @@ def composite_action(*functions):
     def wrapper(args):
         for function in functions:
             function(args)
+    return wrapper
+
+
+def target_must_exist(func):
+    @functools.wraps(func)
+    def wrapper(args):
+        target = Path(args.target[0])
+        if not target.is_dir():
+            sys.stderr.write("Error: Target directory doesn't exist\n")
+            sys.exit(1)
+        return func(args)
     return wrapper
 
 

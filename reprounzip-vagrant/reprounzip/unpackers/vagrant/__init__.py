@@ -14,7 +14,6 @@ See http://www.vagrantup.com/
 from __future__ import unicode_literals
 
 import argparse
-import functools
 import logging
 import os
 import paramiko
@@ -26,8 +25,8 @@ import sys
 import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer, \
-    composite_action, shell_escape, busybox_url, join_root, \
-    COMPAT_OK, COMPAT_MAYBE
+    composite_action, target_must_exist, shell_escape, busybox_url, \
+    join_root, COMPAT_OK, COMPAT_MAYBE
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_
 
@@ -87,17 +86,6 @@ def read_dict(filename):
         dct = pickle.load(fp)
     assert dct['unpacker'] == 'vagrant'
     return dct
-
-
-def target_must_exist(func):
-    @functools.wraps(func)
-    def wrapper(args):
-        target = Path(args.target[0])
-        if not target.is_dir():
-            sys.stderr.write("Error: Target directory doesn't exist")
-            sys.exit(1)
-        return func(args)
-    return wrapper
 
 
 def vagrant_setup_create(args):
