@@ -17,6 +17,8 @@ import argparse
 import functools
 import logging
 import os
+import paramiko
+from paramiko.client import MissingHostKeyPolicy
 import pickle
 from rpaths import PosixPath, Path
 import subprocess
@@ -26,7 +28,13 @@ import tarfile
 from reprounzip.unpackers.common import load_config, select_installer, \
     composite_action, shell_escape, busybox_url, join_root, \
     COMPAT_OK, COMPAT_MAYBE
+from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_
+
+
+class IgnoreMissingKey(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        pass
 
 
 def rb_escape(s):
@@ -68,17 +76,20 @@ def select_box(runs):
 
 
 def write_dict(filename, dct):
-    pickle.dump(dct, filename.path, pickle.HIGHEST_PROTOCOL)
+    with filename.open('wb') as fp:
+        pickle.dump(dct, fp, pickle.HIGHEST_PROTOCOL)
 
 
 def read_dict(filename):
-    return pickle.load(filename.path)
+    with filename.open('rb') as fp:
+        return pickle.load(fp)
 
 
 def target_must_exist(func):
     @functools.wraps(func)
     def wrapper(args):
-        if not args.target[0].is_dir():
+        target = Path(args.target[0])
+        if not target.is_dir():
             sys.stderr.write("Error: Target directory doesn't exist")
             sys.exit(1)
         return func(args)
@@ -282,6 +293,48 @@ def vagrant_setup_start(args):
 
 
 @target_must_exist
+def vagrant_run(args):
+    """Runs the experiment in the virtual machine.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+    # use_chroot = .get('use_chroot', True)
+
+    # Makes sure the VM is running
+    subprocess.check_call(['vagrant', 'up'],
+                          cwd=target.path)
+
+    # Gets vagrant SSH parameters
+    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                     cwd=target.path)
+    info = {}
+    for line in stdout.split('\n'):
+        line = line.strip().split(' ', 1)
+        if len(line) != 2:
+            continue
+        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+
+    # Connects to the machine
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    if 'identityfile' in info:
+        key_file = info['identityfile']
+    else:
+        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+    ssh.connect(info.get('hostname', '127.0.0.1'),
+                port=int(info.get('port', 2222)),
+                username=info.get('user', 'vagrant'),
+                key_filename=key_file)
+
+    chan = ssh.get_transport().open_session()
+    chan.get_pty()
+    chan.exec_command('/vagrant/script.sh')
+    interactive_shell(chan)
+
+    ssh.close()
+
+
+@target_must_exist
 def vagrant_destroy_vm(args):
     """Destroys the VM through Vagrant.
     """
@@ -345,24 +398,24 @@ def setup(parser):
     options.add_argument('target', nargs=1, help="Directory to create")
 
     # setup/create
-    opt_pack = argparse.ArgumentParser(add_help=False)
-    opt_pack.add_argument('--pack', nargs=1, help="Pack to extract")
-    parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[options, opt_pack])
-    parser_setup_create.add_argument(
+    opt_setup = argparse.ArgumentParser(add_help=False)
+    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument(
             '--use-chroot', action='store_true',
             default=True,
             help=argparse.SUPPRESS)
-    parser_setup_create.add_argument(
+    opt_setup.add_argument(
             '--no-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
-    parser_setup_create.add_argument(
+    opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (if "
             "--use-chroot is set)")
+    parser_setup_create = subparsers.add_parser('setup/create',
+                                                parents=[options, opt_setup])
     parser_setup_create.set_defaults(func=vagrant_setup_create)
 
     # setup/start
@@ -371,13 +424,16 @@ def setup(parser):
     parser_setup_start.set_defaults(func=vagrant_setup_start)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options, opt_pack])
+    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
     # TODO : vagrant upload
 
-    # TODO : vagrant run
+    # run
+    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.set_defaults(func=vagrant_run)
 
     # TODO : vagrant download
 
