@@ -329,7 +329,16 @@ def vagrant_run(args):
     chan = ssh.get_transport().open_session()
     chan.get_pty()
     chan.exec_command('/vagrant/script.sh')
-    interactive_shell(chan)
+    if args.no_stdin:
+        while True:
+            data = chan.recv(1024)
+            if len(data) == 0:
+                sys.stdout.write('\r\n*** EOF\r\n')
+                break
+            sys.stdout.write(data)
+            sys.stdout.flush()
+    else:
+        interactive_shell(chan)
 
     ssh.close()
 
@@ -433,6 +442,9 @@ def setup(parser):
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('--no-stdin', action='store_true', default=False,
+                            help=("Don't connect program's input stream to "
+                                  "this terminal"))
     parser_run.set_defaults(func=vagrant_run)
 
     # TODO : vagrant download

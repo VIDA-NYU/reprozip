@@ -78,9 +78,9 @@ def windows_shell(chan):
     sys.stdout.write("Line-buffered terminal emulation. "
                      "Press F6 or ^Z to send EOF.\r\n\r\n")
 
-    def writeall(recv):
+    def writeall(sock):
         while True:
-            data = recv(256)
+            data = sock.recv(256)
             if not data:
                 sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
                 sys.stdout.flush()
@@ -88,13 +88,8 @@ def windows_shell(chan):
             sys.stdout.write(data)
             sys.stdout.flush()
 
-    stdout_thread = threading.Thread(target=writeall, args=(chan.recv,))
-    stdout_thread.setDaemon(True)
-    stdout_thread.start()
-
-    stderr_thread = threading.Thread(target=writeall, args=(chan.recv_stderr,))
-    stderr_thread.setDaemon(True)
-    stderr_thread.start()
+    writer = threading.Thread(target=writeall, args=(chan,))
+    writer.start()
 
     try:
         while True:
