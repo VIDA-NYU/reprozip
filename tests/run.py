@@ -20,7 +20,7 @@ tests = Path(__file__).parent.absolute()
 
 
 if 'COVER' in os.environ:
-    python = os.environ['COVER'].split(' ')
+    python = [sys.executable, '-m'] + os.environ['COVER'].split(' ')
 else:
     python = [sys.executable]
 
