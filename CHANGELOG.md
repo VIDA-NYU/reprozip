@@ -1,6 +1,21 @@
 Changelog
 =========
 
+dev (???)
+---------
+
+Bugfixes:
+* Copying files from host to chroot when some packages where not packed
+* Don't use the full command path in directory's script
+
+Features:
+* Displays a warning for READ_THEN_WRITTEN files
+* Identifies input and output files
+* Adds 'reprounzip info' command
+* Better error messages when trying to unpack on incompatible system
+* Vagrant now defaults to --use-chroot`, added --no-use-chroot
+* Adds --summary and --missing to installpkgs
+
 0.3 (2014-07-28)
 ----------------
 
