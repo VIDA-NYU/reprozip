@@ -10,7 +10,8 @@ with open('README.rst') as fp:
     description = fp.read()
 setup(name='reprounzip-vagrant',
       version='0.3',
-      packages=['reprounzip', 'reprounzip.unpackers'],
+      packages=['reprounzip', 'reprounzip.unpackers',
+                'reprounzip.unpackers.vagrant'],
       entry_points={
           'reprounzip.unpackers': [
               'vagrant = reprounzip.unpackers.vagrant:setup']},

@@ -58,8 +58,10 @@ def build(target, sources, args=[]):
 
 parser = argparse.ArgumentParser(description="reprozip tests")
 parser.add_argument('--interactive', action='store_true')
+parser.add_argument('--run-vagrant', action='store_true')
 args = parser.parse_args()
 interactive = args.interactive
+run_vagrant = args.run_vagrant
 
 
 with in_temp_dir():
@@ -116,21 +118,29 @@ with in_temp_dir():
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    check_call(rpuz + ['vagrant', '--use-chroot', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot',
+                       '--pack', 'simple.rpz',
                        '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
-        if interactive:
+        if run_vagrant:
+            check_call(rpuz + ['vagrant', 'run', '--no-stdin',
+                               '/vagrant/simplevagrantchroot'])
+        elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
-    check_call(rpuz + ['vagrant', '--no-use-chroot', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--no-use-chroot',
+                       '--pack', 'simple.rpz',
                        '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
-        if interactive:
+        if run_vagrant:
+            check_call(rpuz + ['vagrant', 'run', '--no-stdin',
+                               '/vagrant/simplevagrant'])
+        elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
