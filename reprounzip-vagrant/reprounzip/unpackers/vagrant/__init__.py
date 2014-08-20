@@ -76,13 +76,17 @@ def select_box(runs):
 
 
 def write_dict(filename, dct):
+    to_write = {'unpacker': 'vagrant'}
+    to_write.update(dct)
     with filename.open('wb') as fp:
-        pickle.dump(dct, fp, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(to_write, fp, pickle.HIGHEST_PROTOCOL)
 
 
 def read_dict(filename):
     with filename.open('rb') as fp:
-        return pickle.load(fp)
+        dct = pickle.load(fp)
+    assert dct['unpacker'] == 'vagrant'
+    return dct
 
 
 def target_must_exist(func):
