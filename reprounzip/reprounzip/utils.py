@@ -173,7 +173,7 @@ def download_file(url, dest, cachename=None):
                     break
                 f.write(chunk)
         response.close()
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         try:
             cache.remove()
         except OSError:

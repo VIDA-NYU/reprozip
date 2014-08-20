@@ -13,6 +13,7 @@ in
         reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
         reprounzip graph graph.dot
         reprozip pack
+        reprounzip graph graph2.dot experiment.rpz
         python tests/run.py
 EOF
         ;;
@@ -28,6 +29,7 @@ EOF
         $COVER reprozip/reprozip/main.py trace --continue sh -c "cat /etc/group;/usr/bin/id"
         $COVER reprounzip/reprounzip/main.py graph graph.dot
         $COVER reprozip/reprozip/main.py pack
+        $COVER reprounzip/reprounzip/main.py graph graph2.dot experiment.rpz
         python tests/run.py
 EOF
         ;;
