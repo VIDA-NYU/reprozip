@@ -42,6 +42,15 @@ def in_temp_dir():
         tmp.rmtree(ignore_errors=True)
 
 
+def call(args):
+    print(" ".join(a if isinstance(a, unicode)
+                   else a.decode('utf-8', 'replace')
+                   for a in args))
+    r = subprocess.call(args)
+    print("---> %d" % r)
+    return r
+
+
 def check_call(args):
     print(" ".join(a if isinstance(a, unicode)
                    else a.decode('utf-8', 'replace')
@@ -94,25 +103,32 @@ with in_temp_dir():
     # Lists packages
     check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
     # Unpack directory
-    check_call(rpuz + ['directory', 'simple.rpz', 'simpledir'])
-    # Run script
-    check_call(['cat', 'simpledir/script.sh'])
-    check_call(['sh', 'simpledir/script.sh'])
+    check_call(rpuz + ['directory', 'setup',
+                       '--pack', 'simple.rpz', 'simpledir'])
+    # Run directory
+    check_call(rpuz + ['directory', 'run', 'simpledir'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
     assert output_in_dir.is_file()
     with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
-    output_in_dir.remove()
+    # Delete with wrong command (should fail)
+    assert call(rpuz + ['chroot', 'destroy', 'simpledir']) != 0
+    # Delete directory
+    check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
-    check_call(rpuz + ['chroot', 'simple.rpz', 'simplechroot'])
+    check_call(['sudo'] + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
+                                  '--pack', 'simple.rpz', 'simplechroot'])
     # Run chroot
-    check_call(['sudo', 'sh', 'simplechroot/script.sh'])
+    check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
     assert output_in_chroot.is_file()
     with output_in_chroot.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
-    output_in_chroot.remove()
+    # Delete with wrong command (should fail)
+    assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
+    # Delete chroot
+    check_call(['sudo'] + rpuz + ['chroot', 'destroy', 'simplechroot'])
 
     if not Path('/vagrant').exists():
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
