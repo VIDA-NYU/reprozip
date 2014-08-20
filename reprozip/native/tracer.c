@@ -288,9 +288,12 @@ static int trace(pid_t first_proc, int *first_exit_code)
         tid = waitpid(-1, &status, __WALL);
         if(tid == -1)
         {
+            /* LCOV_EXCL_START : internal error: waitpid() won't fail unless we
+             * mistakingly call it while there is no child to wait for */
             log_critical_(0, "waitpid failed: ");
             perror(NULL);
             return -1;
+            /* LCOV_EXCL_END */
         }
         if(WIFEXITED(status) || WIFSIGNALED(status))
         {
@@ -321,13 +324,14 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 break;
             if(unknown >= nprocs)
             {
-                /* This can happen because UNKNOWN processes are the forked
-                 * processes whose creator has not returned yet. Therefore, if
-                 * there is an UNKNOWN process, its creator has to exist as
-                 * well (and it is not UNKNOWN). */
+                /* LCOV_EXCL_START : This can't happen because UNKNOWN
+                 * processes are the forked processes whose creator has not
+                 * returned yet. Therefore, if there is an UNKNOWN process, its
+                 * creator has to exist as well (and it is not UNKNOWN). */
                 log_critical(0, "only UNKNOWN processes remaining (%d)",
                              (unsigned int)nprocs);
                 return -1;
+                /* LCOV_EXCL_END */
             }
             continue;
         }
@@ -390,7 +394,10 @@ static int trace(pid_t first_proc, int *first_exit_code)
 #endif
             /* GETREGSET undefined or call failed, fallback on GETREGS */
             {
+                /* LCOV_EXCL_START : GETREGSET was added by Linux 2.6.34 in
+                 * May 2010 (2225a122) */
                 ptrace(PTRACE_GETREGS, tid, NULL, &regs);
+                /* LCOV_EXCL_END */
             }
 #if defined(I386)
             if(!process->in_syscall || regs.orig_eax >= 0)
@@ -464,11 +471,12 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             else if(signum == SIGTRAP)
             {
-                /* Probably doesn't happen? Then, remove */
+                /* LCOV_EXCL_START : Processes shouldn't be getting SIGTRAPs */
                 log_warn(0,
                          "NOT delivering SIGTRAP to %d\n"
                          "    waitstatus=0x%X", tid, status);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                /* LCOV_EXCL_END */
             }
             /* Other signal, let the process handle it */
             else
@@ -480,10 +488,12 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     ptrace(PTRACE_SYSCALL, tid, NULL, signum);
                 else
                 {
-                    /* Not sure what this is for */
+                    /* LCOV_EXCL_START : Not sure what this is for... doesn't
+                     * seem to happen in practice */
                     perror("    NOT delivering");
                     if(signum != SIGSTOP)
                         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+                    /* LCOV_EXCL_END */
                 }
             }
         }
@@ -598,8 +608,10 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             log_info(0, "process %d created by initial fork()", child);
         if(db_add_first_process(&process->identifier, process->wd) != 0)
         {
+            /* LCOV_EXCL_START : Database insertion shouldn't fail */
             cleanup();
             return 1;
+            /* LCOV_EXCL_END */
         }
     }
 
