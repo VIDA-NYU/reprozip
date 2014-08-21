@@ -74,7 +74,11 @@ def create_docker(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    target_distribution, base_image = select_image(runs)
+    if args.base_image:
+        target_distribution = None
+        base_image = args.base_image[0]
+    else:
+        target_distribution, base_image = select_image(runs)
 
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
@@ -143,6 +147,7 @@ def setup(parser):
     # Creates a virtual machine with Vagrant
     parser.add_argument('pack', nargs=1, help="Pack to extract")
     parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.add_argument('--base-image', nargs=1, help="Base image to use")
     parser.set_defaults(func=create_docker)
 
     return {'test_compatibility': test_has_docker}
