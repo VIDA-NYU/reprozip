@@ -146,7 +146,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     if target_distribution == 'ubuntu':
         installer = AptInstaller('apt-get')
     elif target_distribution == 'debian':
-        installer = AptInstaller('aptitude')
+        # aptitude is not installed by default, so use apt-get here too
+        installer = AptInstaller('apt-get')
     else:
         sys.stderr.write("Your current distribution, \"%s\", is not "
                          "supported\n" % target_distribution.capitalize())
