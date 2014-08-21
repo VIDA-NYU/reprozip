@@ -16,6 +16,7 @@ This file contains the default plugins that come with reprounzip:
 
 from __future__ import unicode_literals
 
+import os
 import platform
 from rpaths import PosixPath, DefaultAbstractPath, Path
 import subprocess
@@ -172,6 +173,28 @@ def create_chroot(args):
         sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
 
+    # We can only restore owner/group of files if running as root
+    restore_owner = False
+    if os.getuid() != 0:
+        if args.restore_owner is True:
+            # Restoring the owner was explicitely requested
+            sys.stderr.write("Error: Not running as root, cannot restore "
+                             "files' owner/group\n")
+            sys.exit(1)
+        elif args.restore_owner is None:
+            # Nothing was requested
+            sys.stderr.write("Warning: Not running as root, won't restore "
+                             "files' owner/group\n")
+        # If False: skip warning
+    else:
+        if args.restore_owner is None:
+            # Nothing was requested
+            sys.stderr.write("Info: Running as root, we will restore files' "
+                             "owner/group\n")
+            restore_owner = True
+        elif args.restore_owner is True:
+            restore_owner = True
+
     # Loads config
     runs, packages, other_files = load_config(pack)
 
@@ -202,6 +225,9 @@ def create_chroot(args):
                     dest.symlink(f.read_link())
                 else:
                     f.copy(dest)
+                if restore_owner:
+                    stat = f.stat()
+                    dest.chown(stat.st_uid, stat.st_gid)
 
     # Unpacks files
     tar = tarfile.open(str(pack), 'r:*')
@@ -211,6 +237,12 @@ def create_chroot(args):
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
+    if not restore_owner:
+        uid = os.getuid()
+        gid = os.getgid()
+        for m in members:
+            m.uid = uid
+            m.gid = gid
     tar.extractall(str(root), members)
     tar.close()
 
@@ -317,6 +349,13 @@ def setup_chroot(parser):
     """
     parser.add_argument('pack', nargs=1, help="Pack to extract")
     parser.add_argument('target', nargs=1, help="Directory to create")
+    parser.add_argument('--preserve-owner', action='store_true',
+                        dest='restore_owner', default=None,
+                        help="Restore files' owner/group when extracting")
+    parser.add_argument('--no-preserve-owner', action='store_false',
+                        dest='restore_owner', default=None,
+                        help=("Don't restore files' owner/group when "
+                              "extracting, use current users"))
     parser.set_defaults(func=create_chroot)
 
     return {'test_compatibility': test_linux_same_arch}
