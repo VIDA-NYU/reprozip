@@ -150,7 +150,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         installer = AptInstaller('apt-get')
     else:
         sys.stderr.write("Your current distribution, \"%s\", is not "
-                         "supported\n" % target_distribution.capitalize())
+                         "supported\n" %
+                         (target_distribution or ("unknown")).capitalize())
         sys.exit(1)
 
     return installer

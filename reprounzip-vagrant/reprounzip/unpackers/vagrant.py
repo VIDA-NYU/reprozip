@@ -89,7 +89,11 @@ def create_vagrant(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    target_distribution, box = select_box(runs)
+    if args.base_image and args.base_image[0]:
+        target_distribution = None
+        box = args.base_image[0]
+    else:
+        target_distribution, box = select_box(runs)
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
@@ -271,6 +275,7 @@ def setup(parser):
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (if "
             "--use-chroot is set)")
+    parser.add_argument('--base-image', nargs=1, help="Vagrant box to use")
     parser.set_defaults(func=create_vagrant)
 
     return {'test_compatibility': test_has_vagrant}
