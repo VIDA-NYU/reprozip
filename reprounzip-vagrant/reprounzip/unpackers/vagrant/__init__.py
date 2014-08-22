@@ -457,6 +457,87 @@ def vagrant_upload(args):
 
 
 @target_must_exist
+def vagrant_download(args):
+    """Gets an output file out of the VM.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    use_chroot = read_dict(target / '.reprounzip')['use_chroot']
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    # No argument: list all the output files and exit
+    if not files:
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name in run['output_files']:
+                print("    %s" % output_name)
+        return
+
+    # Checks whether the VM is running
+    try:
+        info = get_ssh_parameters(target)
+    except subprocess.CalledProcessError:
+        sys.stderr.write("Failed to get the status of the machine -- is it "
+                         "running?\n")
+        sys.exit(1)
+
+    # Get the path of each output file
+    all_output_files = {}
+    for run in runs:
+        all_output_files.update(run['output_files'])
+
+    # Connect with scp
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    ssh.connect(**info)
+    client = scp.SCPClient(ssh.get_transport())
+
+    try:
+        # Download files
+        for filespec in files:
+            filespec_split = filespec.split(':', 1)
+            if len(filespec_split) != 2:
+                sys.stderr.write("Invalid file specification: %r\n" % filespec)
+                sys.exit(1)
+            output_name, local_path = filespec_split
+
+            try:
+                remote_path = all_output_files[output_name]
+            except KeyError:
+                sys.stderr.write("Invalid output name: %r\n" % output_name)
+                sys.exit(1)
+
+            if use_chroot:
+                remote_path = join_root(PosixPath('/experimentroot'),
+                                        PosixPath(remote_path))
+
+            if not local_path:
+                # Download to temporary file
+                fd, temp = Path.tempfile(prefix='reprozip_output_')
+                os.close(fd)
+                client.get(remote_path.path, temp.path, recursive=False)
+                # Output to stdout
+                with temp.open('rb') as fp:
+                    chunk = fp.read(1024)
+                    if chunk:
+                        sys.stdout.write(chunk)
+                    while len(chunk) == 1024:
+                        chunk = fp.read(1024)
+                        if chunk:
+                            sys.stdout.write(chunk)
+                temp.remove()
+            else:
+                # Download
+                client.get(remote_path.path, local_path, recursive=False)
+    finally:
+        ssh.close()
+
+
+@target_must_exist
 def vagrant_destroy_dir(args):
     """Destroys the directory.
     """
@@ -562,7 +643,11 @@ def setup(parser):
                                   "this terminal"))
     parser_run.set_defaults(func=vagrant_run)
 
-    # TODO : vagrant download
+    # vagrant download
+    parser_download = subparsers.add_parser('download', parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=vagrant_download)
 
     # destroy/vm
     parser_destroy_vm = subparsers.add_parser('destroy/vm',
