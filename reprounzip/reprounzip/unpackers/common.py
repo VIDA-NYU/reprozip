@@ -170,7 +170,7 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     else:
         sys.stderr.write("Your current distribution, \"%s\", is not "
                          "supported\n" %
-                         (target_distribution or ("unknown")).capitalize())
+                         (target_distribution or "(unknown)").capitalize())
         sys.exit(1)
 
     return installer
