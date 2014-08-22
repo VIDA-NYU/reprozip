@@ -68,10 +68,14 @@ def main():
     for entry_point in iter_entry_points('reprounzip.unpackers'):
         setup_function = entry_point.load()
         name = entry_point.name
+        # Docstring is used as description (used for detailed help)
         descr = setup_function.__doc__.strip()
-        plugin_parser = subparsers.add_parser(name,
-                                              parents=[options],
-                                              help=descr)
+        # First line of docstring is the help (used for general help)
+        descr_1 = descr.split('\n', 1)[0]
+        plugin_parser = subparsers.add_parser(
+                name, parents=[options],
+                help=descr_1, description=descr,
+                formatter_class=argparse.RawDescriptionHelpFormatter)
         info = setup_function(plugin_parser)
         if info is None:
             info = {}

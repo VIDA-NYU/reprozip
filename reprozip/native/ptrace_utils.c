@@ -19,9 +19,13 @@ static long tracee_getword(pid_t tid, const void *addr)
     res = ptrace(PTRACE_PEEKDATA, tid, addr, NULL);
     if(errno)
     {
+        /* LCOV_EXCL_START : We only do that on things that went through the
+         * kernel successfully, and so should be valid. The exception is
+         * execve(), which will dup arguments when entering the syscall */
         log_error_(tid, "tracee_getword() failed: ");
         perror(NULL);
         return 0;
+        /* LCOV_EXCL_END */
     }
     return res;
 }

@@ -13,21 +13,19 @@ in
         reprozip trace --continue sh -c "cat /etc/group;/usr/bin/id"
         reprounzip graph graph.dot
         reprozip pack
+        reprounzip graph graph2.dot experiment.rpz
         python tests/run.py
 EOF
         ;;
     coverage_py)
-        if [ "$TEST_MODE" = "coverage_py" ]; then
-            export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-vagrant/reprounzip --branch"
-        else
-            export COVER="python"
-        fi
+        export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-vagrant/reprounzip --branch"
         run_lines<<'EOF'
         $COVER reprozip/reprozip/main.py testrun bash -c "cat ../../../../../etc/passwd;cd /var/lib;cat ../../etc/group"
         $COVER reprozip/reprozip/main.py trace bash -c "cat /etc/passwd;echo"
         $COVER reprozip/reprozip/main.py trace --continue sh -c "cat /etc/group;/usr/bin/id"
         $COVER reprounzip/reprounzip/main.py graph graph.dot
         $COVER reprozip/reprozip/main.py pack
+        $COVER reprounzip/reprounzip/main.py graph graph2.dot experiment.rpz
         python tests/run.py
 EOF
         ;;

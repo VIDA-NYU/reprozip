@@ -106,8 +106,8 @@ def print_info(args, unpackers):
     if runs:
         print("Architecture: %s (current: %s)" % (meta_architecture,
                                                   current_architecture))
-        print("Distribution: %s (current: %s)" % (meta_distribution,
-                                                  current_distribution))
+        print("Distribution: %s (current: %s)" % (
+              meta_distribution, current_distribution or "(not Linux)"))
         print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(r['argv']))

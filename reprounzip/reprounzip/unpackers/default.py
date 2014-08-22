@@ -16,21 +16,28 @@ This file contains the default plugins that come with reprounzip:
 
 from __future__ import unicode_literals
 
+import argparse
+import os
+import pickle
 import platform
 from rpaths import PosixPath, DefaultAbstractPath, Path
 import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import THIS_DISTRIBUTION, COMPAT_OK, \
-    COMPAT_NO, load_config, select_installer, shell_escape, busybox_url, \
-    join_root, PKG_NOT_INSTALLED
+from reprounzip.unpackers.common import THIS_DISTRIBUTION, load_config, \
+    select_installer, target_must_exist, shell_escape, busybox_url, \
+    join_root, PKG_NOT_INSTALLED, COMPAT_OK, COMPAT_NO
 from reprounzip.utils import unicode_, download_file
 
 
 def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """
+    if not THIS_DISTRIBUTION:
+        sys.stderr.write("Error: Not running on Linux\n")
+        sys.exit(1)
+
     pack = args.pack[0]
     missing = args.missing
 
@@ -70,12 +77,31 @@ def installpkgs(args):
             sys.exit(r)
 
 
-def create_directory(args):
+def write_dict(filename, dct, type_):
+    to_write = {'unpacker': type_}
+    to_write.update(dct)
+    with filename.open('wb') as fp:
+        pickle.dump(to_write, fp, pickle.HIGHEST_PROTOCOL)
+
+
+def read_dict(filename, type_):
+    with filename.open('rb') as fp:
+        dct = pickle.load(fp)
+    if type is not None:
+        assert dct['unpacker'] == type_
+    return dct
+
+
+def directory_create(args):
     """Unpacks the experiment in a folder.
 
     Only the files that are not part of a package are copied (unless they are
     missing from the system and were packed).
     """
+    if not args.pack:
+        sys.stderr.write("Error: setup needs --pack\n")
+        sys.exit(1)
+
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
@@ -149,15 +175,32 @@ def create_directory(args):
                     for a in run['argv'])
             fp.write('%s\n' % cmd)
 
+    # Meta-data for reprounzip
+    write_dict(target / '.reprounzip', {}, 'directory')
+
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
-def create_chroot(args):
+@target_must_exist
+def directory_destroy(args):
+    """Destroys the directory.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip', 'directory')
+
+    target.rmtree()
+
+
+def chroot_create(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
 
     All the files in the pack are unpacked; system files are copied only if
     they were not packed, and busybox is installed if /bin/sh wasn't packed.
     """
+    if not args.pack:
+        sys.stderr.write("Error: setup/create needs --pack\n")
+        sys.exit(1)
+
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
@@ -167,6 +210,28 @@ def create_chroot(args):
     if DefaultAbstractPath is not PosixPath:
         sys.stderr.write("Error: Not unpacking on POSIX system\n")
         sys.exit(1)
+
+    # We can only restore owner/group of files if running as root
+    restore_owner = False
+    if os.getuid() != 0:
+        if args.restore_owner is True:
+            # Restoring the owner was explicitely requested
+            sys.stderr.write("Error: Not running as root, cannot restore "
+                             "files' owner/group\n")
+            sys.exit(1)
+        elif args.restore_owner is None:
+            # Nothing was requested
+            sys.stderr.write("Warning: Not running as root, won't restore "
+                             "files' owner/group\n")
+        # If False: skip warning
+    else:
+        if args.restore_owner is None:
+            # Nothing was requested
+            sys.stderr.write("Info: Running as root, we will restore files' "
+                             "owner/group\n")
+            restore_owner = True
+        elif args.restore_owner is True:
+            restore_owner = True
 
     # Loads config
     runs, packages, other_files = load_config(pack)
@@ -198,6 +263,9 @@ def create_chroot(args):
                     dest.symlink(f.read_link())
                 else:
                     f.copy(dest)
+                if restore_owner:
+                    stat = f.stat()
+                    dest.chown(stat.st_uid, stat.st_gid)
 
     # Unpacks files
     tar = tarfile.open(str(pack), 'r:*')
@@ -207,6 +275,12 @@ def create_chroot(args):
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
+    if not restore_owner:
+        uid = os.getuid()
+        gid = os.getgid()
+        for m in members:
+            m.uid = uid
+            m.gid = gid
     tar.extractall(str(root), members)
     tar.close()
 
@@ -245,7 +319,51 @@ def create_chroot(args):
                      shell_escape(unicode_(root)),
                      shell_escape(cmd)))
 
+    # Meta-data for reprounzip
+    write_dict(target / '.reprounzip', {}, 'chroot')
+
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
+
+
+@target_must_exist
+def chroot_mount(args):
+    """Mounts /dev and /proc inside the chroot directory.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip', 'chroot')
+
+    for m in ('/dev', '/proc'):
+        d = join_root(target / 'root', Path(m))
+        d.mkdir(parents=True)
+        subprocess.check_call(['mount', '--bind', m, str(d)])
+
+    write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
+
+
+@target_must_exist
+def chroot_destroy(args):
+    """Destroys the directory.
+    """
+    target = Path(args.target[0])
+    mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
+
+    if mounted:
+        for m in ('/dev', '/proc'):
+            d = join_root(target / 'root', Path(m))
+            if d.exists():
+                subprocess.check_call(['umount', str(d)])
+
+    target.rmtree()
+
+
+@target_must_exist
+def run(args):
+    """Runs the command in the directory or chroot.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip', args.type)
+
+    subprocess.check_call(['/bin/sh', (target / 'script.sh').path])
 
 
 def test_same_pkgmngr(pack, config, **kwargs):
@@ -299,20 +417,113 @@ def setup_installpkgs(parser):
 
 
 def setup_directory(parser):
-    """Unpacks the files in a directory
+    """Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
+
+    setup       creates the directory (--pack is required)
+    upload      replaces input files in the directory
+                (without arguments, lists input files)
+    run         runs the experiment
+    download    gets output files
+                (without arguments, lists output files)
+    destroy     removes the unpacked directory
     """
-    parser.add_argument('pack', nargs=1, help="Pack to extract")
-    parser.add_argument('target', nargs=1, help="Directory to create")
-    parser.set_defaults(func=create_directory)
+    subparsers = parser.add_subparsers(title="actions",
+                                       metavar='', help=argparse.SUPPRESS)
+    options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('target', nargs=1, help="Directory to create")
+
+    # setup
+    parser_setup = subparsers.add_parser('setup', parents=[options])
+    parser_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    parser_setup.set_defaults(func=directory_create)
+
+    # TODO : directory upload
+
+    # run
+    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.set_defaults(func=run, type='directory')
+
+    # TODO : directory download
+
+    # destroy
+    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy.set_defaults(func=directory_destroy)
 
     return {'test_compatibility': test_linux_same_arch}
 
 
+def chroot_setup(args):
+    chroot_create(args)
+    if args.bind_magic_dirs:
+        chroot_mount(args)
+
+
 def setup_chroot(parser):
-    """Unpacks the files so the experiment can be run with chroot
+    """Unpacks the files and run with chroot
+
+    setup/create    creates the directory (--pack is required)
+    setup/mount     mounts --bind /dev and /proc inside the chroot
+                    (do NOT rm -Rf the directory after that!)
+    upload          replaces input files in the directory
+                    (without arguments, lists input files)
+    run             runs the experiment
+    download        gets output files
+                    (without arguments, lists output files)
+    destroy/unmount unmounts /dev and /proc from the directory
+    destroy/dir     removes the unpacked directory
     """
-    parser.add_argument('pack', nargs=1, help="Pack to extract")
-    parser.add_argument('target', nargs=1, help="Directory to create")
-    parser.set_defaults(func=create_chroot)
+    subparsers = parser.add_subparsers(title="actions",
+                                       metavar='', help=argparse.SUPPRESS)
+    options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('target', nargs=1, help="Directory to create")
+
+    # setup/create
+    opt_setup = argparse.ArgumentParser(add_help=False)
+    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_owner = argparse.ArgumentParser(add_help=False)
+    opt_owner.add_argument('--preserve-owner', action='store_true',
+                           dest='restore_owner', default=None,
+                           help="Restore files' owner/group when extracting")
+    opt_owner.add_argument('--no-preserve-owner', action='store_false',
+                           dest='restore_owner', default=None,
+                           help=("Don't restore files' owner/group when "
+                                 "extracting, use current users"))
+    parser_setup_create = subparsers.add_parser(
+            'setup/create',
+            parents=[options, opt_setup, opt_owner])
+    parser_setup_create.set_defaults(func=chroot_create)
+
+    # setup/mount
+    parser_setup_mount = subparsers.add_parser('setup/mount',
+                                               parents=[options])
+    parser_setup_mount.set_defaults(func=chroot_mount)
+
+    # setup
+    parser_setup = subparsers.add_parser(
+            'setup',
+            parents=[options, opt_setup, opt_owner])
+    parser_setup.add_argument(
+            '--dont-bind-magic-dirs', action='store_false',
+            dest='bind_magic_dirs', default=True,
+            help="Don't mount /dev and /proc inside the chroot")
+    parser_setup.add_argument(
+            '--bind-magic-dirs', action='store_true',
+            dest='bind_magic_dirs', default=True,
+            help=argparse.SUPPRESS)
+    parser_setup.set_defaults(func=chroot_setup)
+
+    # TODO : chroot upload (options, opt_owner)
+
+    # run
+    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.set_defaults(func=run, type='chroot')
+
+    # TODO : chroot download (options)
+
+    # destroy
+    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy.set_defaults(func=chroot_destroy)
 
     return {'test_compatibility': test_linux_same_arch}

@@ -16,13 +16,24 @@ from __future__ import unicode_literals
 import argparse
 import logging
 import os
+import paramiko
+from paramiko.client import MissingHostKeyPolicy
+import pickle
 from rpaths import PosixPath, Path
+import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config, select_installer,\
-    shell_escape, busybox_url, join_root, COMPAT_OK, COMPAT_MAYBE
+from reprounzip.unpackers.common import load_config, select_installer, \
+    composite_action, target_must_exist, shell_escape, busybox_url, \
+    join_root, COMPAT_OK, COMPAT_MAYBE
+from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_
+
+
+class IgnoreMissingKey(MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        pass
 
 
 def rb_escape(s):
@@ -42,7 +53,7 @@ def select_box(runs):
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.01 'Precise' instead "
+            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
                              "of '%s'\n" % version)
         if architecture == 'i686':
             return 'ubuntu', 'hashicorp/precise32'
@@ -53,9 +64,9 @@ def select_box(runs):
     elif distribution != 'debian':
         sys.stderr.write("Warning: unsupported distribution %s, using Debian"
                          "\n" % distribution)
-    if (distribution == 'debian' and
-            version != '7' and not version.startswith('jessie')):
-        sys.stderr.write("Warning: using Debian 7 'Jessie' instead of '%s'"
+
+    elif version != '7' and not version.startswith('wheezy'):
+        sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
                          "\n" % version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
@@ -63,7 +74,21 @@ def select_box(runs):
         return 'debian', 'remram/debian-7-amd64'
 
 
-def create_vagrant(args):
+def write_dict(filename, dct):
+    to_write = {'unpacker': 'vagrant'}
+    to_write.update(dct)
+    with filename.open('wb') as fp:
+        pickle.dump(to_write, fp, pickle.HIGHEST_PROTOCOL)
+
+
+def read_dict(filename):
+    with filename.open('rb') as fp:
+        dct = pickle.load(fp)
+    assert dct['unpacker'] == 'vagrant'
+    return dct
+
+
+def vagrant_setup_create(args):
     """Sets up the experiment to be run in a Vagrant-built virtual machine.
 
     This can either build a chroot or not.
@@ -78,6 +103,10 @@ def create_vagrant(args):
     In short: files from packages with packfiles=True will only be used if
     building a chroot.
     """
+    if not args.pack:
+        sys.stderr.write("Error: setup/create needs --pack\n")
+        sys.exit(1)
+
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
@@ -89,7 +118,11 @@ def create_vagrant(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    target_distribution, box = select_box(runs)
+    if args.base_image and args.base_image[0]:
+        target_distribution = None
+        box = args.base_image[0]
+    else:
+        target_distribution, box = select_box(runs)
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
@@ -231,6 +264,9 @@ fi
 
         fp.write('end\n')
 
+    # Meta-data for reprounzip
+    write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
+
     target_readable = unicode_(target)
     if not target_readable.endswith('/'):
         target_readable = target_readable + '/'
@@ -238,6 +274,92 @@ fi
           "Create the virtual machine by running 'vagrant up' from %s\n"
           "Then, ssh into it (for example using 'vagrant ssh') and run "
           "'sh /vagrant/script.sh'" % target_readable)
+
+
+@target_must_exist
+def vagrant_setup_start(args):
+    """Starts the vagrant-built virtual machine.
+    """
+    target = Path(args.target[0])
+
+    retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
+    if retcode != 0:
+        sys.stderr("vagrant up failed with code %d\n" % retcode)
+        sys.exit(1)
+
+
+@target_must_exist
+def vagrant_run(args):
+    """Runs the experiment in the virtual machine.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+    # use_chroot = .get('use_chroot', True)
+
+    # Makes sure the VM is running
+    subprocess.check_call(['vagrant', 'up'],
+                          cwd=target.path)
+
+    # Gets vagrant SSH parameters
+    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                     cwd=target.path)
+    info = {}
+    for line in stdout.split('\n'):
+        line = line.strip().split(' ', 1)
+        if len(line) != 2:
+            continue
+        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+
+    # Connects to the machine
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    if 'identityfile' in info:
+        key_file = info['identityfile']
+    else:
+        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+    ssh.connect(info.get('hostname', '127.0.0.1'),
+                port=int(info.get('port', 2222)),
+                username=info.get('user', 'vagrant'),
+                key_filename=key_file)
+
+    chan = ssh.get_transport().open_session()
+    chan.get_pty()
+    chan.exec_command('/vagrant/script.sh')
+    if args.no_stdin:
+        while True:
+            data = chan.recv(1024)
+            if len(data) == 0:
+                sys.stdout.write('\r\n*** EOF\r\n')
+                break
+            sys.stdout.write(data)
+            sys.stdout.flush()
+    else:
+        interactive_shell(chan)
+
+    ssh.close()
+
+
+@target_must_exist
+def vagrant_destroy_vm(args):
+    """Destroys the VM through Vagrant.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+
+    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
+    if retcode != 0:
+        sys.stderr("vagrant destroy failed with code %d, ignoring...\n" %
+                   retcode)
+
+
+@target_must_exist
+def vagrant_destroy_dir(args):
+    """Destroys the directory.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+
+    target.rmtree()
 
 
 def test_has_vagrant(pack, **kwargs):
@@ -252,25 +374,91 @@ def test_has_vagrant(pack, **kwargs):
 
 
 def setup(parser):
-    """Unpacks the files and sets up the experiment to be run in Vagrant
+    """Runs the experiment in a virtual machine created through Vagrant
+
+    You will need Vagrant to be installed on your machine if you want to run
+    the experiment.
+
+    setup   setup/create    creates Vagrantfile (--pack is required)
+            setup/start     starts or resume the virtual machine
+    upload                  replaces input files in the machine
+                            (without arguments, lists input files)
+    run                     runs the experiment in the virtual machine
+    suspend                 suspend the virtual machine without destroying it
+    download                gets output files from the machine
+                            (without arguments, lists output files)
+    destroy destroy/vm      destroys the virtual machine
+            destroy/dir     removes the unpacked directory
+
+    For example:
+
+        $ reprounzip vagrant setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip vagrant run .
+        $ reprounzip vagrant download . results:/home/user/theresults.txt
+        $ cd ..; reprounzip vagrant destroy experiment
     """
-    # Creates a virtual machine with Vagrant
-    parser.add_argument('pack', nargs=1, help="Pack to extract")
-    parser.add_argument('target', nargs=1, help="Directory to create")
-    parser.add_argument(
+    subparsers = parser.add_subparsers(title="actions",
+                                       metavar='', help=argparse.SUPPRESS)
+    options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('target', nargs=1, help="Directory to create")
+
+    # setup/create
+    opt_setup = argparse.ArgumentParser(add_help=False)
+    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument(
             '--use-chroot', action='store_true',
             default=True,
             help=argparse.SUPPRESS)
-    parser.add_argument(
+    opt_setup.add_argument(
             '--no-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
-    parser.add_argument(
+    opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (if "
             "--use-chroot is set)")
-    parser.set_defaults(func=create_vagrant)
+    opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
+    parser_setup_create = subparsers.add_parser('setup/create',
+                                                parents=[options, opt_setup])
+    parser_setup_create.set_defaults(func=vagrant_setup_create)
+
+    # setup/start
+    parser_setup_start = subparsers.add_parser('setup/start',
+                                               parents=[options])
+    parser_setup_start.set_defaults(func=vagrant_setup_start)
+
+    # setup
+    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
+                                                    vagrant_setup_start))
+
+    # TODO : vagrant upload
+
+    # run
+    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('--no-stdin', action='store_true', default=False,
+                            help=("Don't connect program's input stream to "
+                                  "this terminal"))
+    parser_run.set_defaults(func=vagrant_run)
+
+    # TODO : vagrant download
+
+    # destroy/vm
+    parser_destroy_vm = subparsers.add_parser('destroy/vm',
+                                              parents=[options])
+    parser_destroy_vm.set_defaults(func=vagrant_destroy_vm)
+
+    # destroy/dir
+    parser_destroy_dir = subparsers.add_parser('destroy/dir',
+                                               parents=[options])
+    parser_destroy_dir.set_defaults(func=vagrant_destroy_dir)
+
+    # destroy
+    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy.set_defaults(func=composite_action(vagrant_destroy_vm,
+                                                      vagrant_destroy_dir))
 
     return {'test_compatibility': test_has_vagrant}

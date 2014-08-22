@@ -384,9 +384,11 @@ static int syscall_execve_out(const char *name, struct Process *process,
         }
         if(exec_process == NULL)
         {
+            /* LCOV_EXCL_START : internal error */
             log_critical(process->tid,
                          "execve() completed but call wasn't recorded");
             return -1;
+            /* LCOV_EXCL_END */
         }
         execi = exec_process->syscall_info;
 
@@ -466,10 +468,12 @@ static int syscall_forking(const char *name, struct Process *process,
             /* Process has been seen before and options were set */
             if(new_process->status != PROCESS_UNKNOWN)
             {
+                /* LCOV_EXCL_START : internal error */
                 log_critical(new_tid,
                              "just created process that is already running "
                              "(status=%d)", new_process->status);
                 return -1;
+                /* LCOV_EXCL_END */
             }
             new_process->status = PROCESS_ATTACHED;
             ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
@@ -915,9 +919,11 @@ int syscall_handle(struct Process *process)
     }
     else if(process->current_syscall & __X32_SYSCALL_BIT)
     {
+        /* LCOV_EXCL_START : x32 is not supported right now */
         syscall_type = SYSCALL_X86_64_x32;
         if(verbosity >= 4)
             log_info(process->tid, "syscall %d (x32)", syscall);
+        /* LCOV_EXCL_END */
     }
     else
     {

@@ -60,6 +60,8 @@ char *abspath(const char *wd, const char *path)
 #endif
     if(wd[len_wd-1] == '/')
     {
+        /* LCOV_EXCL_START : We usually get canonical path names, so we don't
+         * run into this one */
         char *result = malloc(len_wd + strlen(path) + 1);
         memcpy(result, wd, len_wd);
         strcpy(result + len_wd, path);
@@ -67,6 +69,7 @@ char *abspath(const char *wd, const char *path)
         fprintf(stderr, "%s\n", result);
 #endif
         return result;
+        /* LCOV_EXCL_END */
     }
     else
     {
@@ -95,9 +98,11 @@ char *get_wd(void)
         {
             if(errno != ERANGE)
             {
+                /* LCOV_EXCL_START : getcwd() really shouldn't fail */
                 free(path);
                 perror("getcwd failed");
                 return strdup("/UNKNOWN");
+                /* LCOV_EXCL_END */
             }
             free(path);
             size <<= 1;
@@ -149,9 +154,11 @@ int path_is_dir(const char *pathname)
     {
         if(trace_verbosity >= 1)
         {
-            /* shouldn't happen because a tracer process just accessed it */
+            /* LCOV_EXCL_START : shouldn't happen because a tracer process just
+             * accessed it */
             log_error_(0, "error stat()ing %s: ", pathname);
             perror(NULL);
+            /* LCOV_EXCL_END */
         }
         return 0;
     }
