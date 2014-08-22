@@ -20,6 +20,7 @@ import paramiko
 from paramiko.client import MissingHostKeyPolicy
 import pickle
 from rpaths import PosixPath, Path
+import scp
 import subprocess
 import sys
 import tarfile
@@ -359,6 +360,103 @@ def vagrant_destroy_vm(args):
 
 
 @target_must_exist
+def vagrant_upload(args):
+    """Replaces an input file in the VM.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    unpacked_info = read_dict(target / '.reprounzip')
+    input_files = unpacked_info.setdefault('input_files', {})
+    use_chroot = unpacked_info['use_chroot']
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    # No argument: list all the input files and exit
+    if not files:
+        print("Input files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for input_name in run['input_files']:
+                assigned = input_files.get(input_name) or "(original)"
+                print("    %s: %s" % (input_name, assigned))
+        return
+
+    # Checks whether the VM is running
+    try:
+        info = get_ssh_parameters(target)
+    except subprocess.CalledProcessError:
+        sys.stderr.write("Failed to get the status of the machine -- is it "
+                         "running?\n")
+        sys.exit(1)
+
+    # Get the path of each input file
+    all_input_files = {}
+    for run in runs:
+        all_input_files.update(run['input_files'])
+
+    # Connect with scp
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    ssh.connect(**info)
+    client = scp.SCPClient(ssh.get_transport())
+
+    try:
+        # Upload files
+        # TODO : copy permissions/owner
+        for filespec in files:
+            filespec_split = filespec.rsplit(':', 1)
+            if len(filespec_split) != 2:
+                sys.stderr.write("Invalid file specification: %r\n" % filespec)
+                sys.exit(1)
+            local_path, input_name = filespec_split
+
+            try:
+                input_path = PosixPath(all_input_files[input_name])
+            except KeyError:
+                sys.stderr.write("Invalid input name: %r" % input_name)
+                sys.exit(1)
+
+            if use_chroot:
+                remote_path = join_root(PosixPath('/experimentroot'),
+                                        PosixPath(input_path))
+            else:
+                remote_path = input_path
+
+            temp = None
+
+            if not local_path:
+                # Restore original file from pack
+                fd, temp = Path.tempfile(prefix='reprozip_input_')
+                os.close(fd)
+                tar = tarfile.open(str(target / 'experiment.rpz'), 'r:*')
+                member = tar.getmember(str(join_root(PosixPath('DATA'),
+                                                     input_path)))
+                member.name = str(temp.name)
+                tar.extract(member, str(temp.parent))
+                tar.close()
+                local_path = temp
+            else:
+                local_path = Path(local_path)
+                if not local_path.exists():
+                    sys.stderr.write("Local file %s doesn't exist\n" %
+                                     local_path)
+                    sys.exit(1)
+
+            client.put(local_path.path, remote_path.path, recursive=False)
+
+            if temp is not None:
+                temp.remove()
+                input_files[input_name] = None
+            else:
+                input_files[input_name] = local_path.absolute().path
+    finally:
+        ssh.close()
+        write_dict(target / '.reprounzip', unpacked_info)
+
+
+@target_must_exist
 def vagrant_destroy_dir(args):
     """Destroys the directory.
     """
@@ -402,6 +500,16 @@ def setup(parser):
         $ reprounzip vagrant run .
         $ reprounzip vagrant download . results:/home/user/theresults.txt
         $ cd ..; reprounzip vagrant destroy experiment
+
+    Upload specifications are either:
+      :inputname            restores the original input file from the pack
+      filename:inputname    replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      outputname:           print the output file to stdout
+      outputname:filename   extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
@@ -440,7 +548,11 @@ def setup(parser):
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
-    # TODO : vagrant upload
+    # vagrant upload
+    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name")
+    parser_upload.set_defaults(func=vagrant_upload)
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
