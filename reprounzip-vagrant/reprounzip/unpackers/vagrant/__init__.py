@@ -88,6 +88,26 @@ def read_dict(filename):
     return dct
 
 
+def get_ssh_parameters(target):
+    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                     cwd=target.path)
+    info = {}
+    for line in stdout.split('\n'):
+        line = line.strip().split(' ', 1)
+        if len(line) != 2:
+            continue
+        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+
+    if 'identityfile' in info:
+        key_file = info['identityfile']
+    else:
+        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+    return dict(hostname=info.get('hostname', '127.0.0.1'),
+                port=int(info.get('port', 2222)),
+                username=info.get('user', 'vagrant'),
+                key_filename=key_file)
+
+
 def vagrant_setup_create(args):
     """Sets up the experiment to be run in a Vagrant-built virtual machine.
 
@@ -301,26 +321,12 @@ def vagrant_run(args):
                           cwd=target.path)
 
     # Gets vagrant SSH parameters
-    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                     cwd=target.path)
-    info = {}
-    for line in stdout.split('\n'):
-        line = line.strip().split(' ', 1)
-        if len(line) != 2:
-            continue
-        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+    info = get_ssh_parameters(target)
 
     # Connects to the machine
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(IgnoreMissingKey())
-    if 'identityfile' in info:
-        key_file = info['identityfile']
-    else:
-        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
-    ssh.connect(info.get('hostname', '127.0.0.1'),
-                port=int(info.get('port', 2222)),
-                username=info.get('user', 'vagrant'),
-                key_filename=key_file)
+    ssh.connect(**info)
 
     chan = ssh.get_transport().open_session()
     chan.get_pty()
