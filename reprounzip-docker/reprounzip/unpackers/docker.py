@@ -55,6 +55,8 @@ def select_image(runs):
 
     if version == '6' or version.startswith('squeeze'):
         return 'debian', 'debian:squeeze'
+    if version == '8' or version.startswith('jessie'):
+        return 'debian', 'debian:jessie'
     else:
         if version != '7' and not version.startswith('wheezy'):
             sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
