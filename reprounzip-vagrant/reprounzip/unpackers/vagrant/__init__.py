@@ -288,14 +288,6 @@ fi
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
 
-    target_readable = unicode_(target)
-    if not target_readable.endswith('/'):
-        target_readable = target_readable + '/'
-    print("Vagrantfile ready\n"
-          "Create the virtual machine by running 'vagrant up' from %s\n"
-          "Then, ssh into it (for example using 'vagrant ssh') and run "
-          "'sh /vagrant/script.sh'" % target_readable)
-
 
 @target_must_exist
 def vagrant_setup_start(args):
