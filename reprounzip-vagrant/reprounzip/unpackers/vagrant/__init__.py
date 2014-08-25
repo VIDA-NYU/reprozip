@@ -19,6 +19,7 @@ import os
 import paramiko
 from paramiko.client import MissingHostKeyPolicy
 import pickle
+import random
 from rpaths import PosixPath, Path
 import scp
 import subprocess
@@ -107,6 +108,19 @@ def get_ssh_parameters(target):
                 port=int(info.get('port', 2222)),
                 username=info.get('user', 'vagrant'),
                 key_filename=key_file)
+
+
+def remote_tempfiles():
+    """Generates temporary filenames for POSIX targets.
+    """
+    characters = (b"abcdefghijklmnopqrstuvwxyz"
+                  b"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                  b"0123456789_")
+    rng = random.Random()
+    while True:
+        letters = [rng.choice(characters) for i in xrange(10)]
+        yield PosixPath('/tmp') / ''.join(letters)
+remote_tempfiles = remote_tempfiles()
 
 
 def vagrant_setup_create(args):
@@ -392,11 +406,10 @@ def vagrant_upload(args):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(IgnoreMissingKey())
     ssh.connect(**info)
-    client = scp.SCPClient(ssh.get_transport())
+    client_scp = scp.SCPClient(ssh.get_transport())
 
     try:
         # Upload files
-        # TODO : copy permissions/owner
         for filespec in files:
             filespec_split = filespec.rsplit(':', 1)
             if len(filespec_split) != 2:
@@ -436,7 +449,27 @@ def vagrant_upload(args):
                                      local_path)
                     sys.exit(1)
 
-            client.put(local_path.path, remote_path.path, recursive=False)
+            # Upload to a temporary file first
+            rtemp = next(remote_tempfiles)
+            client_scp.put(local_path.path, rtemp.path, recursive=False)
+
+            # Move it
+            chan = ssh.get_transport().open_session()
+            chown_cmd = '/bin/chown --reference=%s %s' % (
+                    shell_escape(remote_path.path),
+                    shell_escape(rtemp.path))
+            chmod_cmd = '/bin/chmod --reference=%s %s' % (
+                    shell_escape(remote_path.path),
+                    shell_escape(rtemp.path))
+            mv_cmd = '/bin/mv %s %s' % (
+                    shell_escape(rtemp.path),
+                    shell_escape(remote_path.path))
+            chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+                              ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
+            if chan.recv_exit_status() != 0:
+                sys.stderr.write("Couldn't move file in virtual machine\n")
+                sys.exit(1)
+            chan.close()
 
             if temp is not None:
                 temp.remove()
