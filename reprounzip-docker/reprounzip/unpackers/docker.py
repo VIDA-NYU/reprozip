@@ -12,14 +12,19 @@ See http://www.docker.io/
 
 from __future__ import unicode_literals
 
+import argparse
+import logging
 import os
+import pickle
+import random
 from rpaths import Path, PosixPath
+import subprocess
 import sys
+import tarfile
 
 from reprounzip.unpackers.common import load_config, select_installer, \
-    COMPAT_OK, COMPAT_MAYBE, join_root, shell_escape
-import tarfile
-import logging
+    composite_action, target_must_exist, COMPAT_OK, COMPAT_MAYBE, join_root, \
+    shell_escape
 from reprounzip.utils import unicode_
 
 
@@ -64,7 +69,33 @@ def select_image(runs):
         return 'debian', 'debian:wheezy'
 
 
-def create_docker(args):
+def write_dict(filename, dct):
+    to_write = {'unpacker': 'docker'}
+    to_write.update(dct)
+    with filename.open('wb') as fp:
+        pickle.dump(to_write, fp, pickle.HIGHEST_PROTOCOL)
+
+
+def read_dict(filename):
+    with filename.open('rb') as fp:
+        dct = pickle.load(fp)
+    assert dct['unpacker'] == 'docker'
+    return dct
+
+
+def image_tags():
+    """Generates unique image names.
+    """
+    characters = (b"abcdefghijklmnopqrstuvwxyz"
+                  b"0123456789")
+    rng = random.Random()
+    while True:
+        letters = [rng.choice(characters) for i in xrange(10)]
+        yield b'reprounzip_' + ''.join(letters)
+image_tags = image_tags()
+
+
+def docker_setup_create(args):
     """Sets up the experiment to be run in a Docker-built container.
     """
     pack = Path(args.pack[0])
@@ -129,7 +160,53 @@ def create_docker(args):
                  '--numeric-owner --strip=1 %s\n' %
                  ' '.join(shell_escape(p) for p in reversed(pathlist)))
 
-        # TODO
+    # Meta-data for reprounzip
+    write_dict(target / '.reprounzip', {})
+
+
+@target_must_exist
+def docker_setup_build(args):
+    """Builds the container from the Dockerfile
+    """
+    target = Path(args.target[0])
+    unpacked_info = read_dict(target / '.reprounzip')
+    if 'initial_image' in unpacked_info:
+        sys.stderr.write("Image already built\n")
+        sys.exit(1)
+
+    tag = next(image_tags)
+
+    retcode = subprocess.call(['docker', 'build', '-t', tag, '.'],
+                              cwd=target.path)
+    if retcode != 0:
+        sys.stderr.write("docker build failed with code %d\n" % retcode)
+        sys.exit(1)
+
+    unpacked_info['initial_image'] = tag
+    unpacked_info['current_image'] = tag
+
+
+@target_must_exist
+def docker_destroy_docker(args):
+    """Destroys the container and images.
+    """
+    target = Path(args.target[0])
+    unpacked_info = read_dict(target / '.reprounzip')
+    if 'initial_image' not in unpacked_info:
+        sys.stderr.write("Image not created\n")
+        sys.exit(1)
+
+    # TODO : destroys images and containers
+
+
+@target_must_exist
+def docker_destroy_dir(args):
+    """Destroys the directory.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+
+    target.rmtree()
 
 
 def test_has_docker(pack, **kwargs):
@@ -144,12 +221,70 @@ def test_has_docker(pack, **kwargs):
 
 
 def setup(parser):
-    """Unpacks the files and sets up the experiment to be run with Docker
+    """Runs the experiment in a Docker container
+
+    You will need Docker to be installed on your machine if you want to run the
+    experiment.
+
+    setup   setup/create    creates Dockerfile (--pack is required)
+            setup/build     builds the container from the Dockerfile
+    upload                  replaces input files in the container
+                            (without arguments, lists input files)
+    run                     runs the experiment in the container
+    download                gets output files from the container
+                            (without arguments, lists output files)
+    destroy destroy/docker  destroys the container and associated images
+            destroy/dir     removes the unpacked directory
+
+    For example:
+
+        $ reprounzip docker setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip docker run .
+        $ reprounzip docker download . results:/home/user/theresults.txt
+        $ cd ..; reprounzip docker destroy experiment
     """
-    # Creates a virtual machine with Vagrant
-    parser.add_argument('pack', nargs=1, help="Pack to extract")
-    parser.add_argument('target', nargs=1, help="Directory to create")
-    parser.add_argument('--base-image', nargs=1, help="Base image to use")
-    parser.set_defaults(func=create_docker)
+    subparsers = parser.add_subparsers(title="actions",
+                                       metavar='', help=argparse.SUPPRESS)
+    options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('target', nargs=1, help="Directory to create")
+
+    # setup/create
+    opt_setup = argparse.ArgumentParser(add_help=False)
+    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
+    parser_setup_create = subparsers.add_parser('/setup/create',
+                                                parents=[options, opt_setup])
+    parser_setup_create.set_defaults(func=docker_setup_create)
+
+    # setup/build
+    parser_setup_build = subparsers.add_parser('setup/build',
+                                               parents=[options])
+    parser_setup_build.set_defaults(func=docker_setup_build)
+
+    # setup
+    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup.set_defaults(func=composite_action(docker_setup_create,
+                                                    docker_setup_build))
+
+    # TODO : docker upload
+
+    # TODO : docker run
+
+    # TODO : docker download
+
+    # destroy/docker
+    parser_destroy_docker = subparsers.add_parser('destroy/docker',
+                                                  parents=[options])
+    parser_destroy_docker.set_defaults(func=docker_destroy_docker)
+
+    # destroy/dir
+    parser_destroy_dir = subparsers.add_parser('destroy/dir',
+                                               parents=[options])
+    parser_destroy_dir.set_defaults(func=docker_destroy_dir)
+
+    # destroy
+    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy.set_defaults(func=composite_action(docker_destroy_docker,
+                                                      docker_destroy_dir))
 
     return {'test_compatibility': test_has_docker}
