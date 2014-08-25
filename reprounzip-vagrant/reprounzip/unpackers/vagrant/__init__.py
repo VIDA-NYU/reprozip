@@ -119,7 +119,7 @@ def remote_tempfiles():
     rng = random.Random()
     while True:
         letters = [rng.choice(characters) for i in xrange(10)]
-        yield PosixPath('/tmp') / ''.join(letters)
+        yield PosixPath('/tmp') / (b'reprozip_input_' + ''.join(letters))
 remote_tempfiles = remote_tempfiles()
 
 
@@ -308,6 +308,7 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
 
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
@@ -350,19 +351,6 @@ def vagrant_run(args):
         interactive_shell(chan)
 
     ssh.close()
-
-
-@target_must_exist
-def vagrant_destroy_vm(args):
-    """Destroys the VM through Vagrant.
-    """
-    target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
-
-    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
-    if retcode != 0:
-        sys.stderr("vagrant destroy failed with code %d, ignoring...\n" %
-                   retcode)
 
 
 @target_must_exist
@@ -560,6 +548,19 @@ def vagrant_download(args):
                 client.get(remote_path.path, local_path, recursive=False)
     finally:
         ssh.close()
+
+
+@target_must_exist
+def vagrant_destroy_vm(args):
+    """Destroys the VM through Vagrant.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
+
+    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
+    if retcode != 0:
+        sys.stderr("vagrant destroy failed with code %d, ignoring...\n" %
+                   retcode)
 
 
 @target_must_exist
