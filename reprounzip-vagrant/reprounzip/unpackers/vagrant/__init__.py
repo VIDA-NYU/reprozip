@@ -19,16 +19,15 @@ import os
 import paramiko
 from paramiko.client import MissingHostKeyPolicy
 import pickle
-import random
 from rpaths import PosixPath, Path
 import scp
 import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config, select_installer, \
-    composite_action, target_must_exist, shell_escape, busybox_url, \
-    join_root, COMPAT_OK, COMPAT_MAYBE
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
+    composite_action, target_must_exist, make_unique_name, shell_escape, \
+    load_config, select_installer, busybox_url, join_root
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_
 
@@ -108,19 +107,6 @@ def get_ssh_parameters(target):
                 port=int(info.get('port', 2222)),
                 username=info.get('user', 'vagrant'),
                 key_filename=key_file)
-
-
-def remote_tempfiles():
-    """Generates temporary filenames for POSIX targets.
-    """
-    characters = (b"abcdefghijklmnopqrstuvwxyz"
-                  b"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                  b"0123456789_")
-    rng = random.Random()
-    while True:
-        letters = [rng.choice(characters) for i in xrange(10)]
-        yield PosixPath('/tmp') / (b'reprozip_input_' + ''.join(letters))
-remote_tempfiles = remote_tempfiles()
 
 
 def vagrant_setup_create(args):
@@ -438,7 +424,7 @@ def vagrant_upload(args):
                     sys.exit(1)
 
             # Upload to a temporary file first
-            rtemp = next(remote_tempfiles)
+            rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
             client_scp.put(local_path.path, rtemp.path, recursive=False)
 
             # Move it

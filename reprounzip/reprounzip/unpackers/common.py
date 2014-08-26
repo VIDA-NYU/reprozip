@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 
 import functools
 import platform
+import random
 from rpaths import Path
 import string
 import subprocess
@@ -48,6 +49,23 @@ def target_must_exist(func):
             sys.exit(1)
         return func(args)
     return wrapper
+
+
+def unique_names():
+    """Generates unique sequences of bytes.
+    """
+    characters = (b"abcdefghijklmnopqrstuvwxyz"
+                  b"0123456789")
+    rng = random.Random()
+    while True:
+        letters = [rng.choice(characters) for i in xrange(10)]
+        yield ''.join(letters)
+unique_names = unique_names()
+
+
+def make_unique_name(prefix):
+    assert isinstance(prefix, bytes)
+    return prefix + next(unique_names)
 
 
 def shell_escape(s):
