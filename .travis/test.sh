@@ -14,7 +14,7 @@ in
         reprounzip graph graph.dot
         reprozip pack
         reprounzip graph graph2.dot experiment.rpz
-        python tests/run.py
+        python tests
 EOF
         ;;
     coverage_py)
@@ -26,7 +26,7 @@ EOF
         $COVER reprounzip/reprounzip/main.py graph graph.dot
         $COVER reprozip/reprozip/main.py pack
         $COVER reprounzip/reprounzip/main.py graph graph2.dot experiment.rpz
-        python tests/run.py
+        python tests
 EOF
         ;;
     check_style)

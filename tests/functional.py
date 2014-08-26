@@ -4,8 +4,7 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-import argparse
-from contextlib import contextmanager
+import functools
 import os
 import re
 from rpaths import Path, unicode
@@ -32,14 +31,16 @@ rpz = python + [reprozip_main.absolute().path] + verbose
 rpuz = python + [reprounzip_main.absolute().path] + verbose
 
 
-@contextmanager
-def in_temp_dir():
-    tmp = Path.tempdir(prefix='reprozip_tests_')
-    try:
-        with tmp.in_dir():
-            yield
-    finally:
-        tmp.rmtree(ignore_errors=True)
+def in_temp_dir(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        tmp = Path.tempdir(prefix='reprozip_tests_')
+        try:
+            with tmp.in_dir():
+                return f(*args, **kwargs)
+        finally:
+            tmp.rmtree(ignore_errors=True)
+    return wrapper
 
 
 def call(args):
@@ -65,15 +66,8 @@ def build(target, sources, args=[]):
                           args)
 
 
-parser = argparse.ArgumentParser(description="reprozip tests")
-parser.add_argument('--interactive', action='store_true')
-parser.add_argument('--run-vagrant', action='store_true')
-args = parser.parse_args()
-interactive = args.interactive
-run_vagrant = args.run_vagrant
-
-
-with in_temp_dir():
+@in_temp_dir
+def functional_tests(interactive, run_vagrant):
     # ########################################
     # 'simple' program: trace, pack, info, unpack
     #
