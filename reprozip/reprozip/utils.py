@@ -41,6 +41,10 @@ else:
 
 
 def escape(s):
+    """Escapes backslashes and double quotes in strings.
+
+    This does NOT add quotes around the string.
+    """
     return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
