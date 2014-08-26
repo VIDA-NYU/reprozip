@@ -31,7 +31,7 @@ EOF
         ;;
     check_style)
         run_lines<<'EOF'
-        flake8 --ignore=E126 reprozip/reprozip reprounzip/reprounzip
+        flake8 --ignore=E126 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip
 EOF
         ;;
     check_shared)
