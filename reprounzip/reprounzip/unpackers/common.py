@@ -20,6 +20,7 @@ import sys
 import tarfile
 
 import reprounzip.common
+from reprounzip.utils import irange
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
@@ -56,10 +57,10 @@ def unique_names():
     """
     characters = (b"abcdefghijklmnopqrstuvwxyz"
                   b"0123456789")
-    characters = [characters[i:i + 1] for i in range(len(characters))]
+    characters = [characters[i:i + 1] for i in irange(len(characters))]
     rng = random.Random()
     while True:
-        letters = [rng.choice(characters) for i in range(10)]
+        letters = [rng.choice(characters) for i in irange(10)]
         yield b''.join(letters)
 unique_names = unique_names()
 

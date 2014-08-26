@@ -28,10 +28,12 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.request import Request, urlopen
     izip = zip
+    irange = range
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
     import itertools
     izip = itertools.izip
+    irange = xrange
 
 
 if PY3:
