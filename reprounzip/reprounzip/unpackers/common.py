@@ -56,10 +56,11 @@ def unique_names():
     """
     characters = (b"abcdefghijklmnopqrstuvwxyz"
                   b"0123456789")
+    characters = [characters[i:i + 1] for i in range(len(characters))]
     rng = random.Random()
     while True:
         letters = [rng.choice(characters) for i in range(10)]
-        yield ''.join(letters)
+        yield b''.join(letters)
 unique_names = unique_names()
 
 
