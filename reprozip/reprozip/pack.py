@@ -150,7 +150,8 @@ def pack(target, directory, sort_packages):
     # (they already do if files from them are used, but empty directories do
     # not get packed inside a tar archive)
     for directory in list_directories(trace):
-        tar.add_data(directory)
+        if directory.is_dir():
+            tar.add_data(directory)
 
     logging.info("Adding metadata...")
     # Stores pack version
