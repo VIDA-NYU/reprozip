@@ -94,7 +94,7 @@ def load_config(filename, canonical, File=File, Package=Package):
 
     ver = LooseVersion(config['version'])
 
-    keys_ = set(config.keys())
+    keys_ = set(config)
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
     # Accepts versions from 0.2 to 0.3 inclusive

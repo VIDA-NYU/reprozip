@@ -20,7 +20,7 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange
+from reprounzip.utils import irange, itervalues
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
@@ -117,7 +117,7 @@ class AptInstaller(object):
 
         # Checks on packages
         pkgs_status = self.get_packages_info(packages)
-        for pkg, status in pkgs_status.itervalues():
+        for pkg, status in itervalues(pkgs_status):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:

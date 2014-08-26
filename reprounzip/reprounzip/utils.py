@@ -29,11 +29,17 @@ if PY3:
     from urllib.request import Request, urlopen
     izip = zip
     irange = range
+    iteritems = dict.items
+    itervalues = dict.values
+    listvalues = lambda d: list(d.values())
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
     import itertools
     izip = itertools.izip
     irange = xrange
+    iteritems = dict.iteritems
+    itervalues = dict.itervalues
+    listvalues = dict.values
 
 
 if PY3:

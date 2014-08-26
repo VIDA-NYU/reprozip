@@ -29,7 +29,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     load_config, select_installer, busybox_url, join_root
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_
+from reprounzip.utils import unicode_, iteritems
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -252,7 +252,7 @@ fi
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
             cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in run['environ'].items())
+                            for k, v in iteritems(run['environ']))
             cmd += ' '
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(

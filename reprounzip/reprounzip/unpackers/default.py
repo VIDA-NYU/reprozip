@@ -28,7 +28,7 @@ import tarfile
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, load_config, \
     select_installer, target_must_exist, shell_escape, busybox_url, \
     join_root, PKG_NOT_INSTALLED, COMPAT_OK, COMPAT_NO
-from reprounzip.utils import unicode_, download_file
+from reprounzip.utils import unicode_, iteritems, download_file
 
 
 def installpkgs(args):
@@ -161,7 +161,7 @@ def directory_create(args):
                     unicode_(join_root(root,
                                        Path(run['workingdir']))))
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in run['environ'].items())
+                            for k, v in iteritems(run['environ']))
             cmd += ' '
             path = [PosixPath(d)
                     for d in run['environ'].get('PATH', '').split(':')]
@@ -307,7 +307,7 @@ def chroot_create(args):
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
             cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in run['environ'].items())
+                            for k, v in iteritems(run['environ']))
             cmd += ' '
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(

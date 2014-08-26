@@ -26,7 +26,8 @@ import tarfile
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK
-from reprounzip.utils import PY3, CommonEqualityMixin, escape, unicode_
+from reprounzip.utils import PY3, unicode_, iteritems, escape, \
+    CommonEqualityMixin
 
 
 C_INITIAL = 0   # First process or don't know
@@ -213,7 +214,7 @@ def generate(target, directory, all_forks=False):
         fp.write('\n    node [shape=ellipse];\n\n    /* system packages */\n')
 
         # Files from packages
-        for i, ((name, version), files) in enumerate(package_files.items()):
+        for i, ((name, version), files) in enumerate(iteritems(package_files)):
             fp.write('    subgraph cluster%d {\n        label=' % i)
             if version:
                 fp.write('"%s %s";\n' % (escape(name), escape(version)))
