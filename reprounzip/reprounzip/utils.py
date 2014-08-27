@@ -134,6 +134,8 @@ def download_file(url, dest, cachename=None):
         mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
         request.add_header('If-Modified-Since', mtime)
 
+    cache.parent.mkdir(parents=True)
+
     try:
         response = urlopen(request)
     except URLError as e:
@@ -155,7 +157,6 @@ def download_file(url, dest, cachename=None):
     logging.info("Downloading %s" % url)
     try:
         CHUNK_SIZE = 4096
-        cache.parent.mkdir(parents=True)
         with cache.open('wb') as f:
             while True:
                 chunk = response.read(CHUNK_SIZE)
