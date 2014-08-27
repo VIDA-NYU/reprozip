@@ -104,6 +104,7 @@ def create_directory(args):
                     shell_escape(a)
                     for a in [run['binary']] + run['argv'][1:])
             fp.write('%s\n' % cmd)
+    (target / 'script.sh').chmod(0o755)
 
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
@@ -195,6 +196,7 @@ def create_chroot(args):
                      userspec,
                      shell_escape(unicode_(root)),
                      shell_escape(cmd)))
+    (target / 'script.sh').chmod(0o755)
 
     print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
