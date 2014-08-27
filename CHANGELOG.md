@@ -16,6 +16,14 @@ Features:
 * Vagrant now defaults to --use-chroot`, added --no-use-chroot
 * Adds --summary and --missing to installpkgs
 
+0.3.1 (2014-08-26)
+------------------
+
+(reprozip only)
+
+Bugfixes:
+* Don't crash when packing an experiment that wrote in temporary directories
+
 0.3 (2014-07-28)
 ----------------
 
