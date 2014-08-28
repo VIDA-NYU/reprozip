@@ -495,6 +495,67 @@ def upload(args):
         write_dict(target / '.reprounzip', unpacked_info, args.type)
 
 
+@target_must_exist
+def download(args):
+    """Gets an output file from the directory.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    read_dict(target / '.reprounzip', args.type)
+
+    # Loads config
+    runs, packages, other_files = load_config_file(target / 'config.yml',
+                                                   True)
+
+    # No argument: list all the output files and exit
+    if not files:
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name in run['output_files']:
+                print("    %s" % output_name)
+        return
+
+    root = (target / 'root').absolute()
+
+    # Get the path of each output file
+    all_output_files = {}
+    for run in runs:
+        all_output_files.update(run['output_files'])
+
+    # Copy files
+    for filespec in files:
+        filespec_split = filespec.split(':', 1)
+        if len(filespec_split) != 2:
+            sys.stderr.write("Invalid file specification: %r\n" % filespec)
+            sys.exit(1)
+        output_name, local_path = filespec_split
+
+        try:
+            remote_path = PosixPath(all_output_files[output_name])
+        except KeyError:
+            sys.stderr.write("Invalid output name: %r\n" % output_name)
+            sys.exit(1)
+
+        remote_path = join_root(root, remote_path)
+
+        if not local_path:
+            # Output to stdout
+            with remote_path.open('rb') as fp:
+                chunk = fp.read(1024)
+                if chunk:
+                    sys.stdout.write(chunk)
+                while len(chunk) == 1024:
+                    chunk = fp.read(1024)
+                    if chunk:
+                        sys.stdout.write(chunk)
+        else:
+            # Copy
+            remote_path.copyfile(local_path)
+            remote_path.copymode(local_path)
+
+
 def test_same_pkgmngr(pack, config, **kwargs):
     """Compatibility test: platform is Linux and uses same package manager.
     """
@@ -577,7 +638,12 @@ def setup_directory(parser):
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.set_defaults(func=run, type='directory')
 
-    # TODO : directory download
+    # download
+    parser_download = subparsers.add_parser('download',
+                                            parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=download, type='directory')
 
     # destroy
     parser_destroy = subparsers.add_parser('destroy', parents=[options])
@@ -658,7 +724,12 @@ def setup_chroot(parser):
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.set_defaults(func=run, type='chroot')
 
-    # TODO : chroot download (options)
+    # download
+    parser_download = subparsers.add_parser('download',
+                                            parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=download, type='chroot')
 
     # destroy
     parser_destroy = subparsers.add_parser('destroy', parents=[options])
