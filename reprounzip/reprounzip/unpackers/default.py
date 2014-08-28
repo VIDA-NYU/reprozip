@@ -97,6 +97,8 @@ def directory_create(args):
 
     Only the files that are not part of a package are copied (unless they are
     missing from the system and were packed).
+
+    In addition, the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup needs --pack\n")
@@ -135,6 +137,11 @@ def directory_create(args):
         if linkname.is_absolute:
             m.linkname = join_root(root, PosixPath(m.linkname)).path
     tar.extractall(str(root), members)
+
+    # Unpacks configuration file
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
     tar.close()
 
     # Gets library paths
@@ -223,6 +230,8 @@ def chroot_create(args):
 
     All the files in the pack are unpacked; system files are copied only if
     they were not packed, and busybox is installed if /bin/sh wasn't packed.
+
+    In addition, the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup/create needs --pack\n")
@@ -290,6 +299,11 @@ def chroot_create(args):
             m.uid = uid
             m.gid = gid
     tar.extractall(str(root), members)
+
+    # Unpacks configuration file
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
     tar.close()
 
     # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
