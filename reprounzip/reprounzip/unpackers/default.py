@@ -191,6 +191,33 @@ def directory_destroy(args):
     target.rmtree()
 
 
+def should_restore_owner(param):
+    if os.getuid() != 0:
+        if param is True:
+            # Restoring the owner was explicitely requested
+            sys.stderr.write("Error: Not running as root, cannot restore "
+                             "files' owner/group\n")
+            sys.exit(1)
+        elif param is None:
+            # Nothing was requested
+            sys.stderr.write("Warning: Not running as root, won't restore "
+                             "files' owner/group\n")
+        else:
+            # If False: skip warning
+            return False
+    else:
+        if param is None:
+            # Nothing was requested
+            sys.stderr.write("Info: Running as root, we will restore files' "
+                             "owner/group\n")
+            return True
+        elif param is True:
+            return True
+        else:
+            # If False: skip warning
+            return False
+
+
 def chroot_create(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
 
@@ -212,26 +239,7 @@ def chroot_create(args):
         sys.exit(1)
 
     # We can only restore owner/group of files if running as root
-    restore_owner = False
-    if os.getuid() != 0:
-        if args.restore_owner is True:
-            # Restoring the owner was explicitely requested
-            sys.stderr.write("Error: Not running as root, cannot restore "
-                             "files' owner/group\n")
-            sys.exit(1)
-        elif args.restore_owner is None:
-            # Nothing was requested
-            sys.stderr.write("Warning: Not running as root, won't restore "
-                             "files' owner/group\n")
-        # If False: skip warning
-    else:
-        if args.restore_owner is None:
-            # Nothing was requested
-            sys.stderr.write("Info: Running as root, we will restore files' "
-                             "owner/group\n")
-            restore_owner = True
-        elif args.restore_owner is True:
-            restore_owner = True
+    restore_owner = should_restore_owner(args.restore_owner)
 
     # Loads config
     runs, packages, other_files = load_config(pack)
