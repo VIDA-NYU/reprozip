@@ -91,7 +91,8 @@ def create_directory(args):
                     unicode_(join_root(root,
                                        Path(run['workingdir']))))
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in run['environ'].items())
+                            for k, v in run['environ'].items()
+                            if k != 'PATH')
             cmd += ' '
             path = [PosixPath(d)
                     for d in run['environ'].get('PATH', '').split(':')]
