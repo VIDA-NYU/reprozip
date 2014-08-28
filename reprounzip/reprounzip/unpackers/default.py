@@ -28,7 +28,7 @@ import tarfile
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, load_config, \
     select_installer, target_must_exist, shell_escape, busybox_url, \
     join_root, PKG_NOT_INSTALLED, COMPAT_OK, COMPAT_NO
-from reprounzip.utils import unicode_, iteritems, download_file
+from reprounzip.utils import unicode_, iteritems, itervalues, download_file
 
 
 def installpkgs(args):
@@ -98,7 +98,8 @@ def directory_create(args):
     Only the files that are not part of a package are copied (unless they are
     missing from the system and were packed).
 
-    In addition, the configuration file is extracted.
+    In addition, input files are put in a tar.gz (so they can be put back after
+    an upload) and the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup needs --pack\n")
@@ -182,6 +183,14 @@ def directory_create(args):
                     for a in run['argv'])
             fp.write('%s\n' % cmd)
 
+    # Original input files, so upload can restore them
+    if any(run['input_files'] for run in runs):
+        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
+        for run in runs:
+            for ifile in itervalues(run['input_files']):
+                inputtar.add(str(PosixPath(ifile)))
+        inputtar.close()
+
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
@@ -231,7 +240,8 @@ def chroot_create(args):
     All the files in the pack are unpacked; system files are copied only if
     they were not packed, and busybox is installed if /bin/sh wasn't packed.
 
-    In addition, the configuration file is extracted.
+    In addition, input files are put in a tar.gz (so they can be put back after
+    an upload) and the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup/create needs --pack\n")
@@ -340,6 +350,14 @@ def chroot_create(args):
                      userspec,
                      shell_escape(unicode_(root)),
                      shell_escape(cmd)))
+
+    # Original input files, so upload can restore them
+    if any(run['input_files'] for run in runs):
+        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
+        for run in runs:
+            for ifile in itervalues(run['input_files']):
+                inputtar.add(str(PosixPath(ifile)))
+        inputtar.close()
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
