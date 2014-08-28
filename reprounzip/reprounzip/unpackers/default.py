@@ -94,12 +94,19 @@ def create_directory(args):
                             for k, v in run['environ'].items()
                             if k != 'PATH')
             cmd += ' '
+
+            # PATH
+            # Get the original PATH components
             path = [PosixPath(d)
                     for d in run['environ'].get('PATH', '').split(':')]
-            path = ':'.join(unicode_(join_root(root, d)) if d.root == '/'
-                            else unicode_(d)
-                            for d in path)
+            # The same paths but in the directory
+            dir_path = [join_root(root, d)
+                        for d in path
+                        if d.root == '/']
+            # Rebuild string
+            path = ':'.join(unicode_(d) for d in (dir_path + path))
             cmd += 'PATH=%s ' % shell_escape(path)
+
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
