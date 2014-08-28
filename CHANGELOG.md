@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.3.2 (2014-08-28)
+------------------
+
+(reprounzip only)
+
+Bugfixes:
+* Once busybox was in the local cache, setting it up could crash
+* 'script.sh' files were not set as executable
+
 0.3.1 (2014-08-26)
 ------------------
 

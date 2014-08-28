@@ -12,7 +12,7 @@ from pkg_resources import iter_entry_points
 import sys
 
 
-__version__ = '0.3'
+__version__ = '0.3.2'
 
 
 def main():
