@@ -25,3 +25,6 @@ matrix:
       env: TEST_MODE=coverage_py
     - python: "2.7"
       env: TEST_MODE=coverage_c
+branches:
+  except:
+    - docs
