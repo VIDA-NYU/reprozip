@@ -641,7 +641,7 @@ def setup(parser):
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
-    # vagrant upload
+    # upload
     parser_upload = subparsers.add_parser('upload', parents=[options])
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                help="<path>:<input_file_name")
@@ -655,7 +655,7 @@ def setup(parser):
                                   "this terminal"))
     parser_run.set_defaults(func=vagrant_run)
 
-    # vagrant download
+    # download
     parser_download = subparsers.add_parser('download', parents=[options])
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
