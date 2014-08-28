@@ -178,8 +178,6 @@ def directory_create(args):
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
-    print("Experiment set up, run %s to start" % (target / 'script.sh'))
-
 
 @target_must_exist
 def directory_destroy(args):
@@ -321,8 +319,6 @@ def chroot_create(args):
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
-
-    print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
 @target_must_exist
