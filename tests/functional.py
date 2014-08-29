@@ -61,7 +61,7 @@ def check_call(args):
 
 
 def build(target, sources, args=[]):
-    subprocess.check_call(['cc', '-o', target] +
+    subprocess.check_call(['/usr/bin/env', 'CFLAGS=', 'cc', '-o', target] +
                           [(tests / s).path
                            for s in sources] +
                           args)
@@ -97,9 +97,10 @@ def functional_tests(interactive, run_vagrant):
                  for k, f in iteritems(input_files)) ==
             {'arg': b'simple_input.txt'})
     output_files = conf['runs'][0]['output_files']
-    assert (dict((k, Path(f).name)
-                 for k, f in iteritems(output_files)) ==
-            {'arg': b'simple_output.txt'})
+    print(dict((k, Path(f).name) for k, f in iteritems(output_files)))
+    # Here we don't test for dict equality, since we might have C coverage
+    # files in the mix
+    assert Path(output_files['arg']).name == b'simple_output.txt'
     # Pack
     check_call(rpz + ['pack', '-d', 'rpz-simple', 'simple.rpz'])
     Path('simple').remove()
