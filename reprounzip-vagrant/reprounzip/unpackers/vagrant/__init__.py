@@ -27,7 +27,8 @@ import tarfile
 
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, busybox_url, join_root
+    load_config, select_installer, busybox_url, join_root, FileUploader, \
+    FileDownloader
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_, iteritems
 
@@ -339,6 +340,59 @@ def vagrant_run(args):
     ssh.close()
 
 
+class SSHUploader(FileUploader):
+    def __init__(self, target, input_files, files, use_chroot):
+        self.use_chroot = use_chroot
+        FileUploader.__init__(self, target, input_files, files)
+
+    def prepare_upload(self, files):
+        # Checks whether the VM is running
+        try:
+            ssh_info = get_ssh_parameters(self.target)
+        except subprocess.CalledProcessError:
+            sys.stderr.write("Failed to get the status of the machine -- is "
+                             "it running?\n")
+            sys.exit(1)
+
+        # Connect with scp
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(IgnoreMissingKey())
+        self.ssh.connect(**ssh_info)
+        self.client_scp = scp.SCPClient(self.ssh.get_transport())
+
+    def upload_file(self, local_path, input_path):
+        if self.use_chroot:
+            remote_path = join_root(PosixPath('/experimentroot'),
+                                    PosixPath(input_path))
+        else:
+            remote_path = input_path
+
+        # Upload to a temporary file first
+        rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
+        self.client_scp.put(local_path.path, rtemp.path, recursive=False)
+
+        # Move it
+        chan = self.ssh.get_transport().open_session()
+        chown_cmd = '/bin/chown --reference=%s %s' % (
+                shell_escape(remote_path.path),
+                shell_escape(rtemp.path))
+        chmod_cmd = '/bin/chmod --reference=%s %s' % (
+                shell_escape(remote_path.path),
+                shell_escape(rtemp.path))
+        mv_cmd = '/bin/mv %s %s' % (
+                shell_escape(rtemp.path),
+                shell_escape(remote_path.path))
+        chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+                          ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
+        if chan.recv_exit_status() != 0:
+            sys.stderr.write("Couldn't move file in virtual machine\n")
+            sys.exit(1)
+        chan.close()
+
+    def finalize(self):
+        self.ssh.close()
+
+
 @target_must_exist
 def vagrant_upload(args):
     """Replaces an input file in the VM.
@@ -349,110 +403,40 @@ def vagrant_upload(args):
     input_files = unpacked_info.setdefault('input_files', {})
     use_chroot = unpacked_info['use_chroot']
 
-    # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
-
-    # No argument: list all the input files and exit
-    if not files:
-        print("Input files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for input_name in run['input_files']:
-                assigned = input_files.get(input_name) or "(original)"
-                print("    %s: %s" % (input_name, assigned))
-        return
-
-    # Checks whether the VM is running
     try:
-        info = get_ssh_parameters(target)
-    except subprocess.CalledProcessError:
-        sys.stderr.write("Failed to get the status of the machine -- is it "
-                         "running?\n")
-        sys.exit(1)
-
-    # Get the path of each input file
-    all_input_files = {}
-    for run in runs:
-        all_input_files.update(run['input_files'])
-
-    # Connect with scp
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(IgnoreMissingKey())
-    ssh.connect(**info)
-    client_scp = scp.SCPClient(ssh.get_transport())
-
-    try:
-        # Upload files
-        for filespec in files:
-            filespec_split = filespec.rsplit(':', 1)
-            if len(filespec_split) != 2:
-                sys.stderr.write("Invalid file specification: %r\n" % filespec)
-                sys.exit(1)
-            local_path, input_name = filespec_split
-
-            try:
-                input_path = PosixPath(all_input_files[input_name])
-            except KeyError:
-                sys.stderr.write("Invalid input name: %r" % input_name)
-                sys.exit(1)
-
-            if use_chroot:
-                remote_path = join_root(PosixPath('/experimentroot'),
-                                        PosixPath(input_path))
-            else:
-                remote_path = input_path
-
-            temp = None
-
-            if not local_path:
-                # Restore original file from pack
-                fd, temp = Path.tempfile(prefix='reprozip_input_')
-                os.close(fd)
-                tar = tarfile.open(str(target / 'experiment.rpz'), 'r:*')
-                member = tar.getmember(str(join_root(PosixPath('DATA'),
-                                                     input_path)))
-                member.name = str(temp.name)
-                tar.extract(member, str(temp.parent))
-                tar.close()
-                local_path = temp
-            else:
-                local_path = Path(local_path)
-                if not local_path.exists():
-                    sys.stderr.write("Local file %s doesn't exist\n" %
-                                     local_path)
-                    sys.exit(1)
-
-            # Upload to a temporary file first
-            rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
-            client_scp.put(local_path.path, rtemp.path, recursive=False)
-
-            # Move it
-            chan = ssh.get_transport().open_session()
-            chown_cmd = '/bin/chown --reference=%s %s' % (
-                    shell_escape(remote_path.path),
-                    shell_escape(rtemp.path))
-            chmod_cmd = '/bin/chmod --reference=%s %s' % (
-                    shell_escape(remote_path.path),
-                    shell_escape(rtemp.path))
-            mv_cmd = '/bin/mv %s %s' % (
-                    shell_escape(rtemp.path),
-                    shell_escape(remote_path.path))
-            chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                              ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
-            if chan.recv_exit_status() != 0:
-                sys.stderr.write("Couldn't move file in virtual machine\n")
-                sys.exit(1)
-            chan.close()
-
-            if temp is not None:
-                temp.remove()
-                input_files[input_name] = None
-            else:
-                input_files[input_name] = local_path.absolute().path
+        SSHUploader(target, input_files, files, use_chroot)
     finally:
-        ssh.close()
         write_dict(target / '.reprounzip', unpacked_info)
+
+
+class SSHDownloader(FileDownloader):
+    def __init__(self, target, files, use_chroot):
+        self.use_chroot = use_chroot
+        FileDownloader.__init__(self, target, files)
+
+    def prepare_download(self, files):
+        # Checks whether the VM is running
+        try:
+            info = get_ssh_parameters(self.target)
+        except subprocess.CalledProcessError:
+            sys.stderr.write("Failed to get the status of the machine -- is "
+                             "it running?\n")
+            sys.exit(1)
+
+        # Connect with scp
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(IgnoreMissingKey())
+        self.ssh.connect(**info)
+        self.client_scp = scp.SCPClient(self.ssh.get_transport())
+
+    def download(self, remote_path, local_path):
+        if self.use_chroot:
+            remote_path = join_root(PosixPath('/experimentroot'), remote_path)
+        self.client_scp.get(remote_path.path, local_path.path,
+                            recursive=False)
+
+    def finalize(self):
+        self.ssh.close()
 
 
 @target_must_exist
@@ -463,77 +447,7 @@ def vagrant_download(args):
     files = args.file
     use_chroot = read_dict(target / '.reprounzip')['use_chroot']
 
-    # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
-
-    # No argument: list all the output files and exit
-    if not files:
-        print("Output files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for output_name in run['output_files']:
-                print("    %s" % output_name)
-        return
-
-    # Checks whether the VM is running
-    try:
-        info = get_ssh_parameters(target)
-    except subprocess.CalledProcessError:
-        sys.stderr.write("Failed to get the status of the machine -- is it "
-                         "running?\n")
-        sys.exit(1)
-
-    # Get the path of each output file
-    all_output_files = {}
-    for run in runs:
-        all_output_files.update(run['output_files'])
-
-    # Connect with scp
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(IgnoreMissingKey())
-    ssh.connect(**info)
-    client = scp.SCPClient(ssh.get_transport())
-
-    try:
-        # Download files
-        for filespec in files:
-            filespec_split = filespec.split(':', 1)
-            if len(filespec_split) != 2:
-                sys.stderr.write("Invalid file specification: %r\n" % filespec)
-                sys.exit(1)
-            output_name, local_path = filespec_split
-
-            try:
-                remote_path = all_output_files[output_name]
-            except KeyError:
-                sys.stderr.write("Invalid output name: %r\n" % output_name)
-                sys.exit(1)
-
-            if use_chroot:
-                remote_path = join_root(PosixPath('/experimentroot'),
-                                        PosixPath(remote_path))
-
-            if not local_path:
-                # Download to temporary file
-                fd, temp = Path.tempfile(prefix='reprozip_output_')
-                os.close(fd)
-                client.get(remote_path.path, temp.path, recursive=False)
-                # Output to stdout
-                with temp.open('rb') as fp:
-                    chunk = fp.read(1024)
-                    if chunk:
-                        sys.stdout.write(chunk)
-                    while len(chunk) == 1024:
-                        chunk = fp.read(1024)
-                        if chunk:
-                            sys.stdout.write(chunk)
-                temp.remove()
-            else:
-                # Download
-                client.get(remote_path.path, local_path, recursive=False)
-    finally:
-        ssh.close()
+    SSHDownloader(target, files, use_chroot)
 
 
 @target_must_exist
