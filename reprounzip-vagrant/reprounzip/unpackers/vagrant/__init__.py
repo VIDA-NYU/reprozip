@@ -326,16 +326,19 @@ def vagrant_run(args):
     chan = ssh.get_transport().open_session()
     chan.get_pty()
     chan.exec_command('/vagrant/script.sh')
+
+    # Get output
     if args.no_stdin:
         while True:
             data = chan.recv(1024)
             if len(data) == 0:
-                sys.stdout.write('\r\n*** EOF\r\n')
                 break
             sys.stdout.write(data)
             sys.stdout.flush()
     else:
         interactive_shell(chan)
+    sys.stdout.write("\r\n*** Command finished, status: %d\r\n" %
+                     chan.recv_exit_status())
 
     ssh.close()
 
