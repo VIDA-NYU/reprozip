@@ -6,7 +6,7 @@ The *reprozip* component is responsible for packing
 an experiment. In ReproZip, we assume that the
 experiment can be executed by a single command line,
 preferably with no GUI involved
-(please refer to `Additional Information`_ for further information
+(please refer to :ref:`further-information` for additional information
 regarding different types of experiment).
 
 
@@ -144,13 +144,55 @@ by running the following command::
 Creating a Package
 ==================
 
+After tracing the experiment and optionally editing the configuration file,
+the experiment package can be created by issuing the command below::
 
+  $ reprozip pack <package-name>
+  
+where *<package-name>* is the name given to the package.
+This command generates a *.rpz* file in the current directory,
+which can then be sent to others so that the
+experiment can be reproduced.
+For more information regarding the unpacking step, please see :ref:`unpacking-experiments`.
 
+.. _further-information:
 
-Additional Information
+Further Considerations
 ======================
 
+Packing Multiple Command Lines
+++++++++++++++++++++++++++++++
 
+ReproZip can only pack one command line execution per package.
+Therefore, if an experiment comprises many command line executions,
+users should create a **script** that combines all these command lines,
+and pack the script execution with *reprozip*.
+
+Exposing Useful Parameters
+++++++++++++++++++++++++++
+
+ReproZip traces the *execution* of the experiment;
+concretely, this means that, for compiled programming languages,
+it captures the binaries rather than the source code.
+As a consequence, if the experiment has important parameters
+that are hardcoded,
+these will not be able to be varied and explored
+when reproducing the execution, once
+the source code is not included in the package.
+It is thus recommended that users expose all
+useful parameters as command line arguments
+or in an input file for the experiment,
+since *reprounzip* allows users to
+easily change the argument values
+for the experiment reproduction
+(see :ref:`unpacking-experiments` for more
+information on reproducing experiments).
+
+Capturing Communication with Servers
+++++++++++++++++++++++++++++++++++++
+
+Excluding Sensitive and Third-Party Information
++++++++++++++++++++++++++++++++++++++++++++++++
 
 Example
 =======
