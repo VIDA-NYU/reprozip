@@ -23,7 +23,7 @@ import sys
 from reprounzip.pack_info import print_info
 
 
-__version__ = '0.3.2'
+__version__ = '0.4'
 
 
 unpackers = {}
