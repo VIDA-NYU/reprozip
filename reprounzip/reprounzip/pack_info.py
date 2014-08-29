@@ -111,8 +111,8 @@ def print_info(args, unpackers):
         print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(r['argv']))
-            print("    input files: %s" % (", ".join(r['input_files'])))
-            print("    output files: %s" % (", ".join(r['output_files'])))
+            print("        input files: %s" % (", ".join(r['input_files'])))
+            print("        output files: %s" % (", ".join(r['output_files'])))
             print("        wd: %s" % r['workingdir'])
             if 'signal' in r:
                 print("        signal: %d" % r['signal'])
