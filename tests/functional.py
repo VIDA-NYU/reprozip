@@ -13,6 +13,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
+from reprounzip.utils import iteritems
 
 
 tests = Path(__file__).parent.absolute()
@@ -90,8 +91,18 @@ def functional_tests(interactive, run_vagrant):
     other_files = set(Path(f).absolute() for f in conf['other_files'])
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
+    # Check input and output files
+    input_files = conf['runs'][0]['input_files']
+    assert (dict((k, Path(f).name)
+                 for k, f in iteritems(input_files)) ==
+            {'arg': b'simple_input.txt'})
+    output_files = conf['runs'][0]['output_files']
+    assert (dict((k, Path(f).name)
+                 for k, f in iteritems(output_files)) ==
+            {'arg': b'simple_output.txt'})
     # Pack
     check_call(rpz + ['pack', '-d', 'rpz-simple', 'simple.rpz'])
+    Path('simple').remove()
     # Info
     check_call(rpuz + ['info', 'simple.rpz'])
     # Lists packages
@@ -102,7 +113,6 @@ def functional_tests(interactive, run_vagrant):
     # Run directory
     check_call(rpuz + ['directory', 'run', 'simpledir'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
-    assert output_in_dir.is_file()
     with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     # Delete with wrong command (should fail)
@@ -116,9 +126,18 @@ def functional_tests(interactive, run_vagrant):
     check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
-    assert output_in_chroot.is_file()
     with output_in_chroot.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
+    # Replace input file
+    check_call(['sudo'] + rpuz + ['chroot', 'upload', 'simplechroot',
+                                  '%s:arg' % (tests / 'simple_input2.txt')])
+    check_call(['sudo'] + rpuz + ['chroot', 'upload', 'simplechroot'])
+    # Run again
+    check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
+    output_in_chroot = join_root(Path('simplechroot/root'),
+                                 orig_output_location)
+    with output_in_chroot.open(encoding='utf-8') as fp:
+        assert fp.read().strip() == '36'
     # Delete with wrong command (should fail)
     assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
     # Delete chroot
