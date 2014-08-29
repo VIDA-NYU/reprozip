@@ -97,11 +97,11 @@ def print_info(args, unpackers):
     print("Total paths: %d" % meta_total_paths)
     print("Listed packed paths: %d" % meta_packed_paths)
     if packages:
-        print("Total packages: %d" % meta_packages)
-        print("Packed packages: %d" % meta_packed_packages)
-        print("    Files from packed packages: %d" %
+        print("Total software packages: %d" % meta_packages)
+        print("Packed software packages: %d" % meta_packed_packages)
+        print("    Files from packed software packages: %d" %
               meta_packed_packages_files)
-        print("    Files from unpacked packages: %d" %
+        print("    Files from unpacked software packages: %d" %
               meta_unpacked_packages_files)
     if runs:
         print("Architecture: %s (current: %s)" % (meta_architecture,
@@ -111,8 +111,8 @@ def print_info(args, unpackers):
         print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(r['argv']))
-            print("    input files: %s" % (", ".join(r['input_files'])))
-            print("    output files: %s" % (", ".join(r['output_files'])))
+            print("        input files: %s" % (", ".join(r['input_files'])))
+            print("        output files: %s" % (", ".join(r['output_files'])))
             print("        wd: %s" % r['workingdir'])
             if 'signal' in r:
                 print("        signal: %d" % r['signal'])

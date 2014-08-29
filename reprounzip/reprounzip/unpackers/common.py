@@ -11,9 +11,10 @@ pack files.
 from __future__ import unicode_literals
 
 import functools
+import os
 import platform
 import random
-from rpaths import Path
+from rpaths import PosixPath, Path
 import string
 import subprocess
 import sys
@@ -204,3 +205,175 @@ def join_root(root, path):
     p_root, p_loc = path.split_root()
     assert p_root == b'/'
     return root / p_loc
+
+
+class FileUploader(object):
+    """Common logic for 'upload' commands.
+    """
+    def __init__(self, target, input_files, files):
+        self.target = target
+        self.input_files = input_files
+        self.run(files)
+
+    def run(self, files):
+        runs = self.get_runs_from_config()
+
+        # No argument: list all the input files and exit
+        if not files:
+            print("Input files:")
+            for i, run in enumerate(runs):
+                if len(runs) > 1:
+                    print("  Run %d:" % i)
+                for input_name in run['input_files']:
+                    assigned = self.input_files.get(input_name) or "(original)"
+                    print("    %s: %s" % (input_name, assigned))
+            return
+
+        self.prepare_upload(files)
+
+        # Get the path of each input file
+        all_input_files = {}
+        for run in runs:
+            all_input_files.update(run['input_files'])
+
+        try:
+            # Upload files
+            for filespec in files:
+                filespec_split = filespec.rsplit(':', 1)
+                if len(filespec_split) != 2:
+                    sys.stderr.write("Invalid file specification: %r\n" %
+                                     filespec)
+                    sys.exit(1)
+                local_path, input_name = filespec_split
+
+                try:
+                    input_path = PosixPath(all_input_files[input_name])
+                except KeyError:
+                    sys.stderr.write("Invalid input name: %r" % input_name)
+                    sys.exit(1)
+
+                temp = None
+
+                if not local_path:
+                    # Restore original file from pack
+                    fd, temp = Path.tempfile(prefix='reprozip_input_')
+                    os.close(fd)
+                    tar = tarfile.open(str(self.target / 'experiment.rpz'),
+                                       'r:*')
+                    member = tar.getmember(str(join_root(PosixPath('DATA'),
+                                                         input_path)))
+                    member.name = str(temp.name)
+                    tar.extract(member, str(temp.parent))
+                    tar.close()
+                    local_path = temp
+                else:
+                    local_path = Path(local_path)
+                    if not local_path.exists():
+                        sys.stderr.write("Local file %s doesn't exist\n" %
+                                         local_path)
+                        sys.exit(1)
+
+                self.upload_file(local_path, input_path)
+
+                if temp is not None:
+                    temp.remove()
+                    self.input_files[input_name] = None
+                else:
+                    self.input_files[input_name] = local_path.absolute().path
+        finally:
+            self.finalize()
+
+    def get_runs_from_config(self):
+        # Loads config
+        runs, packages, other_files = load_config(
+                self.target / 'experiment.rpz')
+        return runs
+
+    def prepare_upload(self, files):
+        pass
+
+    def upload_file(self, local_path, input_path):
+        raise NotImplementedError
+
+    def finalize(self):
+        pass
+
+
+class FileDownloader(object):
+    def __init__(self, target, files):
+        self.target = target
+        self.run(files)
+
+    def run(self, files):
+        runs = self.get_runs_from_config()
+
+        # No argument: list all the output files and exit
+        if not files:
+            print("Output files:")
+            for i, run in enumerate(runs):
+                if len(runs) > 1:
+                    print("  Run %d:" % i)
+                for output_name in run['output_files']:
+                    print("    %s" % output_name)
+            return
+
+        self.prepare_download(files)
+
+        # Get the path of each output file
+        all_output_files = {}
+        for run in runs:
+            all_output_files.update(run['output_files'])
+
+        try:
+            # Download files
+            for filespec in files:
+                filespec_split = filespec.split(':', 1)
+                if len(filespec_split) != 2:
+                    sys.stderr.write("Invalid file specification: %r\n" %
+                                     filespec)
+                    sys.exit(1)
+                output_name, local_path = filespec_split
+
+                try:
+                    remote_path = PosixPath(all_output_files[output_name])
+                except KeyError:
+                    sys.stderr.write("Invalid output name: %r\n" % output_name)
+                    sys.exit(1)
+
+                if not local_path:
+                    self.download_and_print(remote_path)
+                else:
+                    self.download(remote_path, Path(local_path))
+        finally:
+            self.finalize()
+
+    def get_runs_from_config(self):
+        # Loads config
+        runs, packages, other_files = load_config(
+                self.target / 'experiment.rpz')
+        return runs
+
+    def prepare_download(self, files):
+        pass
+
+    def download_and_print(self, remote_path):
+        # Download to temporary file
+        fd, temp = Path.tempfile(prefix='reprozip_output_')
+        os.close(fd)
+        self.download(remote_path, temp)
+        # Output to stdout
+        with temp.open('rb') as fp:
+            chunk = fp.read(1024)
+            if chunk:
+                sys.stdout.write(chunk)
+            while len(chunk) == 1024:
+                chunk = fp.read(1024)
+                if chunk:
+                    sys.stdout.write(chunk)
+        temp.remove()
+
+    def download(self, remote_path, local_path):
+        raise NotImplementedError
+
+    def finalize(self):
+        pass
