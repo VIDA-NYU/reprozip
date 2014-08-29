@@ -128,6 +128,11 @@ def functional_tests(interactive, run_vagrant):
                                  orig_output_location)
     with output_in_chroot.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
+    # Get output file
+    check_call(['sudo'] + rpuz + ['chroot', 'download', 'simplechroot',
+                                  'arg:output1.txt'])
+    with Path('output1.txt').open(encoding='utf-8') as fp:
+        assert fp.read().strip() == '42'
     # Replace input file
     check_call(['sudo'] + rpuz + ['chroot', 'upload', 'simplechroot',
                                   '%s:arg' % (tests / 'simple_input2.txt')])
