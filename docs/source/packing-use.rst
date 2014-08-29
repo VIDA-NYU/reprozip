@@ -30,31 +30,129 @@ The following command is used to trace an experiment::
   $ reprozip trace <command-line>
   
 where *<command-line>* is the command line used to execute the
-experiment. Internally, *reprozip* executes the experiment
+experiment. By running this command, *reprozip* executes the experiment
 and uses *ptrace* to trace all the system calls issued;
-the information captured by *ptrace* is analyzed and
+the information captured by *ptrace* is then analyzed and
 stored in a SQLite database.
 
-The database, together with a *configuration file*,
+By default, if the operating system is Debian or Debian-based (e.g.: Ubuntu),
+*reprozip* will also try to automatically identify the
+software dependencies of the experiment by using
+the available `package manager <http://en.wikipedia.org/wiki/Dpkg>`_ of the system.
+This is useful to provide a more detailed information
+about the dependencies, as well as to further help when
+reproducing the experiment,
+but it may slow down the *trace* command depending
+on the amount of file dependencies that the experiment has.
+To disable this feature, users may use the flag
+*--dont-identify-packages*::
+
+  $ reprozip trace --dont-identify-packages <command-line>
+
+The database, together with a *configuration file* (see below),
 are placed in a directory named *.reprozip*,
-created in the current path where the command was issued.
+created in the current path where the *reprozip* command was issued.
 
 Editing the Configuration File
 ==============================
 
+The configuration file, which can be found in *.reprozip/config.yml*,
+has most of the information necessary for creating the experiment package.
+Users may edit this file prior to the creation of the package
+in order to add or remove files.
+This can be particularly useful to remove big files that
+can be obtained elsewhere when reproducing the experiment,
+so as to keep the size of package small,
+and also to remove sensitive information that the
+experiment may use.
+The configuration file can also be used to
+edit the main command line, as well as to
+add or remove environment variables.
+Note that this step is optional, i.e.,
+it is not required for generating the package.
 
+The first part of the configuration file gives
+general information with respect to the experiment execution,
+including the command line, environment variables,
+main input and output files, and machine information::
+
+  # Run info
+  version: <reprozip-version>
+  runs:
+  - architecture: <machine-architecture>
+    argv: <command-line-arguments>
+    binary: <command-line-binary>
+    distribution: <linux-distribution>
+    environ: <environment-variables>
+    exitcode: <exit-code>
+    gid: <group-id>
+    hostname: <machine-hostname>
+    input_files: <input-files>
+    output_files: <output-files>
+    system: <system-kernel>
+    uid: <user-id>
+    workingdir: <working-directory>
+    
+If necessary, users may change the command line parameters by editing *<command-line-arguments>*,
+and add or remove environment variables by editing *<environment-variables>*.
+The other attributes should mostly not be changed.
+
+The next section in the configuration file shows the files
+to be packed. If the software dependencies were identified
+by the package manager of the system during the *trace* command,
+they will be listed under *packages*;
+the file dependencies not identified
+in software packages are listed under *other_files*::
+
+  packages:
+    - name: <package-name>
+      version: <package-version>
+      size: <package-size>
+      packfiles: <include-package>
+      files:
+        # Total files used: <used-files-size>
+        # Installed package size: <package-size>
+        <files-list>
+    - name: ...
+    ...
+    
+  other_files:
+    <files-list>
+    
+The attribute *packfiles* can be used to control which software
+packages will be packed:
+its default value is *true*, but users may change it to
+*false* to inform *reprozip* that the corresponding
+software package should not be included.
+To remove a file that was not identified as part of a package,
+users can simply remove it from the list under *other_files*.
+
+Last, users may add file patterns under *additional_patterns*
+to include other files that were not originally detected by *reprozip*.
+As an example, the following would add everything under
+*/etc/apache2/* and all the Python files of all users::
+
+  additional_patterns:
+    - /etc/apache2/**
+    - /var/lib/lxc/*/rootfs/home/**/*.py
+    
+Note that users can always reset the configuration file to its initial state
+by running the following command::
+
+  $ reprozip reset
 
 Creating a Package
 ==================
 
 
 
-Example
-=======
-
-
 
 Additional Information
 ======================
+
+
+
+Example
+=======
 
 
