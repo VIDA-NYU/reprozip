@@ -30,7 +30,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     load_config, select_installer, busybox_url, join_root, FileUploader, \
     FileDownloader
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_, iteritems
+from reprounzip.utils import unicode_, irange, iteritems
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -245,32 +245,6 @@ fi
     # Copies pack
     pack.copyfile(target / 'experiment.rpz')
 
-    # Writes start script
-    with (target / 'script.sh').open('w', encoding='utf-8',
-                                     newline='\n') as fp:
-        fp.write('#!/bin/bash\n\n')
-        for run in runs:
-            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-            cmd += '/usr/bin/env -i '
-            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in iteritems(run['environ']))
-            cmd += ' '
-            # FIXME : Use exec -a or something if binary != argv[0]
-            cmd += ' '.join(
-                     shell_escape(a)
-                     for a in [run['binary']] + run['argv'][1:])
-            uid = run.get('uid', 1000)
-            gid = run.get('gid', 1000)
-            if use_chroot:
-                userspec = '%s:%s' % (uid, gid)
-                fp.write('sudo chroot --userspec=%s /experimentroot '
-                         '/bin/sh -c %s\n' % (
-                             userspec,
-                             shell_escape(cmd)))
-            else:
-                fp.write('sudo -u \'#%d\' sh -c %s\n' % (
-                         uid, shell_escape(cmd)))
-
     # Writes Vagrant file
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
                                        newline='\n') as fp:
@@ -308,8 +282,58 @@ def vagrant_run(args):
     """Runs the experiment in the virtual machine.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
-    # use_chroot = .get('use_chroot', True)
+    use_chroot = read_dict(target / '.reprounzip').get('use_chroot', True)
+    run = args.run
+    cmdline = args.cmdline
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    if run is None and len(runs) == 1:
+        run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if run is None:
+            sys.stderr.write("Error: There are several runs in this pack -- "
+                             "you have to choose which\none to use with "
+                             "--cmdline\n")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
+        sys.exit(0)
+
+    if run is None:
+        run = irange(len(runs))
+    else:
+        run = (int(run),)
+
+    cmds = []
+    for run_number in run:
+        run_dict = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+        cmd += '/usr/bin/env -i '
+        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                        for k, v in iteritems(run_dict['environ']))
+        cmd += ' '
+        # FIXME : Use exec -a or something if binary != argv[0]
+        if cmdline is None:
+            argv = [run_dict['binary']] + run_dict['argv'][1:]
+        else:
+            argv = cmdline
+        cmd += ' '.join(shell_escape(a) for a in argv)
+        uid = run_dict.get('uid', 1000)
+        gid = run_dict.get('gid', 1000)
+        if use_chroot:
+            userspec = '%s:%s' % (uid, gid)
+            cmd = ('chroot --userspec=%s /experimentroot '
+                   '/bin/sh -c %s\n' % (
+                       userspec,
+                       shell_escape(cmd)))
+        else:
+            cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+        cmds.append(cmd)
+    cmds = ' && '.join(cmds)
 
     # Makes sure the VM is running
     subprocess.check_call(['vagrant', 'up'],
@@ -325,7 +349,9 @@ def vagrant_run(args):
 
     chan = ssh.get_transport().open_session()
     chan.get_pty()
-    chan.exec_command('/vagrant/script.sh')
+
+    # Execute command
+    chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
 
     # Get output
     if args.no_stdin:
@@ -570,6 +596,8 @@ def setup(parser):
     parser_run.add_argument('--no-stdin', action='store_true', default=False,
                             help=("Don't connect program's input stream to "
                                   "this terminal"))
+    parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
+                            help=("Command line to run"))
     parser_run.set_defaults(func=vagrant_run)
 
     # download
