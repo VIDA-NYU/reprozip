@@ -26,9 +26,9 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config as load_config_file
-from reprounzip.unpackers.common import THIS_DISTRIBUTION, load_config, \
-    select_installer, target_must_exist, shell_escape, busybox_url, \
-    join_root, PKG_NOT_INSTALLED, COMPAT_OK, COMPAT_NO
+from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
+    COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
+    select_installer, busybox_url, join_root, FileUploader
 from reprounzip.utils import unicode_, iteritems, itervalues, download_file
 
 
@@ -413,6 +413,33 @@ def run(args):
     subprocess.check_call(['/bin/sh', (target / 'script.sh').path])
 
 
+class LocalUploader(FileUploader):
+    def __init__(self, target, input_files, files, type_, param_restore_owner):
+        self.type = type_
+        self.param_restore_owner = param_restore_owner
+        FileUploader.__init__(self, target, input_files, files)
+
+    def get_runs_from_config(self):
+        runs, packages, other_files = load_config_file(
+                self.target / 'config.yml', True)
+        return runs
+
+    def prepare_upload(self, files):
+        self.restore_owner = (self.type == 'chroot' and
+                              should_restore_owner(self.param_restore_owner))
+        self.root = (self.target / 'root').absolute()
+
+    def upload_file(self, local_path, input_path):
+        remote_path = join_root(self.root, input_path)
+
+        # Copy
+        orig_stat = remote_path.stat()
+        local_path.copyfile(remote_path)
+        remote_path.chmod(orig_stat.st_mode & 0o7777)
+        if self.restore_owner:
+            remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+
+
 @target_must_exist
 def upload(args):
     """Replaces an input file in the directory.
@@ -422,81 +449,9 @@ def upload(args):
     unpacked_info = read_dict(target / '.reprounzip', args.type)
     input_files = unpacked_info.setdefault('input_files', {})
 
-    # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml',
-                                                   True)
-
-    # No argument: list all the input files and exit
-    if not files:
-        print("Input files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for input_name in run['input_files']:
-                assigned = input_files.get(input_name) or "(original)"
-                print("    %s: %s" % (input_name, assigned))
-        return
-
-    restore_owner = False
-    if args.type == 'chroot':
-        restore_owner = should_restore_owner(args.restore_owner)
-
-    root = (target / 'root').absolute()
-
-    # Get the path of each input file
-    all_input_files = {}
-    for run in runs:
-        all_input_files.update(run['input_files'])
-
     try:
-        # Copy files
-        for filespec in files:
-            filespec_split = filespec.rsplit(':', 1)
-            if len(filespec_split) != 2:
-                sys.stderr.write("Invalid file specification: %r\n" % filespec)
-                sys.exit(1)
-            local_path, input_name = filespec_split
-
-            try:
-                input_path = PosixPath(all_input_files[input_name])
-            except KeyError:
-                sys.stderr.write("Invalid input name: %r" % input_name)
-                sys.exit(1)
-
-            remote_path = join_root(root, input_path)
-
-            temp = None
-
-            if not local_path:
-                # Restore original file from pack
-                fd, temp = Path.tempfile(prefix='reprozip_input_')
-                os.close(fd)
-                tar = tarfile.open(str(target / 'inputs.tar.gz'), 'r:*')
-                member = tar.getmember(str(
-                        join_root(PosixPath(''), input_path)))
-                member.name = str(temp.name)
-                tar.extract(member, str(temp.parent))
-                tar.close()
-                local_path = temp
-            else:
-                local_path = Path(local_path)
-                if not local_path.exists():
-                    sys.stderr.write("Local file %s doesn't exist\n" %
-                                     local_path)
-                    sys.exit(1)
-
-            # Copy
-            orig_stat = remote_path.stat()
-            local_path.copyfile(remote_path)
-            remote_path.chmod(orig_stat.st_mode & 0o7777)
-            if restore_owner:
-                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
-
-            if temp is not None:
-                temp.remove()
-                input_files[input_name] = None
-            else:
-                input_files[input_name] = local_path.absolute().path
+        LocalUploader(target, input_files, files,
+                      args.type, args.type == 'chroot' and args.restore_owner)
     finally:
         write_dict(target / '.reprounzip', unpacked_info, args.type)
 
