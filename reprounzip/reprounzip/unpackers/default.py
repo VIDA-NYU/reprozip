@@ -170,19 +170,28 @@ def directory_create(args):
                     unicode_(join_root(root,
                                        Path(run['workingdir']))))
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in iteritems(run['environ']))
+                            for k, v in iteritems(run['environ'])
+                            if k != 'PATH')
             cmd += ' '
+
+            # PATH
+            # Get the original PATH components
             path = [PosixPath(d)
                     for d in run['environ'].get('PATH', '').split(':')]
-            path = ':'.join(unicode_(join_root(root, d)) if d.root == '/'
-                            else unicode_(d)
-                            for d in path)
+            # The same paths but in the directory
+            dir_path = [join_root(root, d)
+                        for d in path
+                        if d.root == '/']
+            # Rebuild string
+            path = ':'.join(unicode_(d) for d in (dir_path + path))
             cmd += 'PATH=%s ' % shell_escape(path)
+
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
                     shell_escape(a)
                     for a in run['argv'])
             fp.write('%s\n' % cmd)
+    (target / 'script.sh').chmod(0o755)
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
@@ -349,6 +358,7 @@ def chroot_create(args):
                      userspec,
                      shell_escape(unicode_(root)),
                      shell_escape(cmd)))
+    (target / 'script.sh').chmod(0o755)
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
