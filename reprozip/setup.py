@@ -27,7 +27,7 @@ with open('README.rst') as fp:
     description = fp.read()
 req = [
     'PyYAML',
-    'rpaths>=0.7']
+    'rpaths>=0.8']
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprozip',
