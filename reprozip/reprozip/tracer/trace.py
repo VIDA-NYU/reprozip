@@ -106,6 +106,7 @@ def get_files(conn):
             FROM executed_files
             ORDER BY timestamp;
             ''')
+    executed = set()
     # ... and opened files
     open_cursor = conn.cursor()
     opened_files = open_cursor.execute(
@@ -124,6 +125,9 @@ def get_files(conn):
         else:  # event_type == 'open'
             r_name, r_mode, r_timestamp = data
         r_name = Path(r_name)
+
+        if event_type == 'exec':
+            executed.add(r_name)
 
         # Stays on the current run
         while run_timestamps and r_timestamp > run_timestamps[0]:
@@ -149,7 +153,7 @@ def get_files(conn):
             f.read()
 
         # Identifies input files
-        if r_name.is_file():
+        if r_name.is_file() and r_name not in executed:
             access_files[-1].add(f)
     exec_cursor.close()
     open_cursor.close()
