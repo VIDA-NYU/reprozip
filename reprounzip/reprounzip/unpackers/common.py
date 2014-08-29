@@ -297,3 +297,83 @@ class FileUploader(object):
 
     def finalize(self):
         pass
+
+
+class FileDownloader(object):
+    def __init__(self, target, files):
+        self.target = target
+        self.run(files)
+
+    def run(self, files):
+        runs = self.get_runs_from_config()
+
+        # No argument: list all the output files and exit
+        if not files:
+            print("Output files:")
+            for i, run in enumerate(runs):
+                if len(runs) > 1:
+                    print("  Run %d:" % i)
+                for output_name in run['output_files']:
+                    print("    %s" % output_name)
+            return
+
+        self.prepare_download(files)
+
+        # Get the path of each output file
+        all_output_files = {}
+        for run in runs:
+            all_output_files.update(run['output_files'])
+
+        try:
+            # Download files
+            for filespec in files:
+                filespec_split = filespec.split(':', 1)
+                if len(filespec_split) != 2:
+                    sys.stderr.write("Invalid file specification: %r\n" %
+                                     filespec)
+                    sys.exit(1)
+                output_name, local_path = filespec_split
+
+                try:
+                    remote_path = PosixPath(all_output_files[output_name])
+                except KeyError:
+                    sys.stderr.write("Invalid output name: %r\n" % output_name)
+                    sys.exit(1)
+
+                if not local_path:
+                    self.download_and_print(remote_path)
+                else:
+                    self.download(remote_path, Path(local_path))
+        finally:
+            self.finalize()
+
+    def get_runs_from_config(self):
+        # Loads config
+        runs, packages, other_files = load_config(
+                self.target / 'experiment.rpz')
+        return runs
+
+    def prepare_download(self, files):
+        pass
+
+    def download_and_print(self, remote_path):
+        # Download to temporary file
+        fd, temp = Path.tempfile(prefix='reprozip_output_')
+        os.close(fd)
+        self.download(remote_path, temp)
+        # Output to stdout
+        with temp.open('rb') as fp:
+            chunk = fp.read(1024)
+            if chunk:
+                sys.stdout.write(chunk)
+            while len(chunk) == 1024:
+                chunk = fp.read(1024)
+                if chunk:
+                    sys.stdout.write(chunk)
+        temp.remove()
+
+    def download(self, remote_path, local_path):
+        raise NotImplementedError
+
+    def finalize(self):
+        pass

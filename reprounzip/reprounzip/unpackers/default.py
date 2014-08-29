@@ -28,7 +28,7 @@ import tarfile
 from reprounzip.common import load_config as load_config_file
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
-    select_installer, busybox_url, join_root, FileUploader
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader
 from reprounzip.utils import unicode_, iteritems, itervalues, download_file
 
 
@@ -456,6 +456,40 @@ def upload(args):
         write_dict(target / '.reprounzip', unpacked_info, args.type)
 
 
+class LocalDownloader(FileDownloader):
+    def __init__(self, target, files, type_):
+        self.type = type_
+        FileDownloader.__init__(self, target, files)
+
+    def get_runs_from_config(self):
+        runs, packages, other_files = load_config_file(
+                self.target / 'config.yml', True)
+        return runs
+
+    def prepare_download(self, files):
+        self.root = (self.target / 'root').absolute()
+
+    def download_and_print(self, remote_path):
+        remote_path = join_root(self.root, remote_path)
+
+        # Output to stdout
+        with remote_path.open('rb') as fp:
+            chunk = fp.read(1024)
+            if chunk:
+                sys.stdout.write(chunk)
+            while len(chunk) == 1024:
+                chunk = fp.read(1024)
+                if chunk:
+                    sys.stdout.write(chunk)
+
+    def download(self, remote_path, local_path):
+        remote_path = join_root(self.root, remote_path)
+
+        # Copy
+        remote_path.copyfile(local_path)
+        remote_path.copymode(local_path)
+
+
 @target_must_exist
 def download(args):
     """Gets an output file from the directory.
@@ -464,57 +498,7 @@ def download(args):
     files = args.file
     read_dict(target / '.reprounzip', args.type)
 
-    # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml',
-                                                   True)
-
-    # No argument: list all the output files and exit
-    if not files:
-        print("Output files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for output_name in run['output_files']:
-                print("    %s" % output_name)
-        return
-
-    root = (target / 'root').absolute()
-
-    # Get the path of each output file
-    all_output_files = {}
-    for run in runs:
-        all_output_files.update(run['output_files'])
-
-    # Copy files
-    for filespec in files:
-        filespec_split = filespec.split(':', 1)
-        if len(filespec_split) != 2:
-            sys.stderr.write("Invalid file specification: %r\n" % filespec)
-            sys.exit(1)
-        output_name, local_path = filespec_split
-
-        try:
-            remote_path = PosixPath(all_output_files[output_name])
-        except KeyError:
-            sys.stderr.write("Invalid output name: %r\n" % output_name)
-            sys.exit(1)
-
-        remote_path = join_root(root, remote_path)
-
-        if not local_path:
-            # Output to stdout
-            with remote_path.open('rb') as fp:
-                chunk = fp.read(1024)
-                if chunk:
-                    sys.stdout.write(chunk)
-                while len(chunk) == 1024:
-                    chunk = fp.read(1024)
-                    if chunk:
-                        sys.stdout.write(chunk)
-        else:
-            # Copy
-            remote_path.copyfile(local_path)
-            remote_path.copymode(local_path)
+    LocalDownloader(target, files, args.type)
 
 
 def test_same_pkgmngr(pack, config, **kwargs):
