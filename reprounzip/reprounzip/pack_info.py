@@ -20,7 +20,7 @@ import tarfile
 
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO
-from reprounzip.utils import hsize
+from reprounzip.utils import iteritems, hsize
 
 
 def print_info(args, unpackers):
@@ -111,6 +111,8 @@ def print_info(args, unpackers):
         print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(r['argv']))
+            print("    input files: %s" % (", ".join(r['input_files'])))
+            print("    output files: %s" % (", ".join(r['output_files'])))
             print("        wd: %s" % r['workingdir'])
             if 'signal' in r:
                 print("        signal: %d" % r['signal'])
@@ -120,7 +122,7 @@ def print_info(args, unpackers):
     # Unpacker compatibility
     print("----- Unpackers -----")
     unpacker_status = {}
-    for name, upk in unpackers.items():
+    for name, upk in iteritems(unpackers):
         if 'test_compatibility' in upk:
             compat = upk['test_compatibility']
             if callable(compat):

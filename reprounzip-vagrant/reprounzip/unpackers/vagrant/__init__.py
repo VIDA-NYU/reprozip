@@ -20,15 +20,16 @@ import paramiko
 from paramiko.client import MissingHostKeyPolicy
 import pickle
 from rpaths import PosixPath, Path
+import scp
 import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config, select_installer, \
-    composite_action, target_must_exist, shell_escape, busybox_url, \
-    join_root, COMPAT_OK, COMPAT_MAYBE
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
+    composite_action, target_must_exist, make_unique_name, shell_escape, \
+    load_config, select_installer, busybox_url, join_root
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_
+from reprounzip.utils import unicode_, iteritems
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -86,6 +87,26 @@ def read_dict(filename):
         dct = pickle.load(fp)
     assert dct['unpacker'] == 'vagrant'
     return dct
+
+
+def get_ssh_parameters(target):
+    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                     cwd=target.path)
+    info = {}
+    for line in stdout.split('\n'):
+        line = line.strip().split(' ', 1)
+        if len(line) != 2:
+            continue
+        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+
+    if 'identityfile' in info:
+        key_file = info['identityfile']
+    else:
+        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+    return dict(hostname=info.get('hostname', '127.0.0.1'),
+                port=int(info.get('port', 2222)),
+                username=info.get('user', 'vagrant'),
+                key_filename=key_file)
 
 
 def vagrant_setup_create(args):
@@ -231,7 +252,7 @@ fi
             cmd = 'cd %s && ' % shell_escape(run['workingdir'])
             cmd += '/usr/bin/env -i '
             cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in run['environ'].items())
+                            for k, v in iteritems(run['environ']))
             cmd += ' '
             # FIXME : Use exec -a or something if binary != argv[0]
             cmd += ' '.join(
@@ -267,20 +288,13 @@ fi
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
 
-    target_readable = unicode_(target)
-    if not target_readable.endswith('/'):
-        target_readable = target_readable + '/'
-    print("Vagrantfile ready\n"
-          "Create the virtual machine by running 'vagrant up' from %s\n"
-          "Then, ssh into it (for example using 'vagrant ssh') and run "
-          "'sh /vagrant/script.sh'" % target_readable)
-
 
 @target_must_exist
 def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
+    read_dict(target / '.reprounzip')
 
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
@@ -301,26 +315,12 @@ def vagrant_run(args):
                           cwd=target.path)
 
     # Gets vagrant SSH parameters
-    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                     cwd=target.path)
-    info = {}
-    for line in stdout.split('\n'):
-        line = line.strip().split(' ', 1)
-        if len(line) != 2:
-            continue
-        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+    info = get_ssh_parameters(target)
 
     # Connects to the machine
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(IgnoreMissingKey())
-    if 'identityfile' in info:
-        key_file = info['identityfile']
-    else:
-        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
-    ssh.connect(info.get('hostname', '127.0.0.1'),
-                port=int(info.get('port', 2222)),
-                username=info.get('user', 'vagrant'),
-                key_filename=key_file)
+    ssh.connect(**info)
 
     chan = ssh.get_transport().open_session()
     chan.get_pty()
@@ -337,6 +337,203 @@ def vagrant_run(args):
         interactive_shell(chan)
 
     ssh.close()
+
+
+@target_must_exist
+def vagrant_upload(args):
+    """Replaces an input file in the VM.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    unpacked_info = read_dict(target / '.reprounzip')
+    input_files = unpacked_info.setdefault('input_files', {})
+    use_chroot = unpacked_info['use_chroot']
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    # No argument: list all the input files and exit
+    if not files:
+        print("Input files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for input_name in run['input_files']:
+                assigned = input_files.get(input_name) or "(original)"
+                print("    %s: %s" % (input_name, assigned))
+        return
+
+    # Checks whether the VM is running
+    try:
+        info = get_ssh_parameters(target)
+    except subprocess.CalledProcessError:
+        sys.stderr.write("Failed to get the status of the machine -- is it "
+                         "running?\n")
+        sys.exit(1)
+
+    # Get the path of each input file
+    all_input_files = {}
+    for run in runs:
+        all_input_files.update(run['input_files'])
+
+    # Connect with scp
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    ssh.connect(**info)
+    client_scp = scp.SCPClient(ssh.get_transport())
+
+    try:
+        # Upload files
+        for filespec in files:
+            filespec_split = filespec.rsplit(':', 1)
+            if len(filespec_split) != 2:
+                sys.stderr.write("Invalid file specification: %r\n" % filespec)
+                sys.exit(1)
+            local_path, input_name = filespec_split
+
+            try:
+                input_path = PosixPath(all_input_files[input_name])
+            except KeyError:
+                sys.stderr.write("Invalid input name: %r" % input_name)
+                sys.exit(1)
+
+            if use_chroot:
+                remote_path = join_root(PosixPath('/experimentroot'),
+                                        PosixPath(input_path))
+            else:
+                remote_path = input_path
+
+            temp = None
+
+            if not local_path:
+                # Restore original file from pack
+                fd, temp = Path.tempfile(prefix='reprozip_input_')
+                os.close(fd)
+                tar = tarfile.open(str(target / 'experiment.rpz'), 'r:*')
+                member = tar.getmember(str(join_root(PosixPath('DATA'),
+                                                     input_path)))
+                member.name = str(temp.name)
+                tar.extract(member, str(temp.parent))
+                tar.close()
+                local_path = temp
+            else:
+                local_path = Path(local_path)
+                if not local_path.exists():
+                    sys.stderr.write("Local file %s doesn't exist\n" %
+                                     local_path)
+                    sys.exit(1)
+
+            # Upload to a temporary file first
+            rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
+            client_scp.put(local_path.path, rtemp.path, recursive=False)
+
+            # Move it
+            chan = ssh.get_transport().open_session()
+            chown_cmd = '/bin/chown --reference=%s %s' % (
+                    shell_escape(remote_path.path),
+                    shell_escape(rtemp.path))
+            chmod_cmd = '/bin/chmod --reference=%s %s' % (
+                    shell_escape(remote_path.path),
+                    shell_escape(rtemp.path))
+            mv_cmd = '/bin/mv %s %s' % (
+                    shell_escape(rtemp.path),
+                    shell_escape(remote_path.path))
+            chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+                              ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
+            if chan.recv_exit_status() != 0:
+                sys.stderr.write("Couldn't move file in virtual machine\n")
+                sys.exit(1)
+            chan.close()
+
+            if temp is not None:
+                temp.remove()
+                input_files[input_name] = None
+            else:
+                input_files[input_name] = local_path.absolute().path
+    finally:
+        ssh.close()
+        write_dict(target / '.reprounzip', unpacked_info)
+
+
+@target_must_exist
+def vagrant_download(args):
+    """Gets an output file out of the VM.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    use_chroot = read_dict(target / '.reprounzip')['use_chroot']
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    # No argument: list all the output files and exit
+    if not files:
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name in run['output_files']:
+                print("    %s" % output_name)
+        return
+
+    # Checks whether the VM is running
+    try:
+        info = get_ssh_parameters(target)
+    except subprocess.CalledProcessError:
+        sys.stderr.write("Failed to get the status of the machine -- is it "
+                         "running?\n")
+        sys.exit(1)
+
+    # Get the path of each output file
+    all_output_files = {}
+    for run in runs:
+        all_output_files.update(run['output_files'])
+
+    # Connect with scp
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(IgnoreMissingKey())
+    ssh.connect(**info)
+    client = scp.SCPClient(ssh.get_transport())
+
+    try:
+        # Download files
+        for filespec in files:
+            filespec_split = filespec.split(':', 1)
+            if len(filespec_split) != 2:
+                sys.stderr.write("Invalid file specification: %r\n" % filespec)
+                sys.exit(1)
+            output_name, local_path = filespec_split
+
+            try:
+                remote_path = all_output_files[output_name]
+            except KeyError:
+                sys.stderr.write("Invalid output name: %r\n" % output_name)
+                sys.exit(1)
+
+            if use_chroot:
+                remote_path = join_root(PosixPath('/experimentroot'),
+                                        PosixPath(remote_path))
+
+            if not local_path:
+                # Download to temporary file
+                fd, temp = Path.tempfile(prefix='reprozip_output_')
+                os.close(fd)
+                client.get(remote_path.path, temp.path, recursive=False)
+                # Output to stdout
+                with temp.open('rb') as fp:
+                    chunk = fp.read(1024)
+                    if chunk:
+                        sys.stdout.write(chunk)
+                    while len(chunk) == 1024:
+                        chunk = fp.read(1024)
+                        if chunk:
+                            sys.stdout.write(chunk)
+                temp.remove()
+            else:
+                # Download
+                client.get(remote_path.path, local_path, recursive=False)
+    finally:
+        ssh.close()
 
 
 @target_must_exist
@@ -396,6 +593,16 @@ def setup(parser):
         $ reprounzip vagrant run .
         $ reprounzip vagrant download . results:/home/user/theresults.txt
         $ cd ..; reprounzip vagrant destroy experiment
+
+    Upload specifications are either:
+      :inputname            restores the original input file from the pack
+      filename:inputname    replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      outputname:           print the output file to stdout
+      outputname:filename   extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
@@ -434,7 +641,11 @@ def setup(parser):
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
-    # TODO : vagrant upload
+    # upload
+    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name")
+    parser_upload.set_defaults(func=vagrant_upload)
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
@@ -444,7 +655,11 @@ def setup(parser):
                                   "this terminal"))
     parser_run.set_defaults(func=vagrant_run)
 
-    # TODO : vagrant download
+    # download
+    parser_download = subparsers.add_parser('download', parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=vagrant_download)
 
     # destroy/vm
     parser_destroy_vm = subparsers.add_parser('destroy/vm',

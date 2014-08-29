@@ -19,6 +19,7 @@ from rpaths import Path
 import subprocess
 
 from reprozip.common import Package
+from reprozip.utils import listvalues
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
@@ -117,4 +118,4 @@ def identify_packages(files):
     for f in files:
         manager.search_for_file(f)
 
-    return manager.unknown_files, manager.packages.values()
+    return manager.unknown_files, listvalues(manager.packages)

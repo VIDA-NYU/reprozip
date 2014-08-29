@@ -23,7 +23,7 @@ import sys
 from reprounzip.pack_info import print_info
 
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 
 unpackers = {}
@@ -42,6 +42,12 @@ def main():
         writer = codecs.getwriter(locale.getpreferredencoding())
         sys.stdout = writer(sys.stdout)
         sys.stderr = writer(sys.stderr)
+
+    # Python 2.6 won't work because of bug 13676
+    if sys.version_info < (2, 7):
+        sys.stderr.write("Warning: your version of Python, %s, is not "
+                         "supported\nThings WILL break if you don't upgrade "
+                         "to 2.7\n" % sys.version.split(' ', 1)[0])
 
     # Parses command-line
 

@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 
 import functools
 import platform
+import random
 from rpaths import Path
 import string
 import subprocess
@@ -19,6 +20,7 @@ import sys
 import tarfile
 
 import reprounzip.common
+from reprounzip.utils import irange, itervalues
 
 
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
@@ -48,6 +50,24 @@ def target_must_exist(func):
             sys.exit(1)
         return func(args)
     return wrapper
+
+
+def unique_names():
+    """Generates unique sequences of bytes.
+    """
+    characters = (b"abcdefghijklmnopqrstuvwxyz"
+                  b"0123456789")
+    characters = [characters[i:i + 1] for i in irange(len(characters))]
+    rng = random.Random()
+    while True:
+        letters = [rng.choice(characters) for i in irange(10)]
+        yield b''.join(letters)
+unique_names = unique_names()
+
+
+def make_unique_name(prefix):
+    assert isinstance(prefix, bytes)
+    return prefix + next(unique_names)
 
 
 def shell_escape(s):
@@ -97,7 +117,7 @@ class AptInstaller(object):
 
         # Checks on packages
         pkgs_status = self.get_packages_info(packages)
-        for pkg, status in pkgs_status.itervalues():
+        for pkg, status in itervalues(pkgs_status):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:

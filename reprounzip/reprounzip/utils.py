@@ -28,10 +28,18 @@ if PY3:
     from urllib.error import HTTPError, URLError
     from urllib.request import Request, urlopen
     izip = zip
+    irange = range
+    iteritems = dict.items
+    itervalues = dict.values
+    listvalues = lambda d: list(d.values())
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
     import itertools
     izip = itertools.izip
+    irange = xrange
+    iteritems = dict.iteritems
+    itervalues = dict.itervalues
+    listvalues = dict.values
 
 
 if PY3:
@@ -41,6 +49,10 @@ else:
 
 
 def escape(s):
+    """Escapes backslashes and double quotes in strings.
+
+    This does NOT add quotes around the string.
+    """
     return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
@@ -144,6 +156,8 @@ def download_file(url, dest, cachename=None):
         mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
         request.add_header('If-Modified-Since', mtime)
 
+    cache.parent.mkdir(parents=True)
+
     try:
         response = urlopen(request)
     except URLError as e:
@@ -165,7 +179,6 @@ def download_file(url, dest, cachename=None):
     logging.info("Downloading %s" % url)
     try:
         CHUNK_SIZE = 4096
-        cache.parent.mkdir(parents=True)
         with cache.open('wb') as f:
             while True:
                 chunk = response.read(CHUNK_SIZE)

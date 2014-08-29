@@ -25,7 +25,8 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, hsize, find_all_links
+from reprozip.utils import PY3, izip, itervalues, listvalues, hsize, \
+    find_all_links
 
 
 class TracedFile(File):
@@ -185,7 +186,7 @@ def get_files(conn):
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
             fi
-            for fi in files.values()
+            for fi in itervalues(files)
             if fi.what == TracedFile.READ_THEN_WRITTEN and
             not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
@@ -196,7 +197,7 @@ def get_files(conn):
                 ", ".join(fi.path for fi in read_then_written_files))
 
     files = [fi
-             for fi in files.values()
+             for fi in itervalues(files)
              if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                           for m in magic_dirs)]
     return files, inputs, outputs
@@ -217,7 +218,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
             packages[oldpkg.name] = oldpkg
         else:
             packages[oldpkg.name] = oldpkg
-    packages = list(packages.values())
+    packages = listvalues(packages)
 
     return files, packages
 
