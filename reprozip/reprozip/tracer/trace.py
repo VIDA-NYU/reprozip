@@ -180,8 +180,6 @@ def get_files(conn):
                 if fi.path.is_file() and
                 # WRITTEN
                 fi.what == TracedFile.WRITTEN and
-                # not in /tmp
-                not fi.path.lies_under('/tmp') and
                 # not in a system directory
                 not any(fi.path.lies_under(m)
                         for m in magic_dirs + system_dirs)]
