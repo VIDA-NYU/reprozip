@@ -68,7 +68,7 @@ def build(target, sources, args=[]):
 
 
 @in_temp_dir
-def functional_tests(interactive, run_vagrant):
+def functional_tests(interactive, run_vagrant, run_docker):
     # ########################################
     # 'simple' program: trace, pack, info, unpack
     #
@@ -180,6 +180,23 @@ def functional_tests(interactive, run_vagrant):
             sys.stdin.readline()
     finally:
         Path('/vagrant/simplevagrant').rmtree()
+
+    # Unpack Docker
+    check_call(rpuz + ['docker', 'setup/create', '--pack', 'simple.rpz',
+                       '/vagrant/simpledocker'])
+    print("\nDocker project set up in simpledocker")
+    try:
+        if run_docker:
+            check_call(rpuz + ['docker', 'setup/build',
+                               '/vagrant/simpledocker'])
+            check_call(rpuz + ['docker', 'run', '/vagrant/simpledocker'])
+            # TODO : Check output file
+            check_call(rpuz + ['docker', 'destroy', '/vagrant/simpledocker'])
+        elif interactive:
+            print("Test and press enter")
+            sys.stdin.readline()
+    finally:
+        Path('/vagrant/simpledocker').rmtree()
 
     # ########################################
     # 'threads' program: testrun
