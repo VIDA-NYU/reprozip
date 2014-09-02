@@ -274,9 +274,16 @@ class ContainerDownloader(FileDownloader):
         FileDownloader.__init__(self, target, files)
 
     def download(self, remote_path, local_path):
-        subprocess.check_call(['docker', 'cp',
-                               self.container + b':' + remote_path.path,
-                               local_path.path])
+        # Docker copies to a file in the specified directory, cannot just take
+        # a file name (#4272)
+        tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
+        try:
+            subprocess.check_call(['docker', 'cp',
+                                   self.container + b':' + remote_path.path,
+                                   tmpdir.path])
+            (tmpdir / remote_path.name).copyfile(local_path)
+        finally:
+            tmpdir.rmtree()
 
 
 @target_must_exist
