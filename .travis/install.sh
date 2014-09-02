@@ -17,6 +17,7 @@ in
         if [ $TEST_MODE = "coverage_c" ]; then pip install cpp-coveralls; fi
         cd reprozip && python setup.py install
         cd reprounzip && python setup.py install
+        cd reprounzip-docker && python setup.py install
         cd reprounzip-vagrant && python setup.py install
 EOF
         ;;
@@ -28,6 +29,7 @@ EOF
         pip install coveralls
         cd reprozip && python setup.py develop
         cd reprounzip && python setup.py develop
+        cd reprounzip-docker && python setup.py develop
         cd reprounzip-vagrant && python setup.py develop
 EOF
         ;;

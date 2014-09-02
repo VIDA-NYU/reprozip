@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 """Vagrant plugin for reprounzip.
 
 This files contains the 'vagrant' unpacker, which builds a Vagrant template
@@ -6,10 +10,6 @@ Vagrant (``vagrant up``).
 
 See http://www.vagrantup.com/
 """
-
-# Copyright (C) 2014 New York University
-# This file is part of ReproZip which is released under the Revised BSD License
-# See file LICENSE for full license details.
 
 from __future__ import unicode_literals
 

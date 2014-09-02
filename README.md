@@ -25,11 +25,11 @@ Then, it can pack these files in a package to allow for easy reproducibility
 elsewhere, either by unpacking and running on a compatible machine or by
 creating a virtual machine through [Vagrant][vagrant].
 
-ReproZip is split in several components which are all hosted here, and also
+ReproZip is split in two components which are all hosted here, and also
 available on PyPI: [reprozip][pz] (the packer, that generates a .rpz file by
 tracing a piece of software), [reprounzip][puz] (the unpacker, that takes a
-.rpz file and allows you to run it), and [reprounzip-vagrant][puzv] (the plugin
-that does Vagrant-related things in reprounzip).
+.rpz file and allows you to run it). There are also two plugins for reprounzip,
+[reprounzip-docker][puzd] and [reprounzip-vagrant][puzv].
 
 Quickstart
 ----------
@@ -79,4 +79,5 @@ Once done editing `.reprozip/config.yml`, or if you left everything as-is, simpl
 [vagrant]: http://www.vagrantup.com/
 [pz]: https://pypi.python.org/pypi/reprozip
 [puz]: https://pypi.python.org/pypi/reprounzip
+[puzd]: https://pypi.python.org/pypi/reprounzip-docker
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
