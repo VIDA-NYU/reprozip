@@ -23,7 +23,7 @@ import tarfile
 
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, join_root
+    load_config, select_installer, join_root, FileDownloader
 from reprounzip.utils import unicode_, irange, iteritems
 
 
@@ -253,11 +253,32 @@ def docker_run(args):
     write_dict(target / '.reprounzip', unpacked_info)
 
 
+class ContainerDownloader(FileDownloader):
+    def __init__(self, target, files, container):
+        self.container = container
+        FileDownloader.__init__(self, target, files)
+
+    def download(self, remote_path, local_path):
+        subprocess.check_call(['docker', 'cp',
+                               self.container + b':' + remote_path.path,
+                               local_path.path])
+
+
 @target_must_exist
 def docker_download(args):
     """Gets an output file out of the container.
     """
-    # TODO : docker download
+    target = Path(args.target[0])
+    files = args.file
+    unpacked_info = read_dict(target / '.reprounzip')
+
+    if 'ran_container' not in unpacked_info:
+        sys.stderr.write("Container does not exist. Have you run the "
+                         "experiment?\n")
+        sys.exit(1)
+    container = unpacked_info['ran_container']
+
+    ContainerDownloader(target, files, container)
 
 
 @target_must_exist
@@ -347,6 +368,8 @@ def setup(parser):
     parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
+
+    # TODO : docker upload
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
