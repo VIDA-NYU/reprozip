@@ -100,6 +100,10 @@ def docker_setup_create(args):
     else:
         target_distribution, base_image = select_image(runs)
 
+    logging.debug("Base image: %s, distribution: %s" % (
+                  base_image,
+                  target_distribution or "unknown"))
+
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
 
@@ -118,6 +122,8 @@ def docker_setup_create(args):
             fp.write('    %s && \\\n' % installer.update_script())
             # Installs necessary packages
             fp.write('    %s && \\\n' % installer.install_script(packages))
+        logging.info("Dockerfile will install the %d software packages that "
+                     "were not packed" % len(packages))
 
         # Untar
         paths = set()
@@ -168,6 +174,7 @@ def docker_setup_build(args):
     if retcode != 0:
         sys.stderr.write("docker build failed with code %d\n" % retcode)
         sys.exit(1)
+    logging.info("Initial image created: %s" % image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
     write_dict(target / '.reprounzip', unpacked_info)
@@ -207,6 +214,8 @@ def docker_run(args):
     # Destroy previous container
     if 'ran_container' in unpacked_info:
         container = unpacked_info.pop('ran_container')
+        logging.info("Destroying previous container %s" %
+                     container.decode('ascii'))
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
             sys.stderr.write("Error deleting previous container %s\n" %
@@ -216,6 +225,7 @@ def docker_run(args):
     # Use the initial image
     if 'initial_image' in unpacked_info:
         image = unpacked_info['initial_image']
+        logging.debug("Running from initial image %s" % image.decode('ascii'))
     else:
         sys.stderr.write("Image doesn't exist yet, have you run "
                          "setup/build?\n")
@@ -244,6 +254,7 @@ def docker_run(args):
     cmds = ' && '.join(cmds)
 
     # Run command in container
+    logging.info("Starting container %s" % container.decode('ascii'))
     subprocess.check_call(['docker', 'run', b'--name=' + container,
                            '-i', '-t', image,
                            '/bin/sh', '-c', cmds])
@@ -277,6 +288,7 @@ def docker_download(args):
                          "experiment?\n")
         sys.exit(1)
     container = unpacked_info['ran_container']
+    logging.debug("Downloading from container %s" % container.decode('ascii'))
 
     ContainerDownloader(target, files, container)
 
