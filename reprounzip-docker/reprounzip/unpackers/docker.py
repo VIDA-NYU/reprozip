@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tarfile
 
+from reprounzip.common import Package
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     load_config, select_installer, join_root, FileDownloader
@@ -116,6 +117,9 @@ def docker_setup_create(args):
 
         # Installs missing packages
         packages = [pkg for pkg in packages if not pkg.packfiles]
+        # FIXME : Right now, we need 'sudo' to be available (and it's not
+        # necessarily in the base image)
+        packages += [Package('sudo', None, packfiles=False)]
         if packages:
             installer = select_installer(pack, runs, target_distribution)
             # Updates package sources
