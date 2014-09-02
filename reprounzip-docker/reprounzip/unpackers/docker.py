@@ -1,3 +1,7 @@
+# Copyright (C) 2014 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 """Docker plugin for reprounzip.
 
 This files contains the 'docker' unpacker, which builds a Dockerfile from a
@@ -6,26 +10,21 @@ reprozip pack. You can then build a container and run it with Docker.
 See http://www.docker.io/
 """
 
-# Copyright (C) 2014 New York University
-# This file is part of ReproZip which is released under the Revised BSD License
-# See file LICENSE for full license details.
-
 from __future__ import unicode_literals
 
 import argparse
 import logging
 import os
 import pickle
-import random
 from rpaths import Path, PosixPath
 import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import load_config, select_installer, \
-    composite_action, target_must_exist, COMPAT_OK, COMPAT_MAYBE, join_root, \
-    shell_escape
-from reprounzip.utils import unicode_
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
+    composite_action, target_must_exist, make_unique_name, shell_escape, \
+    load_config, select_installer, join_root
+from reprounzip.utils import unicode_, irange, iteritems
 
 
 def docker_escape(s):
@@ -81,18 +80,6 @@ def read_dict(filename):
         dct = pickle.load(fp)
     assert dct['unpacker'] == 'docker'
     return dct
-
-
-def image_tags():
-    """Generates unique image names.
-    """
-    characters = (b"abcdefghijklmnopqrstuvwxyz"
-                  b"0123456789")
-    rng = random.Random()
-    while True:
-        letters = [rng.choice(characters) for i in xrange(10)]
-        yield b'reprounzip_' + ''.join(letters)
-image_tags = image_tags()
 
 
 def docker_setup_create(args):
@@ -174,16 +161,103 @@ def docker_setup_build(args):
         sys.stderr.write("Image already built\n")
         sys.exit(1)
 
-    tag = next(image_tags)
+    image = make_unique_name(b'reprounzip_image_')
 
-    retcode = subprocess.call(['docker', 'build', '-t', tag, '.'],
+    retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                               cwd=target.path)
     if retcode != 0:
         sys.stderr.write("docker build failed with code %d\n" % retcode)
         sys.exit(1)
 
-    unpacked_info['initial_image'] = tag
-    unpacked_info['current_image'] = tag
+    unpacked_info['initial_image'] = image
+    write_dict(target / '.reprounzip', unpacked_info)
+
+
+@target_must_exist
+def docker_run(args):
+    """Runs the experiment in the container.
+    """
+    target = Path(args.target[0])
+    unpacked_info = read_dict(target / '.reprounzip')
+    run = args.run
+    cmdline = args.cmdline
+
+    # Loads config
+    runs, packages, other_files = load_config(target / 'experiment.rpz')
+
+    if run is None and len(runs) == 1:
+        run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if run is None:
+            sys.stderr.write("Error: There are several runs in this pack -- "
+                             "you have to choose which\none to use with "
+                             "--cmdline\n")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
+        sys.exit(0)
+
+    if run is None:
+        run = irange(len(runs))
+    else:
+        run = (int(run),)
+
+    # Destroy previous container
+    if 'ran_container' in unpacked_info:
+        container = unpacked_info.pop('ran_container')
+        retcode = subprocess.call(['docker', 'rm', '-f', container])
+        if retcode != 0:
+            sys.stderr.write("Error deleting previous container %s\n" %
+                             container.decode('ascii'))
+        write_dict(target / '.reprounzip', unpacked_info)
+
+    # Use the initial image
+    if 'initial_image' in unpacked_info:
+        image = unpacked_info['initial_image']
+    else:
+        sys.stderr.write("Image doesn't exist yet, have you run "
+                         "setup/build?\n")
+        sys.exit(1)
+
+    # Name of new container
+    container = make_unique_name(b'reprounzip_run_')
+
+    cmds = []
+    for run_number in run:
+        run_dict = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+        cmd += '/usr/bin/env -i '
+        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                        for k, v in iteritems(run_dict['environ']))
+        cmd += ' '
+        # FIXME : Use exec -a or something if binary != argv[0]
+        if cmdline is None:
+            argv = [run_dict['binary']] + run_dict['argv'][1:]
+        else:
+            argv = cmdline
+        cmd += ' '.join(shell_escape(a) for a in argv)
+        uid = run_dict.get('uid', 1000)
+        cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+        cmds.append(cmd)
+    cmds = ' && '.join(cmds)
+
+    # Run command in container
+    subprocess.check_call(['docker', 'run', b'--name=' + container,
+                           '-i', '-t', image,
+                           '/bin/sh', '-c', cmds])
+
+    # Store container name (so we can download output files)
+    unpacked_info['ran_container'] = container
+    write_dict(target / '.reprounzip', unpacked_info)
+
+
+@target_must_exist
+def docker_download(args):
+    """Gets an output file out of the container.
+    """
+    # TODO : docker download
 
 
 @target_must_exist
@@ -196,7 +270,17 @@ def docker_destroy_docker(args):
         sys.stderr.write("Image not created\n")
         sys.exit(1)
 
-    # TODO : destroys images and containers
+    if 'ran_container' in unpacked_info:
+        container = unpacked_info.pop('ran_container')
+        retcode = subprocess.call(['docker', 'rm', '-f', container])
+        if retcode != 0:
+            sys.stderr.write("Error deleting container %s\n" %
+                             container.decode('ascii'))
+
+    image = unpacked_info.pop('initial_image')
+    retcode = subprocess.call(['docker', 'rmi', image])
+    if retcode != 0:
+        sys.stderr.write("Error deleting image %s\n" % image.decode('ascii'))
 
 
 @target_must_exist
@@ -228,8 +312,6 @@ def setup(parser):
 
     setup   setup/create    creates Dockerfile (--pack is required)
             setup/build     builds the container from the Dockerfile
-    upload                  replaces input files in the container
-                            (without arguments, lists input files)
     run                     runs the experiment in the container
     download                gets output files from the container
                             (without arguments, lists output files)
@@ -252,7 +334,7 @@ def setup(parser):
     opt_setup = argparse.ArgumentParser(add_help=False)
     opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
-    parser_setup_create = subparsers.add_parser('/setup/create',
+    parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[options, opt_setup])
     parser_setup_create.set_defaults(func=docker_setup_create)
 
@@ -266,11 +348,18 @@ def setup(parser):
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
 
-    # TODO : docker upload
+    # run
+    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
+                            help=("Command line to run"))
+    parser_run.set_defaults(func=docker_run)
 
-    # TODO : docker run
-
-    # TODO : docker download
+    # download
+    parser_download = subparsers.add_parser('download', parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=docker_download)
 
     # destroy/docker
     parser_destroy_docker = subparsers.add_parser('destroy/docker',
