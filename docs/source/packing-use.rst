@@ -29,7 +29,7 @@ The following command is used to trace an experiment::
 
   $ reprozip trace <command-line>
   
-where *<command-line>* is the command line used to execute the
+where <command-line> is the command line used to execute the
 experiment. By running this command, *reprozip* executes the experiment
 and uses *ptrace* to trace all the system calls issued;
 the information captured by *ptrace* is then analyzed and
@@ -149,7 +149,7 @@ the experiment package can be created by issuing the command below::
 
   $ reprozip pack <package-name>
   
-where *<package-name>* is the name given to the package.
+where <package-name> is the name given to the package.
 This command generates a *.rpz* file in the current directory,
 which can then be sent to others so that the
 experiment can be reproduced.

@@ -13,6 +13,9 @@ as well (see :ref:`unpackers`).
 Inspecting a Package
 ====================
 
+Showing Package Information
++++++++++++++++++++++++++++
+
 Before unpacking an experiment,
 it is often useful to have further information
 with respect to its package.
@@ -20,7 +23,7 @@ The following command allows users to do so::
 
   $ reprounzip info <package>
   
-where *<package>* corresponds to the experiment package.
+where <package> corresponds to the experiment package.
 
 The output of this command has three sections.
 The first section, *Pack Information*, comprises
@@ -91,10 +94,20 @@ operating system incompatibility,
 e.g.: plugin for *vagrant* is installed,
 but not the Vagrant software.
 
+.. _showfiles:
+
+Showing Input and Output Files
+++++++++++++++++++++++++++++++
+
+Coming Soon!
+
+Creating a Provenance Graph
++++++++++++++++++++++++++++
+
 ReproZip also allows users to
 generate a *provenance graph* related to
 the experiment execution.
-The graph
+This graph
 shows the relationships between
 files, library dependencies, and
 binaries during the execution.
@@ -103,7 +116,7 @@ the following command should be used::
 
   $ reprounzip graph <graph-file> <package>
   
-where *<graph-file>* corresponds to the
+where <graph-file> corresponds to the
 graph, outputted using the
 `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ language.
 
@@ -112,6 +125,96 @@ graph, outputted using the
 
 Unpacking an Experiment in Linux
 ================================
+
+There are three main unpackers specific for
+Linux environments: *directory*,
+*chroot*, and *installpkgs*.
+In the following,
+each of these unpackers are explained
+in detail.
+
+Running From a Directory
+++++++++++++++++++++++++
+
+The *directory* unpacker
+(*reprounzip directory*) allows users
+to unpack the entire experiment
+(including library dependencies)
+in a single directory, and to
+reproduce the experiment directly
+from that directory,
+**without interfering with
+the current environment**.
+It does so by automatically
+setting up environment variables
+(e.g.: PATH, HOME, and LD_LIBRARY_PATH)
+that point the experiment execution
+to the created directory.
+
+To create the directory where
+the execution takes place,
+users should use the command *setup*::
+
+  $ reprounzip directory setup <path> --pack <package>
+  
+where <path> is the diretory where the experiment
+will be unpacked.
+
+After creating the directory, the
+experiment can be reproduced by issuing
+the *run* command::
+
+  $ reprounzip directory run <path>
+  
+which will execute the experiment inside
+the experiment directory.
+Users may also change the command line
+of the experiment by using the argument
+*--cmdline*::
+
+  $ reprounzip directory run <path> --cmdline <new-command-line>
+
+where <new-command-line> is the modified command line.
+This is particularly useful to reproduce
+the experiment under different input parameters.
+
+Before reproducing the experiment,
+users may also want to change its input files:
+users need first to identify the input files
+by running the *showfiles* command
+(see :ref:`showfiles`),
+and then run the *upload* command::
+
+  $ reprounzip directory upload <path> <input-path>:<input-id>
+  
+where <input-path> is the new input file
+and <input-id> is the input file identifier
+(from *showfiles*).
+Also, after running the experiment,
+to copy an output file
+from the experiment directory,
+users must first run the *showfiles* command
+to identify the desired output file, and then run
+the *download* command::
+
+  $ reprounzip directory download <path> <output-id>:<output-path>
+  
+where <output-id> is the output file identifier (from *showfiles*)
+and <output-path> is the desired destination of the file.
+
+The experiment directory can be removed by executing
+the *destroy* command::
+
+  $ reprounzip directory destroy <path>
+
+
+Running With *chroot*
++++++++++++++++++++++
+
+
+
+Installing Software Packages
+++++++++++++++++++++++++++++
 
 
 
@@ -136,3 +239,15 @@ VisTrails Plugin
 ++++++++++++++++
 
 Coming soon!
+
+Further Considerations
+======================
+
+Multiple Execution Paths
+++++++++++++++++++++++++
+
+Non-Deterministic Experiments
++++++++++++++++++++++++++++++
+
+
+
