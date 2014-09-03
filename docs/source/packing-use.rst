@@ -41,8 +41,8 @@ software dependencies of the experiment by using
 the available `package manager <http://en.wikipedia.org/wiki/Dpkg>`_ of the system.
 This is useful to provide a more detailed information
 about the dependencies, as well as to further help when
-reproducing the experiment,
-but it may slow down the *trace* command depending
+reproducing the experiment; however,
+it may slow down the *trace* command depending
 on the amount of file dependencies that the experiment has.
 To disable this feature, users may use the flag
 *--dont-identify-packages*::
@@ -51,7 +51,7 @@ To disable this feature, users may use the flag
 
 The database, together with a *configuration file* (see below),
 are placed in a directory named *.reprozip*,
-created in the current path where the *reprozip* command was issued.
+created under the path where the *reprozip* command was issued.
 
 Editing the Configuration File
 ==============================
@@ -60,7 +60,7 @@ The configuration file, which can be found in *.reprozip/config.yml*,
 has most of the information necessary for creating the experiment package.
 Users may edit this file prior to the creation of the package
 in order to add or remove files.
-This can be particularly useful to remove big files that
+This can be particularly useful, for instance, to remove big files that
 can be obtained elsewhere when reproducing the experiment,
 so as to keep the size of package small,
 and also to remove sensitive information that the
@@ -95,11 +95,11 @@ main input and output files, and machine information::
     
 If necessary, users may change the command line parameters by editing *<command-line-arguments>*,
 and add or remove environment variables by editing *<environment-variables>*.
-The other attributes should mostly not be changed.
+Other attributes should mostly not be changed.
 
 The next section in the configuration file shows the files
 to be packed. If the software dependencies were identified
-by the package manager of the system during the *trace* command,
+by the package manager of the system during the *trace* command execution,
 they will be listed under *packages*;
 the file dependencies not identified
 in software packages are listed under *other_files*::
@@ -128,7 +128,7 @@ To remove a file that was not identified as part of a package,
 users can simply remove it from the list under *other_files*.
 
 Last, users may add file patterns under *additional_patterns*
-to include other files that were not originally detected by *reprozip*.
+to include other files that they think it will be useful for a future reproduction.
 As an example, the following would add everything under
 */etc/apache2/* and all the Python files of all users::
 
@@ -168,33 +168,82 @@ Therefore, if an experiment comprises many command line executions,
 users should create a **script** that combines all these command lines,
 and pack the script execution with *reprozip*.
 
-Exposing Useful Parameters
-++++++++++++++++++++++++++
+Packing GUI and Interactive Tools
++++++++++++++++++++++++++++++++++
+
+Currently, ReproZip cannot ensure that GUI interfaces will be
+correctly reproduced (support is coming soon), so we recommend packing tools in a non-GUI mode
+for a successfull reproduction.
+
+Additionally, there is no restriction in packing interactive experiments
+(i.e., experiments that require input from users).
+Note, however, that ReproZip packs the execution path followed
+during the *trace* command execution.
+Therefore, during reproduction, if the interactive inputs chosen
+by the user are different from the ones used in the packing step,
+reproducibility cannot be guaranteed in case
+different execution paths are triggered that
+require dependencies not originally packed by ReproZip.
+
+Capturing Useful Parameters and Input Files
++++++++++++++++++++++++++++++++++++++++++++
 
 ReproZip traces the *execution* of the experiment;
 concretely, this means that, for compiled programming languages,
 it captures the binaries rather than the source code.
 As a consequence, if the experiment has important parameters
-that are hardcoded,
+and input files that are hardcoded,
 these will not be able to be varied and explored
 when reproducing the execution, once
 the source code is not included in the package.
-It is thus recommended that users expose all
+It is thus recommended that users **expose all
 useful parameters as command line arguments
-or in an input file for the experiment,
+or in an input file** for the experiment,
 since *reprounzip* allows users to
 easily change the argument values
 for the experiment reproduction
 (see :ref:`unpacking-experiments` for more
 information on reproducing experiments).
 
-Capturing Communication with Servers
+Capturing Connection with Servers
 ++++++++++++++++++++++++++++++++++++
+
+Communication with remote servers cannot be
+guaranteed: when reproducing an execution,
+the experiment will try to connect to the server,
+which may or may not fail depending on the status
+of the server at the moment of the reproduction.
+However, if the experiment uses a local server
+(e.g.: database) that can be stopped with no harm,
+this server can also be captured,
+together with the experiment, to
+ensure that the connection will succeed.
+Users should create a **script**
+to:
+
+* start the server,
+* execute the experiment, and
+* stop the server,
+
+and use *reprozip* to pack the script, rather than
+the experiment itself.
+In this way, ReproZip is able to capture
+the local server as well,
+which ensures that the server will be alive
+at the time of the reproduction.
 
 Excluding Sensitive and Third-Party Information
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-Example
-=======
-
+ReproZip automatically tries
+to identify log and temporary files,
+removing them from the package,
+but the configuration file should be edited to remove
+any sensitive information that the experiment uses,
+or any third-party file/software that should not
+be distributed.
+Note that the ReproZip team is **not responsible** for personal
+and non-authorized files that are distributed in a package;
+users should double-check the configuration file and
+their package before sending it to others.
 
