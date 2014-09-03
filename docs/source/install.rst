@@ -7,7 +7,7 @@ ReproZip is available as open source, released under the Revised BSD License. Pl
 Software Requirements
 =====================
 
-ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant [2]_ virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker [3]_ container (please see :doc:`unpackers` for more information).
+ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant [2]_ virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker [3]_ container (please see :ref:`unpackers` for more information).
 
 The operating system compatibility for the two ReproZip components is the following:
 
