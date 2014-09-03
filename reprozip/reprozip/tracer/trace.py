@@ -25,8 +25,8 @@ from reprozip.common import File, load_config, save_config, \
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, itervalues, listvalues, hsize, \
-    find_all_links
+from reprozip.utils import PY3, izip, itervalues, listvalues, unicode_, \
+    hsize, find_all_links
 
 
 class TracedFile(File):
@@ -196,7 +196,7 @@ def get_files(conn):
                 "Some files were read and then written. We will only pack the "
                 "final version of the file; reproducible experiments "
                 "shouldn't change their input files:\n%s" %
-                ", ".join(fi.path for fi in read_then_written_files))
+                ", ".join(unicode_(fi.path for fi in read_then_written_files)))
 
     files = [fi
              for fi in itervalues(files)
