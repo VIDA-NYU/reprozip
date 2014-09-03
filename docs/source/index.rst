@@ -6,9 +6,3 @@ ReproZip's Documentation
 
    userguide
    developerguide
-
-Indices and Tables
-******************
-
-* :ref:`genindex`
-* :ref:`search`
