@@ -41,6 +41,7 @@ if __name__ == '__main__':
                         dest='functests', default=None)
     parser.add_argument('--interactive', action='store_true')
     parser.add_argument('--run-vagrant', action='store_true')
+    parser.add_argument('--run-docker', action='store_true')
     parser.add_argument('arg', nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
@@ -63,7 +64,7 @@ if __name__ == '__main__':
         successful = prog.result.wasSuccessful()
     if functests:
         sys.stderr.write("Running functional tests\n")
-        functional_tests(args.interactive, args.run_vagrant)
+        functional_tests(args.interactive, args.run_vagrant, args.run_docker)
 
     if not successful:
         sys.exit(1)

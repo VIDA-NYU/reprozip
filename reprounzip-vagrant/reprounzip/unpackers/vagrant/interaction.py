@@ -75,14 +75,15 @@ def posix_shell(chan):
 def windows_shell(chan):
     import threading
 
-    sys.stdout.write("Line-buffered terminal emulation. "
-                     "Press F6 or ^Z to send EOF.\r\n\r\n")
+    sys.stdout.write("*** Line-buffered terminal emulation. "
+                     "Press F6 or ^Z to send EOF.\r\n")
 
     def writeall(sock):
         while True:
             data = sock.recv(256)
             if not data:
-                sys.stdout.write('\r\n*** EOF ***\r\n\r\n')
+                sys.stdout.write("\r\n*** EOF (press F6 or ^Z then enter to "
+                                 "end)\r\n")
                 sys.stdout.flush()
                 break
             sys.stdout.write(data)

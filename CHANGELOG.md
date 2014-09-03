@@ -10,11 +10,33 @@ Bugfixes:
 
 Features:
 * Displays a warning for READ_THEN_WRITTEN files
-* Identifies input and output files
+* chroot restores files' owner/group
 * Adds 'reprounzip info' command
 * Better error messages when trying to unpack on incompatible system
+* Identifies input files, which can be replaced ('upload' operation)
+* Identifies output files, which can be retrieved ('download' operation)
+* New command-line interface for unpackers, with setup/run/destroy; you can now
+  do everything through reprounzip
 * Vagrant now defaults to --use-chroot`, added --no-use-chroot
 * Adds --summary and --missing to installpkgs
+* Adds Docker unpacker (no uploading support yet)
+
+0.3.2 (2014-08-28)
+------------------
+
+(reprounzip only)
+
+Bugfixes:
+* Once busybox was in the local cache, setting it up could crash
+* 'script.sh' files were not set as executable
+
+0.3.1 (2014-08-26)
+------------------
+
+(reprozip only)
+
+Bugfixes:
+* Don't crash when packing an experiment that wrote in temporary directories
 
 0.3 (2014-07-28)
 ----------------

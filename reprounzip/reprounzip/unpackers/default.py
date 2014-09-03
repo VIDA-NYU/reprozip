@@ -25,10 +25,12 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.unpackers.common import THIS_DISTRIBUTION, load_config, \
-    select_installer, target_must_exist, shell_escape, busybox_url, \
-    join_root, PKG_NOT_INSTALLED, COMPAT_OK, COMPAT_NO
-from reprounzip.utils import unicode_, iteritems, download_file
+from reprounzip.common import load_config as load_config_file
+from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
+    COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader
+from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
+    download_file
 
 
 def installpkgs(args):
@@ -97,6 +99,9 @@ def directory_create(args):
 
     Only the files that are not part of a package are copied (unless they are
     missing from the system and were packed).
+
+    In addition, input files are put in a tar.gz (so they can be put back after
+    an upload) and the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup needs --pack\n")
@@ -135,6 +140,11 @@ def directory_create(args):
         if linkname.is_absolute:
             m.linkname = join_root(root, PosixPath(m.linkname)).path
     tar.extractall(str(root), members)
+
+    # Unpacks configuration file
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
     tar.close()
 
     # Gets library paths
@@ -150,35 +160,101 @@ def directory_create(args):
     finally:
         p.wait()
 
-    # Writes start script
-    with (target / 'script.sh').open('w', encoding='utf-8') as fp:
-        fp.write('#!/bin/sh\n\n')
-        fp.write("export LD_LIBRARY_PATH=%s\n\n" % ':'.join(
-                shell_escape(unicode_(join_root(root, d)))
-                for d in lib_dirs))
+    # Original input files, so upload can restore them
+    if any(run['input_files'] for run in runs):
+        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
-            cmd = 'cd %s && ' % shell_escape(
-                    unicode_(join_root(root,
-                                       Path(run['workingdir']))))
-            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in iteritems(run['environ']))
-            cmd += ' '
-            path = [PosixPath(d)
-                    for d in run['environ'].get('PATH', '').split(':')]
-            path = ':'.join(unicode_(join_root(root, d)) if d.root == '/'
-                            else unicode_(d)
-                            for d in path)
-            cmd += 'PATH=%s ' % shell_escape(path)
-            # FIXME : Use exec -a or something if binary != argv[0]
-            cmd += ' '.join(
-                    shell_escape(a)
-                    for a in run['argv'])
-            fp.write('%s\n' % cmd)
+            for ifile in itervalues(run['input_files']):
+                inputtar.add(str(PosixPath(ifile)))
+        inputtar.close()
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
-    print("Experiment set up, run %s to start" % (target / 'script.sh'))
+
+@target_must_exist
+def directory_run(args):
+    """Runs the command in the directory.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip', 'directory')
+    run = args.run
+    cmdline = args.cmdline
+
+    # Loads config
+    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+
+    if run is None and len(runs) == 1:
+        run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if run is None:
+            sys.stderr.write("Error: There are several runs in this pack -- "
+                             "you have to choose which\none to use with "
+                             "--cmdline\n")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
+        sys.exit(0)
+
+    if run is None:
+        run = irange(len(runs))
+    else:
+        run = (int(run),)
+
+    root = target / 'root'
+
+    # Gets library paths
+    lib_dirs = []
+    p = subprocess.Popen(['/sbin/ldconfig', '-v', '-N'],
+                         stdout=subprocess.PIPE)
+    try:
+        for l in p.stdout:
+            if len(l) < 3 or l[0] in (b' ', b'\t'):
+                continue
+            if l.endswith(b':\n'):
+                lib_dirs.append(Path(l[:-2]))
+    finally:
+        p.wait()
+    lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
+                shell_escape(unicode_(join_root(root, d)))
+                for d in lib_dirs))
+
+    cmds = [lib_dirs]
+    for run_number in run:
+        run_dict = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(
+                unicode_(join_root(root,
+                                   Path(run_dict['workingdir']))))
+        cmd += '/usr/bin/env -i '
+        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                        for k, v in iteritems(run_dict['environ'])
+                        if k != 'PATH')
+        cmd += ' '
+
+        # PATH
+        # Get the original PATH components
+        path = [PosixPath(d)
+                for d in run_dict['environ'].get('PATH', '').split(':')]
+        # The same paths but in the directory
+        dir_path = [join_root(root, d)
+                    for d in path
+                    if d.root == '/']
+        # Rebuild string
+        path = ':'.join(unicode_(d) for d in (dir_path + path))
+        cmd += 'PATH=%s ' % shell_escape(path)
+
+        # FIXME : Use exec -a or something if binary != argv[0]
+        if cmdline is None:
+            argv = run_dict['argv']
+        else:
+            argv = cmdline
+        cmd += ' '.join(shell_escape(a) for a in argv)
+        cmds.append(cmd)
+    cmds = ' && '.join(cmds)
+
+    subprocess.check_call(cmds, shell=True)
 
 
 @target_must_exist
@@ -191,11 +267,41 @@ def directory_destroy(args):
     target.rmtree()
 
 
+def should_restore_owner(param):
+    if os.getuid() != 0:
+        if param is True:
+            # Restoring the owner was explicitely requested
+            sys.stderr.write("Error: Not running as root, cannot restore "
+                             "files' owner/group\n")
+            sys.exit(1)
+        elif param is None:
+            # Nothing was requested
+            sys.stderr.write("Warning: Not running as root, won't restore "
+                             "files' owner/group\n")
+        else:
+            # If False: skip warning
+            return False
+    else:
+        if param is None:
+            # Nothing was requested
+            sys.stderr.write("Info: Running as root, we will restore files' "
+                             "owner/group\n")
+            return True
+        elif param is True:
+            return True
+        else:
+            # If False: skip warning
+            return False
+
+
 def chroot_create(args):
     """Unpacks the experiment in a folder so it can be run with chroot.
 
     All the files in the pack are unpacked; system files are copied only if
     they were not packed, and busybox is installed if /bin/sh wasn't packed.
+
+    In addition, input files are put in a tar.gz (so they can be put back after
+    an upload) and the configuration file is extracted.
     """
     if not args.pack:
         sys.stderr.write("Error: setup/create needs --pack\n")
@@ -212,26 +318,7 @@ def chroot_create(args):
         sys.exit(1)
 
     # We can only restore owner/group of files if running as root
-    restore_owner = False
-    if os.getuid() != 0:
-        if args.restore_owner is True:
-            # Restoring the owner was explicitely requested
-            sys.stderr.write("Error: Not running as root, cannot restore "
-                             "files' owner/group\n")
-            sys.exit(1)
-        elif args.restore_owner is None:
-            # Nothing was requested
-            sys.stderr.write("Warning: Not running as root, won't restore "
-                             "files' owner/group\n")
-        # If False: skip warning
-    else:
-        if args.restore_owner is None:
-            # Nothing was requested
-            sys.stderr.write("Info: Running as root, we will restore files' "
-                             "owner/group\n")
-            restore_owner = True
-        elif args.restore_owner is True:
-            restore_owner = True
+    restore_owner = should_restore_owner(args.restore_owner)
 
     # Loads config
     runs, packages, other_files = load_config(pack)
@@ -282,6 +369,11 @@ def chroot_create(args):
             m.uid = uid
             m.gid = gid
     tar.extractall(str(root), members)
+
+    # Unpacks configuration file
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
     tar.close()
 
     # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
@@ -300,29 +392,16 @@ def chroot_create(args):
             env_path.parent.mkdir(parents=True)
             env_path.symlink('/bin/busybox')
 
-    # Writes start script
-    with (target / 'script.sh').open('w', encoding='utf-8') as fp:
-        fp.write('#!/bin/sh\n\n')
+    # Original input files, so upload can restore them
+    if any(run['input_files'] for run in runs):
+        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
-            cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-            cmd += '/usr/bin/env -i '
-            cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                            for k, v in iteritems(run['environ']))
-            cmd += ' '
-            # FIXME : Use exec -a or something if binary != argv[0]
-            cmd += ' '.join(
-                    shell_escape(a)
-                    for a in [run['binary']] + run['argv'][1:])
-            userspec = '%s:%s' % (run.get('uid', 1000), run.get('gid', 1000))
-            fp.write('chroot --userspec=%s %s /bin/sh -c %s\n' % (
-                     userspec,
-                     shell_escape(unicode_(root)),
-                     shell_escape(cmd)))
+            for ifile in itervalues(run['input_files']):
+                inputtar.add(str(PosixPath(ifile)))
+        inputtar.close()
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
-
-    print("Experiment set up, run %s to start" % (target / 'script.sh'))
 
 
 @target_must_exist
@@ -341,6 +420,65 @@ def chroot_mount(args):
 
 
 @target_must_exist
+def chroot_run(args):
+    """Runs the command in the chroot.
+    """
+    target = Path(args.target[0])
+    read_dict(target / '.reprounzip', 'chroot')
+    run = args.run
+    cmdline = args.cmdline
+
+    # Loads config
+    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+
+    if run is None and len(runs) == 1:
+        run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if run is None:
+            sys.stderr.write("Error: There are several runs in this pack -- "
+                             "you have to choose which\none to use with "
+                             "--cmdline\n")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
+        sys.exit(0)
+
+    if run is None:
+        run = irange(len(runs))
+    else:
+        run = (int(run),)
+
+    root = target / 'root'
+
+    cmds = []
+    for run_number in run:
+        run_dict = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+        cmd += '/usr/bin/env -i '
+        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+                        for k, v in iteritems(run_dict['environ']))
+        cmd += ' '
+        # FIXME : Use exec -a or something if binary != argv[0]
+        if cmdline is None:
+            argv = [run_dict['binary']] + run_dict['argv'][1:]
+        else:
+            argv = cmdline
+        cmd += ' '.join(shell_escape(a) for a in argv)
+        userspec = '%s:%s' % (run_dict.get('uid', 1000),
+                              run_dict.get('gid', 1000))
+        cmd = 'chroot --userspec=%s %s /bin/sh -c %s' % (
+                userspec,
+                shell_escape(unicode_(root)),
+                shell_escape(cmd))
+        cmds.append(cmd)
+    cmds = ' && '.join(cmds)
+
+    subprocess.check_call(cmds, shell=True)
+
+
+@target_must_exist
 def chroot_destroy(args):
     """Destroys the directory.
     """
@@ -356,14 +494,92 @@ def chroot_destroy(args):
     target.rmtree()
 
 
+class LocalUploader(FileUploader):
+    def __init__(self, target, input_files, files, type_, param_restore_owner):
+        self.type = type_
+        self.param_restore_owner = param_restore_owner
+        FileUploader.__init__(self, target, input_files, files)
+
+    def get_runs_from_config(self):
+        runs, packages, other_files = load_config_file(
+                self.target / 'config.yml', True)
+        return runs
+
+    def prepare_upload(self, files):
+        self.restore_owner = (self.type == 'chroot' and
+                              should_restore_owner(self.param_restore_owner))
+        self.root = (self.target / 'root').absolute()
+
+    def upload_file(self, local_path, input_path):
+        remote_path = join_root(self.root, input_path)
+
+        # Copy
+        orig_stat = remote_path.stat()
+        local_path.copyfile(remote_path)
+        remote_path.chmod(orig_stat.st_mode & 0o7777)
+        if self.restore_owner:
+            remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+
+
 @target_must_exist
-def run(args):
-    """Runs the command in the directory or chroot.
+def upload(args):
+    """Replaces an input file in the directory.
     """
     target = Path(args.target[0])
+    files = args.file
+    unpacked_info = read_dict(target / '.reprounzip', args.type)
+    input_files = unpacked_info.setdefault('input_files', {})
+
+    try:
+        LocalUploader(target, input_files, files,
+                      args.type, args.type == 'chroot' and args.restore_owner)
+    finally:
+        write_dict(target / '.reprounzip', unpacked_info, args.type)
+
+
+class LocalDownloader(FileDownloader):
+    def __init__(self, target, files, type_):
+        self.type = type_
+        FileDownloader.__init__(self, target, files)
+
+    def get_runs_from_config(self):
+        runs, packages, other_files = load_config_file(
+                self.target / 'config.yml', True)
+        return runs
+
+    def prepare_download(self, files):
+        self.root = (self.target / 'root').absolute()
+
+    def download_and_print(self, remote_path):
+        remote_path = join_root(self.root, remote_path)
+
+        # Output to stdout
+        with remote_path.open('rb') as fp:
+            chunk = fp.read(1024)
+            if chunk:
+                sys.stdout.write(chunk)
+            while len(chunk) == 1024:
+                chunk = fp.read(1024)
+                if chunk:
+                    sys.stdout.write(chunk)
+
+    def download(self, remote_path, local_path):
+        remote_path = join_root(self.root, remote_path)
+
+        # Copy
+        remote_path.copyfile(local_path)
+        remote_path.copymode(local_path)
+
+
+@target_must_exist
+def download(args):
+    """Gets an output file from the directory.
+    """
+    target = Path(args.target[0])
+    files = args.file
     read_dict(target / '.reprounzip', args.type)
 
-    subprocess.check_call(['/bin/sh', (target / 'script.sh').path])
+    LocalDownloader(target, files, args.type)
 
 
 def test_same_pkgmngr(pack, config, **kwargs):
@@ -437,14 +653,25 @@ def setup_directory(parser):
     parser_setup.add_argument('--pack', nargs=1, help="Pack to extract")
     parser_setup.set_defaults(func=directory_create)
 
-    # TODO : directory upload
+    # upload
+    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name>")
+    parser_upload.set_defaults(func=upload, type='directory')
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
-    parser_run.set_defaults(func=run, type='directory')
+    parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
+                            help=("Command line to run"))
+    parser_run.set_defaults(func=directory_run)
 
-    # TODO : directory download
+    # download
+    parser_download = subparsers.add_parser('download',
+                                            parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=download, type='directory')
 
     # destroy
     parser_destroy = subparsers.add_parser('destroy', parents=[options])
@@ -513,14 +740,26 @@ def setup_chroot(parser):
             help=argparse.SUPPRESS)
     parser_setup.set_defaults(func=chroot_setup)
 
-    # TODO : chroot upload (options, opt_owner)
+    # upload
+    parser_upload = subparsers.add_parser('upload',
+                                          parents=[options, opt_owner])
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name>")
+    parser_upload.set_defaults(func=upload, type='chroot')
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
-    parser_run.set_defaults(func=run, type='chroot')
+    parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
+                            help=("Command line to run"))
+    parser_run.set_defaults(func=chroot_run)
 
-    # TODO : chroot download (options)
+    # download
+    parser_download = subparsers.add_parser('download',
+                                            parents=[options])
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>:<path>")
+    parser_download.set_defaults(func=download, type='chroot')
 
     # destroy
     parser_destroy = subparsers.add_parser('destroy', parents=[options])
