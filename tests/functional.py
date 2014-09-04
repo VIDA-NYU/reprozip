@@ -44,20 +44,33 @@ def in_temp_dir(f):
     return wrapper
 
 
+def print_arg_list(f):
+    """Decorator printing the sole argument (list of strings) first.
+    """
+    @functools.wraps(f)
+    def wrapper(args):
+        print(" ".join(a if isinstance(a, unicode)
+                       else a.decode('utf-8', 'replace')
+                       for a in args))
+        return f(args)
+    return wrapper
+
+
+@print_arg_list
 def call(args):
-    print(" ".join(a if isinstance(a, unicode)
-                   else a.decode('utf-8', 'replace')
-                   for a in args))
     r = subprocess.call(args)
     print("---> %d" % r)
     return r
 
 
+@print_arg_list
 def check_call(args):
-    print(" ".join(a if isinstance(a, unicode)
-                   else a.decode('utf-8', 'replace')
-                   for a in args))
     return subprocess.check_call(args)
+
+
+@print_arg_list
+def check_output(args):
+    return subprocess.check_output(args)
 
 
 def build(target, sources, args=[]):
