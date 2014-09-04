@@ -20,7 +20,7 @@ from pkg_resources import iter_entry_points
 import sys
 
 from reprounzip.common import setup_logging
-from reprounzip.pack_info import print_info
+from reprounzip.pack_info import print_info, showfiles
 
 
 __version__ = '0.4'
@@ -72,6 +72,13 @@ def main():
     parser_info.add_argument('pack', nargs=1,
                              help="Pack to read")
     parser_info.set_defaults(func=lambda args: print_info(args, unpackers))
+
+    parser_showfiles = subparsers.add_parser(
+            'showfiles', parents=[options],
+            help="Prints out input and output file names")
+    parser_showfiles.add_argument('pack', nargs=1,
+                                  help="Pack or directory to read from")
+    parser_showfiles.set_defaults(func=showfiles)
 
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):

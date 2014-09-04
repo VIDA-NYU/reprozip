@@ -16,6 +16,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import platform
 from rpaths import Path
+import sys
 import tarfile
 
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
@@ -153,3 +154,42 @@ def print_info(args, unpackers):
                 print("    %s (%s)" % (upk_name, msg))
             else:
                 print("    %s" % upk_name)
+
+
+def showfiles(args):
+    """Writes out the input and output files.
+
+    Works both for a pack file and for an extracted directory.
+    """
+    pack = Path(args.pack[0])
+
+    if not pack.exists():
+        logging.critical("Pack or directory %s does not exist" % pack)
+        sys.exit(1)
+
+    if pack.is_dir():
+        logging.critical("Not yet implemented")
+        sys.exit(1)
+    else:  # pack.is_file()
+        # Reads info from a pack file
+        runs, packages, other_files = load_config(pack)
+
+        print("Input files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for input_name, path in iteritems(run['input_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (input_name, path))
+                else:
+                    print("    %s" % input_name)
+
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name, path in iteritems(run['output_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (output_name, path))
+                else:
+                    print("    %s" % output_name)
