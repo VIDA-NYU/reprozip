@@ -145,8 +145,8 @@ The *directory* unpacker
 (*reprounzip directory*) allows users
 to unpack the entire experiment
 (including library dependencies)
-in a single directory, and to
-reproduce the experiment directly
+in a single directory,
+and to reproduce the experiment directly
 from that directory,
 **without interfering with
 the current environment**.
@@ -154,7 +154,9 @@ It does so by automatically
 setting up environment variables
 (e.g.: PATH, HOME, and LD_LIBRARY_PATH)
 that point the experiment execution
-to the created directory.
+to the created directory, which has
+the same structure
+as in the packing environment.
 
 To create the directory where
 the execution will take place,
@@ -226,7 +228,71 @@ modify them.
 Running With *chroot*
 +++++++++++++++++++++
 
+In the *chroot* unpacker (*reprounzip chroot*),
+similar to *reprounzip directory*,
+a directory is created from the experiment package,
+but a chroot environment is also built under this
+directory.
+This fundamentally changes the root directory of the
+current environment to the experiment directory,
+creating a virtualized copy of the original environment.
+Therefore, this unpacker addresses
+the limitation of *reprounzip directory*
+and does not fail in the presence of harcoded paths.
 
+To create the directory of the
+chroot environment,
+users should use the command *setup/create*::
+
+  $ reprounzip chroot setup/create <path> --pack <package>
+  
+where <path> is the diretory where the experiment
+will be unpacked for the chroot environment.
+If users run this command as root,
+ReproZip will restore the owner/group of the
+experiment files by default.
+To disable this, flag *no-preserve-owner*
+can be used::
+
+  $ reprounzip chroot setup/create <path> --pack <package> --no-preserve-owner
+  
+Next, users need to use the *setup/mount* command
+to create the chroot environment under the experiment directory::
+
+  $ reprounzip chroot setup/mount <path>
+
+This command binds */dev* and */proc* inside the experiment directory,
+thus creating the chroot environment.
+Both the creation and mounting steps (*setup/create* and *setup/mount*, respectively)
+can be executed in one step by using
+the *setup* command::
+
+  $ reprounzip chroot setup <path> --pack <package>
+
+The commands to replace input files, reproduce the experiment,
+and copy output files are the same as for *reprounzip directory*::
+
+  $ reprounzip chroot upload <path> <input-path>:<input-id>
+  $ reprounzip chroot run <path> --cmdline <new-command-line>
+  $ reprounzip chroot download <path> <output-id>:<output-path>
+
+To remove the chroot environment, users can execute the command *destroy*::
+
+  $ reprounzip directory destroy <path>
+  
+which unmounts *\dev* and *\proc* from the experiment
+directory and then removes the directory.
+These steps can also be executed separately by
+using the commands *destroy/unmount* and
+*destroy/dir*::
+
+  $ reprounzip directory destroy/unmount <path>
+  $ reprounzip directory destroy/dir <path>
+  
+**Warning:** note that, after creating the chroot environment,
+the root directory is changed to the experiment directory;
+therefore, do **not** use command *rm -Rf* inside this
+directory.
 
 Installing Software Packages
 ++++++++++++++++++++++++++++
