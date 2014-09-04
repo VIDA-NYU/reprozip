@@ -283,47 +283,48 @@ def vagrant_run(args):
     """
     target = Path(args.target[0])
     use_chroot = read_dict(target / '.reprounzip').get('use_chroot', True)
-    run = args.run
+    selected_run = args.run
     cmdline = args.cmdline
 
     # Loads config
     runs, packages, other_files = load_config(target / 'experiment.rpz')
 
-    if run is None and len(runs) == 1:
-        run = 0
+    if selected_run is None and len(runs) == 1:
+        selected_run = 0
 
     # --cmdline without arguments: display the original command line
     if cmdline == []:
-        if run is None:
+        if selected_run is None:
             sys.stderr.write("Error: There are several runs in this pack -- "
                              "you have to choose which\none to use with "
                              "--cmdline\n")
             sys.exit(1)
         print("Original command-line:")
-        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
+        print(' '.join(shell_escape(arg)
+                       for arg in runs[selected_run]['argv']))
         sys.exit(0)
 
-    if run is None:
-        run = irange(len(runs))
+    if selected_run is None:
+        selected_run = irange(len(runs))
     else:
-        run = (int(run),)
+        selected_run = (int(selected_run),)
 
     cmds = []
-    for run_number in run:
-        run_dict = runs[run_number]
-        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+    for run_number in selected_run:
+        run = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run_dict['environ']))
+                        for k, v in iteritems(run['environ']))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
-            argv = [run_dict['binary']] + run_dict['argv'][1:]
+            argv = [run['binary']] + run['argv'][1:]
         else:
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
-        uid = run_dict.get('uid', 1000)
-        gid = run_dict.get('gid', 1000)
+        uid = run.get('uid', 1000)
+        gid = run.get('gid', 1000)
         if use_chroot:
             userspec = '%s:%s' % (uid, gid)
             cmd = ('chroot --userspec=%s /experimentroot '
