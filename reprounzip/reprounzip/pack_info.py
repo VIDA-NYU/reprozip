@@ -19,7 +19,7 @@ from rpaths import Path
 import tarfile
 
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
-    COMPAT_NO
+    COMPAT_NO, shell_escape
 from reprounzip.utils import iteritems, hsize
 
 
@@ -110,7 +110,7 @@ def print_info(args, unpackers):
               meta_distribution, current_distribution or "(not Linux)"))
         print("Executions (%d):" % len(runs))
         for r in runs:
-            print("    %s" % ' '.join(r['argv']))
+            print("    %s" % ' '.join(shell_escape(a) for a in r['argv']))
             print("        input files: %s" % (", ".join(r['input_files'])))
             print("        output files: %s" % (", ".join(r['output_files'])))
             print("        wd: %s" % r['workingdir'])
