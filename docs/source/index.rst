@@ -6,3 +6,4 @@ ReproZip's Documentation
 
    userguide
    developerguide
+   faq

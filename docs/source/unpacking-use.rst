@@ -239,6 +239,8 @@ creating a virtualized copy of the original environment.
 Therefore, this unpacker addresses
 the limitation of *reprounzip directory*
 and does not fail in the presence of harcoded paths.
+Note that this unpacker **does not interfere
+with the current environment** either.
 
 To create the directory of the
 chroot environment,
@@ -297,7 +299,43 @@ directory.
 Installing Software Packages
 ++++++++++++++++++++++++++++
 
+By default, ReproZip identifies
+if the current environment already has
+the required software packages for the experiment,
+using the installed ones;
+for the non-installed software packages,
+it uses the dependencies packed in the original
+environment and extracted under the
+experiment directory.
 
+Users may also let ReproZip to try installing
+all the dependencies of the experiment in
+their environment by using the *installpkgs*
+unpacker (*reprounzip installpkgs*).
+This unpacker currently works for Debian and Dabian-based
+operating systems only, and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`_
+package manager to automatically install all the
+required software packages direclty on
+the current environment,
+thus **interfering with this environment**.
+
+To install the required dependencies, the following command
+should be used::
+
+  $ reprounzip installpkgs <package>
+  
+Users may use flag *y* or *assume-yes* to automatically confirm
+all the questions from the package manager;
+flag *missing* to install only the software packages that were not
+originally included in the experiment package (i.e.:
+software packages excluded in the configuration file);
+and flag *summary* to simply provide a summary
+of which software packages are installed or not
+in the current environment **without installing any dependency**.
+
+Note that this unpacker is only used to install software packages.
+Users still need to use either *reprounzip directory* or *reprounzip chroot*
+to extract the experiment and execute it.
 
 .. _unpackers:
 
