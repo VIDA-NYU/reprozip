@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from distutils.version import LooseVersion
+import logging
 from rpaths import PosixPath
 import yaml
 
@@ -211,3 +212,29 @@ other_files:
 #  - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in
 #    # that container
 """)
+
+
+class LoggingDateFormatter(logging.Formatter):
+    converter = datetime.fromtimestamp
+
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        t = ct.strftime("%H:%M:%S")
+        s = "%s.%03d" % (t, record.msecs)
+        return s
+
+
+def setup_logging(tag, verbosity):
+    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
+    level = levels[min(verbosity, 3)]
+
+    fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
+
+    formatter = LoggingDateFormatter(fmt)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(level)
+    logger.addHandler(handler)

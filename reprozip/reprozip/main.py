@@ -22,6 +22,7 @@ import sqlite3
 import sys
 
 from reprozip import _pytracer
+from reprozip.common import setup_logging
 import reprozip.pack
 import reprozip.tracer.trace
 from reprozip.utils import PY3
@@ -273,8 +274,7 @@ def main():
     parser_pack.set_defaults(func=pack)
 
     args = parser.parse_args()
-    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=levels[min(args.verbosity, 3)])
+    setup_logging('REPROZIP', args.verbosity)
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
     args.func(args)

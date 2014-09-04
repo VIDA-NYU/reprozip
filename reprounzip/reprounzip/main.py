@@ -16,10 +16,10 @@ from __future__ import absolute_import, unicode_literals
 import argparse
 import codecs
 import locale
-import logging
 from pkg_resources import iter_entry_points
 import sys
 
+from reprounzip.common import setup_logging
 from reprounzip.pack_info import print_info
 
 
@@ -91,8 +91,7 @@ def main():
         unpackers[name] = info
 
     args = parser.parse_args()
-    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=levels[min(args.verbosity, 3)])
+    setup_logging('REPROUNZIP', args.verbosity)
     args.func(args)
     sys.exit(0)
 
