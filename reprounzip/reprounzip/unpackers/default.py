@@ -479,8 +479,43 @@ def chroot_run(args):
 
 
 @target_must_exist
-def chroot_destroy(args):
+def chroot_destroy_unmount(args):
+    """Unmounts the bound magic dirs.
+    """
+    target = Path(args.target[0])
+    unpacked_info = read_dict(target / '.reprounzip', 'chroot')
+    mounted = unpacked_info.get('mounted', False)
+
+    if not mounted:
+        sys.stderr.write("Error: Magic directories were not mounted\n")
+        sys.exit(1)
+
+    unpacked_info['mounted'] = False
+    write_dict(target / '.reprounzip', unpacked_info, 'chroot')
+
+    for m in ('/dev', '/proc'):
+        d = join_root(target / 'root', Path(m))
+        if d.exists():
+            subprocess.check_call(['umount', str(d)])
+
+
+@target_must_exist
+def chroot_destroy_dir(args):
     """Destroys the directory.
+    """
+    target = Path(args.target[0])
+    mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
+
+    if mounted:
+        sys.stderr.write("Error: Magic directories might still be mounted\n")
+        sys.exit(1)
+
+    target.rmtree()
+
+
+@target_must_exist
+def chroot_destroy(args):
+    """Destroys the directory, unmounting first if necessary.
     """
     target = Path(args.target[0])
     mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
@@ -760,6 +795,16 @@ def setup_chroot(parser):
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
     parser_download.set_defaults(func=download, type='chroot')
+
+    # destroy/unmount
+    parser_destroy_unmount = subparsers.add_parser('destroy/unmount',
+                                                   parents=[options])
+    parser_destroy_unmount.set_defaults(func=chroot_destroy_unmount)
+
+    # destroy/dir
+    parser_destroy_dir = subparsers.add_parser('destroy/dir',
+                                               parents=[options])
+    parser_destroy_dir.set_defaults(func=chroot_destroy_dir)
 
     # destroy
     parser_destroy = subparsers.add_parser('destroy', parents=[options])
