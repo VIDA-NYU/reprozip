@@ -27,7 +27,8 @@ where <package> corresponds to the experiment package.
 
 The output of this command has three sections.
 The first section, *Pack Information*, comprises
-the main information about the experiment package::
+the main information about the experiment package,
+including size and total number of files::
 
   ----- Pack information -----
   Compressed size: <compressed-size>
@@ -52,7 +53,7 @@ and experiment execution::
       Files from unpacked software packages: <number-files-unpacked-software-packages>
   Architecture: <original-architecture> (current: <current-architecture>)
   Distribution: <original-operating-system> (current: <current-operating-system>)
-  Executions (1):
+  Executions:
       <command-line>
           input files: <number-input-files>
           output files: <number-output-files>
@@ -65,6 +66,10 @@ both the original environment (i.e.: the environment
 where the experiment was packed) and
 the current one (i.e.: the environment
 where the experiment is to be unpacked).
+This helps users understand
+the differences between the environments
+in order to provide a better guidance in
+choosing the most appropriate unpacker.
 
 Last, the section *Unpackers* shows
 which of the installed *reprounzip* unpackers
@@ -152,7 +157,7 @@ that point the experiment execution
 to the created directory.
 
 To create the directory where
-the execution takes place,
+the execution will take place,
 users should use the command *setup*::
 
   $ reprounzip directory setup <path> --pack <package>
@@ -166,35 +171,41 @@ the *run* command::
 
   $ reprounzip directory run <path>
   
-which will execute the experiment inside
+which will execute the entire experiment inside
 the experiment directory.
 Users may also change the command line
 of the experiment by using the argument
-*--cmdline*::
+*cmdline*::
 
   $ reprounzip directory run <path> --cmdline <new-command-line>
 
 where <new-command-line> is the modified command line.
-This is particularly useful to reproduce
-the experiment under different input parameters.
+This is particularly useful to reproduce and test
+the experiment under different input parameter values.
 
 Before reproducing the experiment,
-users may also want to change its input files:
-users need first to identify the input files
+users also have the option to change the input files.
+First, users need to identify the identifiers for these files
 by running the *showfiles* command
 (see :ref:`showfiles`),
 and then run the *upload* command::
 
   $ reprounzip directory upload <path> <input-path>:<input-id>
   
-where <input-path> is the new input file
+where <input-path> is the new input file path
 and <input-id> is the input file identifier
 (from *showfiles*).
-Also, after running the experiment,
-to copy an output file
-from the experiment directory,
+This command essentially replaces the file identified
+by <input-id> with the user file under <input-path>.
+
+After running the experiment,
+all the generated output files
+will be located under the experiment directory.
+To copy an output file
+from this directory
+to another desired location,
 users must first run the *showfiles* command
-to identify the desired output file, and then run
+to identify the identifier of this file, and then run
 the *download* command::
 
   $ reprounzip directory download <path> <output-id>:<output-path>
@@ -202,11 +213,15 @@ the *download* command::
 where <output-id> is the output file identifier (from *showfiles*)
 and <output-path> is the desired destination of the file.
 
-The experiment directory can be removed by executing
+The experiment directory can be removed by using
 the *destroy* command::
 
   $ reprounzip directory destroy <path>
 
+**Limitation:** *reprounzip directory*
+will fail if the binaries involved in the experiment
+use hardcoded paths, as ReproZip cannot
+modify them.
 
 Running With *chroot*
 +++++++++++++++++++++
