@@ -84,25 +84,28 @@ def print_info(args, unpackers):
     current_distribution = platform.linux_distribution()[0:2]
 
     print("Pack file: %s" % pack)
-    print("----- Pack information -----")
+    print("\n----- Pack information -----")
     print("Compressed size: %s" % hsize(pack.size()))
     print("Unpacked size: %s" % hsize(pack_total_size))
-    print("Total packed paths: %d" % pack_total_paths)
-    print("    Files: %d" % pack_files)
-    print("    Directories: %d" % pack_dirs)
-    print("    Symbolic links: %d" % pack_symlinks)
+    if args.verbosity >= 3:
+        print("Total packed paths: %d" % pack_total_paths)
+        print("    Files: %d" % pack_files)
+        print("    Directories: %d" % pack_dirs)
+        print("    Symbolic links: %d" % pack_symlinks)
     if pack_others:
         print("    Unknown (what!?): %d" % pack_others)
-    print("----- Metadata -----")
-    print("Total paths: %d" % meta_total_paths)
-    print("Listed packed paths: %d" % meta_packed_paths)
+    print("\n----- Metadata -----")
+    if args.verbosity >= 3:
+        print("Total paths: %d" % meta_total_paths)
+        print("Listed packed paths: %d" % meta_packed_paths)
     if packages:
         print("Total software packages: %d" % meta_packages)
         print("Packed software packages: %d" % meta_packed_packages)
-        print("    Files from packed software packages: %d" %
-              meta_packed_packages_files)
-        print("    Files from unpacked software packages: %d" %
-              meta_unpacked_packages_files)
+        if args.verbosity >= 3:
+            print("Files from packed software packages: %d" %
+                  meta_packed_packages_files)
+            print("Files from unpacked software packages: %d" %
+                  meta_unpacked_packages_files)
     if runs:
         print("Architecture: %s (current: %s)" % (meta_architecture,
                                                   current_architecture))
@@ -111,16 +114,19 @@ def print_info(args, unpackers):
         print("Executions (%d):" % len(runs))
         for r in runs:
             print("    %s" % ' '.join(shell_escape(a) for a in r['argv']))
-            print("        input files: %s" % (", ".join(r['input_files'])))
-            print("        output files: %s" % (", ".join(r['output_files'])))
-            print("        wd: %s" % r['workingdir'])
-            if 'signal' in r:
-                print("        signal: %d" % r['signal'])
-            else:
-                print("        exitcode: %d" % r['exitcode'])
+            if args.verbosity >= 2:
+                print("        input files: %s" %
+                      ", ".join(r['input_files']))
+                print("        output files: %s" %
+                      ", ".join(r['output_files']))
+                print("        wd: %s" % r['workingdir'])
+                if 'signal' in r:
+                    print("        signal: %d" % r['signal'])
+                else:
+                    print("        exitcode: %d" % r['exitcode'])
 
     # Unpacker compatibility
-    print("----- Unpackers -----")
+    print("\n----- Unpackers -----")
     unpacker_status = {}
     for name, upk in iteritems(unpackers):
         if 'test_compatibility' in upk:
@@ -136,6 +142,8 @@ def print_info(args, unpackers):
             unpacker_status.setdefault(None, []).append((name, None))
     for s, n in [(COMPAT_OK, "Compatible"), (COMPAT_MAYBE, "Unknown"),
                  (COMPAT_NO, "Incompatible")]:
+        if s != COMPAT_OK and args.verbosity < 2:
+            continue
         if s not in unpacker_status:
             continue
         upks = unpacker_status[s]
