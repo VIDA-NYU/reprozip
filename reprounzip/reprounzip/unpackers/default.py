@@ -681,7 +681,7 @@ def setup_directory(parser):
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Directory to create")
+    options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup
     parser_setup = subparsers.add_parser('setup', parents=[options])
@@ -738,7 +738,7 @@ def setup_chroot(parser):
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Directory to create")
+    options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)

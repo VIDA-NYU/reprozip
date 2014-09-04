@@ -550,7 +550,7 @@ def setup(parser):
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Directory to create")
+    options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
