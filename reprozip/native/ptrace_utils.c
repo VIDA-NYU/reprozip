@@ -30,7 +30,7 @@ static long tracee_getword(pid_t tid, const void *addr)
     return res;
 }
 
-static void *tracee_getptr(int mode, pid_t tid, const void *addr)
+void *tracee_getptr(int mode, pid_t tid, const void *addr)
 {
     if(mode == MODE_I386)
     {
@@ -46,6 +46,34 @@ static void *tracee_getptr(int mode, pid_t tid, const void *addr)
         tracee_read(tid, (void*)&ptr, addr, sizeof(ptr));
         return (void*)ptr;
     }
+}
+
+uint64_t tracee_getlong(int mode, pid_t tid, const void *addr)
+{
+    if(mode == MODE_I386)
+    {
+        /* Longs are 32 bits */
+        uint32_t val;
+        tracee_read(tid, (void*)&val, addr, sizeof(val));
+        return (uint64_t)val;
+    }
+    else /* mode == MODE_X86_64 */
+    {
+        /* Longs are 64 bits */
+        uint64_t val;
+        tracee_read(tid, (void*)&val, addr, sizeof(val));
+        return val;
+    }
+}
+
+size_t tracee_getwordsize(int mode)
+{
+    if(mode == MODE_I386)
+        /* Pointers are 32 bits */
+        return 4;
+    else /* mode == MODE_X86_64 */
+        /* Pointers are 64 bits */
+        return 8;
 }
 
 size_t tracee_strlen(pid_t tid, const char *str)
