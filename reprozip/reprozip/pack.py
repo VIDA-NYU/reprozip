@@ -138,16 +138,16 @@ def pack(target, directory, sort_packages):
     """
     if target.exists():
         # Don't overwrite packs...
-        sys.stderr.write("Error: Target file exists!\n")
+        logging.critical("Target file exists!")
         sys.exit(1)
 
     # Reads configuration
     configfile = directory / 'config.yml'
     if not configfile.is_file():
-        sys.stderr.write("Error: Configuration file does not exist!\n"
+        logging.critical("Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
-                         "alternate location.\n")
+                         "alternate location.")
         sys.exit(1)
     runs, packages, other_files, additional_patterns = load_config(
             configfile,

@@ -49,14 +49,14 @@ def select_box(runs):
     architecture = runs[0]['architecture']
 
     if architecture not in ('i686', 'x86_64'):
-        sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+        logging.critical("Error: unsupported architecture %s" % architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
-                             "of '%s'\n" % version)
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+                            version)
         if architecture == 'i686':
             return 'ubuntu', 'hashicorp/precise32'
         else:  # architecture == 'x86_64':
@@ -64,12 +64,11 @@ def select_box(runs):
 
     # Debian
     elif distribution != 'debian':
-        sys.stderr.write("Warning: unsupported distribution %s, using Debian"
-                         "\n" % distribution)
+        logging.warning("unsupported distribution %s, using Debian" %
+                        distribution)
 
     elif version != '7' and not version.startswith('wheezy'):
-        sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
-                         "\n" % version)
+        logging.warning("using Debian 7 'Wheezy' instead of '%s'" % version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
     else:  # architecture == 'x86_64':
@@ -126,13 +125,13 @@ def vagrant_setup_create(args):
     building a chroot.
     """
     if not args.pack:
-        sys.stderr.write("Error: setup/create needs --pack\n")
+        logging.critical("setup/create needs --pack")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
@@ -151,10 +150,10 @@ def vagrant_setup_create(args):
     if use_chroot:
         packages = [pkg for pkg in packages if not pkg.packfiles]
         if packages:
-            sys.stderr.write("Warning: Some packages were not packed, so "
-                             "we'll install and copy their files\n"
-                             "Packages that are missing:\n%s\n" %
-                             ' '.join(pkg.name for pkg in packages))
+            logging.info("Some packages were not packed, so we'll install and "
+                         "copy their files\n"
+                         "Packages that are missing:\n%s" % ' '.join(
+                             pkg.name for pkg in packages))
 
     if packages:
         installer = select_installer(pack, runs, target_distribution)
@@ -361,8 +360,8 @@ class SSHUploader(FileUploader):
         try:
             ssh_info = get_ssh_parameters(self.target)
         except subprocess.CalledProcessError:
-            sys.stderr.write("Failed to get the status of the machine -- is "
-                             "it running?\n")
+            logging.critical("Failed to get the status of the machine -- is "
+                             "it running?")
             sys.exit(1)
 
         # Connect with scp
@@ -396,7 +395,7 @@ class SSHUploader(FileUploader):
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
-            sys.stderr.write("Couldn't move file in virtual machine\n")
+            logging.critical("Couldn't move file in virtual machine")
             sys.exit(1)
         chan.close()
 
@@ -430,8 +429,8 @@ class SSHDownloader(FileDownloader):
         try:
             info = get_ssh_parameters(self.target)
         except subprocess.CalledProcessError:
-            sys.stderr.write("Failed to get the status of the machine -- is "
-                             "it running?\n")
+            logging.critical("Failed to get the status of the machine -- is "
+                             "it running?")
             sys.exit(1)
 
         # Connect with scp

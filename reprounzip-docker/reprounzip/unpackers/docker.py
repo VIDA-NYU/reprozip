@@ -39,23 +39,23 @@ def select_image(runs):
     architecture = runs[0]['architecture']
 
     if architecture == 'i686':
-        sys.stderr.write("Warning: wanted architecture was i686, but we'll "
-                         "use x86_64 with Docker")
+        logging.info("wanted architecture was i686, but we'll use x86_64 with "
+                     "Docker")
     elif architecture != 'x86_64':
-        sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+        logging.error("Error: unsupported architecture %s" % architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
-                             "of '%s'\n" % version)
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+                            version)
         return 'ubuntu', 'ubuntu:12.04'
 
     # Debian
     elif distribution != 'debian':
-        sys.stderr.write("Warning: unsupported distribution %s, using Debian"
-                         "\n" % distribution)
+        logging.warning("unsupported distribution %s, using Debian" %
+                        distribution)
         distribution = 'debian', '7'
 
     if version == '6' or version.startswith('squeeze'):
@@ -64,8 +64,8 @@ def select_image(runs):
         return 'debian', 'debian:jessie'
     else:
         if version != '7' and not version.startswith('wheezy'):
-            sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
-                             "\n" % version)
+            logging.warning("using Debian 7 'Wheezy' instead of '%s'" %
+                            version)
         return 'debian', 'debian:wheezy'
 
 
@@ -89,7 +89,7 @@ def docker_setup_create(args):
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
 
     # Loads config
@@ -168,7 +168,7 @@ def docker_setup_build(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip')
     if 'initial_image' in unpacked_info:
-        sys.stderr.write("Image already built\n")
+        logging.critical("Image already built")
         sys.exit(1)
 
     image = make_unique_name(b'reprounzip_image_')
@@ -176,7 +176,7 @@ def docker_setup_build(args):
     retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                               cwd=target.path)
     if retcode != 0:
-        sys.stderr.write("docker build failed with code %d\n" % retcode)
+        logging.critical("docker build failed with code %d" % retcode)
         sys.exit(1)
     logging.info("Initial image created: %s" % image.decode('ascii'))
 
@@ -204,8 +204,8 @@ def docker_run(args):
                      container.decode('ascii'))
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            sys.stderr.write("Error deleting previous container %s\n" %
-                             container.decode('ascii'))
+            logging.error("Error deleting previous container %s" %
+                          container.decode('ascii'))
         write_dict(target / '.reprounzip', unpacked_info)
 
     # Use the initial image
@@ -213,8 +213,7 @@ def docker_run(args):
         image = unpacked_info['initial_image']
         logging.debug("Running from initial image %s" % image.decode('ascii'))
     else:
-        sys.stderr.write("Image doesn't exist yet, have you run "
-                         "setup/build?\n")
+        logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
 
     # Name of new container
@@ -277,8 +276,8 @@ def docker_download(args):
     unpacked_info = read_dict(target / '.reprounzip')
 
     if 'ran_container' not in unpacked_info:
-        sys.stderr.write("Container does not exist. Have you run the "
-                         "experiment?\n")
+        logging.critical("Container does not exist. Have you run the "
+                         "experiment?")
         sys.exit(1)
     container = unpacked_info['ran_container']
     logging.debug("Downloading from container %s" % container.decode('ascii'))
@@ -293,20 +292,20 @@ def docker_destroy_docker(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip')
     if 'initial_image' not in unpacked_info:
-        sys.stderr.write("Image not created\n")
+        logging.critical("Image not created")
         sys.exit(1)
 
     if 'ran_container' in unpacked_info:
         container = unpacked_info.pop('ran_container')
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            sys.stderr.write("Error deleting container %s\n" %
-                             container.decode('ascii'))
+            logging.error("Error deleting container %s" %
+                          container.decode('ascii'))
 
     image = unpacked_info.pop('initial_image')
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
-        sys.stderr.write("Error deleting image %s\n" % image.decode('ascii'))
+        logging.error("Error deleting image %s" % image.decode('ascii'))
 
 
 @target_must_exist

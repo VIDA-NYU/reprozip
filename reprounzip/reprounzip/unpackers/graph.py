@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import argparse
 import heapq
+import logging
 from rpaths import PosixPath, Path
 import sqlite3
 import sys
@@ -72,10 +73,10 @@ def generate(target, directory, all_forks=False):
     # Reads package ownership from the configuration
     configfile = directory / 'config.yml'
     if not configfile.is_file():
-        sys.stderr.write("Error: Configuration file does not exist!\n"
+        logging.critical("Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
-                         "alternate location.\n")
+                         "alternate location.")
         sys.exit(1)
     runs, packages, other_files, patterns = load_config(configfile,
                                                         canonical=False)
@@ -263,13 +264,13 @@ def graph(args):
             version = f.read()
             f.close()
             if version != b'REPROZIP VERSION 1\n':
-                sys.stderr.write("Unknown pack format\n")
+                logging.critical("Unknown pack format")
                 sys.exit(1)
             try:
                 tar.extract('METADATA/config.yml', path=str(tmp))
                 tar.extract('METADATA/trace.sqlite3', path=str(tmp))
             except KeyError as e:
-                sys.stderr.write("Error extracting from pack: %s" % e.args[0])
+                logging.critical("Error extracting from pack: %s" % e.args[0])
             generate(Path(args.target[0]),
                      tmp / 'METADATA',
                      args.all_forks)

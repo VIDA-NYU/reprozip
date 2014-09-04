@@ -17,6 +17,7 @@ This file contains the default plugins that come with reprounzip:
 from __future__ import unicode_literals
 
 import argparse
+import logging
 import os
 import pickle
 import platform
@@ -37,7 +38,7 @@ def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """
     if not THIS_DISTRIBUTION:
-        sys.stderr.write("Error: Not running on Linux\n")
+        logging.critical("Not running on Linux")
         sys.exit(1)
 
     pack = args.pack[0]
@@ -70,11 +71,10 @@ def installpkgs(args):
             req = pkg.version
             real = pkgs[pkg.name][1]
             if real == PKG_NOT_INSTALLED:
-                sys.stderr.write("Warning: package %s was not installed\n" %
-                                 pkg.name)
+                logging.warning("package %s was not installed" % pkg.name)
             else:
-                sys.stderr.write("Warning: version %s of %s was installed, "
-                                 "instead or %s\n" % (real, pkg.name, req))
+                logging.warning("version %s of %s was installed, instead of "
+                                "%s" % (real, pkg.name, req))
         if r != 0:
             sys.exit(r)
 
@@ -104,17 +104,17 @@ def directory_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        sys.stderr.write("Error: setup needs --pack\n")
+        logging.critical("setup needs --pack")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
 
     if DefaultAbstractPath is not PosixPath:
-        sys.stderr.write("Error: Not unpacking on POSIX system\n")
+        logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
     # Loads config
@@ -127,7 +127,7 @@ def directory_create(args):
     # Unpacks files
     tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
-        sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
+        logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
@@ -253,21 +253,21 @@ def should_restore_owner(param):
     if os.getuid() != 0:
         if param is True:
             # Restoring the owner was explicitely requested
-            sys.stderr.write("Error: Not running as root, cannot restore "
-                             "files' owner/group\n")
+            logging.critical("Not running as root, cannot restore files' "
+                             "owner/group as requested")
             sys.exit(1)
         elif param is None:
             # Nothing was requested
-            sys.stderr.write("Warning: Not running as root, won't restore "
-                             "files' owner/group\n")
+            logging.warning("Not running as root, won't restore files' "
+                            "owner/group")
         else:
             # If False: skip warning
             return False
     else:
         if param is None:
             # Nothing was requested
-            sys.stderr.write("Info: Running as root, we will restore files' "
-                             "owner/group\n")
+            logging.info("Info: Running as root, we will restore files' "
+                         "owner/group")
             return True
         elif param is True:
             return True
@@ -286,17 +286,17 @@ def chroot_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        sys.stderr.write("Error: setup/create needs --pack\n")
+        logging.critical("setup/create needs --pack")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
 
     if DefaultAbstractPath is not PosixPath:
-        sys.stderr.write("Error: Not unpacking on POSIX system\n")
+        logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
     # We can only restore owner/group of files if running as root
@@ -312,19 +312,17 @@ def chroot_create(args):
     # Checks that everything was packed
     packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
     if packages_not_packed:
-        sys.stderr.write("Error: According to configuration, some files were "
-                         "left out because they belong to the following "
-                         "packages:\n")
-        sys.stderr.write(''.join('    %s\n' % pkg
-                                 for pkg in packages_not_packed))
-        sys.stderr.write("Will copy files from HOST SYSTEM\n")
+        logging.warning("According to configuration, some files were left out "
+                        "because they belong to the following packages:%s"
+                        "\nWill copy files from HOST SYSTEM" % ''.join(
+                            '\n    %s' % pkg for pkg in packages_not_packed))
         for pkg in packages_not_packed:
             for f in pkg.files:
                 f = Path(f.path)
                 if not f.exists():
-                    sys.stderr.write(
+                    logging.error(
                             "Missing file %s (from package %s) on host, "
-                            "experiment will probably miss it\n" % (
+                            "experiment will probably miss it" % (
                                 f, pkg.name))
                 dest = join_root(root, f)
                 dest.parent.mkdir(parents=True)
@@ -339,7 +337,7 @@ def chroot_create(args):
     # Unpacks files
     tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
-        sys.stderr.write("Error: Tar archive contains invalid pathnames\n")
+        logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
     members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
     for m in members:
@@ -451,7 +449,7 @@ def chroot_destroy_unmount(args):
     mounted = unpacked_info.get('mounted', False)
 
     if not mounted:
-        sys.stderr.write("Error: Magic directories were not mounted\n")
+        logging.critical("Magic directories were not mounted")
         sys.exit(1)
 
     unpacked_info['mounted'] = False
@@ -471,7 +469,7 @@ def chroot_destroy_dir(args):
     mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
 
     if mounted:
-        sys.stderr.write("Error: Magic directories might still be mounted\n")
+        logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
     target.rmtree()
