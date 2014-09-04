@@ -234,6 +234,37 @@ def functional_tests(interactive, run_vagrant, run_docker):
     check_call(rpz + ['testrun', './segv'])
 
     # ########################################
+    # 'exec_echo' program: trace, pack, run --cmdline
+    #
+
+    # Build
+    build('exec_echo', ['exec_echo.c'])
+    # Trace
+    check_call(rpz + ['trace', './exec_echo', 'originalexecechooutput'])
+    # Pack
+    check_call(rpz + ['pack', 'exec_echo.rpz'])
+    # Unpack chroot
+    check_call(['sudo'] + rpuz + ['chroot', 'setup', '--pack', 'exec_echo.rpz',
+                                  'echochroot'])
+    try:
+        # Run original command-line
+        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
+                                                 'echochroot'])
+        assert output == b'originalexecechooutput\n'
+        # Prints out command-line
+        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
+                                                 'echochroot', '--cmdline'])
+        assert any(b'./exec_echo originalexecechooutput' == s.strip()
+                   for s in output.split(b'\n'))
+        # Run with different command-line
+        output = check_output(['sudo'] + rpuz + [
+                'chroot', 'run', 'echochroot',
+                '--cmdline', './exec_echo', 'changedexecechooutput'])
+        assert output == b'changedexecechooutput\n'
+    finally:
+        check_call(['sudo'] + rpuz + ['chroot', 'destroy', 'echochroot'])
+
+    # ########################################
     # 'exec_echo' program: testrun
     # This is built with -m32 so that we transition:
     #   python (x64) -> exec_echo (i386) -> echo (x64)
@@ -241,9 +272,9 @@ def functional_tests(interactive, run_vagrant, run_docker):
 
     if sys.maxsize > 2 ** 32:
         # Build
-        build('exec_echo', ['exec_echo.c'], ['-m32'])
+        build('exec_echo32', ['exec_echo.c'], ['-m32'])
         # Trace
-        check_call(rpz + ['testrun', './exec_echo'])
+        check_call(rpz + ['testrun', './exec_echo32 42'])
     else:
         print("Can't try exec_echo transitions: not running on 64bits")
 
