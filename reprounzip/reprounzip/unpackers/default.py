@@ -28,9 +28,9 @@ import tarfile
 from reprounzip.common import load_config as load_config_file
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
-    select_installer, busybox_url, join_root, FileUploader, FileDownloader
-from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
-    download_file
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
+    get_runs
+from reprounzip.utils import unicode_, iteritems, itervalues, download_file
 
 
 def installpkgs(args):
@@ -178,31 +178,12 @@ def directory_run(args):
     """
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
-    selected_run = args.run
     cmdline = args.cmdline
 
     # Loads config
     runs, packages, other_files = load_config_file(target / 'config.yml', True)
 
-    if selected_run is None and len(runs) == 1:
-        selected_run = 0
-
-    # --cmdline without arguments: display the original command line
-    if cmdline == []:
-        if selected_run is None:
-            sys.stderr.write("Error: There are several runs in this pack -- "
-                             "you have to choose which\none to use with "
-                             "--cmdline\n")
-            sys.exit(1)
-        print("Original command-line:")
-        print(' '.join(shell_escape(arg)
-                       for arg in runs[selected_run]['argv']))
-        sys.exit(0)
-
-    if selected_run is None:
-        selected_run = irange(len(runs))
-    else:
-        selected_run = (int(selected_run),)
+    selected_runs = get_runs(runs, args.run, cmdline)
 
     root = target / 'root'
 
@@ -223,7 +204,7 @@ def directory_run(args):
                 for d in lib_dirs))
 
     cmds = [lib_dirs]
-    for run_number in selected_run:
+    for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(
                 unicode_(join_root(root,
@@ -426,36 +407,17 @@ def chroot_run(args):
     """
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'chroot')
-    selected_run = args.run
     cmdline = args.cmdline
 
     # Loads config
     runs, packages, other_files = load_config_file(target / 'config.yml', True)
 
-    if selected_run is None and len(runs) == 1:
-        selected_run = 0
-
-    # --cmdline without arguments: display the original command line
-    if cmdline == []:
-        if selected_run is None:
-            sys.stderr.write("Error: There are several runs in this pack -- "
-                             "you have to choose which\none to use with "
-                             "--cmdline\n")
-            sys.exit(1)
-        print("Original command-line:")
-        print(' '.join(shell_escape(arg)
-                       for arg in runs[selected_run]['argv']))
-        sys.exit(0)
-
-    if selected_run is None:
-        selected_run = irange(len(runs))
-    else:
-        selected_run = (int(selected_run),)
+    selected_runs = get_runs(runs, args.run, cmdline)
 
     root = target / 'root'
 
     cmds = []
-    for run_number in selected_run:
+    for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '

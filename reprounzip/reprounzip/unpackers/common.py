@@ -377,3 +377,27 @@ class FileDownloader(object):
 
     def finalize(self):
         pass
+
+
+def get_runs(runs, selected_run, cmdline):
+    if selected_run is None and len(runs) == 1:
+        selected_run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if selected_run is None:
+            sys.stderr.write("Error: There are several runs in this pack -- "
+                             "you have to choose which\none to use with "
+                             "--cmdline\n")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg)
+                       for arg in runs[selected_run]['argv']))
+        sys.exit(0)
+
+    if selected_run is None:
+        selected_run = irange(len(runs))
+    else:
+        selected_run = (int(selected_run),)
+
+    return selected_run
