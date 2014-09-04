@@ -369,15 +369,22 @@ Single Execution Path
 The *reprozip* component traces a single
 execution of the experiment, so it
 can only guarantee that *reprounzip*
-will reproduce the same execution path.
-If changing some input files or command line
-arguments requires dependencies not
-originally packed during the packing step
+will successfully reproduce the same execution path.
+If, by changing some input files or command line arguments,
+the experiment requires dependencies not originally packed
 (i.e.: that cannot be found in the *.rpz* package),
 the reproduction may fail.
 
 Non-Deterministic Experiments
 +++++++++++++++++++++++++++++
 
-
+Experiments that have non-deterministic parts
+(e.g.: connection to Web services
+or random number generation)
+can be reproduced, but
+they may not be replicated
+(i.e.: the same results may
+not be produced),
+since ReproZip can only capture
+deterministic behavior.
 
