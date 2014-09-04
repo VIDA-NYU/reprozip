@@ -23,7 +23,8 @@ The following command allows users to do so::
 
   $ reprounzip info <package>
   
-where <package> corresponds to the experiment package.
+where <package> corresponds to the experiment package
+(i.e.: the *.rpz* file).
 
 The output of this command has three sections.
 The first section, *Pack Information*, comprises
@@ -362,8 +363,18 @@ Coming soon!
 Further Considerations
 ======================
 
-Multiple Execution Paths
-++++++++++++++++++++++++
+Single Execution Path
++++++++++++++++++++++
+
+The *reprozip* component traces a single
+execution of the experiment, so it
+can only guarantee that *reprounzip*
+will reproduce the same execution path.
+If changing some input files or command line
+arguments requires dependencies not
+originally packed during the packing step
+(i.e.: that cannot be found in the *.rpz* package),
+the reproduction may fail.
 
 Non-Deterministic Experiments
 +++++++++++++++++++++++++++++
