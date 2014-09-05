@@ -233,7 +233,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'reprozip', u'ReproZip Documentation',
-     [u'Fernando Chirigati, Remi Rampin, Juliana Freire, and Dennis Shasha'], 1)
+     [u'Fernando Chirigati', u'Remi Rampin', u'Juliana Freire', u'Dennis Shasha'], 1)
 ]
 
 # If true, show URL addresses after external links.
