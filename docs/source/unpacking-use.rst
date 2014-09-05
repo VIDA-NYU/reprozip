@@ -437,13 +437,61 @@ in a single run::
 Docker Plugin
 +++++++++++++
 
+ReproZip can also extract and reproduce experiments
+using `Docker <https://www.docker.com/>`_ containers.
+Similar to Vagrant, Docker is also compatible
+to many different environments, thus allowing
+experiments to be reproduced in different
+environments as well.
+The *reprounzip-docker* plugin is the one
+responsible for such integration and
+it assumes that Docker is already installed
+in the current environment.
 
-.. _vistrails-plugin:
+To create the container files for an experiment package,
+the following command should be used::
 
-VisTrails Plugin
-++++++++++++++++
+  $ reprounzip docker setup/create <path> --pack <package>
+  
+where <path> is the destination directory for the Docker files.
+By default, *reprounzip-docker* uses the *chroot* unpacker
+inside the container, but users can choose
+the *directory* unpacker instead by using the flag *no-use-chroot*::
 
-Coming soon!
+  $ reprounzip docker setup/create <path> --pack <package> --no-use-chroot
+
+To generate and start the Docker container,
+the *setup/start* command should be used::
+
+  $ reprounzip docker setup/start <path>
+  
+Note that the *setup* command can be used to
+both create the Docker files and start the container::
+
+  $ reprounzip docker setup <path> --pack <package>
+  
+The commands to replace input files, reproduce the experiment,
+and copy output files are the same as in previous unpackers::
+
+  $ reprounzip docker upload <path> <input-path>:<input-id>
+  $ reprounzip docker run <path> --cmdline <new-command-line>
+  $ reprounzip docker download <path> <output-id>:<output-path>
+
+To destroy the container, the following command must be used::
+
+  $ reprounzip docker destroy/vm <path>
+  
+To remove the Docker files,
+the *destroy/dir* command should be used::
+
+  $ reprounzip docker destroy/dir <path>
+  
+Alternatively, users can use the *destroy* command
+to both destroy the container and remove the files
+in a single run::
+
+  $ reprounzip docker destroy <path>
+
 
 Further Considerations
 ======================
