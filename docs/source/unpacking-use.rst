@@ -90,7 +90,7 @@ with the original one)::
 be used in the current environment,
 e.g.: for an experiment originally packed on Ubuntu
 and to be reproduced on Windows,
-*vagrant* is compatible (see :ref:`vagrant`);
+*vagrant* is compatible (see :ref:`vagrant-plugin`);
 *Incompatible* lists the unpackers
 that cannot be used in the current environment,
 e.g.: *installpkgs* on Windows (see :ref:`linux_unpacker`);
@@ -188,7 +188,7 @@ the experiment under different input parameter values.
 
 Before reproducing the experiment,
 users also have the option to change the input files.
-First, users need to identify the identifiers for these files
+First, users need to get the identifiers for these files
 by running the *showfiles* command
 (see :ref:`showfiles`),
 and then run the *upload* command::
@@ -200,6 +200,10 @@ and <input-id> is the input file identifier
 (from *showfiles*).
 This command essentially replaces the file identified
 by <input-id> with the user file under <input-path>.
+To restore the original input file, the same command,
+but in the following format::
+
+  $ reprounzip directory upload <path> :<input-id>
 
 After running the experiment,
 all the generated output files
@@ -208,13 +212,18 @@ To copy an output file
 from this directory
 to another desired location,
 users must first run the *showfiles* command
-to identify the identifier of this file, and then run
+to get the identifier of this file, and then run
 the *download* command::
 
   $ reprounzip directory download <path> <output-id>:<output-path>
   
 where <output-id> is the output file identifier (from *showfiles*)
 and <output-path> is the desired destination of the file.
+To print the output file in stdout, instead of
+copying it, the same command can be used,
+but with the following format::
+
+  $ reprounzip directory download <path> <output-id>:
 
 The experiment directory can be removed by using
 the *destroy* command::
@@ -343,17 +352,93 @@ to extract the experiment and execute it.
 Additional Unpackers
 ====================
 
-.. _vagrant:
+ReproZip has some plugins for the *reprounzip* component
+that provide a new range of unpackers for the system,
+even allowing a Linux experiment to be reproduced
+in different environments (e.g.: Mac OS X and Windows).
+These plugins do not come builtin with *reprounzip*
+and need to be installed separately,
+**after** installing *reprounzip*.
+
+.. _vagrant-plugin:
 
 Vagrant Plugin
 ++++++++++++++
 
+The *reprounzip-vagrant* plugin allows an experiment
+to be unpacked and reproduced using a virtual machine
+created through `Vagrant <https://www.vagrantup.com/>`_.
+Therefore, the experiment can be reproduced in any
+environment supported by this tool, i.e.: Linux, Mac OS X, and Windows.
+Note that the plugin assumes that Vagrant is installed in the
+current environment.
 
+To create the virtual machine for an experiment package,
+the following command should be used::
+
+  $ reprounzip vagrant setup/create <path> --pack <package>
+  
+where <path> is the destination directory for the Vagrant
+virtual machine.
+By default, *reprounzip-vagrant* uses the *chroot* unpacker
+inside the virtual machine, but users can choose
+the *directory* unpacker instead by using the flag *no-use-chroot*::
+
+  $ reprounzip vagrant setup/create <path> --pack <package> --no-use-chroot
+  
+The plugin, based on the original environment information,
+automatically detects the best virtual machine image to use in Vagrant.
+Users may also choose their own image by using the *base-image* argument::
+
+  $ reprounzip vagrant setup/create <path> --pack <package> --base-image <base-image>
+  
+where <base-image> is the user's virtual machine image.
+
+To start or resume the virtual machine,
+the *setup/start* command should be used::
+
+  $ reprounzip vagrant setup/start <path>
+  
+Note that the *setup* command can be used to
+both create and start the virtual machine::
+
+  $ reprounzip vagrant setup <path> --pack <package>
+  
+The commands to replace input files, reproduce the experiment,
+and copy output files are the same as used in other unpackers::
+
+  $ reprounzip vagrant upload <path> <input-path>:<input-id>
+  $ reprounzip vagrant run <path> --cmdline <new-command-line>
+  $ reprounzip vagrant download <path> <output-id>:<output-path>
+
+Users can also suspend the virtual machine (without destroying it)
+by using the *suspend* command::
+
+  $ reprounzip vagrant suspend <path>
+  
+After suspended, the virtual machine can be resumed by using the *setup/start* command.
+To destroy the virtual machine, the following command must be used::
+
+  $ reprounzip vagrant destroy/vm <path>
+  
+To remove the virtual machine files,
+users can use the *destroy/dir* command::
+
+  $ reprounzip vagrant destroy/dir <path>
+  
+Alternatively, users can use the *destroy* command
+to both destroy the virtual machine and remove the files
+in a single run::
+
+  $ reprounzip vagrant destroy <path>
+
+.. _docker-plugin:
 
 Docker Plugin
 +++++++++++++
 
 
+.. _vistrails-plugin:
 
 VisTrails Plugin
 ++++++++++++++++
