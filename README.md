@@ -16,22 +16,21 @@ A reviewer can then extract the experiment in his environment to reproduce the r
 Quickstart
 ----------
 
-Packing
-+++++++
+### Packing
 
 Packing experiments is only available for Linux distributions.
-In the environment where the experiment is originally executed, first install reprozip::
+In the environment where the experiment is originally executed, first install reprozip:
 
-  $ pip install reprozip
+    $ pip install reprozip
 
 Then, run your experiment with reprozip.
-Suppose you execute your experiment by originally running the following command::
+Suppose you execute your experiment by originally running the following command:
 
-  $ ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
+    $ ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
 
-To run it with reprozip, you just need to use the prefix *reprozip trace*::
+To run it with reprozip, you just need to use the prefix *reprozip trace*:
 
-  $ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
+    $ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
 
 This command creates a *.reprozip* directory, in which you'll find the configuration file, named *config.yml*.
 You can edit the command line and environment variables, and choose which files to pack.
@@ -45,9 +44,9 @@ Choosing which files to pack is also important to remove sensitive information a
 not open source and should not be distributed.
           
 Once done editing the configuration file (or even if you did not change anything), run the following command
-to create a ReproZip package named *my_experiment*::
+to create a ReproZip package named *my_experiment*:
 
-  $ reprozip pack my_experiment.rpz
+    $ reprozip pack my_experiment.rpz
 
 Voil&agrave;! Now your experiment has been packed, and you can send it to your collaborators,
 reviewers, and researchers around the world!
@@ -55,24 +54,23 @@ reviewers, and researchers around the world!
 Note that you can open the help message for any reprozip command
 by using the flag *-h*.
 
-Unpacking
-+++++++++
+### Unpacking
 
-Do you need to unpack an experiment in a Linux machine? Easy! First, install reprounzip::
+Do you need to unpack an experiment in a Linux machine? Easy! First, install reprounzip:
 
-  $ pip install reprounzip
+    $ pip install reprounzip
 
 Then, if you want to unpack everything in a single directory named *mydirectory*
-and execute the experiment from there, use the prefix *reprounzip directory*::
+and execute the experiment from there, use the prefix *reprounzip directory*:
 
-  $ reprounzip directory setup mydirectory --pack my_experiment.rpz</br>
-  $ reprounzip directory run mydirectory
+    $ reprounzip directory setup mydirectory --pack my_experiment.rpz</br>
+    $ reprounzip directory run mydirectory
 
 In case you prefer to build a chroot environment under *mychroot*,
-use the prefix *reprounzip chroot*::
+use the prefix *reprounzip chroot*:
 
-  $ reprounzip chroot setup mychroot --pack my_experiment.rpz</br>
-  $ reprounzip chroot run mychroot
+    $ reprounzip chroot setup mychroot --pack my_experiment.rpz</br>
+    $ reprounzip chroot run mychroot
 
 Note that the previous options do not interfere with the original configuration of
 the environment, so don't worry!
@@ -82,38 +80,38 @@ dependencies directly on the machine using package managers
 (rather than just copying the files from the .rpz package).
 Be aware that this will interfere in your environment and it may
 update your library packages, so use it at your own risk! For this option,
-just use the prefix *reprounzip installpkgs*::
+just use the prefix *reprounzip installpkgs*:
 
-  $ reprounzip installpkgs my_experiment.rpz
+    $ reprounzip installpkgs my_experiment.rpz
 
 What if you want to reproduce the experiment in Windows or Mac OS X?
 You can build a virtual machine with the experiment! Easy as well!
-First, install the plugin reprounzip-vagrant::
+First, install the plugin reprounzip-vagrant:
 
-  $ pip install reprounzip-vagrant
+    $ pip install reprounzip-vagrant
 
 Note that (i) you must install reprounzip first, and (ii) the plugin requires having
 [Vagrant][vagrant] installed.
 Then, use the prefix *reprounzip vagrant* to create and start a virtual machine
-under directory *mytemplate*::
+under directory *mytemplate*:
 
-  $ reprounzip vagrant setup mytemplate --pack my_experiment.rpz
+    $ reprounzip vagrant setup mytemplate --pack my_experiment.rpz
 
-To execute the experiment, simply run::
+To execute the experiment, simply run:
 
-  $ reprounzip vagrant run mytemplate
+    $ reprounzip vagrant run mytemplate
 
 Alternatively, you may use [Docker][docker]
 containers to reproduce the experiment, which also works under
-Linux, Mac OS X, and Windows! First, install the plugin reprounzip-docker::
+Linux, Mac OS X, and Windows! First, install the plugin reprounzip-docker:
 
-  $ pip install reprounzip-docker
+    $ pip install reprounzip-docker
 
 Then, assuming that you want to create the container under directory *mytemplate*,
-simply use the prefix *reprounzip docker*::
+simply use the prefix *reprounzip docker*:
 
-  $ reprounzip docker setup mytemplate --pack my_experiment.rpz</br>
-  $ reprounzip docker run mytemplate
+    $ reprounzip docker setup mytemplate --pack my_experiment.rpz</br>
+    $ reprounzip docker run mytemplate
           
 Remember that you can open the help message and learn more about other available flags and options
 by using the flag *-h* for any reprounzip command.
