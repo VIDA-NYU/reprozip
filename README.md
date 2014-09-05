@@ -6,7 +6,7 @@
 ReproZip
 ========
 
-ReproZip is a tool aimed at simplifying the process of creating reproducible
+[ReproZip][web] is a tool aimed at simplifying the process of creating reproducible
 experiments from command-line executions, a frequently-used common denominator
 in computational science. It tracks operating system calls and creates a package
 that contains all the binaries, files and dependencies required to run a given
@@ -63,13 +63,13 @@ Do you need to unpack an experiment in a Linux machine? Easy! First, install rep
 Then, if you want to unpack everything in a single directory named *mydirectory*
 and execute the experiment from there, use the prefix *reprounzip directory*:
 
-    $ reprounzip directory setup mydirectory --pack my_experiment.rpz</br>
+    $ reprounzip directory setup mydirectory --pack my_experiment.rpz
     $ reprounzip directory run mydirectory
 
 In case you prefer to build a chroot environment under *mychroot*,
 use the prefix *reprounzip chroot*:
 
-    $ reprounzip chroot setup mychroot --pack my_experiment.rpz</br>
+    $ reprounzip chroot setup mychroot --pack my_experiment.rpz
     $ reprounzip chroot run mychroot
 
 Note that the previous options do not interfere with the original configuration of
@@ -110,7 +110,7 @@ Linux, Mac OS X, and Windows! First, install the plugin reprounzip-docker:
 Then, assuming that you want to create the container under directory *mytemplate*,
 simply use the prefix *reprounzip docker*:
 
-    $ reprounzip docker setup mytemplate --pack my_experiment.rpz</br>
+    $ reprounzip docker setup mytemplate --pack my_experiment.rpz
     $ reprounzip docker run mytemplate
           
 Remember that you can open the help message and learn more about other available flags and options

@@ -1,7 +1,7 @@
 ReproZip
 ========
 
-ReproZip is a tool aimed at simplifying the process of creating reproducible
+`ReproZip <http://vida-nyu.github.io/reprozip/>`_ is a tool aimed at simplifying the process of creating reproducible
 experiments from command-line executions, a frequently-used common denominator
 in computational science. It tracks operating system calls and creates a package
 that contains all the binaries, files and dependencies required to run a given
