@@ -496,10 +496,10 @@ in a single run::
 Further Considerations
 ======================
 
-Single Execution Path
-+++++++++++++++++++++
+Reproducing Multiple Execution Paths
+++++++++++++++++++++++++++++++++++++
 
-The *reprozip* component traces a single
+The *reprozip* component often traces a single
 execution of the experiment, so it
 can only guarantee that *reprounzip*
 will successfully reproduce the same execution path.
@@ -507,6 +507,13 @@ If, by changing some input files or command line arguments,
 the experiment requires dependencies not originally packed
 (i.e.: that cannot be found in the *.rpz* package),
 the reproduction may fail.
+
+As an alternative, users may use a single **script**
+during the packing step to execute multiple
+execution paths of the experiment.
+In this way, all the different execution paths
+are captured and can be successfully
+reproduced by *reprounzip*.
 
 Non-Deterministic Experiments
 +++++++++++++++++++++++++++++
