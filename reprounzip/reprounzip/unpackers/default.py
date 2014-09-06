@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.utils import unicode_, download_file
+from reprounzip.utils import unicode_, make_dir_writable, download_file
 from reprounzip.unpackers.common import load_config, select_installer, \
     shell_escape, busybox_url, join_root
 
@@ -176,15 +176,16 @@ def create_chroot(args):
     if not sh_path.lexists() or not env_path.lexists():
         busybox_path = join_root(root, Path('/bin/busybox'))
         busybox_path.parent.mkdir(parents=True)
-        download_file(busybox_url(runs[0]['architecture']),
-                      busybox_path)
-        busybox_path.chmod(0o755)
-        if not sh_path.lexists():
-            sh_path.parent.mkdir(parents=True)
-            sh_path.symlink('/bin/busybox')
-        if not env_path.lexists():
-            env_path.parent.mkdir(parents=True)
-            env_path.symlink('/bin/busybox')
+        with make_dir_writable(join_root(root, Path('/bin'))):
+            download_file(busybox_url(runs[0]['architecture']),
+                          busybox_path)
+            busybox_path.chmod(0o755)
+            if not sh_path.lexists():
+                sh_path.parent.mkdir(parents=True)
+                sh_path.symlink('/bin/busybox')
+            if not env_path.lexists():
+                env_path.parent.mkdir(parents=True)
+                env_path.symlink('/bin/busybox')
 
     # Writes start script
     with (target / 'script.sh').open('w', encoding='utf-8') as fp:
