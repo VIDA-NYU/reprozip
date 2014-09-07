@@ -15,8 +15,10 @@ to this software (more utilities).
 
 from __future__ import unicode_literals
 
+import contextlib
 import email.utils
 import logging
+import os
 from rpaths import Path
 import sys
 
@@ -143,6 +145,27 @@ def find_all_links(filename, include_target=False):
     if include_target:
         files.append(path)
     return files
+
+
+@contextlib.contextmanager
+def make_dir_writable(directory):
+    """Context-manager that sets write permission on a directory.
+
+    This assumes that the directory belongs to you. If the u+w permission
+    wasn't set, it gets set in the context, and restored to what it was when
+    leaving the context.
+    """
+    assert isinstance(directory, Path)
+    stat = directory.stat()
+    prev_perms = stat.st_mode & 0o7777
+    if stat.st_uid == os.getuid() and not (prev_perms & 0o200):
+        directory.chmod(prev_perms | 0o300)
+        try:
+            yield
+        finally:
+            directory.chmod(prev_perms)
+    else:
+        yield
 
 
 def download_file(url, dest, cachename=None):
