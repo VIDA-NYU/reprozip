@@ -56,6 +56,8 @@ def main():
 
     # General options
     options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('--version', action='version',
+                         version="reprounzip version %s" % __version__)
     options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
