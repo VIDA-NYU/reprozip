@@ -25,10 +25,11 @@ import subprocess
 import sys
 import tarfile
 
+from reprounzip.common import load_config
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, busybox_url, join_root, FileUploader, \
-    FileDownloader, get_runs
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
+    get_runs
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import unicode_, iteritems
 
@@ -136,8 +137,15 @@ def vagrant_setup_create(args):
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+    tar.close()
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image and args.base_image[0]:
         target_distribution = None
@@ -285,7 +293,7 @@ def vagrant_run(args):
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
