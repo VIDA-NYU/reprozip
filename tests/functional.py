@@ -122,8 +122,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
     # Lists packages
     check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
     # Unpack directory
-    check_call(rpuz + ['directory', 'setup',
-                       '--pack', 'simple.rpz', 'simpledir'])
+    check_call(rpuz + ['directory', 'setup', 'simple.rpz', 'simpledir'])
     # Run directory
     check_call(rpuz + ['directory', 'run', 'simpledir'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
@@ -135,7 +134,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
     check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
     check_call(['sudo'] + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
-                                  '--pack', 'simple.rpz', 'simplechroot'])
+                                  'simple.rpz', 'simplechroot'])
     # Run chroot
     check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
@@ -166,8 +165,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot',
-                       '--pack', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot', 'simple.rpz',
                        '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
@@ -181,7 +179,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--no-use-chroot',
-                       '--pack', 'simple.rpz',
+                       'simple.rpz',
                        '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
@@ -195,8 +193,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
         Path('/vagrant/simplevagrant').rmtree()
 
     # Unpack Docker
-    check_call(rpuz + ['docker', 'setup/create', '--pack', 'simple.rpz',
-                       'simpledocker'])
+    check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
     print("\nDocker project set up in simpledocker")
     try:
         if run_docker:
@@ -244,8 +241,8 @@ def functional_tests(interactive, run_vagrant, run_docker):
     # Pack
     check_call(rpz + ['pack', 'exec_echo.rpz'])
     # Unpack chroot
-    check_call(['sudo'] + rpuz + ['chroot', 'setup', '--pack', 'exec_echo.rpz',
-                                  'echochroot'])
+    check_call(['sudo'] + rpuz + ['chroot', 'setup',
+                                  'exec_echo.rpz', 'echochroot'])
     try:
         # Run original command-line
         output = check_output(['sudo'] + rpuz + ['chroot', 'run',

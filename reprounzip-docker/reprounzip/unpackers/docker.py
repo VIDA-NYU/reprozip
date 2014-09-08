@@ -335,7 +335,7 @@ def setup(parser):
     You will need Docker to be installed on your machine if you want to run the
     experiment.
 
-    setup   setup/create    creates Dockerfile (--pack is required)
+    setup   setup/create    creates Dockerfile (needs the pack filename)
             setup/build     builds the container from the Dockerfile
     run                     runs the experiment in the container
     download                gets output files from the container
@@ -345,7 +345,7 @@ def setup(parser):
 
     For example:
 
-        $ reprounzip docker setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip docker setup mypack.rpz experiment; cd experiment
         $ reprounzip docker run .
         $ reprounzip docker download . results:/home/user/theresults.txt
         $ cd ..; reprounzip docker destroy experiment
@@ -357,10 +357,10 @@ def setup(parser):
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
     parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[options, opt_setup])
+                                                parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=docker_setup_create)
 
     # setup/build
@@ -369,7 +369,7 @@ def setup(parser):
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
 

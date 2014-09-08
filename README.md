@@ -63,13 +63,13 @@ Do you need to unpack an experiment in a Linux machine? Easy! First, install rep
 Then, if you want to unpack everything in a single directory named *mydirectory*
 and execute the experiment from there, use the prefix *reprounzip directory*:
 
-    $ reprounzip directory setup mydirectory --pack my_experiment.rpz
+    $ reprounzip directory setup my_experiment.rpz mydirectory
     $ reprounzip directory run mydirectory
 
 In case you prefer to build a chroot environment under *mychroot*,
 use the prefix *reprounzip chroot*:
 
-    $ reprounzip chroot setup mychroot --pack my_experiment.rpz
+    $ reprounzip chroot setup my_experiment.rpz mychroot
     $ reprounzip chroot run mychroot
 
 Note that the previous options do not interfere with the original configuration of
@@ -95,7 +95,7 @@ Note that (i) you must install reprounzip first, and (ii) the plugin requires ha
 Then, use the prefix *reprounzip vagrant* to create and start a virtual machine
 under directory *mytemplate*:
 
-    $ reprounzip vagrant setup mytemplate --pack my_experiment.rpz
+    $ reprounzip vagrant setup my_experiment.rpz mytemplate
 
 To execute the experiment, simply run:
 
@@ -110,7 +110,7 @@ Linux, Mac OS X, and Windows! First, install the plugin reprounzip-docker:
 Then, assuming that you want to create the container under directory *mytemplate*,
 simply use the prefix *reprounzip docker*:
 
-    $ reprounzip docker setup mytemplate --pack my_experiment.rpz
+    $ reprounzip docker setup my_experiment.rpz mytemplate
     $ reprounzip docker run mytemplate
           
 Remember that you can open the help message and learn more about other available flags and options
