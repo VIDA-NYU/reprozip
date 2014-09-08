@@ -268,8 +268,33 @@ def should_restore_owner(param):
     else:
         if param is None:
             # Nothing was requested
-            logging.info("Info: Running as root, we will restore files' "
+            logging.info("Running as root, we will restore files' "
                          "owner/group")
+            return True
+        elif param is True:
+            return True
+        else:
+            # If False: skip warning
+            return False
+
+
+def should_mount_magic_dirs(param):
+    if os.getuid() != 0:
+        if param is True:
+            # Restoring the owner was explicitely requested
+            logging.critical("Not running as root, cannot mount /dev and "
+                             "/proc")
+            sys.exit(1)
+        elif param is None:
+            # Nothing was requested
+            logging.warning("Not running as root, won't mount /dev and /proc")
+        else:
+            # If False: skip warning
+            return False
+    else:
+        if param is None:
+            # Nothing was requested
+            logging.info("Running as root, will mount /dev and /proc")
             return True
         elif param is True:
             return True
@@ -708,7 +733,7 @@ def setup_directory(parser):
 
 def chroot_setup(args):
     chroot_create(args)
-    if args.bind_magic_dirs:
+    if should_mount_magic_dirs(args.bind_magic_dirs):
         chroot_mount(args)
 
 
@@ -767,13 +792,13 @@ def setup_chroot(parser):
             'setup',
             parents=[opt_setup, options, opt_owner])
     parser_setup.add_argument(
-            '--dont-bind-magic-dirs', action='store_false',
-            dest='bind_magic_dirs', default=True,
-            help="Don't mount /dev and /proc inside the chroot")
-    parser_setup.add_argument(
             '--bind-magic-dirs', action='store_true',
-            dest='bind_magic_dirs', default=True,
-            help=argparse.SUPPRESS)
+            dest='bind_magic_dirs', default=None,
+            help="Mount /dev and /proc inside the chroot")
+    parser_setup.add_argument(
+            '--dont-bind-magic-dirs', action='store_false',
+            dest='bind_magic_dirs', default=None,
+            help="Don't mount /dev and /proc inside the chroot")
     parser_setup.set_defaults(func=chroot_setup)
 
     # upload
