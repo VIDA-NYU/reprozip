@@ -398,6 +398,10 @@ def chroot_mount(args):
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
 
+    logging.warning("The host's /dev and /proc have been mounted into the "
+                    "chroot. Do NOT remove the unpacked directory with "
+                    "rm -rf, it WILL WIPE the host's /dev directory.")
+
 
 @target_must_exist
 def chroot_run(args):
