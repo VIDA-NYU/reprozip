@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
 from reprounzip.utils import unicode_, iteritems, itervalues, \
-    make_dir_writable, download_file
+    make_dir_writable, rmtree_fixed, download_file
 
 
 def installpkgs(args):
@@ -247,7 +247,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 def should_restore_owner(param):
@@ -474,7 +474,7 @@ def chroot_destroy_dir(args):
         logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 @target_must_exist
@@ -490,7 +490,7 @@ def chroot_destroy(args):
             if d.exists():
                 subprocess.check_call(['umount', str(d)])
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 class LocalUploader(FileUploader):

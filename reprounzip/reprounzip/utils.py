@@ -20,6 +20,7 @@ import email.utils
 import logging
 import os
 from rpaths import Path
+import stat
 import sys
 
 
@@ -156,8 +157,6 @@ def make_dir_writable(directory):
     leaving the context. u+x also gets set on all the directories leading to
     that path.
     """
-    assert isinstance(directory, Path)
-
     uid = os.getuid()
 
     try:
@@ -193,6 +192,30 @@ def make_dir_writable(directory):
     finally:
         for path, mod in reversed(restore_perms):
             path.chmod(mod)
+
+
+def rmtree_fixed(path):
+    """Like :func:`shutil.rmtree` but doesn't choke on annoying permissions.
+
+    If a directory with -w or -x is encountered, it gets fixed and deletion
+    continues.
+    """
+    if path.is_link():
+        raise OSError("Cannot call rmtree on a symbolic link")
+
+    uid = os.getuid()
+    st = path.lstat()
+
+    if st.st_uid == uid and st.st_mode & 0o700 != 0o700:
+        path.chmod(st.st_mode | 0o700)
+
+    for entry in path.listdir():
+        if stat.S_ISDIR(entry.lstat().st_mode):
+            rmtree_fixed(entry)
+        else:
+            entry.remove()
+
+    path.rmdir()
 
 
 def download_file(url, dest, cachename=None):
