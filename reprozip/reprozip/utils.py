@@ -153,19 +153,46 @@ def make_dir_writable(directory):
 
     This assumes that the directory belongs to you. If the u+w permission
     wasn't set, it gets set in the context, and restored to what it was when
-    leaving the context.
+    leaving the context. u+x also gets set on all the directories leading to
+    that path.
     """
     assert isinstance(directory, Path)
-    stat = directory.stat()
-    prev_perms = stat.st_mode & 0o7777
-    if stat.st_uid == os.getuid() and not (prev_perms & 0o200):
-        directory.chmod(prev_perms | 0o300)
-        try:
-            yield
-        finally:
-            directory.chmod(prev_perms)
+
+    uid = os.getuid()
+
+    try:
+        stat = directory.stat()
+    except OSError:
+        pass
     else:
+        if stat.st_uid != uid or stat.st_mode & 0o700 == 0o700:
+            yield
+            return
+
+    # These are the permissions to be restored, in reverse order
+    restore_perms = []
+    try:
+        # Add u+x to all directories up to the target
+        path = Path('/')
+        for c in directory.components[1:-1]:
+            path = path / c
+            stat = path.stat()
+            if stat.st_uid == uid and not stat.st_mode & 0o100:
+                logging.debug("Temporarily setting u+x on %s" % path)
+                restore_perms.append((path, stat.st_mode))
+                path.chmod(stat.st_mode | 0o700)
+
+        # Add u+wx to the target
+        stat = directory.stat()
+        if stat.st_uid == uid and stat.st_mode & 0o700 != 0o700:
+            logging.debug("Temporarily setting u+wx on %s" % directory)
+            restore_perms.append((directory, stat.st_mode))
+            directory.chmod(stat.st_mode | 0o700)
+
         yield
+    finally:
+        for path, mod in reversed(restore_perms):
+            path.chmod(mod)
 
 
 def download_file(url, dest, cachename=None):
