@@ -514,10 +514,11 @@ class LocalUploader(FileUploader):
 
         # Copy
         orig_stat = remote_path.stat()
-        local_path.copyfile(remote_path)
-        remote_path.chmod(orig_stat.st_mode & 0o7777)
-        if self.restore_owner:
-            remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+        with make_dir_writable(remote_path.parent):
+            local_path.copyfile(remote_path)
+            remote_path.chmod(orig_stat.st_mode & 0o7777)
+            if self.restore_owner:
+                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
 
 
 @target_must_exist
