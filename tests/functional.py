@@ -178,7 +178,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
-    check_call(rpuz + ['vagrant', 'setup/create', '--no-use-chroot',
+    check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
                        '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")

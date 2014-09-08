@@ -735,7 +735,7 @@ def setup_chroot(parser):
     opt_owner.add_argument('--preserve-owner', action='store_true',
                            dest='restore_owner', default=None,
                            help="Restore files' owner/group when extracting")
-    opt_owner.add_argument('--no-preserve-owner', action='store_false',
+    opt_owner.add_argument('--dont-preserve-owner', action='store_false',
                            dest='restore_owner', default=None,
                            help=("Don't restore files' owner/group when "
                                  "extracting, use current users"))

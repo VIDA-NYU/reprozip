@@ -541,15 +541,18 @@ def setup(parser):
             default=True,
             help=argparse.SUPPRESS)
     opt_setup.add_argument(
-            '--no-use-chroot', action='store_false', dest='use_chroot',
+            '--dont-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
     opt_setup.add_argument(
+            '--no-use-chroot', action='store_false', dest='use_chroot',
+            default=True, help=argparse.SUPPRESS)
+    opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
             help="Don't mount /dev and /proc inside the chroot (no effect if "
-            "--no-use-chroot is set)")
+            "--dont-use-chroot is set)")
     opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
     parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[opt_setup, options])
