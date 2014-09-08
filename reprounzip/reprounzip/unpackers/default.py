@@ -31,7 +31,8 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
-from reprounzip.utils import unicode_, iteritems, itervalues, download_file
+from reprounzip.utils import unicode_, iteritems, itervalues, \
+    make_dir_writable, rmtree_fixed, download_file
 
 
 def installpkgs(args):
@@ -247,7 +248,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 def should_restore_owner(param):
@@ -363,15 +364,16 @@ def chroot_create(args):
     if not sh_path.lexists() or not env_path.lexists():
         busybox_path = join_root(root, Path('/bin/busybox'))
         busybox_path.parent.mkdir(parents=True)
-        download_file(busybox_url(runs[0]['architecture']),
-                      busybox_path)
-        busybox_path.chmod(0o755)
-        if not sh_path.lexists():
-            sh_path.parent.mkdir(parents=True)
-            sh_path.symlink('/bin/busybox')
-        if not env_path.lexists():
-            env_path.parent.mkdir(parents=True)
-            env_path.symlink('/bin/busybox')
+        with make_dir_writable(join_root(root, Path('/bin'))):
+            download_file(busybox_url(runs[0]['architecture']),
+                          busybox_path)
+            busybox_path.chmod(0o755)
+            if not sh_path.lexists():
+                sh_path.parent.mkdir(parents=True)
+                sh_path.symlink('/bin/busybox')
+            if not env_path.lexists():
+                env_path.parent.mkdir(parents=True)
+                env_path.symlink('/bin/busybox')
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
@@ -478,7 +480,7 @@ def chroot_destroy_dir(args):
         logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 @target_must_exist
@@ -494,7 +496,7 @@ def chroot_destroy(args):
             if d.exists():
                 subprocess.check_call(['umount', str(d)])
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 class LocalUploader(FileUploader):
@@ -526,10 +528,11 @@ class LocalUploader(FileUploader):
 
         # Copy
         orig_stat = remote_path.stat()
-        local_path.copyfile(remote_path)
-        remote_path.chmod(orig_stat.st_mode & 0o7777)
-        if self.restore_owner:
-            remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+        with make_dir_writable(remote_path.parent):
+            local_path.copyfile(remote_path)
+            remote_path.chmod(orig_stat.st_mode & 0o7777)
+            if self.restore_owner:
+                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
 
 
 @target_must_exist
