@@ -227,7 +227,8 @@ def main():
             help="do not try identify which package each file comes from")
 
     parser = argparse.ArgumentParser(
-            description="Reproducible experiments tool.",
+            description="reprozip is the ReproZip component responsible for "
+                        "tracing and packing the execution of an experiment",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
     subparsers = parser.add_subparsers(title="commands", metavar='')

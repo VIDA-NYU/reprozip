@@ -61,7 +61,9 @@ def main():
                          help="augments verbosity level")
 
     parser = argparse.ArgumentParser(
-            description="Reproducible experiments tool.",
+            description="reprounzip is the ReproZip component responsible for "
+                        "unpacking and reproducing an experiment previously "
+                        "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
     subparsers = parser.add_subparsers(title="formats", metavar='')
