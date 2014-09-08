@@ -126,7 +126,7 @@ def vagrant_setup_create(args):
     building a chroot.
     """
     if not args.pack:
-        logging.critical("setup/create needs --pack")
+        logging.critical("setup/create needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
@@ -508,7 +508,7 @@ def setup(parser):
     You will need Vagrant to be installed on your machine if you want to run
     the experiment.
 
-    setup   setup/create    creates Vagrantfile (--pack is required)
+    setup   setup/create    creates Vagrantfile (needs the pack filename)
             setup/start     starts or resume the virtual machine
     upload                  replaces input files in the machine
                             (without arguments, lists input files)
@@ -521,19 +521,19 @@ def setup(parser):
 
     For example:
 
-        $ reprounzip vagrant setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip vagrant setup mypack.rpz experiment; cd experiment
         $ reprounzip vagrant run .
         $ reprounzip vagrant download . results:/home/user/theresults.txt
         $ cd ..; reprounzip vagrant destroy experiment
 
     Upload specifications are either:
-      :inputname            restores the original input file from the pack
-      filename:inputname    replaces the input file with the specified local
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
                             file
 
     Download specifications are either:
-      outputname:           print the output file to stdout
-      outputname:filename   extracts the output file to the corresponding local
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
                             path
     """
     subparsers = parser.add_subparsers(title="actions",
@@ -543,24 +543,27 @@ def setup(parser):
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument(
             '--use-chroot', action='store_true',
             default=True,
             help=argparse.SUPPRESS)
     opt_setup.add_argument(
-            '--no-use-chroot', action='store_false', dest='use_chroot',
+            '--dont-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
     opt_setup.add_argument(
+            '--no-use-chroot', action='store_false', dest='use_chroot',
+            default=True, help=argparse.SUPPRESS)
+    opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
-            help="Don't mount /dev and /proc inside the chroot (if "
-            "--use-chroot is set)")
+            help="Don't mount /dev and /proc inside the chroot (no effect if "
+            "--dont-use-chroot is set)")
     opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
     parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[options, opt_setup])
+                                                parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=vagrant_setup_create)
 
     # setup/start
@@ -569,7 +572,7 @@ def setup(parser):
     parser_setup_start.set_defaults(func=vagrant_setup_start)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
@@ -586,7 +589,7 @@ def setup(parser):
                             help=("Don't connect program's input stream to "
                                   "this terminal"))
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=vagrant_run)
 
     # download

@@ -31,7 +31,8 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
-from reprounzip.utils import unicode_, iteritems, itervalues, download_file
+from reprounzip.utils import unicode_, iteritems, itervalues, \
+    make_dir_writable, rmtree_fixed, download_file
 
 
 def installpkgs(args):
@@ -104,7 +105,7 @@ def directory_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        logging.critical("setup needs --pack")
+        logging.critical("setup needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
@@ -165,7 +166,8 @@ def directory_create(args):
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
-                inputtar.add(str(PosixPath(ifile)))
+                inputtar.add(str(join_root(root, PosixPath(ifile))),
+                             str(PosixPath(ifile)))
         inputtar.close()
 
     # Meta-data for reprounzip
@@ -246,7 +248,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 def should_restore_owner(param):
@@ -266,8 +268,33 @@ def should_restore_owner(param):
     else:
         if param is None:
             # Nothing was requested
-            logging.info("Info: Running as root, we will restore files' "
+            logging.info("Running as root, we will restore files' "
                          "owner/group")
+            return True
+        elif param is True:
+            return True
+        else:
+            # If False: skip warning
+            return False
+
+
+def should_mount_magic_dirs(param):
+    if os.getuid() != 0:
+        if param is True:
+            # Restoring the owner was explicitely requested
+            logging.critical("Not running as root, cannot mount /dev and "
+                             "/proc")
+            sys.exit(1)
+        elif param is None:
+            # Nothing was requested
+            logging.warning("Not running as root, won't mount /dev and /proc")
+        else:
+            # If False: skip warning
+            return False
+    else:
+        if param is None:
+            # Nothing was requested
+            logging.info("Running as root, will mount /dev and /proc")
             return True
         elif param is True:
             return True
@@ -286,7 +313,7 @@ def chroot_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        logging.critical("setup/create needs --pack")
+        logging.critical("setup/create needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
@@ -362,22 +389,24 @@ def chroot_create(args):
     if not sh_path.lexists() or not env_path.lexists():
         busybox_path = join_root(root, Path('/bin/busybox'))
         busybox_path.parent.mkdir(parents=True)
-        download_file(busybox_url(runs[0]['architecture']),
-                      busybox_path)
-        busybox_path.chmod(0o755)
-        if not sh_path.lexists():
-            sh_path.parent.mkdir(parents=True)
-            sh_path.symlink('/bin/busybox')
-        if not env_path.lexists():
-            env_path.parent.mkdir(parents=True)
-            env_path.symlink('/bin/busybox')
+        with make_dir_writable(join_root(root, Path('/bin'))):
+            download_file(busybox_url(runs[0]['architecture']),
+                          busybox_path)
+            busybox_path.chmod(0o755)
+            if not sh_path.lexists():
+                sh_path.parent.mkdir(parents=True)
+                sh_path.symlink('/bin/busybox')
+            if not env_path.lexists():
+                env_path.parent.mkdir(parents=True)
+                env_path.symlink('/bin/busybox')
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
-                inputtar.add(str(PosixPath(ifile)))
+                inputtar.add(str(join_root(root, PosixPath(ifile))),
+                             str(PosixPath(ifile)))
         inputtar.close()
 
     # Meta-data for reprounzip
@@ -397,6 +426,10 @@ def chroot_mount(args):
         subprocess.check_call(['mount', '--bind', m, str(d)])
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
+
+    logging.warning("The host's /dev and /proc have been mounted into the "
+                    "chroot. Do NOT remove the unpacked directory with "
+                    "rm -rf, it WILL WIPE the host's /dev directory.")
 
 
 @target_must_exist
@@ -472,7 +505,7 @@ def chroot_destroy_dir(args):
         logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 @target_must_exist
@@ -488,7 +521,7 @@ def chroot_destroy(args):
             if d.exists():
                 subprocess.check_call(['umount', str(d)])
 
-    target.rmtree()
+    rmtree_fixed(target)
 
 
 class LocalUploader(FileUploader):
@@ -502,15 +535,24 @@ class LocalUploader(FileUploader):
                               should_restore_owner(self.param_restore_owner))
         self.root = (self.target / 'root').absolute()
 
+    def extract_original_input(self, input_name, input_path, temp):
+        tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
+        member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+        member.name = str(temp.name)
+        tar.extract(member, str(temp.parent))
+        tar.close()
+        return temp
+
     def upload_file(self, local_path, input_path):
         remote_path = join_root(self.root, input_path)
 
         # Copy
         orig_stat = remote_path.stat()
-        local_path.copyfile(remote_path)
-        remote_path.chmod(orig_stat.st_mode & 0o7777)
-        if self.restore_owner:
-            remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+        with make_dir_writable(remote_path.parent):
+            local_path.copyfile(remote_path)
+            remote_path.chmod(orig_stat.st_mode & 0o7777)
+            if self.restore_owner:
+                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
 
 
 @target_must_exist
@@ -602,7 +644,7 @@ def test_linux_same_arch(pack, config, **kwargs):
 
 
 def setup_installpkgs(parser):
-    """"Installs the required packages on this system
+    """Installs the required packages on this system
     """
     parser.add_argument('pack', nargs=1, help="Pack to process")
     parser.add_argument(
@@ -622,13 +664,23 @@ def setup_installpkgs(parser):
 def setup_directory(parser):
     """Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
 
-    setup       creates the directory (--pack is required)
+    setup       creates the directory (needs the pack filename)
     upload      replaces input files in the directory
                 (without arguments, lists input files)
     run         runs the experiment
     download    gets output files
                 (without arguments, lists output files)
     destroy     removes the unpacked directory
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
@@ -636,8 +688,10 @@ def setup_directory(parser):
     options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options])
-    parser_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    # Note: opt_setup is a separate parser so that 'pack' is before 'target'
+    opt_setup = argparse.ArgumentParser(add_help=False)
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
+    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
     parser_setup.set_defaults(func=directory_create)
 
     # upload
@@ -650,7 +704,7 @@ def setup_directory(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=directory_run)
 
     # download
@@ -669,14 +723,14 @@ def setup_directory(parser):
 
 def chroot_setup(args):
     chroot_create(args)
-    if args.bind_magic_dirs:
+    if should_mount_magic_dirs(args.bind_magic_dirs):
         chroot_mount(args)
 
 
 def setup_chroot(parser):
     """Unpacks the files and run with chroot
 
-    setup/create    creates the directory (--pack is required)
+    setup/create    creates the directory (needs the pack filename)
     setup/mount     mounts --bind /dev and /proc inside the chroot
                     (do NOT rm -Rf the directory after that!)
     upload          replaces input files in the directory
@@ -686,6 +740,16 @@ def setup_chroot(parser):
                     (without arguments, lists output files)
     destroy/unmount unmounts /dev and /proc from the directory
     destroy/dir     removes the unpacked directory
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
@@ -694,18 +758,18 @@ def setup_chroot(parser):
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_owner = argparse.ArgumentParser(add_help=False)
     opt_owner.add_argument('--preserve-owner', action='store_true',
                            dest='restore_owner', default=None,
                            help="Restore files' owner/group when extracting")
-    opt_owner.add_argument('--no-preserve-owner', action='store_false',
+    opt_owner.add_argument('--dont-preserve-owner', action='store_false',
                            dest='restore_owner', default=None,
                            help=("Don't restore files' owner/group when "
                                  "extracting, use current users"))
     parser_setup_create = subparsers.add_parser(
             'setup/create',
-            parents=[options, opt_setup, opt_owner])
+            parents=[opt_setup, options, opt_owner])
     parser_setup_create.set_defaults(func=chroot_create)
 
     # setup/mount
@@ -716,15 +780,15 @@ def setup_chroot(parser):
     # setup
     parser_setup = subparsers.add_parser(
             'setup',
-            parents=[options, opt_setup, opt_owner])
-    parser_setup.add_argument(
-            '--dont-bind-magic-dirs', action='store_false',
-            dest='bind_magic_dirs', default=True,
-            help="Don't mount /dev and /proc inside the chroot")
+            parents=[opt_setup, options, opt_owner])
     parser_setup.add_argument(
             '--bind-magic-dirs', action='store_true',
-            dest='bind_magic_dirs', default=True,
-            help=argparse.SUPPRESS)
+            dest='bind_magic_dirs', default=None,
+            help="Mount /dev and /proc inside the chroot")
+    parser_setup.add_argument(
+            '--dont-bind-magic-dirs', action='store_false',
+            dest='bind_magic_dirs', default=None,
+            help="Don't mount /dev and /proc inside the chroot")
     parser_setup.set_defaults(func=chroot_setup)
 
     # upload
@@ -738,7 +802,7 @@ def setup_chroot(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=chroot_run)
 
     # download

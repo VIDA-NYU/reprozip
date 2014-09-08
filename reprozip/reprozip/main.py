@@ -21,6 +21,7 @@ from rpaths import Path
 import sqlite3
 import sys
 
+from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import setup_logging
 import reprozip.pack
@@ -215,6 +216,8 @@ def main():
 
     # General options
     options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('--version', action='version',
+                         version="reprozip version %s" % reprozip_version)
     options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
@@ -227,7 +230,8 @@ def main():
             help="do not try identify which package each file comes from")
 
     parser = argparse.ArgumentParser(
-            description="Reproducible experiments tool.",
+            description="reprozip is the ReproZip component responsible for "
+                        "tracing and packing the execution of an experiment",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
     subparsers = parser.add_subparsers(title="commands", metavar='')

@@ -128,7 +128,8 @@ class AptInstaller(object):
 
         return r, pkgs_status
 
-    def get_packages_info(self, packages):
+    @staticmethod
+    def get_packages_info(packages):
         if not packages:
             return {}
 
@@ -247,7 +248,7 @@ class FileUploader(object):
                 try:
                     input_path = PosixPath(all_input_files[input_name])
                 except KeyError:
-                    logging.critical("Invalid input name: %r" % input_name)
+                    logging.critical("Invalid input file: %r" % input_name)
                     sys.exit(1)
 
                 temp = None
@@ -256,14 +257,9 @@ class FileUploader(object):
                     # Restore original file from pack
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
-                    tar = tarfile.open(str(self.target / 'experiment.rpz'),
-                                       'r:*')
-                    member = tar.getmember(str(join_root(PosixPath('DATA'),
-                                                         input_path)))
-                    member.name = str(temp.name)
-                    tar.extract(member, str(temp.parent))
-                    tar.close()
-                    local_path = temp
+                    local_path = self.extract_original_input(input_name,
+                                                             input_path,
+                                                             temp)
                 else:
                     local_path = Path(local_path)
                     if not local_path.exists():
@@ -290,6 +286,14 @@ class FileUploader(object):
 
     def prepare_upload(self, files):
         pass
+
+    def extract_original_input(self, input_name, input_path, temp):
+        tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
+        member = tar.getmember(str(join_root(PosixPath('DATA'), input_path)))
+        member.name = str(temp.name)
+        tar.extract(member, str(temp.parent))
+        tar.close()
+        return temp
 
     def upload_file(self, local_path, input_path):
         raise NotImplementedError
@@ -336,7 +340,7 @@ class FileDownloader(object):
                 try:
                     remote_path = PosixPath(all_output_files[output_name])
                 except KeyError:
-                    logging.critical("Invalid output name: %r" % output_name)
+                    logging.critical("Invalid output file: %r" % output_name)
                     sys.exit(1)
 
                 if not local_path:
