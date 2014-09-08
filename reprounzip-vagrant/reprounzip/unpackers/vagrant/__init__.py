@@ -548,8 +548,8 @@ def setup(parser):
     opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
-            help="Don't mount /dev and /proc inside the chroot (if "
-            "--use-chroot is set)")
+            help="Don't mount /dev and /proc inside the chroot (no effect if "
+            "--no-use-chroot is set)")
     opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
     parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[options, opt_setup])
