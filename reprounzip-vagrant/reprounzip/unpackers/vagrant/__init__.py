@@ -578,7 +578,7 @@ def setup(parser):
                             help=("Don't connect program's input stream to "
                                   "this terminal"))
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=vagrant_run)
 
     # download

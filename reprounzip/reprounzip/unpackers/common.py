@@ -128,7 +128,8 @@ class AptInstaller(object):
 
         return r, pkgs_status
 
-    def get_packages_info(self, packages):
+    @staticmethod
+    def get_packages_info(packages):
         if not packages:
             return {}
 

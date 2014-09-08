@@ -660,7 +660,7 @@ def setup_directory(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=directory_run)
 
     # download
@@ -748,7 +748,7 @@ def setup_chroot(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=chroot_run)
 
     # download

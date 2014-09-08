@@ -56,7 +56,7 @@ def select_image(runs):
     elif distribution != 'debian':
         logging.warning("unsupported distribution %s, using Debian" %
                         distribution)
-        distribution = 'debian', '7'
+        distribution, version = 'debian', '7'
 
     if version == '6' or version.startswith('squeeze'):
         return 'debian', 'debian:squeeze'
@@ -379,7 +379,7 @@ def setup(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=docker_run)
 
     # download

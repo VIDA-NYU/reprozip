@@ -53,7 +53,7 @@ class File(CommonEqualityMixin):
 
 
 class Package(CommonEqualityMixin):
-    def __init__(self, name, version, files=[], packfiles=True, size=None):
+    def __init__(self, name, version, files=None, packfiles=True, size=None):
         self.name = name
         self.version = version
         self.files = list(files) if files is not None else []
@@ -188,7 +188,7 @@ packages:
 """)
 
         # Writes files
-        for pkg in sorted(packages, key=lambda pkg: pkg.name):
+        for pkg in sorted(packages, key=lambda p: p.name):
             write_package(fp, pkg)
 
         fp.write("""\
