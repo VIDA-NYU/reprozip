@@ -349,6 +349,16 @@ def setup(parser):
         $ reprounzip docker run .
         $ reprounzip docker download . results:/home/user/theresults.txt
         $ cd ..; reprounzip docker destroy experiment
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)

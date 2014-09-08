@@ -643,6 +643,16 @@ def setup_directory(parser):
     download    gets output files
                 (without arguments, lists output files)
     destroy     removes the unpacked directory
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
@@ -702,6 +712,16 @@ def setup_chroot(parser):
                     (without arguments, lists output files)
     destroy/unmount unmounts /dev and /proc from the directory
     destroy/dir     removes the unpacked directory
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
