@@ -519,13 +519,13 @@ def setup(parser):
         $ cd ..; reprounzip vagrant destroy experiment
 
     Upload specifications are either:
-      :inputname            restores the original input file from the pack
-      filename:inputname    replaces the input file with the specified local
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
                             file
 
     Download specifications are either:
-      outputname:           print the output file to stdout
-      outputname:filename   extracts the output file to the corresponding local
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
                             path
     """
     subparsers = parser.add_subparsers(title="actions",

@@ -248,7 +248,7 @@ class FileUploader(object):
                 try:
                     input_path = PosixPath(all_input_files[input_name])
                 except KeyError:
-                    logging.critical("Invalid input name: %r" % input_name)
+                    logging.critical("Invalid input file: %r" % input_name)
                     sys.exit(1)
 
                 temp = None
@@ -336,7 +336,7 @@ class FileDownloader(object):
                 try:
                     remote_path = PosixPath(all_output_files[output_name])
                 except KeyError:
-                    logging.critical("Invalid output name: %r" % output_name)
+                    logging.critical("Invalid output file: %r" % output_name)
                     sys.exit(1)
 
                 if not local_path:
