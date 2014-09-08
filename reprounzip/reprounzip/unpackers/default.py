@@ -612,7 +612,7 @@ def test_linux_same_arch(pack, config, **kwargs):
 
 
 def setup_installpkgs(parser):
-    """"Installs the required packages on this system
+    """Installs the required packages on this system
     """
     parser.add_argument('pack', nargs=1, help="Pack to process")
     parser.add_argument(
