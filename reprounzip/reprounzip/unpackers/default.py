@@ -513,6 +513,14 @@ class LocalUploader(FileUploader):
                               should_restore_owner(self.param_restore_owner))
         self.root = (self.target / 'root').absolute()
 
+    def extract_original_input(self, input_name, input_path, temp):
+        tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
+        member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+        member.name = str(temp.name)
+        tar.extract(member, str(temp.parent))
+        tar.close()
+        return temp
+
     def upload_file(self, local_path, input_path):
         remote_path = join_root(self.root, input_path)
 

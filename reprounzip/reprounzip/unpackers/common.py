@@ -257,14 +257,9 @@ class FileUploader(object):
                     # Restore original file from pack
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
-                    tar = tarfile.open(str(self.target / 'experiment.rpz'),
-                                       'r:*')
-                    member = tar.getmember(str(join_root(PosixPath('DATA'),
-                                                         input_path)))
-                    member.name = str(temp.name)
-                    tar.extract(member, str(temp.parent))
-                    tar.close()
-                    local_path = temp
+                    local_path = self.extract_original_input(input_name,
+                                                             input_path,
+                                                             temp)
                 else:
                     local_path = Path(local_path)
                     if not local_path.exists():
@@ -290,6 +285,14 @@ class FileUploader(object):
 
     def prepare_upload(self, files):
         pass
+
+    def extract_original_input(self, input_name, input_path, temp):
+        tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
+        member = tar.getmember(str(join_root(PosixPath('DATA'), input_path)))
+        member.name = str(temp.name)
+        tar.extract(member, str(temp.parent))
+        tar.close()
+        return temp
 
     def upload_file(self, local_path, input_path):
         raise NotImplementedError
