@@ -5,20 +5,20 @@ Getting Started
 ===============
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   reprozip
-   install
-   
+    reprozip
+    install
+
 .. _packing-experiments:
-   
+
 Packing Experiments
 ===================
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   packing-use
+    packing-use
 
 .. _unpacking-experiments:
 
@@ -26,6 +26,6 @@ Unpacking Experiments
 =====================
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   unpacking-use
+    unpacking-use

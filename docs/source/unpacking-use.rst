@@ -1,4 +1,3 @@
-
 Using *reprounzip*
 ******************
 
@@ -21,8 +20,8 @@ it is often useful to have further information
 with respect to its package.
 The following command allows users to do so::
 
-  $ reprounzip info <package>
-  
+    $ reprounzip info <package>
+
 where <package> corresponds to the experiment package
 (i.e.: the *.rpz* file).
 
@@ -31,35 +30,35 @@ The first section, *Pack Information*, comprises
 the main information about the experiment package,
 including size and total number of files::
 
-  ----- Pack information -----
-  Compressed size: <compressed-size>
-  Unpacked size: <unpacked-size>
-  Total packed paths: <number-packed-paths>
-      Files: <number-files>
-      Directories: <number-directories>
-      Symbolic links: <number-symlinks>
-      
+    ----- Pack information -----
+    Compressed size: <compressed-size>
+    Unpacked size: <unpacked-size>
+    Total packed paths: <number-packed-paths>
+        Files: <number-files>
+        Directories: <number-directories>
+        Symbolic links: <number-symlinks>
+
 The next section, *Metadata*,
 contains information about dependencies
 (i.e., software packages),
 machine architecture from the packing environment,
 and experiment execution::
 
-  ----- Metadata -----
-  Total paths: <total-number-dependencies-paths>
-  Listed packed paths: <number-packed-dependencies-paths>
-  Total software packages: <total-number-software-packages>
-  Packed software packages: <number-packed-software-packages>
-      Files from packed software packages: <number-files-packed-software-packages>
-      Files from unpacked software packages: <number-files-unpacked-software-packages>
-  Architecture: <original-architecture> (current: <current-architecture>)
-  Distribution: <original-operating-system> (current: <current-operating-system>)
-  Executions:
-      <command-line>
-          input files: <number-input-files>
-          output files: <number-output-files>
-          wd: <original-working-directory>
-          exitcode: <original-exit-code>
+    ----- Metadata -----
+    Total paths: <total-number-dependencies-paths>
+    Listed packed paths: <number-packed-dependencies-paths>
+    Total software packages: <total-number-software-packages>
+    Packed software packages: <number-packed-software-packages>
+        Files from packed software packages: <number-files-packed-software-packages>
+        Files from unpacked software packages: <number-files-unpacked-software-packages>
+    Architecture: <original-architecture> (current: <current-architecture>)
+    Distribution: <original-operating-system> (current: <current-operating-system>)
+    Executions:
+        <command-line>
+            input files: <number-input-files>
+            output files: <number-output-files>
+            wd: <original-working-directory>
+            exitcode: <original-exit-code>
 
 Note that, for *architecture* and *distribution*,
 the command shows information with respect to
@@ -78,14 +77,14 @@ can be successfully used in the current environment
 (taking into account its compatibility
 with the original one)::
 
-  ----- Unpackers -----
-  Compatible:
-      ...
-  Incompatible:
-      ...
-  Unknown:
-      ...
-      
+    ----- Unpackers -----
+    Compatible:
+        ...
+    Incompatible:
+        ...
+    Unknown:
+        ...
+
 *Compatible* lists the unpackers that can
 be used in the current environment,
 e.g.: for an experiment originally packed on Ubuntu
@@ -120,8 +119,8 @@ binaries during the execution.
 To generate such a graph,
 the following command should be used::
 
-  $ reprounzip graph <graph-file> <package>
-  
+    $ reprounzip graph <graph-file> <package>
+
 where <graph-file> corresponds to the
 graph, outputted using the
 `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ language.
@@ -163,8 +162,8 @@ To create the directory where
 the execution will take place,
 users should use the command *setup*::
 
-  $ reprounzip directory setup <path> --pack <package>
-  
+    $ reprounzip directory setup <path> --pack <package>
+
 where <path> is the diretory where the experiment
 will be unpacked.
 
@@ -172,15 +171,15 @@ After creating the directory, the
 experiment can be reproduced by issuing
 the *run* command::
 
-  $ reprounzip directory run <path>
-  
+    $ reprounzip directory run <path>
+
 which will execute the entire experiment inside
 the experiment directory.
 Users may also change the command line
 of the experiment by using the argument
 *cmdline*::
 
-  $ reprounzip directory run <path> --cmdline <new-command-line>
+    $ reprounzip directory run <path> --cmdline <new-command-line>
 
 where <new-command-line> is the modified command line.
 This is particularly useful to reproduce and test
@@ -193,8 +192,8 @@ by running the *showfiles* command
 (see :ref:`showfiles`),
 and then run the *upload* command::
 
-  $ reprounzip directory upload <path> <input-path>:<input-id>
-  
+    $ reprounzip directory upload <path> <input-path>:<input-id>
+
 where <input-path> is the new input file path
 and <input-id> is the input file identifier
 (from *showfiles*).
@@ -203,7 +202,7 @@ by <input-id> with the user file under <input-path>.
 To restore the original input file, the same command,
 but in the following format::
 
-  $ reprounzip directory upload <path> :<input-id>
+    $ reprounzip directory upload <path> :<input-id>
 
 After running the experiment,
 all the generated output files
@@ -215,20 +214,20 @@ users must first run the *showfiles* command
 to get the identifier of this file, and then run
 the *download* command::
 
-  $ reprounzip directory download <path> <output-id>:<output-path>
-  
+    $ reprounzip directory download <path> <output-id>:<output-path>
+
 where <output-id> is the output file identifier (from *showfiles*)
 and <output-path> is the desired destination of the file.
 To print the output file in stdout, instead of
 copying it, the same command can be used,
 but with the following format::
 
-  $ reprounzip directory download <path> <output-id>:
+    $ reprounzip directory download <path> <output-id>:
 
 The experiment directory can be removed by using
 the *destroy* command::
 
-  $ reprounzip directory destroy <path>
+    $ reprounzip directory destroy <path>
 
 **Limitation:** *reprounzip directory*
 will fail if the binaries involved in the experiment
@@ -256,8 +255,8 @@ To create the directory of the
 chroot environment,
 users should use the command *setup/create*::
 
-  $ reprounzip chroot setup/create <path> --pack <package>
-  
+    $ reprounzip chroot setup/create <path> --pack <package>
+
 where <path> is the diretory where the experiment
 will be unpacked for the chroot environment.
 If users run this command as root,
@@ -266,12 +265,12 @@ experiment files by default.
 To disable this, flag *no-preserve-owner*
 can be used::
 
-  $ reprounzip chroot setup/create <path> --pack <package> --no-preserve-owner
-  
+    $ reprounzip chroot setup/create <path> --pack <package> --no-preserve-owner
+
 Next, users need to use the *setup/mount* command
 to create the chroot environment under the experiment directory::
 
-  $ reprounzip chroot setup/mount <path>
+    $ reprounzip chroot setup/mount <path>
 
 This command binds */dev* and */proc* inside the experiment directory,
 thus creating the chroot environment.
@@ -279,28 +278,28 @@ Both the creation and mounting steps (*setup/create* and *setup/mount*, respecti
 can be executed in one step by using
 the *setup* command::
 
-  $ reprounzip chroot setup <path> --pack <package>
+    $ reprounzip chroot setup <path> --pack <package>
 
 The commands to replace input files, reproduce the experiment,
 and copy output files are the same as for *reprounzip directory*::
 
-  $ reprounzip chroot upload <path> <input-path>:<input-id>
-  $ reprounzip chroot run <path> --cmdline <new-command-line>
-  $ reprounzip chroot download <path> <output-id>:<output-path>
+    $ reprounzip chroot upload <path> <input-path>:<input-id>
+    $ reprounzip chroot run <path> --cmdline <new-command-line>
+    $ reprounzip chroot download <path> <output-id>:<output-path>
 
 To remove the chroot environment, users can execute the command *destroy*::
 
-  $ reprounzip directory destroy <path>
-  
+    $ reprounzip directory destroy <path>
+
 which unmounts *\dev* and *\proc* from the experiment
 directory and then removes the directory.
 These steps can also be executed separately by
 using the commands *destroy/unmount* and
 *destroy/dir*::
 
-  $ reprounzip directory destroy/unmount <path>
-  $ reprounzip directory destroy/dir <path>
-  
+    $ reprounzip directory destroy/unmount <path>
+    $ reprounzip directory destroy/dir <path>
+
 **Warning:** note that, after creating the chroot environment,
 the root directory is changed to the experiment directory;
 therefore, do **not** use command *rm -Rf* inside this
@@ -332,8 +331,8 @@ thus **interfering with this environment**.
 To install the required dependencies, the following command
 should be used::
 
-  $ reprounzip installpkgs <package>
-  
+    $ reprounzip installpkgs <package>
+
 Users may use flag *y* or *assume-yes* to automatically confirm
 all the questions from the package manager;
 flag *missing* to install only the software packages that were not
@@ -376,61 +375,61 @@ current environment.
 To create the virtual machine for an experiment package,
 the following command should be used::
 
-  $ reprounzip vagrant setup/create <path> --pack <package>
-  
+    $ reprounzip vagrant setup/create <path> --pack <package>
+
 where <path> is the destination directory for the Vagrant
 virtual machine.
 By default, *reprounzip-vagrant* uses the *chroot* unpacker
 inside the virtual machine, but users can choose
 the *directory* unpacker instead by using the flag *no-use-chroot*::
 
-  $ reprounzip vagrant setup/create <path> --pack <package> --no-use-chroot
-  
+    $ reprounzip vagrant setup/create <path> --pack <package> --no-use-chroot
+
 The plugin, based on the original environment information,
 automatically detects the best virtual machine image to use in Vagrant.
 Users may also choose their own image by using the *base-image* argument::
 
-  $ reprounzip vagrant setup/create <path> --pack <package> --base-image <base-image>
-  
+    $ reprounzip vagrant setup/create <path> --pack <package> --base-image <base-image>
+
 where <base-image> is the user's virtual machine image.
 
 To start or resume the virtual machine,
 the *setup/start* command should be used::
 
-  $ reprounzip vagrant setup/start <path>
-  
+    $ reprounzip vagrant setup/start <path>
+
 Note that the *setup* command can be used to
 both create and start the virtual machine::
 
-  $ reprounzip vagrant setup <path> --pack <package>
-  
+    $ reprounzip vagrant setup <path> --pack <package>
+
 The commands to replace input files, reproduce the experiment,
 and copy output files are the same as used in other unpackers::
 
-  $ reprounzip vagrant upload <path> <input-path>:<input-id>
-  $ reprounzip vagrant run <path> --cmdline <new-command-line>
-  $ reprounzip vagrant download <path> <output-id>:<output-path>
+    $ reprounzip vagrant upload <path> <input-path>:<input-id>
+    $ reprounzip vagrant run <path> --cmdline <new-command-line>
+    $ reprounzip vagrant download <path> <output-id>:<output-path>
 
 Users can also suspend the virtual machine (without destroying it)
 by using the *suspend* command::
 
-  $ reprounzip vagrant suspend <path>
-  
+    $ reprounzip vagrant suspend <path>
+
 After suspended, the virtual machine can be resumed by using the *setup/start* command.
 To destroy the virtual machine, the following command must be used::
 
-  $ reprounzip vagrant destroy/vm <path>
-  
+    $ reprounzip vagrant destroy/vm <path>
+
 To remove the virtual machine files,
 users can use the *destroy/dir* command::
 
-  $ reprounzip vagrant destroy/dir <path>
-  
+    $ reprounzip vagrant destroy/dir <path>
+
 Alternatively, users can use the *destroy* command
 to both destroy the virtual machine and remove the files
 in a single run::
 
-  $ reprounzip vagrant destroy <path>
+    $ reprounzip vagrant destroy <path>
 
 .. _docker-plugin:
 
@@ -451,46 +450,46 @@ in the current environment.
 To create the container files for an experiment package,
 the following command should be used::
 
-  $ reprounzip docker setup/create <path> --pack <package>
-  
+    $ reprounzip docker setup/create <path> --pack <package>
+
 where <path> is the destination directory for the Docker files.
 By default, *reprounzip-docker* uses the *chroot* unpacker
 inside the container, but users can choose
 the *directory* unpacker instead by using the flag *no-use-chroot*::
 
-  $ reprounzip docker setup/create <path> --pack <package> --no-use-chroot
+    $ reprounzip docker setup/create <path> --pack <package> --no-use-chroot
 
 To generate and start the Docker container,
 the *setup/start* command should be used::
 
-  $ reprounzip docker setup/start <path>
-  
+    $ reprounzip docker setup/start <path>
+
 Note that the *setup* command can be used to
 both create the Docker files and start the container::
 
-  $ reprounzip docker setup <path> --pack <package>
-  
+    $ reprounzip docker setup <path> --pack <package>
+
 The commands to replace input files, reproduce the experiment,
 and copy output files are the same as in previous unpackers::
 
-  $ reprounzip docker upload <path> <input-path>:<input-id>
-  $ reprounzip docker run <path> --cmdline <new-command-line>
-  $ reprounzip docker download <path> <output-id>:<output-path>
+    $ reprounzip docker upload <path> <input-path>:<input-id>
+    $ reprounzip docker run <path> --cmdline <new-command-line>
+    $ reprounzip docker download <path> <output-id>:<output-path>
 
 To destroy the container, the following command must be used::
 
-  $ reprounzip docker destroy/vm <path>
-  
+    $ reprounzip docker destroy/vm <path>
+
 To remove the Docker files,
 the *destroy/dir* command should be used::
 
-  $ reprounzip docker destroy/dir <path>
-  
+    $ reprounzip docker destroy/dir <path>
+
 Alternatively, users can use the *destroy* command
 to both destroy the container and remove the files
 in a single run::
 
-  $ reprounzip docker destroy <path>
+    $ reprounzip docker destroy <path>
 
 
 Further Considerations
@@ -527,4 +526,3 @@ they may not be replicated
 not be produced),
 since ReproZip can only capture
 deterministic behavior.
-

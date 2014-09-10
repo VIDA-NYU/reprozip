@@ -1,4 +1,3 @@
-
 Installation
 ************
 
@@ -43,8 +42,8 @@ In ReproZip, each component must be installed separately as they fulfill differe
 First, install `pip <https://pypi.python.org/pypi/pip>`_ if not yet installed in your environment.
 Then, to install a ReproZip component, simply run the following command::
 
-  $ pip install <name>
-  
+    $ pip install <name>
+
 where *<name>* is the name of the component.
 
 The additional plugins for *reprounzip* can also be installed using the same command.

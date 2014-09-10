@@ -1,4 +1,3 @@
-
 Using *reprozip*
 ****************
 
@@ -27,8 +26,8 @@ library dependencies, and enviroment variables.
 
 The following command is used to trace an experiment::
 
-  $ reprozip trace <command-line>
-  
+    $ reprozip trace <command-line>
+
 where <command-line> is the command line used to execute the
 experiment. By running this command, *reprozip* executes the experiment
 and uses *ptrace* to trace all the system calls issued;
@@ -47,7 +46,7 @@ on the amount of file dependencies that the experiment has.
 To disable this feature, users may use the flag
 *--dont-identify-packages*::
 
-  $ reprozip trace --dont-identify-packages <command-line>
+    $ reprozip trace --dont-identify-packages <command-line>
 
 The database, together with a *configuration file* (see below),
 are placed in a directory named *.reprozip*,
@@ -76,23 +75,23 @@ general information with respect to the experiment execution,
 including the command line, environment variables,
 main input and output files, and machine information::
 
-  # Run info
-  version: <reprozip-version>
-  runs:
-  - architecture: <machine-architecture>
-    argv: <command-line-arguments>
-    binary: <command-line-binary>
-    distribution: <linux-distribution>
-    environ: <environment-variables>
-    exitcode: <exit-code>
-    gid: <group-id>
-    hostname: <machine-hostname>
-    input_files: <input-files>
-    output_files: <output-files>
-    system: <system-kernel>
-    uid: <user-id>
-    workingdir: <working-directory>
-    
+    # Run info
+    version: <reprozip-version>
+    runs:
+    - architecture: <machine-architecture>
+      argv: <command-line-arguments>
+      binary: <command-line-binary>
+      distribution: <linux-distribution>
+      environ: <environment-variables>
+      exitcode: <exit-code>
+      gid: <group-id>
+      hostname: <machine-hostname>
+      input_files: <input-files>
+      output_files: <output-files>
+      system: <system-kernel>
+      uid: <user-id>
+      workingdir: <working-directory>
+
 If necessary, users may change the command line parameters by editing *<command-line-arguments>*,
 and add or remove environment variables by editing *<environment-variables>*.
 Other attributes should mostly not be changed.
@@ -104,21 +103,21 @@ they will be listed under *packages*;
 the file dependencies not identified
 in software packages are listed under *other_files*::
 
-  packages:
-    - name: <package-name>
-      version: <package-version>
-      size: <package-size>
-      packfiles: <include-package>
-      files:
-        # Total files used: <used-files-size>
-        # Installed package size: <package-size>
-        <files-list>
-    - name: ...
-    ...
-    
-  other_files:
-    <files-list>
-    
+    packages:
+      - name: <package-name>
+        version: <package-version>
+        size: <package-size>
+        packfiles: <include-package>
+        files:
+          # Total files used: <used-files-size>
+          # Installed package size: <package-size>
+          <files-list>
+      - name: ...
+      ...
+
+    other_files:
+      <files-list>
+
 The attribute *packfiles* can be used to control which software
 packages will be packed:
 its default value is *true*, but users may change it to
@@ -132,14 +131,14 @@ to include other files that they think it will be useful for a future reproducti
 As an example, the following would add everything under
 */etc/apache2/* and all the Python files of all users::
 
-  additional_patterns:
-    - /etc/apache2/**
-    - /var/lib/lxc/*/rootfs/home/**/*.py
-    
+    additional_patterns:
+      - /etc/apache2/**
+      - /var/lib/lxc/*/rootfs/home/**/*.py
+
 Note that users can always reset the configuration file to its initial state
 by running the following command::
 
-  $ reprozip reset
+    $ reprozip reset
 
 Creating a Package
 ==================
@@ -147,8 +146,8 @@ Creating a Package
 After tracing the experiment and optionally editing the configuration file,
 the experiment package can be created by issuing the command below::
 
-  $ reprozip pack <package-name>
-  
+    $ reprozip pack <package-name>
+
 where <package-name> is the name given to the package.
 This command generates a *.rpz* file in the current directory,
 which can then be sent to others so that the
@@ -263,4 +262,3 @@ that always points to the latest result.
 This makes it easier for ReproZip (in particular *reprounzip*)
 to identify the output files when reproducing the experiment,
 and then, to handle these files.
-
