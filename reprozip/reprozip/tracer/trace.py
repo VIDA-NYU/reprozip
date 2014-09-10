@@ -214,11 +214,14 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     for oldpkg in oldpackages:
         if oldpkg.name in packages:
             pkg = packages[oldpkg.name]
-            s = OrderedSet(oldpkg.files)
+            # Here we build TracedFiles from the Files so that the comment
+            # (size, etc) gets set
+            s = OrderedSet(TracedFile(fi.path) for fi in oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
         else:
+            oldpkg.files = [TracedFile(fi.path) for fi in oldpkg.files]
             packages[oldpkg.name] = oldpkg
     packages = listvalues(packages)
 
