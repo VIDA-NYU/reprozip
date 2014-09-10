@@ -94,9 +94,11 @@ def get_files(conn):
     for libdir in (Path('/lib'), Path('/lib64')):
         if libdir.exists():
             for linker in libdir.listdir('*ld-linux*'):
-                f = TracedFile(linker)
-                f.read()
-                files[f.path] = f
+                for filename in find_all_links(linker, True):
+                    if filename not in files:
+                        f = TracedFile(filename)
+                        f.read()
+                        files[f.path] = f
 
     # Adds executed files
     exec_cursor = conn.cursor()
