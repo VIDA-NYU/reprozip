@@ -55,7 +55,7 @@ Last, the section `Unpackers` shows which of the installed *reprounzip* unpacker
     Incompatible:
         ...
 
-`Compatible` lists the unpackers that can be used in the current environment, e.g.: for an experiment originally packed on Ubuntu and to be reproduced on Windows, *vagrant* is compatible (see :ref:`vagrant-plugin`); `Incompatible` lists the unpackers that cannot be used in the current environment, e.g.: *installpkgs* on Windows (see :ref:`linux_unpacker`). An additional `Unknown` list shows the installed unpackers that might not work, for example the *vagrant* unpacker if the `vagrant` command is not found in PATH.
+`Compatible` lists the unpackers that can be used in the current environment; `Incompatible` lists the unpackers that cannot be used in the current environment. An additional `Unknown` list shows the installed unpackers that might not work, for example the *vagrant* unpacker if the `vagrant` command is not found in PATH.
 
 For example, for an experiment originally packed on Ubuntu and a user reproducing on Windows, *vagrant* is compatible (see :ref:`vagrant-plugin`), but *installpkgs* is incompatible (we can't use Linux software packages natively).
 
@@ -133,7 +133,7 @@ In the *chroot* unpacker (``reprounzip chroot``), similar to *reprounzip directo
 
 To create the directory of the chroot environment, users should use the command `setup`::
 
-    $ reprounzip chroot setup/create <package> <path>
+    $ reprounzip chroot setup <package> <path>
 
 where `<path>` is the diretory where the experiment will be unpacked for the chroot environment. If users run this command as root, ReproZip will restore the owner/group of the experiment files by default (unless `--no-preserve-owner` is used), and will mount your ``/dev`` and ``/proc`` directory inside the chroot (unless ``--dont-mount-magic-dirs`` is used).
 
@@ -147,7 +147,7 @@ To remove the chroot environment, users can execute the command `destroy`::
 
     $ reprounzip chroot destroy <path>
 
-which unmounts */dev* and */proc* from the experiment directory and then removes the directory.
+which unmounts ``/dev`` and ``/proc`` from the experiment directory and then removes the directory.
 
 **Warning:** do **not** try to delete the experiment directory, **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you would also delete your system's device pseudofiles (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
