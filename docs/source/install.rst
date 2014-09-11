@@ -42,7 +42,7 @@ In ReproZip, each component must be installed separately as they fulfill differe
 
     $ pip install <name>
 
-where *<name>* is the name of the component.
+where `<name>` is the name of the component.
 
 The additional plugins for *reprounzip* can also be installed using the same command. They depend on *reprounzip*, so it will be installed automatically if you simply install the plugin.
 

@@ -18,7 +18,7 @@ The following command is used to trace an experiment::
 
     $ reprozip trace <command-line>
 
-where <command-line> is the command line used to execute the experiment. By running this command, *reprozip* executes the experiment and uses `ptrace` to trace all the system calls issued, storing them in an SQLite database.
+where `<command-line>` is the command line used to execute the experiment. By running this command, *reprozip* executes the experiment and uses `ptrace` to trace all the system calls issued, storing them in an SQLite database.
 
 By default, if the operating system is Debian or Debian-based (e.g.: Ubuntu), *reprozip* will also try to automatically identify the distribution packages that the files come from, using the available `package manager <http://en.wikipedia.org/wiki/Dpkg>`_ of the system. This is useful to provide more detailed information about the dependencies, as well as to further help when reproducing the experiment; however, the *trace* command can take some time doing that after the experiment has finished, depending on the number of file dependencies that the experiment has. To disable this feature, users may use the flag *--dont-identify-packages*::
 
