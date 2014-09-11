@@ -77,7 +77,9 @@
 <p>ReproZip allows you to pack your experiment along with all necessary data files, libraries, environment variables and options.<br/>
 Anybody can then reproduce the experiment on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
 
-<div class="highlight"><pre><code class="console">$ pip install reprozip
+<div style="width: 75%; margin: 1em auto 1em 0;">
+<div class="highlight">
+<pre><code class="console">$ pip install reprozip
 $ reprozip <span class="s">trace</span> <span class="na">./myexperiment -my --options inputs/somefile.csv other_file_here.bin</span>
 <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
 result: 42.137</span>
@@ -89,8 +91,11 @@ $ reprozip <span class="s">pack</span> my_experiment.rpz
 [REPROZIP] 17:26:42.601 INFO: Adding files from package libc6...
 [REPROZIP] 17:26:42.906 INFO: Adding other files...
 [REPROZIP] 17:26:43.450 INFO: Adding metadata...</span></code></pre></div>
+</div>
 
-<div class="highlight"><pre><code class="console">$ pip install reprounzip
+<div style="width: 75%; margin: 2em 0 2em 25%;">
+<div class="highlight">
+<pre><code class="console">$ pip install reprounzip
 $ reprounzip vagrant <span class="s">setup</span> my_experiment.rpz mydirectory
 <span class="c">Bringing machine 'default' up with 'virtualbox' provider...
 ==> default: Importing base box 'remram/debian-7-amd64'...
@@ -104,6 +109,7 @@ $ reprounzip vagrant <span class="s">upload</span> /tmp/new_config:global-config
 $ reprounzip vagrant <span class="s">run</span> mydirectory --cmdline <span class="na">./myexperiment --other --options inputs/somefile.csv</span>
 <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
 result: -17.814</span></code></pre></div>
+</div>
 
 <p>For more information, check out the <a href="http://reprozip.readthedocs.org/">full documentation on ReadTheDocs</a>.</p>
 
