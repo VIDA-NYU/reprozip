@@ -13,7 +13,7 @@ Concretely, ReproZip has two main steps:
 Contents
 --------
 
-.. toctree::
+..  toctree::
     :maxdepth: 2
 
     reprozip
