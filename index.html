@@ -20,6 +20,25 @@
     <!-- Custom styles for this template -->
     <link href="theme.css" rel="stylesheet">
 
+    <style type="text/css" rel="stylesheet">
+.code-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #959595;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-left: 2em;
+    line-height: 2em;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+    </style>
+
     <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
     <!--[if lt IE 9]><script src="js/ie8-responsive-file-warning.js"></script><![endif]-->
     <script src="js/ie-emulation-modes-warning.js"></script>
@@ -78,6 +97,7 @@
 Anybody can then reproduce the experiment on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
 
 <div style="width: 75%; margin: 1em auto 1em 0;">
+<span class="code-title">On the original machine</span>
 <div class="highlight">
 <pre><code class="console">$ pip install reprozip
 $ reprozip <span class="s">trace</span> <span class="na">./myexperiment -my --options inputs/somefile.csv other_file_here.bin</span>
@@ -94,6 +114,7 @@ $ reprozip <span class="s">pack</span> my_experiment.rpz
 </div>
 
 <div style="width: 75%; margin: 2em 0 2em 25%;">
+<span class="code-title">On another machine</span>
 <div class="highlight">
 <pre><code class="console">$ pip install reprounzip
 $ reprounzip vagrant <span class="s">setup</span> my_experiment.rpz mydirectory
