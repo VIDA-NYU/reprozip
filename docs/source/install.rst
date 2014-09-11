@@ -18,9 +18,7 @@ The operating system compatibility for the two ReproZip components is the follow
 | *reprounzip*     | Yes        | Yes [1]_     | Yes [1]_   |
 +------------------+------------+--------------+------------+
 
-Python 2.7.3 or greater is required to run ReproZip.
-Besides, depending on the component or plugin to be used, some additional software packages are also required,
-as described below:
+Python 2.7.3 or greater is required to run ReproZip.  Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
 +------------------------------+-----------------------------------+
 | Component / Plugin           | Required Software Packages        |
@@ -37,17 +35,13 @@ as described below:
 Obtaining the Software
 ======================
 
-In ReproZip, each component must be installed separately as they fulfill different purposes.
-First, install `pip <https://pypi.python.org/pypi/pip>`_ if not yet installed in your environment.
-Then, to install a ReproZip component, simply run the following command::
+In ReproZip, each component must be installed separately as they fulfill different purposes.  First, install `pip <https://pypi.python.org/pypi/pip>`_ if not yet installed in your environment.  Then, to install a ReproZip component, simply run the following command::
 
     $ pip install <name>
 
 where *<name>* is the name of the component.
 
-The additional plugins for *reprounzip* can also be installed using the same command.
-Note, however, that *reprounzip* must be installed in the system prior to installing
-any of the available plugins.
+The additional plugins for *reprounzip* can also be installed using the same command.  Note, however, that *reprounzip* must be installed in the system prior to installing any of the available plugins.
 
 .. rubric:: Footnotes
 
