@@ -18,8 +18,8 @@ Contents
 
     reprozip
     install
-    packing-use
-    unpacking-use
+    packing
+    unpacking
     faq
     developerguide
 
