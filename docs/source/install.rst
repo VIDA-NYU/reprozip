@@ -18,7 +18,7 @@ The operating system compatibility for the two ReproZip components is the follow
 | *reprounzip*     | Yes        | Yes [#plgn]_ | Yes [#plgn]_ |
 +------------------+------------+--------------+--------------+
 
-Python 2.7.3 or greater is required to run ReproZip. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
+Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
 +------------------------------+-----------------------------------------+
 | Component / Plugin           | Required Software Packages              |
@@ -49,3 +49,4 @@ The additional plugins for *reprounzip* can also be installed using the same com
 ..  [#vagrant] Vagrant: https://www.vagrantup.com/
 ..  [#docker] Docker: https://www.docker.com/
 ..  [#sqlite] SQLite: http://www.sqlite.org/
+..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
