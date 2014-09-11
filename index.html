@@ -15,7 +15,7 @@
     <!-- Bootstrap theme -->
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Docs extras -->
-    <!--<link href="css/docs.min.css" rel="stylesheet">-->
+    <link href="css/docs.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="theme.css" rel="stylesheet">
@@ -78,27 +78,32 @@
 Anybody can then reproduce the experiment on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
 
 <div class="highlight"><pre><code class="console">$ pip install reprozip
-$ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
-experiment: 0%... 25%... 50%... 75%... 100%
-Configuration file written in .reprozip/config.yml
-Edit that file then run the packer -- use 'reprozip pack -h' for help
-$ reprozip pack my_experiment.rpz
-[REPROZIP] 17:26:42.588 INFO: Creating pack my_experiment.rpz...
+$ reprozip <span class="s">trace</span> <span class="na">./myexperiment -my --options inputs/somefile.csv other_file_here.bin</span>
+<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+result: 42.137</span>
+<span class="c">Configuration file written in .reprozip/config.yml
+Edit that file then run the packer -- use 'reprozip pack -h' for help</span>
+$ reprozip <span class="s">pack</span> my_experiment.rpz
+<span class="c">[REPROZIP] 17:26:42.588 INFO: Creating pack my_experiment.rpz...
 [REPROZIP] 17:26:42.589 INFO: Adding files from package coreutils...
 [REPROZIP] 17:26:42.601 INFO: Adding files from package libc6...
 [REPROZIP] 17:26:42.906 INFO: Adding other files...
-[REPROZIP] 17:26:43.450 INFO: Adding metadata...</code></pre></div>
+[REPROZIP] 17:26:43.450 INFO: Adding metadata...</span></code></pre></div>
 
 <div class="highlight"><pre><code class="console">$ pip install reprounzip
-$ reprounzip vagrant setup my_experiment.rpz mydirectory
-Bringing machine 'default' up with 'virtualbox' provider...
+$ reprounzip vagrant <span class="s">setup</span> my_experiment.rpz mydirectory
+<span class="c">Bringing machine 'default' up with 'virtualbox' provider...
 ==> default: Importing base box 'remram/debian-7-amd64'...
 ==> default: Booting VM...
 ==> default: Machine booted and ready!
-==> default: Running provisioner: shell...
-$ reprounzip vagrant upload /tmp/new_config:global-config
-$ reprounzip vagrant run mydirectory/script.sh --cmdline ./myexperiment --other --options inputs/somefile.csv
-experiment: 0%... 25%... 50%... 75%... 100%</code></pre></div>
+==> default: Running provisioner: shell...</span>
+$ reprounzip vagrant <span class="s">run</span> mydirectory</span>
+<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+result: 42.137</span>
+$ reprounzip vagrant <span class="s">upload</span> /tmp/new_config:global-config
+$ reprounzip vagrant <span class="s">run</span> mydirectory --cmdline <span class="na">./myexperiment --other --options inputs/somefile.csv</span>
+<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+result: -17.814</span></code></pre></div>
 
 <p>For more information, check out the <a href="http://reprozip.readthedocs.org/">full documentation on ReadTheDocs</a>.</p>
 
