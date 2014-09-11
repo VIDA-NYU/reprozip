@@ -8,6 +8,8 @@ Software Requirements
 
 ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container (please see :ref:`unpackers` for more information).
 
+These are all standard Python packages that you can install using pip. However, *reprozip* only works on Linux and needs a C compiler recognized by distutils since it includes a C extension module that will be built during installation.
+
 The operating system compatibility for the two ReproZip components is the following:
 
 +------------------+------------+--------------+--------------+
@@ -36,13 +38,13 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending 
 Obtaining the Software
 ======================
 
-In ReproZip, each component must be installed separately as they fulfill different purposes. First, install `pip <https://pypi.python.org/pypi/pip>`_ if not yet installed in your environment. Then, to install a ReproZip component, simply run the following command::
+In ReproZip, each component must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_. Then, to install a ReproZip component, simply run the following command::
 
     $ pip install <name>
 
 where *<name>* is the name of the component.
 
-The additional plugins for *reprounzip* can also be installed using the same command. Note, however, that *reprounzip* must be installed in the system prior to installing any of the available plugins.
+The additional plugins for *reprounzip* can also be installed using the same command. They depend on *reprounzip*, so it will be installed automatically if you simply install the plugin.
 
 ..  rubric:: Footnotes
 
