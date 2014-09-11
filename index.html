@@ -81,12 +81,26 @@ Anybody can then reproduce the experiment on a different machine, without tracki
 
 <div class="highlight"><pre><code class="console">$ pip install reprozip
 $ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
-$ reprozip pack my_experiment.rpz</code></pre></div>
+experiment: 0%... 25%... 50%... 75%... 100%
+Configuration file written in .reprozip/config.yml
+Edit that file then run the packer -- use 'reprozip pack -h' for help
+$ reprozip pack my_experiment.rpz
+[REPROZIP] 17:26:42.588 INFO: Creating pack my_experiment.rpz...
+[REPROZIP] 17:26:42.589 INFO: Adding files from package coreutils...
+[REPROZIP] 17:26:42.601 INFO: Adding files from package libc6...
+[REPROZIP] 17:26:42.906 INFO: Adding other files...
+[REPROZIP] 17:26:43.450 INFO: Adding metadata...</code></pre></div>
 
 <div class="highlight"><pre><code class="console">$ pip install reprounzip
 $ reprounzip vagrant setup my_experiment.rpz mydirectory
+Bringing machine 'default' up with 'virtualbox' provider...
+==> default: Importing base box 'remram/debian-7-amd64'...
+==> default: Booting VM...
+==> default: Machine booted and ready!
+==> default: Running provisioner: shell...
 $ reprounzip vagrant upload /tmp/new_config:global-config
-$ reprounzip vagrant run mydirectory/script.sh --cmdline ./myexperiment --other --options inputs/somefile.csv</code></pre></div>
+$ reprounzip vagrant run mydirectory/script.sh --cmdline ./myexperiment --other --options inputs/somefile.csv
+experiment: 0%... 25%... 50%... 75%... 100%</code></pre></div>
 
 <div class="page-header" id="links">
   <strong>Links</strong>
