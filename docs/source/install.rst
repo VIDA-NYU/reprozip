@@ -6,7 +6,7 @@ ReproZip is available as open source, released under the Revised BSD License. Pl
 Software Requirements
 =====================
 
-ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant [#vagrant]_ virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker [#docker]_ container (please see :ref:`unpackers` for more information).
+ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container (please see :ref:`unpackers` for more information).
 
 The operating system compatibility for the two ReproZip components is the following:
 
@@ -23,13 +23,14 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending 
 +------------------------------+-----------------------------------------+
 | Component / Plugin           | Required Software Packages              |
 +==============================+=========================================+
-| *reprozip*                   | SQLite [#sqlite]_, a working C compiler |
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_,     |
+|                              | a working C compiler                    |
 +------------------------------+-----------------------------------------+
 | *reprounzip*                 | None                                    |
 +------------------------------+-----------------------------------------+
-| *reprounzip-vagrant*         | Vagrant [#vagrant]_                     |
+| *reprounzip-vagrant*         | `Vagrant <https://www.vagrantup.com/>`_ |
 +------------------------------+-----------------------------------------+
-| *reprounzip-docker*          | Docker [#docker]_                       |
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`_     |
 +------------------------------+-----------------------------------------+
 
 Obtaining the Software
@@ -46,7 +47,4 @@ The additional plugins for *reprounzip* can also be installed using the same com
 ..  rubric:: Footnotes
 
 ..  [#plgn] By using either *reprounzip-vagrant* or *reprounzip-docker*.
-..  [#vagrant] Vagrant: https://www.vagrantup.com/
-..  [#docker] Docker: https://www.docker.com/
-..  [#sqlite] SQLite: http://www.sqlite.org/
 ..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
