@@ -22,18 +22,17 @@ Python 2.7.3 or greater is required to run ReproZip.
 Besides, depending on the component or plugin to be used, some additional software packages are also required,
 as described below:
 
-+------------------------------+-----------------------------------------------+
-| Component / Plugin           | Required Software Packages                    |
-+==============================+===============================================+
-| *reprozip*                   | SQLite [4]_, libconfig-yaml-perl [5]_         |
-+------------------------------+-----------------------------------------------+
-| *reprounzip*                 | None                                          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-vagrant*         | Vagrant [2]_                                  |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-docker*          | Docker [3]_                                   |
-+------------------------------+-----------------------------------------------+
-
++------------------------------+-----------------------------------+
+| Component / Plugin           | Required Software Packages        |
++==============================+===================================+
+| *reprozip*                   | SQLite [4]_, a working C compiler |
++------------------------------+-----------------------------------+
+| *reprounzip*                 | None                              |
++------------------------------+-----------------------------------+
+| *reprounzip-vagrant*         | Vagrant [2]_                      |
++------------------------------+-----------------------------------+
+| *reprounzip-docker*          | Docker [3]_                       |
++------------------------------+-----------------------------------+
 
 Obtaining the Software
 ======================
@@ -56,4 +55,3 @@ any of the available plugins.
 .. [2] Vagrant: https://www.vagrantup.com/
 .. [3] Docker: https://www.docker.com/
 .. [4] SQLite: http://www.sqlite.org/
-.. [5] libconfig-yaml-perl: https://packages.debian.org/sid/libconfig-yaml-perl
