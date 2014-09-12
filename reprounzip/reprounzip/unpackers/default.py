@@ -131,6 +131,24 @@ def directory_create(args):
     root = (target / 'root').absolute()
     root.mkdir()
 
+    # Checks packages
+    missing_files = False
+    for pkg in packages:
+        if pkg.packfiles:
+            continue
+        for f in pkg.files:
+            f = Path(f.path)
+            if not f.exists():
+                logging.error(
+                        "Missing file %s (from package %s that wasn't packed) "
+                        "on host, experiment will probably miss it." % (
+                            f, pkg.name))
+                missing_files = True
+    if missing_files:
+        logging.error(
+                "Some packages are missing, you should probably install "
+                "them.\nUse 'reprounzip installpkgs -h' for help")
+
     # Unpacks files
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
