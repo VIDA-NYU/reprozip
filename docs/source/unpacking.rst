@@ -15,35 +15,26 @@ Before unpacking an experiment, it is often useful to have further information w
 
     $ reprounzip info <package>
 
-where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file).
+where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can pass ``-v`` (for `verbose`) or ``-v -v`` to get more detailed information on the package.
 
-The output of this command has three sections. The first section, `Pack Information`, comprises the main information about the experiment package, including size and total number of files::
+The output of this command has three sections. The first section, `Pack Information`, contains general information about the experiment package, including size and total number of files::
 
     ----- Pack information -----
     Compressed size: <compressed-size>
     Unpacked size: <unpacked-size>
-    Total packed paths: <number-packed-paths>
-        Files: <number-files>
-        Directories: <number-directories>
-        Symbolic links: <number-symlinks>
+    Total packed paths: <number>
 
 The next section, `Metadata`, contains information about dependencies (i.e., software packages), machine architecture from the packing environment, and experiment execution::
 
     ----- Metadata -----
-    Total paths: <total-number-dependencies-paths>
-    Listed packed paths: <number-packed-dependencies-paths>
     Total software packages: <total-number-software-packages>
     Packed software packages: <number-packed-software-packages>
-        Files from packed software packages: <number-files-packed-software-packages>
-        Files from unpacked software packages: <number-files-unpacked-software-packages>
     Architecture: <original-architecture> (current: <current-architecture>)
     Distribution: <original-operating-system> (current: <current-operating-system>)
     Executions:
         <command-line>
-            input files: <number-input-files>
-            output files: <number-output-files>
-            wd: <original-working-directory>
-            exitcode: <original-exit-code>
+            wd: <working-directory>
+            exitcode: 0
 
 Note that, for `architecture` and `distribution`, the command shows information with respect to both the original environment (i.e.: the environment where the experiment was packed) and the current one (i.e.: the environment where the experiment is to be unpacked). This helps users understand the differences between the environments in order to provide a better guidance in choosing the most appropriate unpacker.
 
@@ -64,7 +55,16 @@ For example, for an experiment originally packed on Ubuntu and a user reproducin
 Showing Input and Output Files
 ++++++++++++++++++++++++++++++
 
-Coming Soon!
+The `showfiles` command can be used to list the input and output files defined for that experiment. This is useful if you want to substitute an input file with another of your files, or get an output file out for further examination::
+
+    $ reprounzip showfiles package.rpz
+    Input files:
+        program_config
+        ipython_config
+        input_data
+    Output files:
+        rendered_image
+        logfile
 
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
@@ -81,12 +81,16 @@ where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://e
 Unpacking an Experiment in Linux
 ================================
 
-There are three main unpackers specific to Linux environments: *directory*, *chroot*, and *installpkgs*. In the following, each of these unpackers are explained in detail.
+There are three main unpackers specific to Linux environments: :ref:`directory <unpack-directory>`, :ref:`chroot <unpack-chroot>`, and :ref:`installpkgs <unpack-installpkgs>`. In the following, each of these unpackers are explained in detail.
+
+..  _unpack-directory:
 
 Running From a Directory
 ++++++++++++++++++++++++
 
-The *directory* unpacker (``reprounzip directory``) allows users to unpack the entire experiment (including library dependencies) in a single directory, and to reproduce the experiment directly from that directory. It does so by automatically setting up environment variables (e.g.: PATH, HOME, and LD_LIBRARY_PATH) that point the experiment execution to the created directory, which has the same structure as in the packing environment.
+The *directory* unpacker (``reprounzip directory``) allows users to unpack the entire experiment (including library dependencies) in a single directory, and to reproduce the experiment directly from that directory. It does so by automatically setting up environment variables (e.g.: ``PATH``, ``HOME``, and ``LD_LIBRARY_PATH``) that point the experiment execution to the created directory, which has the same structure as in the packing environment.
+
+Note however that, although this unpacker is easy to use and does not require any privilege on the reproducing machine, it is unreliable since the directory is not isolated in any way from the rest of the system; in particular, should the experiment use absolute paths, they will hit the host system instead. This is fine if the system has the required packages (see :ref:`unpack-installpkgs`), and the experiment's own files are addressed with relative paths.
 
 To create the directory where the execution will take place, users should use the command *setup*::
 
@@ -126,6 +130,8 @@ The experiment directory can be removed by using the `destroy` command::
 
 **Limitation:** ``reprounzip directory`` will fail if the binaries involved in the experiment use hardcoded paths, as they will point outside the unpacked directory. The other unpackers are more reliable in that regard.
 
+..  _unpack-chroot:
+
 Running With *chroot*
 +++++++++++++++++++++
 
@@ -151,12 +157,14 @@ which unmounts ``/dev`` and ``/proc`` from the experiment directory and then rem
 
 **Warning:** do **not** try to delete the experiment directory, **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you would also delete your system's device pseudofiles (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
+..  _unpack-installpkgs:
+
 Installing Software Packages
 ++++++++++++++++++++++++++++
 
 By default, ReproZip identifies if the current environment already has the required software packages for the experiment, using the installed ones; for the non-installed software packages, it uses the dependencies packed in the original environment and extracted under the experiment directory.
 
-Users may also let ReproZip to try installing all the dependencies of the experiment in their environment by using the *installpkgs* unpacker (*reprounzip installpkgs*). This unpacker currently works for Debian and Dabian-based operating systems only, and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`_ package manager to automatically install all the required software packages direclty on the current environment, thus **interfering with this environment**.
+Users may also let ReproZip to try installing all the dependencies of the experiment in their environment by using the *installpkgs* unpacker (``reprounzip installpkgs``). This unpacker currently works for Debian and Debian-based operating systems only (e.g.: Ubuntu), and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`_ package manager to automatically install all the required software packages directly on the current machine, thus **interfering with this environment**.
 
 To install the required dependencies, the following command should be used::
 
@@ -186,7 +194,7 @@ To create the virtual machine for an experiment package, the `setup` command sho
 
 where `<path>` is the destination directory for the Vagrant virtual machine.
 
-The commands to replace input files, reproduce the experiment, and copy output files are the same as used in other unpackers::
+The commands to replace input files, reproduce the experiment, and copy output files are the same as other unpackers::
 
     $ reprounzip vagrant upload <path> <input-path>:<input-id>
     $ reprounzip vagrant run <path> --cmdline <new-command-line>
@@ -196,7 +204,9 @@ Users can also suspend the virtual machine (without destroying it) by using the 
 
     $ reprounzip vagrant suspend <path>
 
-After suspended, the virtual machine can be resumed by using the `setup/start` command. To destroy the virtual machine, the following command must be used::
+After suspended, the virtual machine can be resumed by using the `setup/start` command.
+
+To destroy the virtual machine, the following command must be used::
 
     $ reprounzip vagrant destroy <path>
 
@@ -229,4 +239,4 @@ Further Considerations
 Reproducing Multiple Execution Paths
 ++++++++++++++++++++++++++++++++++++
 
-The *reprozip* component can only guarantee that *reprounzip* will successfully reproduce the same execution path that the original experiment followed. Every source of indeterminism in the set of files that the experiment uses or outputs is a potential reproducibility issue. In particular, if changing some input files or command line arguments changes the dependencies that the experiment needs (to some that are not in the ``.rpz`` package), the reproduction may fail.
+The *reprozip* component can only guarantee that *reprounzip* will successfully reproduce the same execution path that the original experiment followed. There is no guarantee that the experiment won't need a different set of files if you use a different configuration; if some of these files were not packed into the ``.rpz`` package, the reproduction may fail.

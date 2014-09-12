@@ -1,12 +1,12 @@
 Installation
 ************
 
-ReproZip is available as open source, released under the Revised BSD License. Please visit `ReproZip's website <http://vida-nyu.github.io/reprozip/>`_ to find links to our PyPI packages and GitHub repository.
+ReproZip is available as open source, released under the Revised BSD License. Please visit `ReproZip's website <http://vida-nyu.github.io/reprozip/>`_ to find links to our PyPI packages or our `GitHub repository <https://github.com/ViDA-NYU/reprozip>`_.
 
 Software Requirements
 =====================
 
-ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container (please see :ref:`unpackers` for more information).
+ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container (please see :ref:`unpackers` for more information). More plugins may be developed in the future (and of course, you are free to :ref:`roll your own <develop-plugins>`).
 
 These are all standard Python packages that you can install using pip. However, *reprozip* only works on Linux and needs a C compiler recognized by distutils since it includes a C extension module that will be built during installation.
 
@@ -38,7 +38,7 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending 
 Obtaining the Software
 ======================
 
-In ReproZip, each component must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_. Then, to install a ReproZip component, simply run the following command::
+In ReproZip, the components must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_. Then, to install a ReproZip component, simply run the following command::
 
     $ pip install <name>
 

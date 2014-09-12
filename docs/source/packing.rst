@@ -5,7 +5,7 @@ Using *reprozip*
 
 The *reprozip* component is responsible for packing an experiment. In ReproZip, we assume that the experiment can be executed by a single command line, preferably with no GUI involved (please refer to :ref:`further-information` for additional information regarding different types of experiments).
 
-There are three steps when packing an experiment with *reprozip*: :ref:`tracing the experiment <packing-trace>`, :ref:`editing the configuration file <packing-config>`, if necessary, and :ref:`creating the reproducible package for the experiment <packing-pack>`. Each of these steps is explained in more details below. Note that *reprozip* is only available for Linux distributions.
+There are three steps when packing an experiment with *reprozip*: :ref:`tracing the experiment <packing-trace>`, :ref:`editing the configuration file <packing-config>` if necessary, and :ref:`creating the reproducible package for the experiment <packing-pack>`. Each of these steps is explained in more details below. Note that *reprozip* is only available for Linux distributions.
 
 ..  _packing-trace:
 
@@ -31,7 +31,9 @@ The database, together with a *configuration file* (see below), are placed in a 
 Editing the Configuration File
 ==============================
 
-The configuration file, which can be found in ``.reprozip/config.yml``, contains all the information necessary for creating the experiment package. It is created by the tracer, and drives the packing step. You probably don't need to change anything, as the automatically-generated file is probably sufficient to generate the package, however you may edit this file prior to the creation of the package in order to add or remove files. This can be particularly useful, for instance, to remove big files that can be obtained elsewhere when reproducing the experiment, so as to keep the size of package small, and also to remove sensitive information that the experiment may use. The configuration file can also be used to edit the main command line, as well as to add or remove environment variables.
+The configuration file, which can be found in ``.reprozip/config.yml``, contains all the information necessary for creating the experiment package. It is created by the tracer, and drives the packing step.
+
+It is possible to not change anything, as the automatically-generated file is probably sufficient to generate a working package, however you may want to edit this file prior to the creation of the package in order to add or remove files. This can be particularly useful, for instance, to remove big files that can be obtained elsewhere when reproducing the experiment, so as to keep the size of package small, and also to remove sensitive information that the experiment may use. The configuration file can also be used to edit the main command line, as well as to add or remove environment variables.
 
 The first part of the configuration file gives general information with respect to the experiment execution, including the command line, environment variables, main input and output files, and machine information::
 
@@ -93,6 +95,8 @@ After tracing the experiment and optionally editing the configuration file, the 
     $ reprozip pack <package-name>
 
 where `<package-name>` is the name given to the package. This command generates a ``.rpz`` file in the current directory, which can then be sent to others so that the experiment can be reproduced. For more information regarding the unpacking step, please see :ref:`unpacking-experiments`.
+
+Note that this is only at this point that files will be copied from your environment and into the package; as such, you should not change any file that the experiment used before packing it, or else the package will contain different files than the ones the experiment used while it was traced.
 
 ..  _further-information:
 
