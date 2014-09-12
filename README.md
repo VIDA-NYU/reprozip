@@ -2,6 +2,7 @@
 [![Coverage Status]
 (https://coveralls.io/repos/ViDA-NYU/reprozip/badge.png?branch=master)]
 (https://coveralls.io/r/ViDA-NYU/reprozip?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/reprozip/badge/)](http://reprozip.readthedocs.org/en/latest/)
 
 ReproZip
 ========
