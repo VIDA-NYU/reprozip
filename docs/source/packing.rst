@@ -54,7 +54,7 @@ The first part of the configuration file gives general information with respect 
       uid: <user-id>
       workingdir: <working-directory>
 
-If necessary, users may change the command line parameters by editing `<command-line-arguments>`, and add or remove environment variables by editing `<environment-variables>`. Other attributes should mostly not be changed.
+If necessary, users may change the command line parameters by editing `<command-line-arguments>`, and add or remove environment variables by editing `<environment-variables>`. Other attributes should mostly not be changed, apart from the `input_files` and `output_files` (in particular, feel free to remove some of these, and give them more descriptive names).
 
 The next section in the configuration file shows the files to be packed. If the software dependencies were identified by the package manager of the system during the `trace` command execution, they will be listed under `packages`; the file dependencies not identified in software packages are listed under `other_files`::
 
@@ -106,19 +106,14 @@ Further Considerations
 Packing Multiple Command Lines
 ++++++++++++++++++++++++++++++
 
-ReproZip can only pack one command line execution per package. Therefore, if an experiment comprises many command line executions, users should create a **script** that combines all these command lines, and pack the script execution with *reprozip*.
+ReproZip is meant to trace a whole experiment in one go. Therefore, if an experiment comprises multiple successive commands, users should create a simple **script** that runs all these commands, and pass *that* with ``reprozip trace``.
 
 Packing GUI and Interactive Tools
 +++++++++++++++++++++++++++++++++
 
 Currently, ReproZip cannot ensure that GUI interfaces will be correctly reproduced (support is coming soon), so we recommend packing tools in a non-GUI mode for a successfull reproduction.
 
-Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that ReproZip packs the execution path followed during the `trace` command execution. Therefore, during reproduction, if the interactive inputs chosen by the user are different from the ones used in the packing step, other dependencies might be required that ReproZip didn't know about (and thus didn't pack).
-
-Capturing Useful Parameters and Input Files
-+++++++++++++++++++++++++++++++++++++++++++
-
-ReproZip traces the *execution* of the experiment; concretely, this means that, for compiled programming languages, it captures the binaries rather than the source code. As a consequence, if the experiment has important parameters and input files that are hardcoded, these will not be able to be varied and explored when reproducing the execution, once the source code is not included in the package. It is thus recommended that users **expose all useful parameters as command line arguments or in an input file** for the experiment, since *reprounzip* allows users to easily change the argument values for the experiment reproduction (see :ref:`unpacking` for more information on reproducing experiments).
+Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail in that case when reproduced on a different machine.
 
 Capturing Connections to Servers
 ++++++++++++++++++++++++++++++++
@@ -129,7 +124,7 @@ Communication with remote servers is outside the scope of ReproZip: when reprodu
 * execute the experiment, and
 * stop the server,
 
-and use *reprozip* to trace the whole script, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
+and use *reprozip* to trace the whole script, rather than the experiment itself. This way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
 
 Excluding Sensitive and Third-Party Information
 +++++++++++++++++++++++++++++++++++++++++++++++
