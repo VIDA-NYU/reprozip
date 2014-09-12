@@ -658,7 +658,7 @@ def setup_installpkgs(parser):
     """
     parser.add_argument('pack', nargs=1, help="Pack to process")
     parser.add_argument(
-            '-y', '--assume-yes',
+            '-y', '--assume-yes', action='store_true', default=False,
             help="Assumes yes for package manager's questions (if supported)")
     parser.add_argument(
             '--missing', action='store_true',
