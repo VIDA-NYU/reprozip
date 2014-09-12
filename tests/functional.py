@@ -119,6 +119,8 @@ def functional_tests(interactive, run_vagrant, run_docker):
     Path('simple').remove()
     # Info
     check_call(rpuz + ['info', 'simple.rpz'])
+    # Show files
+    check_call(rpuz + ['showfiles', 'simple.rpz'])
     # Lists packages
     check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
     # Unpack directory
