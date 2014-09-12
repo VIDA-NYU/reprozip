@@ -33,6 +33,10 @@ def expand_patterns(patterns):
 
     # Finds all matching paths
     for pattern in patterns:
+        if logging.root.isEnabledFor(logging.DEBUG):
+            logging.debug("Expanding pattern %r into %d paths" % (
+                          pattern,
+                          len(list(Path('/').recursedir(pattern)))))
         for path in Path('/').recursedir(pattern):
             if path.is_dir():
                 dirs.add(path)

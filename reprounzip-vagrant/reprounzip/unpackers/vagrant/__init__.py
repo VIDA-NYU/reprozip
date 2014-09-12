@@ -104,10 +104,14 @@ def get_ssh_parameters(target):
         key_file = info['identityfile']
     else:
         key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
-    return dict(hostname=info.get('hostname', '127.0.0.1'),
-                port=int(info.get('port', 2222)),
-                username=info.get('user', 'vagrant'),
-                key_filename=key_file)
+    ret = dict(hostname=info.get('hostname', '127.0.0.1'),
+               port=int(info.get('port', 2222)),
+               username=info.get('user', 'vagrant'),
+               key_filename=key_file)
+    logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s" % (
+                  ret['username'], ret['hostname'], ret['port'],
+                  ret['key_filename']))
+    return ret
 
 
 def vagrant_setup_create(args):
@@ -152,6 +156,8 @@ def vagrant_setup_create(args):
         box = args.base_image[0]
     else:
         target_distribution, box = select_box(runs)
+    logging.info("Using box %s" % box)
+    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
@@ -169,6 +175,7 @@ def vagrant_setup_create(args):
     target.mkdir(parents=True)
 
     # Writes setup script
+    logging.info("Writing setup script %s..." % (target / 'setup.sh'))
     with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('#!/bin/sh\n\n')
         if packages:
@@ -250,9 +257,11 @@ fi
 '''.format(url=url))
 
     # Copies pack
+    logging.info("Copying pack file...")
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Vagrant file
+    logging.info("Writing %s..." % (target / 'Vagrantfile'))
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
                                        newline='\n') as fp:
         # Vagrant header and version
@@ -278,6 +287,7 @@ def vagrant_setup_start(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    logging.info("Calling 'vagrant up'...")
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
         sys.stderr("vagrant up failed with code %d\n" % retcode)
@@ -340,6 +350,7 @@ def vagrant_run(args):
     chan.get_pty()
 
     # Execute command
+    logging.info("Connected via SSH, running command...")
     chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
 
     # Get output
@@ -386,10 +397,12 @@ class SSHUploader(FileUploader):
             remote_path = input_path
 
         # Upload to a temporary file first
+        logging.info("Uploading file via SCP...")
         rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
         self.client_scp.put(local_path.path, rtemp.path, recursive=False)
 
         # Move it
+        logging.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
                 shell_escape(remote_path.path),

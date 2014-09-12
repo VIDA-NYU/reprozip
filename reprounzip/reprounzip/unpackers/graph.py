@@ -126,6 +126,7 @@ def generate(target, directory, all_forks=False):
             ''')
 
     # Loop on all event lists
+    logging.info("Getting all events from database...")
     rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
                        ((r[1], 'open', r) for r in file_rows),
                        ((r[1], 'exec', r) for r in exec_rows))
@@ -185,6 +186,7 @@ def generate(target, directory, all_forks=False):
     conn.close()
 
     # Puts files in packages
+    logging.info("Organizes packages...")
     package_files = {}
     other_files = []
     for f in files:
@@ -198,6 +200,7 @@ def generate(target, directory, all_forks=False):
     with target.open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
         # Programs
+        logging.info("Writing programs...")
         for program in all_programs:
             fp.write('    prog%d [label="%s (%d)"];\n' % (
                      id(program), program.binary or "-", program.pid))
@@ -215,6 +218,7 @@ def generate(target, directory, all_forks=False):
         fp.write('\n    node [shape=ellipse];\n\n    /* system packages */\n')
 
         # Files from packages
+        logging.info("Writing packages...")
         for i, ((name, version), files) in enumerate(iteritems(package_files)):
             fp.write('    subgraph cluster%d {\n        label=' % i)
             if version:
@@ -228,12 +232,14 @@ def generate(target, directory, all_forks=False):
         fp.write('\n    /* other files */\n')
 
         # Other files
+        logging.info("Writing other files...")
         for f in other_files:
             fp.write('    "%s"\n' % escape(unicode_(f)))
 
         fp.write('\n')
 
         # Edges
+        logging.info("Connecting edges...")
         for prog, f, mode, argv in edges:
             if mode is None:
                 fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (

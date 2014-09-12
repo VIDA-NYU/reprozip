@@ -107,15 +107,14 @@ def docker_setup_create(args):
         base_image = args.base_image[0]
     else:
         target_distribution, base_image = select_image(runs)
-
-    logging.debug("Base image: %s, distribution: %s" % (
-                  base_image,
-                  target_distribution or "unknown"))
+    logging.info("Using base image %s" % base_image)
+    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
 
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Dockerfile
+    logging.info("Writing %s..." % (target / 'Dockerfile'))
     with (target / 'Dockerfile').open('w',
                                       encoding='utf-8', newline='\n') as fp:
         fp.write('FROM %s\n\n' % base_image)
@@ -180,6 +179,7 @@ def docker_setup_build(args):
 
     image = make_unique_name(b'reprounzip_image_')
 
+    logging.info("Calling 'docker build'...")
     retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                               cwd=target.path)
     if retcode != 0:
@@ -304,12 +304,14 @@ def docker_destroy_docker(args):
 
     if 'ran_container' in unpacked_info:
         container = unpacked_info.pop('ran_container')
+        logging.info("Destroying container...")
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
             logging.error("Error deleting container %s" %
                           container.decode('ascii'))
 
     image = unpacked_info.pop('initial_image')
+    logging.info("Destroying image...")
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
         logging.error("Error deleting image %s" % image.decode('ascii'))
@@ -322,6 +324,7 @@ def docker_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    logging.info("Removing directory %s..." % target)
     target.rmtree()
 
 

@@ -76,7 +76,7 @@ def windows_shell(chan):
     import threading
 
     sys.stdout.write("*** Line-buffered terminal emulation. "
-                     "Press F6 or ^Z to send EOF.\r\n")
+                     "Press F6 or ^Z then enter to send EOF.\r\n")
 
     def writeall(sock):
         while True:

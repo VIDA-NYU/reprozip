@@ -16,8 +16,10 @@ from __future__ import absolute_import, unicode_literals
 import argparse
 import codecs
 import locale
+import logging
 from pkg_resources import iter_entry_points
 import sys
+import traceback
 
 from reprounzip.common import setup_logging
 from reprounzip.pack_info import print_info, showfiles
@@ -86,7 +88,15 @@ def main():
 
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
-        setup_function = entry_point.load()
+        logging.debug("Loading unpacker %s from %s %s" % (
+                      entry_point.name,
+                      entry_point.dist.project_name, entry_point.dist.version))
+        try:
+            setup_function = entry_point.load()
+        except Exception:
+            logging.critical("Plugin %s failed to initialize!")
+            traceback.print_exc()
+            continue
         name = entry_point.name
         # Docstring is used as description (used for detailed help)
         descr = setup_function.__doc__.strip()

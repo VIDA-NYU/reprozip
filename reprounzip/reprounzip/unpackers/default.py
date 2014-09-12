@@ -145,6 +145,7 @@ def directory_create(args):
         linkname = PosixPath(m.linkname)
         if linkname.is_absolute:
             m.linkname = join_root(root, PosixPath(m.linkname)).path
+    logging.info("Extracting files...")
     tar.extractall(str(root), members)
     tar.close()
 
@@ -163,6 +164,7 @@ def directory_create(args):
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
+        logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
@@ -248,6 +250,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
 
+    logging.info("Removing directory %s..." % target)
     rmtree_fixed(target)
 
 
@@ -380,6 +383,7 @@ def chroot_create(args):
         for m in members:
             m.uid = uid
             m.gid = gid
+    logging.info("Extracting files...")
     tar.extractall(str(root), members)
     tar.close()
 
@@ -387,6 +391,7 @@ def chroot_create(args):
     sh_path = join_root(root, Path('/bin/sh'))
     env_path = join_root(root, Path('/usr/bin/env'))
     if not sh_path.lexists() or not env_path.lexists():
+        logging.info("Setting up busybox...")
         busybox_path = join_root(root, Path('/bin/busybox'))
         busybox_path.parent.mkdir(parents=True)
         with make_dir_writable(join_root(root, Path('/bin'))):
@@ -402,6 +407,7 @@ def chroot_create(args):
 
     # Original input files, so upload can restore them
     if any(run['input_files'] for run in runs):
+        logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
@@ -423,6 +429,7 @@ def chroot_mount(args):
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
+        logging.info("Mounting %s on %s..." % (m, d))
         subprocess.check_call(['mount', '--bind', m, str(d)])
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
@@ -491,6 +498,7 @@ def chroot_destroy_unmount(args):
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         if d.exists():
+            logging.info("Unmounting %s..." % d)
             subprocess.check_call(['umount', str(d)])
 
 
@@ -505,6 +513,7 @@ def chroot_destroy_dir(args):
         logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
+    logging.info("Removing directory %s..." % target)
     rmtree_fixed(target)
 
 
@@ -519,8 +528,10 @@ def chroot_destroy(args):
         for m in ('/dev', '/proc'):
             d = join_root(target / 'root', Path(m))
             if d.exists():
+                logging.info("Unmounting %s..." % d)
                 subprocess.check_call(['umount', str(d)])
 
+    logging.info("Removing directory %s..." % target)
     rmtree_fixed(target)
 
 

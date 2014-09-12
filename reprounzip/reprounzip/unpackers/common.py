@@ -255,6 +255,7 @@ class FileUploader(object):
 
                 if not local_path:
                     # Restore original file from pack
+                    logging.debug("Restoring input file %s" % input_path)
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
@@ -262,6 +263,8 @@ class FileUploader(object):
                                                              temp)
                 else:
                     local_path = Path(local_path)
+                    logging.debug("Uploading file %s to %s" % (local_path,
+                                                               input_path))
                     if not local_path.exists():
                         logging.critical("Local file %s doesn't exist" %
                                          local_path)
@@ -343,6 +346,7 @@ class FileDownloader(object):
                     logging.critical("Invalid output file: %r" % output_name)
                     sys.exit(1)
 
+                logging.debug("Downloading file %s" % remote_path)
                 if not local_path:
                     self.download_and_print(remote_path)
                 else:
