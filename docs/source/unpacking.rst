@@ -1,4 +1,4 @@
-..  _unpacking-experiments:
+..  _unpacking:
 
 Using *reprounzip*
 ******************
@@ -48,7 +48,7 @@ Last, the section `Unpackers` shows which of the installed *reprounzip* unpacker
 
 `Compatible` lists the unpackers that can be used in the current environment; `Incompatible` lists the unpackers that cannot be used in the current environment. An additional `Unknown` list shows the installed unpackers that might not work, for example the *vagrant* unpacker if the `vagrant` command is not found in PATH.
 
-For example, for an experiment originally packed on Ubuntu and a user reproducing on Windows, *vagrant* is compatible (see :ref:`vagrant-plugin`), but *installpkgs* is incompatible (we can't use Linux software packages natively).
+For example, for an experiment originally packed on Ubuntu and a user reproducing on Windows, *vagrant* is compatible (see :ref:`unpack-vagrant`), but *installpkgs* is incompatible (we can't use Linux software packages natively).
 
 ..  _showfiles:
 
@@ -181,7 +181,7 @@ Additional Unpackers
 
 ReproZip has some plugins for the *reprounzip* component that provide a new range of unpackers for the system, even allowing a Linux experiment to be reproduced in different environments (e.g.: Mac OS X and Windows). These plugins do not come builtin with *reprounzip* and need to be installed separately, **after** installing *reprounzip*.
 
-..  _vagrant-plugin:
+..  _unpack-vagrant:
 
 Vagrant Plugin
 ++++++++++++++

@@ -1,9 +1,9 @@
-..  _packing-experiments:
+..  _packing:
 
 Using *reprozip*
 ****************
 
-The *reprozip* component is responsible for packing an experiment. In ReproZip, we assume that the experiment can be executed by a single command line, preferably with no GUI involved (please refer to :ref:`further-information` for additional information regarding different types of experiments).
+The *reprozip* component is responsible for packing an experiment. In ReproZip, we assume that the experiment can be executed by a single command line, preferably with no GUI involved (please refer to :ref:`packing-further` for additional information regarding different types of experiments).
 
 There are three steps when packing an experiment with *reprozip*: :ref:`tracing the experiment <packing-trace>`, :ref:`editing the configuration file <packing-config>` if necessary, and :ref:`creating the reproducible package for the experiment <packing-pack>`. Each of these steps is explained in more details below. Note that *reprozip* is only available for Linux distributions.
 
@@ -94,11 +94,11 @@ After tracing the experiment and optionally editing the configuration file, the 
 
     $ reprozip pack <package-name>
 
-where `<package-name>` is the name given to the package. This command generates a ``.rpz`` file in the current directory, which can then be sent to others so that the experiment can be reproduced. For more information regarding the unpacking step, please see :ref:`unpacking-experiments`.
+where `<package-name>` is the name given to the package. This command generates a ``.rpz`` file in the current directory, which can then be sent to others so that the experiment can be reproduced. For more information regarding the unpacking step, please see :ref:`unpacking`.
 
 Note that this is only at this point that files will be copied from your environment and into the package; as such, you should not change any file that the experiment used before packing it, or else the package will contain different files than the ones the experiment used while it was traced.
 
-..  _further-information:
+..  _packing-further:
 
 Further Considerations
 ======================
@@ -118,7 +118,7 @@ Additionally, there is no restriction in packing interactive experiments (i.e., 
 Capturing Useful Parameters and Input Files
 +++++++++++++++++++++++++++++++++++++++++++
 
-ReproZip traces the *execution* of the experiment; concretely, this means that, for compiled programming languages, it captures the binaries rather than the source code. As a consequence, if the experiment has important parameters and input files that are hardcoded, these will not be able to be varied and explored when reproducing the execution, once the source code is not included in the package. It is thus recommended that users **expose all useful parameters as command line arguments or in an input file** for the experiment, since *reprounzip* allows users to easily change the argument values for the experiment reproduction (see :ref:`unpacking-experiments` for more information on reproducing experiments).
+ReproZip traces the *execution* of the experiment; concretely, this means that, for compiled programming languages, it captures the binaries rather than the source code. As a consequence, if the experiment has important parameters and input files that are hardcoded, these will not be able to be varied and explored when reproducing the execution, once the source code is not included in the package. It is thus recommended that users **expose all useful parameters as command line arguments or in an input file** for the experiment, since *reprounzip* allows users to easily change the argument values for the experiment reproduction (see :ref:`unpacking` for more information on reproducing experiments).
 
 Capturing Connections to Servers
 ++++++++++++++++++++++++++++++++
