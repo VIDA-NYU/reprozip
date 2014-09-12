@@ -279,8 +279,9 @@ class FileUploader(object):
 
     def get_runs_from_config(self):
         # Loads config
-        runs, packages, other_files = load_config(
-                self.target / 'experiment.rpz')
+        runs, packages, other_files = reprounzip.common.load_config(
+                self.target / 'config.yml',
+                canonical=True)
         return runs
 
     def prepare_upload(self, files):
@@ -351,8 +352,9 @@ class FileDownloader(object):
 
     def get_runs_from_config(self):
         # Loads config
-        runs, packages, other_files = load_config(
-                self.target / 'experiment.rpz')
+        runs, packages, other_files = reprounzip.common.load_config(
+                self.target / 'config.yml',
+                canonical=True)
         return runs
 
     def prepare_download(self, files):

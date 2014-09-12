@@ -118,15 +118,20 @@ def directory_create(args):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config_file(target / 'config.yml', True)
 
     target.mkdir()
     root = (target / 'root').absolute()
     root.mkdir()
 
     # Unpacks files
-    tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
@@ -141,11 +146,6 @@ def directory_create(args):
         if linkname.is_absolute:
             m.linkname = join_root(root, PosixPath(m.linkname)).path
     tar.extractall(str(root), members)
-
-    # Unpacks configuration file
-    member = tar.getmember('METADATA/config.yml')
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
     tar.close()
 
     # Gets library paths
@@ -329,8 +329,14 @@ def chroot_create(args):
     # We can only restore owner/group of files if running as root
     restore_owner = should_restore_owner(args.restore_owner)
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config_file(target / 'config.yml', True)
 
     target.mkdir()
     root = (target / 'root').absolute()
@@ -362,7 +368,6 @@ def chroot_create(args):
                     dest.chown(stat.st_uid, stat.st_gid)
 
     # Unpacks files
-    tar = tarfile.open(str(pack), 'r:*')
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
@@ -376,11 +381,6 @@ def chroot_create(args):
             m.uid = uid
             m.gid = gid
     tar.extractall(str(root), members)
-
-    # Unpacks configuration file
-    member = tar.getmember('METADATA/config.yml')
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
     tar.close()
 
     # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
@@ -530,11 +530,6 @@ class LocalUploader(FileUploader):
         self.param_restore_owner = param_restore_owner
         FileUploader.__init__(self, target, input_files, files)
 
-    def get_runs_from_config(self):
-        runs, packages, other_files = load_config_file(
-                self.target / 'config.yml', True)
-        return runs
-
     def prepare_upload(self, files):
         self.restore_owner = (self.type == 'chroot' and
                               should_restore_owner(self.param_restore_owner))
@@ -580,11 +575,6 @@ class LocalDownloader(FileDownloader):
     def __init__(self, target, files, type_):
         self.type = type_
         FileDownloader.__init__(self, target, files)
-
-    def get_runs_from_config(self):
-        runs, packages, other_files = load_config_file(
-                self.target / 'config.yml', True)
-        return runs
 
     def prepare_download(self, files):
         self.root = (self.target / 'root').absolute()

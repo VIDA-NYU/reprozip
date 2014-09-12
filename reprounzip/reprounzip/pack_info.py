@@ -14,10 +14,13 @@ It dispatchs to plugins registered through pkg_resources as entry point
 from __future__ import absolute_import, unicode_literals
 
 import logging
+import pickle
 import platform
 from rpaths import Path
+import sys
 import tarfile
 
+from reprounzip.common import load_config as load_config_file
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, shell_escape
 from reprounzip.utils import iteritems, hsize
@@ -155,3 +158,71 @@ def print_info(args, unpackers):
                 print("    %s (%s)" % (upk_name, msg))
             else:
                 print("    %s" % upk_name)
+
+
+def showfiles(args):
+    """Writes out the input and output files.
+
+    Works both for a pack file and for an extracted directory.
+    """
+    pack = Path(args.pack[0])
+
+    if not pack.exists():
+        logging.critical("Pack or directory %s does not exist" % pack)
+        sys.exit(1)
+
+    if pack.is_dir():
+        # Reads info from an unpacked directory
+        runs, packages, other_files = load_config_file(pack / 'config.yml',
+                                                       canonical=True)
+        # The '.reprounzip' file is a pickled dictionary, it contains the name
+        # of the files that replaced each input file (if upload was used)
+        with pack.open('rb', '.reprounzip') as fp:
+            unpacked_info = pickle.load(fp)
+        input_files = unpacked_info.get('input_files', {})
+
+        print("Input files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for input_name, path in iteritems(run['input_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (input_name, path))
+                else:
+                    print("    %s" % input_name)
+                assigned = input_files.get(input_name) or "(original)"
+                print("      %s" % assigned)
+
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name, path in iteritems(run['output_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (output_name, path))
+                else:
+                    print("    %s" % output_name)
+
+    else:  # pack.is_file()
+        # Reads info from a pack file
+        runs, packages, other_files = load_config(pack)
+
+        print("Input files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for input_name, path in iteritems(run['input_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (input_name, path))
+                else:
+                    print("    %s" % input_name)
+
+        print("Output files:")
+        for i, run in enumerate(runs):
+            if len(runs) > 1:
+                print("  Run %d:" % i)
+            for output_name, path in iteritems(run['output_files']):
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (output_name, path))
+                else:
+                    print("    %s" % output_name)

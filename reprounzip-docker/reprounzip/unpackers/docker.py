@@ -21,10 +21,10 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import Package
+from reprounzip.common import Package, load_config
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, join_root, FileDownloader, get_runs
+    select_installer, join_root, FileDownloader, get_runs
 from reprounzip.utils import unicode_, iteritems
 
 
@@ -92,8 +92,15 @@ def docker_setup_create(args):
         logging.critical("Target directory exists")
         sys.exit(1)
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+    tar.close()
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image:
         target_distribution = None
@@ -193,7 +200,7 @@ def docker_run(args):
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
