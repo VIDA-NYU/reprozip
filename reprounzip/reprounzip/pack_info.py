@@ -79,9 +79,11 @@ def print_info(args, unpackers):
         if any(r['distribution'] != meta_distribution
                for r in runs):
             logging.warning("Runs have different distributions")
+        meta_distribution = ' '.join(t for t in meta_distribution if t)
 
     current_architecture = platform.machine().lower()
     current_distribution = platform.linux_distribution()[0:2]
+    current_distribution = ' '.join(t for t in current_distribution if t)
 
     print("Pack file: %s" % pack)
     print("\n----- Pack information -----")
