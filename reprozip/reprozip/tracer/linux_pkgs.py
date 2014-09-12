@@ -61,21 +61,20 @@ class DpkgManager(object):
 
     def _get_package_for_file(self, filename):
         p = subprocess.Popen(['dpkg', '-S', filename.path],
-                             stdout=subprocess.PIPE)
-        try:
-            for l in p.stdout:
-                pkgname, f = l.split(b': ', 1)
-                f = Path(f.strip())
-                # 8-bit safe encoding, because this might be a localized error
-                # message (that we don't care about)
-                pkgname = (pkgname.decode('iso-8859-1')
-                                  .split(':', 1)[0])    # Removes :arch
-                self.package_files[f] = pkgname
-                if f == filename:
-                    if ' ' not in pkgname:
-                        return pkgname
-        finally:
-            p.wait()
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        for l in out.splitlines():
+            pkgname, f = l.split(b': ', 1)
+            f = Path(f.strip())
+            # 8-bit safe encoding, because this might be a localized error
+            # message (that we don't care about)
+            pkgname = (pkgname.decode('iso-8859-1')
+                              .split(':', 1)[0])    # Removes :arch
+            self.package_files[f] = pkgname
+            if f == filename:
+                if ' ' not in pkgname:
+                    return pkgname
         return None
 
     def _create_package(self, pkgname, files):
