@@ -187,13 +187,13 @@ def pack(target, directory, sort_packages):
 
     # Add the rest of the files
     logging.info("Adding other files...")
-    files = []
+    files = set()
     for f in other_files:
         if not Path(f.path).exists():
             logging.warning("Missing file %s" % f.path)
         else:
             tar.add_data(f.path)
-            files.append(f)
+            files.add(f)
     other_files = files
 
     # Makes sure all the directories used as working directories are packed

@@ -200,17 +200,17 @@ def get_files(conn):
                 "shouldn't change their input files:\n%s" %
                 ", ".join(unicode_(fi.path for fi in read_then_written_files)))
 
-    files = [fi
-             for fi in itervalues(files)
-             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                          for m in magic_dirs)]
+    files = set(
+            fi
+            for fi in itervalues(files)
+            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                         for m in magic_dirs))
     return files, inputs, outputs
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
-    files = OrderedSet(oldfiles)
+    files = set(oldfiles)
     files.update(newfiles)
-    files = list(files)
 
     packages = dict((pkg.name, pkg) for pkg in newpackages)
     for oldpkg in oldpackages:

@@ -28,7 +28,7 @@ system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
 
 class DpkgManager(object):
     def __init__(self):
-        self.unknown_files = []
+        self.unknown_files = set()
         self.packages = {}
         self.package_files = {}
 
@@ -40,7 +40,7 @@ class DpkgManager(object):
         # If it's not in a system directory, no need to look for it
         if (f.path.lies_under('/usr/local') or
                 not any(f.path.lies_under(c) for c in system_dirs)):
-            self.unknown_files.append(f)
+            self.unknown_files.add(f)
             return
 
         # Looks in our cache
@@ -52,7 +52,7 @@ class DpkgManager(object):
 
         # Stores the file
         if pkgname is None:
-            self.unknown_files.append(f)
+            self.unknown_files.add(f)
         else:
             if pkgname in self.packages:
                 self.packages[pkgname].add_file(f)
