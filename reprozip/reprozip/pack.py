@@ -15,16 +15,13 @@ import itertools
 import logging
 import os
 from rpaths import Path
-import sqlite3
 import sys
 import tarfile
 
 from reprozip import __version__ as reprozip_version
-from reprozip.common import FILE_WRITE, FILE_WDIR, File, \
-    load_config, save_config
+from reprozip.common import File, load_config, save_config
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.tracer.trace import merge_files
-from reprozip.utils import PY3
 
 
 def expand_patterns(patterns):
@@ -65,32 +62,6 @@ def canonicalize_config(runs, packages, other_files, additional_patterns,
     other_files, packages = merge_files(add_files, add_packages,
                                         other_files, packages)
     return runs, packages, other_files
-
-
-def list_directories(database):
-    if PY3:
-        # On Python 3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    executed_files = cur.execute(
-            '''
-            SELECT name, mode
-            FROM opened_files
-            WHERE mode = ? OR mode = ?
-            ''',
-            (FILE_WDIR, FILE_WRITE))
-    executed_files = ((Path(n), m) for n, m in executed_files)
-    # If WDIR, the name is a folder that was used as working directory
-    # If WRITE, the name is a file that was written to; its directory must
-    # exist
-    result = set(n if m == FILE_WDIR else n.parent
-                 for n, m in executed_files)
-    cur.close()
-    conn.close()
-    return result
 
 
 def data_path(filename, prefix=Path('DATA')):
@@ -195,13 +166,6 @@ def pack(target, directory, sort_packages):
             tar.add_data(f.path)
             files.add(f)
     other_files = files
-
-    # Makes sure all the directories used as working directories are packed
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    for directory in list_directories(trace):
-        if directory.is_dir():
-            tar.add_data(directory)
 
     logging.info("Adding metadata...")
     # Stores pack version

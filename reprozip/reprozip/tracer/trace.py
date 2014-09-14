@@ -21,7 +21,7 @@ import sqlite3
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, load_config, save_config, \
-    FILE_READ, FILE_WRITE
+    FILE_READ, FILE_WRITE, FILE_WDIR
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
@@ -208,6 +208,25 @@ def get_files(conn):
     return files, inputs, outputs
 
 
+def list_directories(conn):
+    cur = conn.cursor()
+    executed_files = cur.execute(
+            '''
+            SELECT name, mode
+            FROM opened_files
+            WHERE mode = ? OR mode = ?
+            ''',
+            (FILE_WDIR, FILE_WRITE))
+    executed_files = ((Path(n), m) for n, m in executed_files)
+    # If WDIR, the name is a folder that was used as working directory
+    # If WRITE, the name is a file that was written to; its directory must
+    # exist
+    result = set(TracedFile(n if m == FILE_WDIR else n.parent)
+                 for n, m in executed_files)
+    cur.close()
+    return result
+
+
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     files = set(oldfiles)
     files.update(newfiles)
@@ -285,6 +304,11 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = identify_packages(files)
     else:
         packages = []
+
+    # Makes sure all the directories used as working directories are packed
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    files.update(d for d in list_directories(conn) if d.path.is_dir())
 
     # Writes configuration file
     config = directory / 'config.yml'
