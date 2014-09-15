@@ -151,7 +151,7 @@ def write_package(fp, pkg, indent=0):
     if pkg.size is not None:
         fp.write("%s      # Installed package size: %s\n" % (
                  indent_str, hsize(pkg.size)))
-    for fi in pkg.files:
+    for fi in sorted(pkg.files, key=lambda fi_: fi_.path):
         write_file(fp, fi, indent + 1)
 
 
