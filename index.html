@@ -28,8 +28,24 @@
         margin: 2em auto 1em 0;
     }
     .codesample-right {
+        float: left;
         width: 75%;
-        margin: 2em 0 2em 25%;
+        padding-left: 1em;
+    }
+    .codesample-arrow {
+        float: left;
+        width: 25%;
+        background-image: url(arrow.png);
+        background-size: 100%;
+        background-repeat: no-repeat;
+        height: 300px;
+    }
+    .codesample-bottom:after {
+        visibility: hidden;
+        display: block;
+        content: " ";
+        clear: both;
+        height: 0;
     }
 }
 /* Sample titles */
@@ -154,6 +170,10 @@ $ reprozip <span class="s">pack</span> my_experiment.rpz
 [REPROZIP] 17:26:43.450 INFO: Adding metadata...</span></code></pre></div>
 </div>
 
+<div class="codesample-bottom">
+
+<div class="codesample-arrow"></div>
+
 <div class="codesample-right">
 <span class="code-title">On another machine</span>
 <div class="highlight">
@@ -171,6 +191,8 @@ $ reprounzip vagrant <span class="s">upload</span> /tmp/new_config:global-config
 $ reprounzip vagrant <span class="s">run</span> mydirectory --cmdline <span class="na">./myexperiment --other --options inputs/somefile.csv</span>
 <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
 result: -17.814</span></code></pre></div>
+</div>
+
 </div>
 
 <p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file.</p>
