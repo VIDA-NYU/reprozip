@@ -7,4 +7,4 @@ The truth is computational reproducibility can be very painful to achieve for a 
 
 For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as `dependency hell <http://en.wikipedia.org/wiki/Dependency_hell>`_.
 
-ReproZip helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package
+ReproZip helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.
