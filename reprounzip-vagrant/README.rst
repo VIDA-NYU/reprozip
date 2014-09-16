@@ -1,7 +1,7 @@
 ReproZip
 ========
 
-`ReproZip <http://vida-nyu.github.io/reprozip/>`_ is a tool aimed at simplifying the process of creating reproducible
+`ReproZip <http://vida-nyu.github.io/reprozip/>`__ is a tool aimed at simplifying the process of creating reproducible
 experiments from command-line executions, a frequently-used common denominator
 in computational science. It tracks operating system calls and creates a package
 that contains all the binaries, files and dependencies required to run a given
@@ -15,7 +15,7 @@ This is the component responsible for the unpacking step
 on different environments (Linux, Windows, and Mac OS X)
 by using a `Vagrant <https://www.vagrantup.com/>`_ virtual machine.
 
-Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`_,
+Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__,
 `reprounzip <https://pypi.python.org/pypi/reprounzip>`_,
 and `reprounzip-docker <https://pypi.python.org/pypi/reprounzip-docker>`_
 for other components and plugins.
