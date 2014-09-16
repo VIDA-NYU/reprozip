@@ -112,9 +112,9 @@ body > .container {
           <ul class="nav navbar-nav">
             <li class="active"><a href="#">About</a></li>
             <li><a href="http://reprozip.readthedocs.org/">Documentation</a></li>
-            <li><a href="https://github.com/ViDA-NYU/reprozip">Github project</a></li>
+            <li><a href="https://github.com/ViDA-NYU/reprozip">Github Project</a></li>
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">PyPI packages<span class="caret"></span></a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">PyPI Packages<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="https://pypi.python.org/pypi/reprozip">reprozip</a></li>
                 <li><a href="https://pypi.python.org/pypi/reprounzip">reprounzip</a></li>
@@ -131,7 +131,7 @@ body > .container {
 
 
 <div class="page-header" id="about">
-  <h2>Automatically pack your whole experiment to be run elsewhere!</h2>
+  <h2>Automatically pack your entire experiment to be run elsewhere!</h2>
 </div>
 
 <p>ReproZip allows you to pack your experiment along with all necessary data files, libraries, environment variables and options.<br/>
@@ -180,7 +180,19 @@ result: -17.814</span></code></pre></div>
 <p>For more information, check out the <a href="http://reprozip.readthedocs.org/">full documentation on ReadTheDocs</a>.</p>
 
 <div class="page-header" id="references">
-  <h1>Links and references</h1>
+    <h2>Why ReproZip?</h2>
+</div>
+
+<p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
+
+<p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
+
+<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="http://en.wikipedia.org/wiki/Dependency_hell">dependency hell</a>.</p>
+
+<p><a href="http://reprozip.readthedocs.org/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package.</p>
+
+<div class="page-header" id="references">
+  <h2>Links and References</h2>
 </div>
 
 <p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
@@ -195,24 +207,12 @@ result: -17.814</span></code></pre></div>
 
 <p>Questions? Concerns? Issues? You can contact us at <em>reprozip-users@vgc.poly.edu</em>. Our bug tracker is also available <a href="https://github.com/ViDA-NYU/reprozip/issues">here</a>.</p>
 
-<div class="page-header" id="references">
-  <h1>Why ReproZip?</h1>
-</div>
-
-<p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
-
-<p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
-
-<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="http://en.wikipedia.org/wiki/Dependency_hell">dependency hell</a>.</p>
-
-<p><a href="http://reprozip.readthedocs.org/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package.</p>
-
 
     </div> <!-- /container -->
 
 <footer class="footer">
   <div class="container">
-    <p>ReproZip is developed at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
+    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
     <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
   </div>
 </footer>
