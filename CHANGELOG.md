@@ -1,12 +1,13 @@
 Changelog
 =========
 
-dev (???)
----------
+0.4 (2014-09-15)
+----------------
 
 Bugfixes:
 * Copying files from host to chroot when some packages where not packed
 * Don't use the full command path in directory's script
+* Fixes socketcall() handling
 
 Features:
 * Displays a warning for READ_THEN_WRITTEN files
