@@ -206,6 +206,19 @@ def functional_tests(interactive, run_vagrant, run_docker):
                                'arg:doutput1.txt'])
             with Path('doutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Replace input file
+            check_call(rpuz + ['docker', 'upload', 'simpledocker',
+                               '%s:arg' % (tests / 'simple_input2.txt')])
+            check_call(rpuz + ['docker', 'upload', 'simpledocker'])
+            check_call(rpuz + ['showfiles', 'simpledocker'])
+            # Run again
+            check_call(rpuz + ['docker', 'run', 'simpledocker'])
+            # Get output file
+            check_call(rpuz + ['docker', 'download', 'simpledocker',
+                               'arg:doutput2.txt'])
+            with Path('doutput2.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '36'
+            # Destroy
             check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
         elif interactive:
             print("Test and press enter")
