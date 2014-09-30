@@ -183,6 +183,7 @@ def docker_setup_build(args):
     logging.info("Initial image created: %s" % image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
+    unpacked_info['current_image'] = image
     write_dict(target / '.reprounzip', unpacked_info)
 
 
@@ -210,21 +211,10 @@ def docker_run(args):
                           container.decode('ascii'))
         write_dict(target / '.reprounzip', unpacked_info)
 
-    temp_image = None
-
-    # If staging container exists, make an image from it
-    if 'staging_container' in unpacked_info:
-        stage = unpacked_info['staging_container']
-        logging.debug("Creating temp image from staging container %s" %
-                      stage.decode('ascii'))
-        temp_image = make_unique_name(b'reprounzip_temp_')
-        subprocess.check_call(['docker', 'commit', stage, temp_image])
-        image = temp_image
-        logging.debug("Image created: %s" % image.decode('ascii'))
-    # Else, use the initial image directly
-    elif 'initial_image' in unpacked_info:
-        image = unpacked_info['initial_image']
-        logging.debug("Running from initial image %s" % image.decode('ascii'))
+    # Use the initial image directly
+    if 'current_image' in unpacked_info:
+        image = unpacked_info['current_image']
+        logging.debug("Running from image %s" % image.decode('ascii'))
     else:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
@@ -261,11 +251,6 @@ def docker_run(args):
     unpacked_info['ran_container'] = container
     write_dict(target / '.reprounzip', unpacked_info)
 
-    if temp_image is not None:
-        # TODO : Can't do that, need to live until container is destroyed
-        logging.debug("Removing temp image %s" % temp_image.decode('ascii'))
-        subprocess.check_call(['docker', 'rmi', temp_image])
-
 
 class ContainerUploader(FileUploader):
     def __init__(self, target, input_files, files, unpacked_info):
@@ -273,26 +258,62 @@ class ContainerUploader(FileUploader):
         FileUploader.__init__(self, target, input_files, files)
 
     def prepare_upload(self, files):
-        # Checks whether the staging container exists
-        if 'staging_container' in self.unpacked_info:
-            self.stage = self.unpacked_info['staging_container']
-        # Else we have to create it
-        elif 'initial_image' in self.unpacked_info:
-            self.stage = make_unique_name(b'reprounzip_staging_')
-            initial_image = self.unpacked_info['initial_image']
-            subprocess.check_call(['docker', 'run', '--name=' + self.stage,
-                                   initial_image, '/bin/sh', '-c', ''])  # nop
-            self.unpacked_info['staging_container'] = self.stage
-            write_dict(self.target / '.reprounzip', self.unpacked_info)
-        else:
+        if 'current_image' not in self.unpacked_info:
             sys.stderr.write("Image doesn't exist yet, have you run "
                              "setup/build?\n")
             sys.exit(1)
 
+        self.build_directory = Path.tempdir(prefix='reprozip_build_')
+        self.docker_copy = []
+
     def upload_file(self, local_path, input_path):
-        # FIXME : owner/group and permissions
-        subprocess.check_call(['docker', 'cp', local_path.path,
-                               self.stage + b':' + input_path.path])
+        stem, ext = local_path.stem, local_path.ext
+        name = local_path.name
+        nb = 0
+        while (self.build_directory / name).exists():
+            nb += 1
+            name = stem + ('_%d' % nb).encode('ascii') + ext
+        name = Path(name)
+        local_path.copyfile(self.build_directory / name)
+        logging.info("Copied file %s to %s" % (local_path, name))
+        self.docker_copy.append((name, input_path))
+
+    def finalize(self):
+        if not self.docker_copy:
+            self.build_directory.rmtree()
+            return
+
+        from_image = self.unpacked_info['current_image']
+
+        with self.build_directory.open('w', 'Dockerfile',
+                                       encoding='utf-8',
+                                       newline='\n') as dockerfile:
+            dockerfile.write('FROM %s\n\n' % from_image)
+            for src, target in self.docker_copy:
+                # FIXME : spaces in filenames will probably break Docker
+                dockerfile.write(
+                        'COPY \\\n    %s \\\n    %s\n' % (
+                            unicode_(src),
+                            unicode_(target)))
+
+            # TODO : restore permissions?
+
+        image = make_unique_name(b'reprounzip_image_')
+        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+                                  cwd=self.build_directory.path)
+        if retcode != 0:
+            logging.critical("docker build failed with code %d" % retcode)
+        else:
+            logging.info("New image created: %s" % image.decode('ascii'))
+            if from_image != self.unpacked_info['initial_image']:
+                retcode = subprocess.call(['docker', 'rmi', from_image])
+                if retcode != 0:
+                    logging.warning("Can't remove previous image, docker "
+                                    "returned %d" % retcode)
+            self.unpacked_info['current_image'] = image
+            write_dict(self.target / '.reprounzip', self.unpacked_info)
+
+        self.build_directory.rmtree()
 
 
 @target_must_exist
@@ -364,15 +385,15 @@ def docker_destroy_docker(args):
             logging.error("Error deleting container %s" %
                           container.decode('ascii'))
 
-    if 'staging_container' in unpacked_info:
-        stage = unpacked_info.pop('staging_container')
-        retcode = subprocess.call(['docker', 'rm', '-f', stage])
+    if 'current_image' in unpacked_info:
+        image = unpacked_info.pop('current_image')
+        logging.info("Destroying image %s..." % image.decode('ascii'))
+        retcode = subprocess.call(['docker', 'rmi', image])
         if retcode != 0:
-            sys.stderr.write("Error deleting container %s\n" %
-                             stage.decode('ascii'))
+            logging.error("Error deleting image %s" % image.decode('ascii'))
 
     image = unpacked_info.pop('initial_image')
-    logging.info("Destroying image...")
+    logging.info("Destroying image %s..." % image.decode('ascii'))
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
         logging.error("Error deleting image %s" % image.decode('ascii'))
