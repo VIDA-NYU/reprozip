@@ -28,11 +28,6 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
 from reprounzip.utils import unicode_, iteritems
 
 
-def docker_escape(s):
-    return '"%s"' % (s.replace('\\', '\\\\')
-                      .replace('"', '\\"'))
-
-
 def select_image(runs):
     distribution, version = runs[0]['distribution']
     distribution = distribution.lower()
