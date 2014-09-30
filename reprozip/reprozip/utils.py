@@ -15,9 +15,12 @@ to this software (more utilities).
 
 from __future__ import unicode_literals
 
+import contextlib
 import email.utils
 import logging
+import os
 from rpaths import Path
+import stat
 import sys
 
 
@@ -143,6 +146,76 @@ def find_all_links(filename, include_target=False):
     if include_target:
         files.append(path)
     return files
+
+
+@contextlib.contextmanager
+def make_dir_writable(directory):
+    """Context-manager that sets write permission on a directory.
+
+    This assumes that the directory belongs to you. If the u+w permission
+    wasn't set, it gets set in the context, and restored to what it was when
+    leaving the context. u+x also gets set on all the directories leading to
+    that path.
+    """
+    uid = os.getuid()
+
+    try:
+        stat = directory.stat()
+    except OSError:
+        pass
+    else:
+        if stat.st_uid != uid or stat.st_mode & 0o700 == 0o700:
+            yield
+            return
+
+    # These are the permissions to be restored, in reverse order
+    restore_perms = []
+    try:
+        # Add u+x to all directories up to the target
+        path = Path('/')
+        for c in directory.components[1:-1]:
+            path = path / c
+            stat = path.stat()
+            if stat.st_uid == uid and not stat.st_mode & 0o100:
+                logging.debug("Temporarily setting u+x on %s" % path)
+                restore_perms.append((path, stat.st_mode))
+                path.chmod(stat.st_mode | 0o700)
+
+        # Add u+wx to the target
+        stat = directory.stat()
+        if stat.st_uid == uid and stat.st_mode & 0o700 != 0o700:
+            logging.debug("Temporarily setting u+wx on %s" % directory)
+            restore_perms.append((directory, stat.st_mode))
+            directory.chmod(stat.st_mode | 0o700)
+
+        yield
+    finally:
+        for path, mod in reversed(restore_perms):
+            path.chmod(mod)
+
+
+def rmtree_fixed(path):
+    """Like :func:`shutil.rmtree` but doesn't choke on annoying permissions.
+
+    If a directory with -w or -x is encountered, it gets fixed and deletion
+    continues.
+    """
+    if path.is_link():
+        raise OSError("Cannot call rmtree on a symbolic link")
+
+    uid = os.getuid()
+    st = path.lstat()
+
+    if st.st_uid == uid and st.st_mode & 0o700 != 0o700:
+        path.chmod(st.st_mode | 0o700)
+
+    for entry in path.listdir():
+        if stat.S_ISDIR(entry.lstat().st_mode):
+            rmtree_fixed(entry)
+        else:
+            entry.remove()
+
+    path.rmdir()
 
 
 def download_file(url, dest, cachename=None):

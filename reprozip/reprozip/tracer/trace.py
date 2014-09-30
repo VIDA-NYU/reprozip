@@ -21,12 +21,12 @@ import sqlite3
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, load_config, save_config, \
-    FILE_READ, FILE_WRITE
+    FILE_READ, FILE_WRITE, FILE_WDIR
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, itervalues, listvalues, hsize, \
-    find_all_links
+from reprozip.utils import PY3, izip, itervalues, listvalues, unicode_, \
+    hsize, find_all_links
 
 
 class TracedFile(File):
@@ -94,9 +94,11 @@ def get_files(conn):
     for libdir in (Path('/lib'), Path('/lib64')):
         if libdir.exists():
             for linker in libdir.listdir('*ld-linux*'):
-                f = TracedFile(linker)
-                f.read()
-                files[f.path] = f
+                for filename in find_all_links(linker, True):
+                    if filename not in files:
+                        f = TracedFile(filename)
+                        f.read()
+                        files[f.path] = f
 
     # Adds executed files
     exec_cursor = conn.cursor()
@@ -196,29 +198,51 @@ def get_files(conn):
                 "Some files were read and then written. We will only pack the "
                 "final version of the file; reproducible experiments "
                 "shouldn't change their input files:\n%s" %
-                ", ".join(fi.path for fi in read_then_written_files))
+                ", ".join(unicode_(fi.path for fi in read_then_written_files)))
 
-    files = [fi
-             for fi in itervalues(files)
-             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                          for m in magic_dirs)]
+    files = set(
+            fi
+            for fi in itervalues(files)
+            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                         for m in magic_dirs))
     return files, inputs, outputs
 
 
+def list_directories(conn):
+    cur = conn.cursor()
+    executed_files = cur.execute(
+            '''
+            SELECT name, mode
+            FROM opened_files
+            WHERE mode = ? OR mode = ?
+            ''',
+            (FILE_WDIR, FILE_WRITE))
+    executed_files = ((Path(n), m) for n, m in executed_files)
+    # If WDIR, the name is a folder that was used as working directory
+    # If WRITE, the name is a file that was written to; its directory must
+    # exist
+    result = set(TracedFile(n if m == FILE_WDIR else n.parent)
+                 for n, m in executed_files)
+    cur.close()
+    return result
+
+
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
-    files = OrderedSet(oldfiles)
+    files = set(oldfiles)
     files.update(newfiles)
-    files = list(files)
 
     packages = dict((pkg.name, pkg) for pkg in newpackages)
     for oldpkg in oldpackages:
         if oldpkg.name in packages:
             pkg = packages[oldpkg.name]
-            s = OrderedSet(oldpkg.files)
+            # Here we build TracedFiles from the Files so that the comment
+            # (size, etc) gets set
+            s = OrderedSet(TracedFile(fi.path) for fi in oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
         else:
+            oldpkg.files = [TracedFile(fi.path) for fi in oldpkg.files]
             packages[oldpkg.name] = oldpkg
     packages = listvalues(packages)
 
@@ -280,6 +304,11 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = identify_packages(files)
     else:
         packages = []
+
+    # Makes sure all the directories used as working directories are packed
+    # (they already do if files from them are used, but empty directories do
+    # not get packed inside a tar archive)
+    files.update(d for d in list_directories(conn) if d.path.is_dir())
 
     # Writes configuration file
     config = directory / 'config.yml'
@@ -360,7 +389,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
             while uniquelabel in input_files_dict:
                 i += 1
                 uniquelabel = '%s_%d' % (label, i)
-            input_files_dict[uniquelabel] = in_file.path
+            input_files_dict[uniquelabel] = str(in_file)
         # TODO : Note that right now, we keep as input files the ones that
         # don't appear on the command line
 
@@ -382,7 +411,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
             while uniquelabel in output_files_dict:
                 i += 1
                 uniquelabel = '%s_%d' % (label, i)
-            output_files_dict[uniquelabel] = out_file.path
+            output_files_dict[uniquelabel] = str(out_file)
         # TODO : Note that right now, we keep as output files the ones that
         # don't appear on the command line
 

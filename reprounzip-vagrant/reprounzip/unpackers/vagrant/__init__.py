@@ -25,12 +25,13 @@ import subprocess
 import sys
 import tarfile
 
+from reprounzip.common import load_config
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, busybox_url, join_root, FileUploader, \
-    FileDownloader
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
+    get_runs
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_, irange, iteritems
+from reprounzip.utils import unicode_, iteritems
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -49,14 +50,14 @@ def select_box(runs):
     architecture = runs[0]['architecture']
 
     if architecture not in ('i686', 'x86_64'):
-        sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+        logging.critical("Error: unsupported architecture %s" % architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
-                             "of '%s'\n" % version)
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+                            version)
         if architecture == 'i686':
             return 'ubuntu', 'hashicorp/precise32'
         else:  # architecture == 'x86_64':
@@ -64,12 +65,11 @@ def select_box(runs):
 
     # Debian
     elif distribution != 'debian':
-        sys.stderr.write("Warning: unsupported distribution %s, using Debian"
-                         "\n" % distribution)
+        logging.warning("unsupported distribution %s, using Debian" %
+                        distribution)
 
     elif version != '7' and not version.startswith('wheezy'):
-        sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
-                         "\n" % version)
+        logging.warning("using Debian 7 'Wheezy' instead of '%s'" % version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
     else:  # architecture == 'x86_64':
@@ -104,10 +104,14 @@ def get_ssh_parameters(target):
         key_file = info['identityfile']
     else:
         key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
-    return dict(hostname=info.get('hostname', '127.0.0.1'),
-                port=int(info.get('port', 2222)),
-                username=info.get('user', 'vagrant'),
-                key_filename=key_file)
+    ret = dict(hostname=info.get('hostname', '127.0.0.1'),
+               port=int(info.get('port', 2222)),
+               username=info.get('user', 'vagrant'),
+               key_filename=key_file)
+    logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s" % (
+                  ret['username'], ret['hostname'], ret['port'],
+                  ret['key_filename']))
+    return ret
 
 
 def vagrant_setup_create(args):
@@ -126,35 +130,44 @@ def vagrant_setup_create(args):
     building a chroot.
     """
     if not args.pack:
-        sys.stderr.write("Error: setup/create needs --pack\n")
+        logging.critical("setup/create needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+    tar.close()
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image and args.base_image[0]:
         target_distribution = None
         box = args.base_image[0]
     else:
         target_distribution, box = select_box(runs)
+    logging.info("Using box %s" % box)
+    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
     if use_chroot:
         packages = [pkg for pkg in packages if not pkg.packfiles]
         if packages:
-            sys.stderr.write("Warning: Some packages were not packed, so "
-                             "we'll install and copy their files\n"
-                             "Packages that are missing:\n%s\n" %
-                             ' '.join(pkg.name for pkg in packages))
+            logging.info("Some packages were not packed, so we'll install and "
+                         "copy their files\n"
+                         "Packages that are missing:\n%s" % ' '.join(
+                             pkg.name for pkg in packages))
 
     if packages:
         installer = select_installer(pack, runs, target_distribution)
@@ -162,6 +175,7 @@ def vagrant_setup_create(args):
     target.mkdir(parents=True)
 
     # Writes setup script
+    logging.info("Writing setup script %s..." % (target / 'setup.sh'))
     with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('#!/bin/sh\n\n')
         if packages:
@@ -243,9 +257,11 @@ fi
 '''.format(url=url))
 
     # Copies pack
+    logging.info("Copying pack file...")
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Vagrant file
+    logging.info("Writing %s..." % (target / 'Vagrantfile'))
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
                                        newline='\n') as fp:
         # Vagrant header and version
@@ -271,6 +287,7 @@ def vagrant_setup_start(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    logging.info("Calling 'vagrant up'...")
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
         sys.stderr("vagrant up failed with code %d\n" % retcode)
@@ -283,47 +300,29 @@ def vagrant_run(args):
     """
     target = Path(args.target[0])
     use_chroot = read_dict(target / '.reprounzip').get('use_chroot', True)
-    run = args.run
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
-    if run is None and len(runs) == 1:
-        run = 0
-
-    # --cmdline without arguments: display the original command line
-    if cmdline == []:
-        if run is None:
-            sys.stderr.write("Error: There are several runs in this pack -- "
-                             "you have to choose which\none to use with "
-                             "--cmdline\n")
-            sys.exit(1)
-        print("Original command-line:")
-        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
-        sys.exit(0)
-
-    if run is None:
-        run = irange(len(runs))
-    else:
-        run = (int(run),)
+    selected_runs = get_runs(runs, args.run, cmdline)
 
     cmds = []
-    for run_number in run:
-        run_dict = runs[run_number]
-        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+    for run_number in selected_runs:
+        run = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run_dict['environ']))
+                        for k, v in iteritems(run['environ']))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
-            argv = [run_dict['binary']] + run_dict['argv'][1:]
+            argv = [run['binary']] + run['argv'][1:]
         else:
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
-        uid = run_dict.get('uid', 1000)
-        gid = run_dict.get('gid', 1000)
+        uid = run.get('uid', 1000)
+        gid = run.get('gid', 1000)
         if use_chroot:
             userspec = '%s:%s' % (uid, gid)
             cmd = ('chroot --userspec=%s /experimentroot '
@@ -351,6 +350,7 @@ def vagrant_run(args):
     chan.get_pty()
 
     # Execute command
+    logging.info("Connected via SSH, running command...")
     chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
 
     # Get output
@@ -379,8 +379,8 @@ class SSHUploader(FileUploader):
         try:
             ssh_info = get_ssh_parameters(self.target)
         except subprocess.CalledProcessError:
-            sys.stderr.write("Failed to get the status of the machine -- is "
-                             "it running?\n")
+            logging.critical("Failed to get the status of the machine -- is "
+                             "it running?")
             sys.exit(1)
 
         # Connect with scp
@@ -397,10 +397,12 @@ class SSHUploader(FileUploader):
             remote_path = input_path
 
         # Upload to a temporary file first
+        logging.info("Uploading file via SCP...")
         rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
         self.client_scp.put(local_path.path, rtemp.path, recursive=False)
 
         # Move it
+        logging.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
                 shell_escape(remote_path.path),
@@ -414,7 +416,7 @@ class SSHUploader(FileUploader):
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
-            sys.stderr.write("Couldn't move file in virtual machine\n")
+            logging.critical("Couldn't move file in virtual machine")
             sys.exit(1)
         chan.close()
 
@@ -448,8 +450,8 @@ class SSHDownloader(FileDownloader):
         try:
             info = get_ssh_parameters(self.target)
         except subprocess.CalledProcessError:
-            sys.stderr.write("Failed to get the status of the machine -- is "
-                             "it running?\n")
+            logging.critical("Failed to get the status of the machine -- is "
+                             "it running?")
             sys.exit(1)
 
         # Connect with scp
@@ -519,7 +521,7 @@ def setup(parser):
     You will need Vagrant to be installed on your machine if you want to run
     the experiment.
 
-    setup   setup/create    creates Vagrantfile (--pack is required)
+    setup   setup/create    creates Vagrantfile (needs the pack filename)
             setup/start     starts or resume the virtual machine
     upload                  replaces input files in the machine
                             (without arguments, lists input files)
@@ -532,46 +534,49 @@ def setup(parser):
 
     For example:
 
-        $ reprounzip vagrant setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip vagrant setup mypack.rpz experiment; cd experiment
         $ reprounzip vagrant run .
         $ reprounzip vagrant download . results:/home/user/theresults.txt
         $ cd ..; reprounzip vagrant destroy experiment
 
     Upload specifications are either:
-      :inputname            restores the original input file from the pack
-      filename:inputname    replaces the input file with the specified local
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
                             file
 
     Download specifications are either:
-      outputname:           print the output file to stdout
-      outputname:filename   extracts the output file to the corresponding local
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
                             path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Directory to create")
+    options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument(
             '--use-chroot', action='store_true',
             default=True,
             help=argparse.SUPPRESS)
     opt_setup.add_argument(
-            '--no-use-chroot', action='store_false', dest='use_chroot',
+            '--dont-use-chroot', action='store_false', dest='use_chroot',
             default=True,
             help=("Don't prefer original files nor use chroot in the virtual "
                   "machine"))
     opt_setup.add_argument(
+            '--no-use-chroot', action='store_false', dest='use_chroot',
+            default=True, help=argparse.SUPPRESS)
+    opt_setup.add_argument(
             '--dont-bind-magic-dirs', action='store_false', default=True,
             dest='bind_magic_dirs',
-            help="Don't mount /dev and /proc inside the chroot (if "
-            "--use-chroot is set)")
+            help="Don't mount /dev and /proc inside the chroot (no effect if "
+            "--dont-use-chroot is set)")
     opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
     parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[options, opt_setup])
+                                                parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=vagrant_setup_create)
 
     # setup/start
@@ -580,7 +585,7 @@ def setup(parser):
     parser_setup_start.set_defaults(func=vagrant_setup_start)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
@@ -597,7 +602,7 @@ def setup(parser):
                             help=("Don't connect program's input stream to "
                                   "this terminal"))
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=vagrant_run)
 
     # download

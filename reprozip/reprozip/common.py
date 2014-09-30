@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from distutils.version import LooseVersion
+import logging
 from rpaths import PosixPath
 import yaml
 
@@ -52,7 +53,7 @@ class File(CommonEqualityMixin):
 
 
 class Package(CommonEqualityMixin):
-    def __init__(self, name, version, files=[], packfiles=True, size=None):
+    def __init__(self, name, version, files=None, packfiles=True, size=None):
         self.name = name
         self.version = version
         self.files = list(files) if files is not None else []
@@ -150,7 +151,7 @@ def write_package(fp, pkg, indent=0):
     if pkg.size is not None:
         fp.write("%s      # Installed package size: %s\n" % (
                  indent_str, hsize(pkg.size)))
-    for fi in pkg.files:
+    for fi in sorted(pkg.files, key=lambda fi_: fi_.path):
         write_file(fp, fi, indent + 1)
 
 
@@ -187,7 +188,7 @@ packages:
 """)
 
         # Writes files
-        for pkg in sorted(packages, key=lambda pkg: pkg.name):
+        for pkg in sorted(packages, key=lambda p: p.name):
             write_package(fp, pkg)
 
         fp.write("""\
@@ -211,3 +212,29 @@ other_files:
 #  - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in
 #    # that container
 """)
+
+
+class LoggingDateFormatter(logging.Formatter):
+    converter = datetime.fromtimestamp
+
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        t = ct.strftime("%H:%M:%S")
+        s = "%s.%03d" % (t, record.msecs)
+        return s
+
+
+def setup_logging(tag, verbosity):
+    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
+    level = levels[min(verbosity, 3)]
+
+    fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
+
+    formatter = LoggingDateFormatter(fmt)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(level)
+    logger.addHandler(handler)

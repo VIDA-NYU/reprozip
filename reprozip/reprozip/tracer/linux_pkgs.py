@@ -28,7 +28,7 @@ system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
 
 class DpkgManager(object):
     def __init__(self):
-        self.unknown_files = []
+        self.unknown_files = set()
         self.packages = {}
         self.package_files = {}
 
@@ -40,7 +40,7 @@ class DpkgManager(object):
         # If it's not in a system directory, no need to look for it
         if (f.path.lies_under('/usr/local') or
                 not any(f.path.lies_under(c) for c in system_dirs)):
-            self.unknown_files.append(f)
+            self.unknown_files.add(f)
             return
 
         # Looks in our cache
@@ -52,7 +52,7 @@ class DpkgManager(object):
 
         # Stores the file
         if pkgname is None:
-            self.unknown_files.append(f)
+            self.unknown_files.add(f)
         else:
             if pkgname in self.packages:
                 self.packages[pkgname].add_file(f)
@@ -61,21 +61,20 @@ class DpkgManager(object):
 
     def _get_package_for_file(self, filename):
         p = subprocess.Popen(['dpkg', '-S', filename.path],
-                             stdout=subprocess.PIPE)
-        try:
-            for l in p.stdout:
-                pkgname, f = l.split(b': ', 1)
-                f = Path(f.strip())
-                # 8-bit safe encoding, because this might be a localized error
-                # message (that we don't care about)
-                pkgname = (pkgname.decode('iso-8859-1')
-                                  .split(':', 1)[0])    # Removes :arch
-                self.package_files[f] = pkgname
-                if f == filename:
-                    if ' ' not in pkgname:
-                        return pkgname
-        finally:
-            p.wait()
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        for l in out.splitlines():
+            pkgname, f = l.split(b': ', 1)
+            f = Path(f.strip())
+            # 8-bit safe encoding, because this might be a localized error
+            # message (that we don't care about)
+            pkgname = (pkgname.decode('iso-8859-1')
+                              .split(':', 1)[0])    # Removes :arch
+            self.package_files[f] = pkgname
+            if f == filename:
+                if ' ' not in pkgname:
+                    return pkgname
         return None
 
     def _create_package(self, pkgname, files):

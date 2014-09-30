@@ -11,6 +11,7 @@ pack files.
 from __future__ import unicode_literals
 
 import functools
+import logging
 import os
 import platform
 import random
@@ -47,7 +48,7 @@ def target_must_exist(func):
     def wrapper(args):
         target = Path(args.target[0])
         if not target.is_dir():
-            sys.stderr.write("Error: Target directory doesn't exist\n")
+            logging.critical("Error: Target directory doesn't exist")
             sys.exit(1)
         return func(args)
     return wrapper
@@ -91,7 +92,7 @@ def load_config(pack):
         version = f.read()
         f.close()
         if version != b'REPROZIP VERSION 1\n':
-            sys.stderr.write("Unknown pack format\n")
+            logging.critical("Unknown pack format")
             sys.exit(1)
         tar.extract('METADATA/config.yml', path=str(tmp))
         tar.close()
@@ -122,13 +123,13 @@ class AptInstaller(object):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
-            sys.stderr.write("Error: some packages could not be installed:\n")
-            for pkg in required_pkgs:
-                sys.stderr.write("    %s\n" % pkg)
+            logging.error("Error: some packages could not be installed:%s" %
+                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
 
-    def get_packages_info(self, packages):
+    @staticmethod
+    def get_packages_info(packages):
         if not packages:
             return {}
 
@@ -171,15 +172,13 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     if (set([orig_distribution, target_distribution]) ==
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
-        sys.stderr.write("Warning: Installing on %s but pack was generated on "
-                         "%s\n" % (
-                             target_distribution.capitalize(),
-                             orig_distribution.capitalize()))
+        logging.warning("Installing on %s but pack was generated on %s" % (
+                        target_distribution.capitalize(),
+                        orig_distribution.capitalize()))
     elif orig_distribution != target_distribution:
-        sys.stderr.write("Error: Installing on %s but pack was generated on %s"
-                         "\n" % (
-                             target_distribution.capitalize(),
-                             orig_distribution.capitalize()))
+        logging.error("Installing on %s but pack was generated on %s" % (
+                      target_distribution.capitalize(),
+                      orig_distribution.capitalize()))
         sys.exit(1)
 
     # Selects installation method
@@ -189,8 +188,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         # aptitude is not installed by default, so use apt-get here too
         installer = AptInstaller('apt-get')
     else:
-        sys.stderr.write("Your current distribution, \"%s\", is not "
-                         "supported\n" %
+        logging.critical("Your current distribution, \"%s\", is not "
+                         "supported" %
                          (target_distribution or "(unknown)").capitalize())
         sys.exit(1)
 
@@ -241,7 +240,7 @@ class FileUploader(object):
             for filespec in files:
                 filespec_split = filespec.rsplit(':', 1)
                 if len(filespec_split) != 2:
-                    sys.stderr.write("Invalid file specification: %r\n" %
+                    logging.critical("Invalid file specification: %r" %
                                      filespec)
                     sys.exit(1)
                 local_path, input_name = filespec_split
@@ -249,27 +248,25 @@ class FileUploader(object):
                 try:
                     input_path = PosixPath(all_input_files[input_name])
                 except KeyError:
-                    sys.stderr.write("Invalid input name: %r" % input_name)
+                    logging.critical("Invalid input file: %r" % input_name)
                     sys.exit(1)
 
                 temp = None
 
                 if not local_path:
                     # Restore original file from pack
+                    logging.debug("Restoring input file %s" % input_path)
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
-                    tar = tarfile.open(str(self.target / 'experiment.rpz'),
-                                       'r:*')
-                    member = tar.getmember(str(join_root(PosixPath('DATA'),
-                                                         input_path)))
-                    member.name = str(temp.name)
-                    tar.extract(member, str(temp.parent))
-                    tar.close()
-                    local_path = temp
+                    local_path = self.extract_original_input(input_name,
+                                                             input_path,
+                                                             temp)
                 else:
                     local_path = Path(local_path)
+                    logging.debug("Uploading file %s to %s" % (local_path,
+                                                               input_path))
                     if not local_path.exists():
-                        sys.stderr.write("Local file %s doesn't exist\n" %
+                        logging.critical("Local file %s doesn't exist" %
                                          local_path)
                         sys.exit(1)
 
@@ -285,12 +282,21 @@ class FileUploader(object):
 
     def get_runs_from_config(self):
         # Loads config
-        runs, packages, other_files = load_config(
-                self.target / 'experiment.rpz')
+        runs, packages, other_files = reprounzip.common.load_config(
+                self.target / 'config.yml',
+                canonical=True)
         return runs
 
     def prepare_upload(self, files):
         pass
+
+    def extract_original_input(self, input_name, input_path, temp):
+        tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
+        member = tar.getmember(str(join_root(PosixPath('DATA'), input_path)))
+        member.name = str(temp.name)
+        tar.extract(member, str(temp.parent))
+        tar.close()
+        return temp
 
     def upload_file(self, local_path, input_path):
         raise NotImplementedError
@@ -329,7 +335,7 @@ class FileDownloader(object):
             for filespec in files:
                 filespec_split = filespec.split(':', 1)
                 if len(filespec_split) != 2:
-                    sys.stderr.write("Invalid file specification: %r\n" %
+                    logging.critical("Invalid file specification: %r" %
                                      filespec)
                     sys.exit(1)
                 output_name, local_path = filespec_split
@@ -337,9 +343,10 @@ class FileDownloader(object):
                 try:
                     remote_path = PosixPath(all_output_files[output_name])
                 except KeyError:
-                    sys.stderr.write("Invalid output name: %r\n" % output_name)
+                    logging.critical("Invalid output file: %r" % output_name)
                     sys.exit(1)
 
+                logging.debug("Downloading file %s" % remote_path)
                 if not local_path:
                     self.download_and_print(remote_path)
                 else:
@@ -349,8 +356,9 @@ class FileDownloader(object):
 
     def get_runs_from_config(self):
         # Loads config
-        runs, packages, other_files = load_config(
-                self.target / 'experiment.rpz')
+        runs, packages, other_files = reprounzip.common.load_config(
+                self.target / 'config.yml',
+                canonical=True)
         return runs
 
     def prepare_download(self, files):
@@ -377,3 +385,26 @@ class FileDownloader(object):
 
     def finalize(self):
         pass
+
+
+def get_runs(runs, selected_run, cmdline):
+    if selected_run is None and len(runs) == 1:
+        selected_run = 0
+
+    # --cmdline without arguments: display the original command line
+    if cmdline == []:
+        if selected_run is None:
+            logging.critical("There are several runs in this pack -- you have "
+                             "to choose which one to use with --cmdline")
+            sys.exit(1)
+        print("Original command-line:")
+        print(' '.join(shell_escape(arg)
+                       for arg in runs[selected_run]['argv']))
+        sys.exit(0)
+
+    if selected_run is None:
+        selected_run = irange(len(runs))
+    else:
+        selected_run = (int(selected_run),)
+
+    return selected_run

@@ -1,20 +1,26 @@
 Changelog
 =========
 
-dev (???)
----------
+0.4 (2014-09-15)
+----------------
 
 Bugfixes:
 * Copying files from host to chroot when some packages where not packed
 * Don't use the full command path in directory's script
+* Fixes socketcall() handling
 
 Features:
 * Displays a warning for READ_THEN_WRITTEN files
-* Identifies input and output files
+* chroot restores files' owner/group
 * Adds 'reprounzip info' command
 * Better error messages when trying to unpack on incompatible system
+* Identifies input files, which can be replaced ('upload' operation)
+* Identifies output files, which can be retrieved ('download' operation)
+* New command-line interface for unpackers, with setup/run/destroy; you can now
+  do everything through reprounzip
 * Vagrant now defaults to --use-chroot`, added --no-use-chroot
 * Adds --summary and --missing to installpkgs
+* Adds Docker unpacker (no uploading support yet)
 
 0.3.2 (2014-08-28)
 ------------------

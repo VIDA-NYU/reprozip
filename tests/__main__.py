@@ -1,8 +1,10 @@
 import argparse
+import logging
 import os
 import sys
 try:
     import unittest2 as unittest
+    sys.modules['unittest'] = unittest
 except ImportError:
     import unittest
 
@@ -15,6 +17,8 @@ if top_level not in sys.path:
 
 sys.path.append(start_dir)
 
+
+from reprounzip.common import setup_logging
 
 from tests.functional import functional_tests
 
@@ -30,6 +34,8 @@ class Program(unittest.TestProgram):
 
 
 if __name__ == '__main__':
+    setup_logging('TESTSUITE', 999)
+
     parser = argparse.ArgumentParser(description="reprozip tests")
     parser.add_argument('--unittests', action='store_true',
                         dest='unittests', default=None)
@@ -54,16 +60,16 @@ if __name__ == '__main__':
 
     successful = True
     if unittests:
-        sys.stderr.write("Running unit tests\n")
+        logging.info("Running unit tests")
         if not hasattr(unittest, 'skipIf'):
-            sys.stderr.write("This testsuite will not work with pre-2.7 "
-                             "unittest. If running Python 2.6, you'll need to "
-                             "install the 'unittest2' package.\n")
+            logging.info("This testsuite will not work with pre-2.7 "
+                         "unittest. If running Python 2.6, you'll need to "
+                         "install the 'unittest2' package.")
             sys.exit(1)
         prog = Program(argv=['tests'] + args.arg, exit=False)
         successful = prog.result.wasSuccessful()
     if functests:
-        sys.stderr.write("Running functional tests\n")
+        logging.info("Running functional tests")
         functional_tests(args.interactive, args.run_vagrant, args.run_docker)
 
     if not successful:

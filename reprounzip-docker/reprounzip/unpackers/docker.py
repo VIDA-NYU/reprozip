@@ -21,11 +21,11 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import Package
+from reprounzip.common import Package, load_config
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    load_config, select_installer, join_root, FileUploader, FileDownloader
-from reprounzip.utils import unicode_, irange, iteritems
+    select_installer, join_root, FileUploader, FileDownloader, get_runs
+from reprounzip.utils import unicode_, iteritems
 
 
 def docker_escape(s):
@@ -39,24 +39,24 @@ def select_image(runs):
     architecture = runs[0]['architecture']
 
     if architecture == 'i686':
-        sys.stderr.write("Warning: wanted architecture was i686, but we'll "
-                         "use x86_64 with Docker")
+        logging.info("wanted architecture was i686, but we'll use x86_64 with "
+                     "Docker")
     elif architecture != 'x86_64':
-        sys.stderr.write("Error: unsupported architecture %s\n" % architecture)
+        logging.error("Error: unsupported architecture %s" % architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            sys.stderr.write("Warning: using Ubuntu 12.04 'Precise' instead "
-                             "of '%s'\n" % version)
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+                            version)
         return 'ubuntu', 'ubuntu:12.04'
 
     # Debian
     elif distribution != 'debian':
-        sys.stderr.write("Warning: unsupported distribution %s, using Debian"
-                         "\n" % distribution)
-        distribution = 'debian', '7'
+        logging.warning("unsupported distribution %s, using Debian" %
+                        distribution)
+        distribution, version = 'debian', '7'
 
     if version == '6' or version.startswith('squeeze'):
         return 'debian', 'debian:squeeze'
@@ -64,8 +64,8 @@ def select_image(runs):
         return 'debian', 'debian:jessie'
     else:
         if version != '7' and not version.startswith('wheezy'):
-            sys.stderr.write("Warning: using Debian 7 'Wheezy' instead of '%s'"
-                             "\n" % version)
+            logging.warning("using Debian 7 'Wheezy' instead of '%s'" %
+                            version)
         return 'debian', 'debian:wheezy'
 
 
@@ -89,26 +89,32 @@ def docker_setup_create(args):
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        sys.stderr.write("Error: Target directory exists\n")
+        logging.critical("Target directory exists")
         sys.exit(1)
 
+    # Unpacks configuration file
+    tar = tarfile.open(str(pack), 'r:*')
+    member = tar.getmember('METADATA/config.yml')
+    member.name = 'config.yml'
+    tar.extract(member, str(target))
+    tar.close()
+
     # Loads config
-    runs, packages, other_files = load_config(pack)
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image:
         target_distribution = None
         base_image = args.base_image[0]
     else:
         target_distribution, base_image = select_image(runs)
-
-    logging.debug("Base image: %s, distribution: %s" % (
-                  base_image,
-                  target_distribution or "unknown"))
+    logging.info("Using base image %s" % base_image)
+    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
 
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Dockerfile
+    logging.info("Writing %s..." % (target / 'Dockerfile'))
     with (target / 'Dockerfile').open('w',
                                       encoding='utf-8', newline='\n') as fp:
         fp.write('FROM %s\n\n' % base_image)
@@ -168,15 +174,16 @@ def docker_setup_build(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip')
     if 'initial_image' in unpacked_info:
-        sys.stderr.write("Image already built\n")
+        logging.critical("Image already built")
         sys.exit(1)
 
     image = make_unique_name(b'reprounzip_image_')
 
+    logging.info("Calling 'docker build'...")
     retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                               cwd=target.path)
     if retcode != 0:
-        sys.stderr.write("docker build failed with code %d\n" % retcode)
+        logging.critical("docker build failed with code %d" % retcode)
         sys.exit(1)
     logging.info("Initial image created: %s" % image.decode('ascii'))
 
@@ -190,30 +197,12 @@ def docker_run(args):
     """
     target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip')
-    run = args.run
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'experiment.rpz')
+    runs, packages, other_files = load_config(target / 'config.yml', True)
 
-    if run is None and len(runs) == 1:
-        run = 0
-
-    # --cmdline without arguments: display the original command line
-    if cmdline == []:
-        if run is None:
-            sys.stderr.write("Error: There are several runs in this pack -- "
-                             "you have to choose which\none to use with "
-                             "--cmdline\n")
-            sys.exit(1)
-        print("Original command-line:")
-        print(' '.join(shell_escape(arg) for arg in runs[run]['argv']))
-        sys.exit(0)
-
-    if run is None:
-        run = irange(len(runs))
-    else:
-        run = (int(run),)
+    selected_runs = get_runs(runs, args.run, cmdline)
 
     # Destroy previous container
     if 'ran_container' in unpacked_info:
@@ -222,8 +211,8 @@ def docker_run(args):
                      container.decode('ascii'))
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            sys.stderr.write("Error deleting previous container %s\n" %
-                             container.decode('ascii'))
+            logging.error("Error deleting previous container %s" %
+                          container.decode('ascii'))
         write_dict(target / '.reprounzip', unpacked_info)
 
     temp_image = None
@@ -242,28 +231,27 @@ def docker_run(args):
         image = unpacked_info['initial_image']
         logging.debug("Running from initial image %s" % image.decode('ascii'))
     else:
-        sys.stderr.write("Image doesn't exist yet, have you run "
-                         "setup/build?\n")
+        logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
 
     # Name of new container
     container = make_unique_name(b'reprounzip_run_')
 
     cmds = []
-    for run_number in run:
-        run_dict = runs[run_number]
-        cmd = 'cd %s && ' % shell_escape(run_dict['workingdir'])
+    for run_number in selected_runs:
+        run = runs[run_number]
+        cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run_dict['environ']))
+                        for k, v in iteritems(run['environ']))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
-            argv = [run_dict['binary']] + run_dict['argv'][1:]
+            argv = [run['binary']] + run['argv'][1:]
         else:
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
-        uid = run_dict.get('uid', 1000)
+        uid = run.get('uid', 1000)
         cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
@@ -354,8 +342,8 @@ def docker_download(args):
     unpacked_info = read_dict(target / '.reprounzip')
 
     if 'ran_container' not in unpacked_info:
-        sys.stderr.write("Container does not exist. Have you run the "
-                         "experiment?\n")
+        logging.critical("Container does not exist. Have you run the "
+                         "experiment?")
         sys.exit(1)
     container = unpacked_info['ran_container']
     logging.debug("Downloading from container %s" % container.decode('ascii'))
@@ -370,15 +358,16 @@ def docker_destroy_docker(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip')
     if 'initial_image' not in unpacked_info:
-        sys.stderr.write("Image not created\n")
+        logging.critical("Image not created")
         sys.exit(1)
 
     if 'ran_container' in unpacked_info:
         container = unpacked_info.pop('ran_container')
+        logging.info("Destroying container...")
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            sys.stderr.write("Error deleting container %s\n" %
-                             container.decode('ascii'))
+            logging.error("Error deleting container %s" %
+                          container.decode('ascii'))
 
     if 'staging_container' in unpacked_info:
         stage = unpacked_info.pop('staging_container')
@@ -388,9 +377,10 @@ def docker_destroy_docker(args):
                              stage.decode('ascii'))
 
     image = unpacked_info.pop('initial_image')
+    logging.info("Destroying image...")
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
-        sys.stderr.write("Error deleting image %s\n" % image.decode('ascii'))
+        logging.error("Error deleting image %s" % image.decode('ascii'))
 
 
 @target_must_exist
@@ -400,6 +390,7 @@ def docker_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    logging.info("Removing directory %s..." % target)
     target.rmtree()
 
 
@@ -420,7 +411,7 @@ def setup(parser):
     You will need Docker to be installed on your machine if you want to run the
     experiment.
 
-    setup   setup/create    creates Dockerfile (--pack is required)
+    setup   setup/create    creates Dockerfile (needs the pack filename)
             setup/build     builds the container from the Dockerfile
     upload                  replaces input files in the container
                             (without arguments, lists input files)
@@ -432,22 +423,27 @@ def setup(parser):
 
     For example:
 
-        $ reprounzip docker setup --pack mypack.rpz experiment; cd experiment
+        $ reprounzip docker setup mypack.rpz experiment; cd experiment
         $ reprounzip docker run .
         $ reprounzip docker download . results:/home/user/theresults.txt
         $ cd ..; reprounzip docker destroy experiment
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
     options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Directory to create")
+    options.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
     opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('--pack', nargs=1, help="Pack to extract")
+    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
     parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[options, opt_setup])
+                                                parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=docker_setup_create)
 
     # setup/build
@@ -456,7 +452,7 @@ def setup(parser):
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[options, opt_setup])
+    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
 
@@ -470,7 +466,7 @@ def setup(parser):
     parser_run = subparsers.add_parser('run', parents=[options])
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
-                            help=("Command line to run"))
+                            help="Command line to run")
     parser_run.set_defaults(func=docker_run)
 
     # download

@@ -19,8 +19,10 @@ import locale
 import logging
 from pkg_resources import iter_entry_points
 import sys
+import traceback
 
-from reprounzip.pack_info import print_info
+from reprounzip.common import setup_logging
+from reprounzip.pack_info import print_info, showfiles
 
 
 __version__ = '0.4'
@@ -43,22 +45,29 @@ def main():
         sys.stdout = writer(sys.stdout)
         sys.stderr = writer(sys.stderr)
 
-    # Python 2.6 won't work because of bug 13676
-    if sys.version_info < (2, 7):
-        sys.stderr.write("Warning: your version of Python, %s, is not "
-                         "supported\nThings WILL break if you don't upgrade "
-                         "to 2.7\n" % sys.version.split(' ', 1)[0])
+    # http://bugs.python.org/issue13676
+    # This prevents reprozip from reading argv and envp arrays from trace
+    if sys.version_info < (2, 7, 3):
+        sys.stderr.write("Error: your version of Python, %s, is not "
+                         "supported\nVersions before 2.7.3 are affected by "
+                         "bug 13676 and will not work with ReproZip\n" %
+                         sys.version.split(' ', 1)[0])
+        sys.exit(1)
 
     # Parses command-line
 
     # General options
     options = argparse.ArgumentParser(add_help=False)
+    options.add_argument('--version', action='version',
+                         version="reprounzip version %s" % __version__)
     options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
 
     parser = argparse.ArgumentParser(
-            description="Reproducible experiments tool.",
+            description="reprounzip is the ReproZip component responsible for "
+                        "unpacking and reproducing an experiment previously "
+                        "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
     subparsers = parser.add_subparsers(title="formats", metavar='')
@@ -70,9 +79,24 @@ def main():
                              help="Pack to read")
     parser_info.set_defaults(func=lambda args: print_info(args, unpackers))
 
+    parser_showfiles = subparsers.add_parser(
+            'showfiles', parents=[options],
+            help="Prints out input and output file names")
+    parser_showfiles.add_argument('pack', nargs=1,
+                                  help="Pack or directory to read from")
+    parser_showfiles.set_defaults(func=showfiles)
+
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
-        setup_function = entry_point.load()
+        logging.debug("Loading unpacker %s from %s %s" % (
+                      entry_point.name,
+                      entry_point.dist.project_name, entry_point.dist.version))
+        try:
+            setup_function = entry_point.load()
+        except Exception:
+            logging.critical("Plugin %s failed to initialize!")
+            traceback.print_exc()
+            continue
         name = entry_point.name
         # Docstring is used as description (used for detailed help)
         descr = setup_function.__doc__.strip()
@@ -88,8 +112,7 @@ def main():
         unpackers[name] = info
 
     args = parser.parse_args()
-    levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
-    logging.basicConfig(level=levels[min(args.verbosity, 3)])
+    setup_logging('REPROUNZIP', args.verbosity)
     args.func(args)
     sys.exit(0)
 

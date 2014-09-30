@@ -44,20 +44,33 @@ def in_temp_dir(f):
     return wrapper
 
 
+def print_arg_list(f):
+    """Decorator printing the sole argument (list of strings) first.
+    """
+    @functools.wraps(f)
+    def wrapper(args):
+        print(" ".join(a if isinstance(a, unicode)
+                       else a.decode('utf-8', 'replace')
+                       for a in args))
+        return f(args)
+    return wrapper
+
+
+@print_arg_list
 def call(args):
-    print(" ".join(a if isinstance(a, unicode)
-                   else a.decode('utf-8', 'replace')
-                   for a in args))
     r = subprocess.call(args)
     print("---> %d" % r)
     return r
 
 
+@print_arg_list
 def check_call(args):
-    print(" ".join(a if isinstance(a, unicode)
-                   else a.decode('utf-8', 'replace')
-                   for a in args))
     return subprocess.check_call(args)
+
+
+@print_arg_list
+def check_output(args):
+    return subprocess.check_output(args)
 
 
 def build(target, sources, args=[]):
@@ -106,11 +119,12 @@ def functional_tests(interactive, run_vagrant, run_docker):
     Path('simple').remove()
     # Info
     check_call(rpuz + ['info', 'simple.rpz'])
+    # Show files
+    check_call(rpuz + ['showfiles', 'simple.rpz'])
     # Lists packages
     check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
     # Unpack directory
-    check_call(rpuz + ['directory', 'setup',
-                       '--pack', 'simple.rpz', 'simpledir'])
+    check_call(rpuz + ['directory', 'setup', 'simple.rpz', 'simpledir'])
     # Run directory
     check_call(rpuz + ['directory', 'run', 'simpledir'])
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
@@ -122,7 +136,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
     check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
     check_call(['sudo'] + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
-                                  '--pack', 'simple.rpz', 'simplechroot'])
+                                  'simple.rpz', 'simplechroot'])
     # Run chroot
     check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
@@ -153,8 +167,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
 
     # Unpack Vagrant-chroot
-    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot',
-                       '--pack', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot', 'simple.rpz',
                        '/vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
@@ -167,8 +180,8 @@ def functional_tests(interactive, run_vagrant, run_docker):
     finally:
         Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
-    check_call(rpuz + ['vagrant', 'setup/create', '--no-use-chroot',
-                       '--pack', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
+                       'simple.rpz',
                        '/vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant")
     try:
@@ -182,8 +195,7 @@ def functional_tests(interactive, run_vagrant, run_docker):
         Path('/vagrant/simplevagrant').rmtree()
 
     # Unpack Docker
-    check_call(rpuz + ['docker', 'setup/create', '--pack', 'simple.rpz',
-                       'simpledocker'])
+    check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
     print("\nDocker project set up in simpledocker")
     try:
         if run_docker:
@@ -221,6 +233,37 @@ def functional_tests(interactive, run_vagrant, run_docker):
     check_call(rpz + ['testrun', './segv'])
 
     # ########################################
+    # 'exec_echo' program: trace, pack, run --cmdline
+    #
+
+    # Build
+    build('exec_echo', ['exec_echo.c'])
+    # Trace
+    check_call(rpz + ['trace', './exec_echo', 'originalexecechooutput'])
+    # Pack
+    check_call(rpz + ['pack', 'exec_echo.rpz'])
+    # Unpack chroot
+    check_call(['sudo'] + rpuz + ['chroot', 'setup',
+                                  'exec_echo.rpz', 'echochroot'])
+    try:
+        # Run original command-line
+        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
+                                                 'echochroot'])
+        assert output == b'originalexecechooutput\n'
+        # Prints out command-line
+        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
+                                                 'echochroot', '--cmdline'])
+        assert any(b'./exec_echo originalexecechooutput' == s.strip()
+                   for s in output.split(b'\n'))
+        # Run with different command-line
+        output = check_output(['sudo'] + rpuz + [
+                'chroot', 'run', 'echochroot',
+                '--cmdline', './exec_echo', 'changedexecechooutput'])
+        assert output == b'changedexecechooutput\n'
+    finally:
+        check_call(['sudo'] + rpuz + ['chroot', 'destroy', 'echochroot'])
+
+    # ########################################
     # 'exec_echo' program: testrun
     # This is built with -m32 so that we transition:
     #   python (x64) -> exec_echo (i386) -> echo (x64)
@@ -228,9 +271,9 @@ def functional_tests(interactive, run_vagrant, run_docker):
 
     if sys.maxsize > 2 ** 32:
         # Build
-        build('exec_echo', ['exec_echo.c'], ['-m32'])
+        build('exec_echo32', ['exec_echo.c'], ['-m32'])
         # Trace
-        check_call(rpz + ['testrun', './exec_echo'])
+        check_call(rpz + ['testrun', './exec_echo32 42'])
     else:
         print("Can't try exec_echo transitions: not running on 64bits")
 
