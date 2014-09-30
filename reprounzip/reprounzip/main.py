@@ -11,12 +11,11 @@ It dispatchs to plugins registered through pkg_resources as entry point
 ``reprounzip.unpackers``.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import codecs
 import locale
-import logging
 from pkg_resources import iter_entry_points
 import sys
 import traceback
@@ -88,17 +87,14 @@ def main():
 
     # Loads commands from plugins
     for entry_point in iter_entry_points('reprounzip.unpackers'):
-        logging.debug("Loading unpacker %s from %s %s" % (
-                      entry_point.name,
-                      entry_point.dist.project_name, entry_point.dist.version))
         try:
             setup_function = entry_point.load()
         except Exception:
-            logging.critical("Plugin %s from %s %s failed to initialize!" % (
-                             entry_point.name,
-                             entry_point.dist.project_name,
-                             entry_point.dist.version))
-            traceback.print_exc()
+            print("Plugin %s from %s %s failed to initialize!" % (
+                  entry_point.name,
+                  entry_point.dist.project_name, entry_point.dist.version),
+                  file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             continue
         name = entry_point.name
         # Docstring is used as description (used for detailed help)

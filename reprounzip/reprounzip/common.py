@@ -235,6 +235,6 @@ def setup_logging(tag, verbosity):
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
+    logger = logging.root
     logger.setLevel(level)
     logger.addHandler(handler)

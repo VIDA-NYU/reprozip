@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.1 (???)
+-----------
+
+Bugfixes:
+* reprounzip showed duplicated logging messages
+
 0.4 (2014-09-15)
 ----------------
 
