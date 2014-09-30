@@ -94,7 +94,10 @@ def main():
         try:
             setup_function = entry_point.load()
         except Exception:
-            logging.critical("Plugin %s failed to initialize!")
+            logging.critical("Plugin %s from %s %s failed to initialize!" % (
+                             entry_point.name,
+                             entry_point.dist.project_name,
+                             entry_point.dist.version))
             traceback.print_exc()
             continue
         name = entry_point.name
