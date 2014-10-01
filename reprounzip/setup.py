@@ -21,6 +21,8 @@ setup(name='reprounzip',
           'console_scripts': [
               'reprounzip = reprounzip.main:main'],
           'reprounzip.unpackers': [
+              'info = reprounzip.pack_info:setup_info',
+              'showfiles = reprounzip.pack_info:setup_showfiles',
               'graph = reprounzip.unpackers.graph:setup',
               'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
               'directory = reprounzip.unpackers.default:setup_directory',
