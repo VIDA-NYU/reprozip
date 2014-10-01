@@ -30,6 +30,26 @@ __version__ = '0.4.1'
 unpackers = {}
 
 
+def get_plugins(entry_point_name):
+    for entry_point in iter_entry_points(entry_point_name):
+        try:
+            func = entry_point.load()
+        except Exception:
+            print("Plugin %s from %s %s failed to initialize!" % (
+                  entry_point.name,
+                  entry_point.dist.project_name, entry_point.dist.version),
+                  file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            continue
+        name = entry_point.name
+        # Docstring is used as description (used for detailed help)
+        descr = func.__doc__.strip()
+        # First line of docstring is the help (used for general help)
+        descr_1 = descr.split('\n', 1)[0]
+
+        yield name, func, descr, descr_1
+
+
 def main():
     """Entry point when called on the command-line.
     """
@@ -76,26 +96,12 @@ def main():
                                        dest='selected_unpacker')
 
     # Loads commands from plugins
-    for entry_point in iter_entry_points('reprounzip.unpackers'):
-        try:
-            setup_function = entry_point.load()
-        except Exception:
-            print("Plugin %s from %s %s failed to initialize!" % (
-                  entry_point.name,
-                  entry_point.dist.project_name, entry_point.dist.version),
-                  file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            continue
-        name = entry_point.name
-        # Docstring is used as description (used for detailed help)
-        descr = setup_function.__doc__.strip()
-        # First line of docstring is the help (used for general help)
-        descr_1 = descr.split('\n', 1)[0]
+    for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
         plugin_parser = subparsers.add_parser(
                 name, parents=[options],
                 help=descr_1, description=descr,
                 formatter_class=argparse.RawDescriptionHelpFormatter)
-        info = setup_function(plugin_parser)
+        info = func(plugin_parser)
         if info is None:
             info = {}
         unpackers[name] = info
