@@ -363,7 +363,7 @@ def vagrant_run(args):
             sys.stdout.flush()
     else:
         interactive_shell(chan)
-    sys.stdout.write("\r\n*** Command finished, status: %d\r\n" %
+    sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
                      chan.recv_exit_status())
 
     ssh.close()
