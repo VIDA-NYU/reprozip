@@ -70,7 +70,8 @@ def main():
                         "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="formats", metavar='')
+    subparsers = parser.add_subparsers(title="formats", metavar='',
+                                       dest='selected_unpacker')
 
     parser_info = subparsers.add_parser(
             'info', parents=[options],
@@ -112,6 +113,7 @@ def main():
         unpackers[name] = info
 
     args = parser.parse_args()
+    signals.unpacker = args.unpacker
     setup_logging('REPROUNZIP', args.verbosity)
     try:
         args.func(args)

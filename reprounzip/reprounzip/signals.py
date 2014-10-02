@@ -61,3 +61,6 @@ post_destroy = Signal(['target'])
 pre_run = Signal(['target'])
 post_run = Signal(['target', 'retcode'])
 application_finishing = Signal(['reason'])
+
+
+unpacker = None
