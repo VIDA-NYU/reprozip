@@ -7,6 +7,9 @@ Changelog
 Bugfixes:
 * reprounzip showed duplicated logging messages
 
+Features:
+* 'docker upload' command
+
 0.4 (2014-09-15)
 ----------------
 
