@@ -346,6 +346,8 @@ def vagrant_run(args):
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
 
+    signals.pre_run(target=target)
+
     # Connects to the machine
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(IgnoreMissingKey())
@@ -368,10 +370,13 @@ def vagrant_run(args):
             sys.stdout.flush()
     else:
         interactive_shell(chan)
+    retcode = chan.recv_exit_status()
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
-                     chan.recv_exit_status())
+                     retcode)
 
     ssh.close()
+
+    signals.post_run(target=target, retcode=retcode)
 
 
 class SSHUploader(FileUploader):

@@ -246,6 +246,8 @@ def docker_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
+    signals.pre_run(target=target)
+
     # Run command in container
     logging.info("Starting container %s" % container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
@@ -256,6 +258,8 @@ def docker_run(args):
     # Store container name (so we can download output files)
     unpacked_info['ran_container'] = container
     write_dict(target / '.reprounzip', unpacked_info)
+
+    signals.post_run(target=target, retcode=retcode)
 
 
 class ContainerUploader(FileUploader):
