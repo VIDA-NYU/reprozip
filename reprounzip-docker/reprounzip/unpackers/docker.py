@@ -24,13 +24,8 @@ import tarfile
 from reprounzip.common import Package, load_config
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    select_installer, join_root, FileDownloader, get_runs
+    select_installer, join_root, FileUploader, FileDownloader, get_runs
 from reprounzip.utils import unicode_, iteritems
-
-
-def docker_escape(s):
-    return '"%s"' % (s.replace('\\', '\\\\')
-                      .replace('"', '\\"'))
 
 
 def select_image(runs):
@@ -188,6 +183,7 @@ def docker_setup_build(args):
     logging.info("Initial image created: %s" % image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
+    unpacked_info['current_image'] = image
     write_dict(target / '.reprounzip', unpacked_info)
 
 
@@ -215,10 +211,10 @@ def docker_run(args):
                           container.decode('ascii'))
         write_dict(target / '.reprounzip', unpacked_info)
 
-    # Use the initial image
-    if 'initial_image' in unpacked_info:
-        image = unpacked_info['initial_image']
-        logging.debug("Running from initial image %s" % image.decode('ascii'))
+    # Use the initial image directly
+    if 'current_image' in unpacked_info:
+        image = unpacked_info['current_image']
+        logging.debug("Running from image %s" % image.decode('ascii'))
     else:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
@@ -254,6 +250,85 @@ def docker_run(args):
     # Store container name (so we can download output files)
     unpacked_info['ran_container'] = container
     write_dict(target / '.reprounzip', unpacked_info)
+
+
+class ContainerUploader(FileUploader):
+    def __init__(self, target, input_files, files, unpacked_info):
+        self.unpacked_info = unpacked_info
+        FileUploader.__init__(self, target, input_files, files)
+
+    def prepare_upload(self, files):
+        if 'current_image' not in self.unpacked_info:
+            sys.stderr.write("Image doesn't exist yet, have you run "
+                             "setup/build?\n")
+            sys.exit(1)
+
+        self.build_directory = Path.tempdir(prefix='reprozip_build_')
+        self.docker_copy = []
+
+    def upload_file(self, local_path, input_path):
+        stem, ext = local_path.stem, local_path.ext
+        name = local_path.name
+        nb = 0
+        while (self.build_directory / name).exists():
+            nb += 1
+            name = stem + ('_%d' % nb).encode('ascii') + ext
+        name = Path(name)
+        local_path.copyfile(self.build_directory / name)
+        logging.info("Copied file %s to %s" % (local_path, name))
+        self.docker_copy.append((name, input_path))
+
+    def finalize(self):
+        if not self.docker_copy:
+            self.build_directory.rmtree()
+            return
+
+        from_image = self.unpacked_info['current_image']
+
+        with self.build_directory.open('w', 'Dockerfile',
+                                       encoding='utf-8',
+                                       newline='\n') as dockerfile:
+            dockerfile.write('FROM %s\n\n' % from_image)
+            for src, target in self.docker_copy:
+                # FIXME : spaces in filenames will probably break Docker
+                dockerfile.write(
+                        'COPY \\\n    %s \\\n    %s\n' % (
+                            unicode_(src),
+                            unicode_(target)))
+
+            # TODO : restore permissions?
+
+        image = make_unique_name(b'reprounzip_image_')
+        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+                                  cwd=self.build_directory.path)
+        if retcode != 0:
+            logging.critical("docker build failed with code %d" % retcode)
+        else:
+            logging.info("New image created: %s" % image.decode('ascii'))
+            if from_image != self.unpacked_info['initial_image']:
+                retcode = subprocess.call(['docker', 'rmi', from_image])
+                if retcode != 0:
+                    logging.warning("Can't remove previous image, docker "
+                                    "returned %d" % retcode)
+            self.unpacked_info['current_image'] = image
+            write_dict(self.target / '.reprounzip', self.unpacked_info)
+
+        self.build_directory.rmtree()
+
+
+@target_must_exist
+def docker_upload(args):
+    """Replaces an input file in the container.
+    """
+    target = Path(args.target[0])
+    files = args.file
+    unpacked_info = read_dict(target / '.reprounzip')
+    input_files = unpacked_info.setdefault('input_files', {})
+
+    try:
+        ContainerUploader(target, input_files, files, unpacked_info)
+    finally:
+        write_dict(target / '.reprounzip', unpacked_info)
 
 
 class ContainerDownloader(FileDownloader):
@@ -310,8 +385,15 @@ def docker_destroy_docker(args):
             logging.error("Error deleting container %s" %
                           container.decode('ascii'))
 
+    if 'current_image' in unpacked_info:
+        image = unpacked_info.pop('current_image')
+        logging.info("Destroying image %s..." % image.decode('ascii'))
+        retcode = subprocess.call(['docker', 'rmi', image])
+        if retcode != 0:
+            logging.error("Error deleting image %s" % image.decode('ascii'))
+
     image = unpacked_info.pop('initial_image')
-    logging.info("Destroying image...")
+    logging.info("Destroying image %s..." % image.decode('ascii'))
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
         logging.error("Error deleting image %s" % image.decode('ascii'))
@@ -347,6 +429,8 @@ def setup(parser):
 
     setup   setup/create    creates Dockerfile (needs the pack filename)
             setup/build     builds the container from the Dockerfile
+    upload                  replaces input files in the container
+                            (without arguments, lists input files)
     run                     runs the experiment in the container
     download                gets output files from the container
                             (without arguments, lists output files)
@@ -388,7 +472,11 @@ def setup(parser):
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
 
-    # TODO : docker upload
+    # upload
+    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name")
+    parser_upload.set_defaults(func=docker_upload)
 
     # run
     parser_run = subparsers.add_parser('run', parents=[options])
