@@ -224,7 +224,10 @@ class FileUploader(object):
                 if len(runs) > 1:
                     print("  Run %d:" % i)
                 for input_name in run['input_files']:
-                    assigned = self.input_files.get(input_name) or "(original)"
+                    if input_name in self.input_files:
+                        assigned = PosixPath(self.input_files[input_name])
+                    else:
+                        assigned = "(original)"
                     print("    %s: %s" % (input_name, assigned))
             return
 

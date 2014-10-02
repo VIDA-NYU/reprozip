@@ -16,7 +16,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import pickle
 import platform
-from rpaths import Path
+from rpaths import PosixPath, Path
 import sys
 import tarfile
 
@@ -190,7 +190,10 @@ def showfiles(args):
                     print("    %s (%s)" % (input_name, path))
                 else:
                     print("    %s" % input_name)
-                assigned = input_files.get(input_name) or "(original)"
+                if input_name in input_files:
+                    assigned = PosixPath(input_files[input_name])
+                else:
+                    assigned = "(original)"
                 print("      %s" % assigned)
 
         print("Output files:")
