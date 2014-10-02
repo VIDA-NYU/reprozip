@@ -6,6 +6,8 @@ Changelog
 
 Bugfixes:
 * reprounzip showed duplicated logging messages
+* Makes 'run' commands not fail if the command returns an error code
+* Unicode issues with Vagrant on Windows Python 3
 
 Features:
 * 'docker upload' command
