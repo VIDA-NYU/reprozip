@@ -716,7 +716,7 @@ def setup_installpkgs(parser):
     return {'test_compatibility': test_same_pkgmngr}
 
 
-def setup_directory(parser):
+def setup_directory(parser, **kwargs):
     """Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
 
     setup       creates the directory (needs the pack filename)
@@ -784,7 +784,7 @@ def chroot_setup(args):
         chroot_mount(args)
 
 
-def setup_chroot(parser):
+def setup_chroot(parser, **kwargs):
     """Unpacks the files and run with chroot
 
     setup/create    creates the directory (needs the pack filename)

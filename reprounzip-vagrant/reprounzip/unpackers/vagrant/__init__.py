@@ -541,7 +541,7 @@ def test_has_vagrant(pack, **kwargs):
     return COMPAT_MAYBE, "vagrant not found in PATH"
 
 
-def setup(parser):
+def setup(parser, **kwargs):
     """Runs the experiment in a virtual machine created through Vagrant
 
     You will need Vagrant to be installed on your machine if you want to run

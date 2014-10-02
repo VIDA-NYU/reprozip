@@ -232,7 +232,7 @@ def showfiles(args):
                     print("    %s" % output_name)
 
 
-def setup_info(parser):
+def setup_info(parser, **kwargs):
     """Prints out some information about a pack
     """
     parser.add_argument('pack', nargs=1,
@@ -240,7 +240,7 @@ def setup_info(parser):
     parser.set_defaults(func=print_info)
 
 
-def setup_showfiles(parser):
+def setup_showfiles(parser, **kwargs):
     """Prints out input and output file names
     """
     parser.add_argument('pack', nargs=1,
