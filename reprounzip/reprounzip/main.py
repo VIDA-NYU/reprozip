@@ -22,6 +22,7 @@ import traceback
 
 from reprounzip.common import setup_logging
 from reprounzip.pack_info import print_info, showfiles
+from reprounzip import signals
 
 
 __version__ = '0.4'
@@ -112,7 +113,13 @@ def main():
 
     args = parser.parse_args()
     setup_logging('REPROUNZIP', args.verbosity)
-    args.func(args)
+    try:
+        args.func(args)
+    except Exception as e:
+        signals.application_finishing(reason=e)
+        raise
+    else:
+        signals.application_finishing(reason=None)
     sys.exit(0)
 
 
