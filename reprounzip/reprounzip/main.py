@@ -86,6 +86,10 @@ def main():
                          dest='verbosity',
                          help="augments verbosity level")
 
+    # Loads plugins
+    for name, func, descr, descr_1 in get_plugins('reprounzip.plugins'):
+        func()
+
     parser = argparse.ArgumentParser(
             description="reprounzip is the ReproZip component responsible for "
                         "unpacking and reproducing an experiment previously "
@@ -95,7 +99,7 @@ def main():
     subparsers = parser.add_subparsers(title="formats", metavar='',
                                        dest='selected_unpacker')
 
-    # Loads commands from plugins
+    # Loads unpackers
     for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
         plugin_parser = subparsers.add_parser(
                 name, parents=[options],
