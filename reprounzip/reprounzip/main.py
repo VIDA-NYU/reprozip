@@ -110,7 +110,9 @@ def main():
             info = {}
         unpackers[name] = info
 
+    signals.pre_parse_args(parser=parser)
     args = parser.parse_args()
+    signals.post_parse_args(args=args)
     signals.unpacker = args.selected_unpacker
     setup_logging('REPROUNZIP', args.verbosity)
     try:

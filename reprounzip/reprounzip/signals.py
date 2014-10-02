@@ -116,6 +116,8 @@ pre_destroy = Signal(['target'])
 post_destroy = Signal(['target'])
 pre_run = Signal(['target'])
 post_run = Signal(['target', 'retcode'])
+pre_parse_args = Signal(['parser'])
+post_parse_args = Signal(['args'])
 application_finishing = Signal(['reason'])
 
 
