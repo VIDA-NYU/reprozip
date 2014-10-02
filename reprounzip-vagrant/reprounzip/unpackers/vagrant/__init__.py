@@ -506,7 +506,9 @@ def vagrant_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    signals.pre_destroy(target=target)
     target.rmtree()
+    signals.post_destroy(target=target)
 
 
 def test_has_vagrant(pack, **kwargs):

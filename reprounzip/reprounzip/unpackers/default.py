@@ -275,7 +275,9 @@ def directory_destroy(args):
     read_dict(target / '.reprounzip', 'directory')
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 def should_restore_owner(param):
@@ -543,7 +545,9 @@ def chroot_destroy_dir(args):
         sys.exit(1)
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 @target_must_exist
@@ -561,7 +565,9 @@ def chroot_destroy(args):
                 subprocess.check_call(['umount', str(d)])
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 class LocalUploader(FileUploader):

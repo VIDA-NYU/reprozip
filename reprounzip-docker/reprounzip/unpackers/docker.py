@@ -413,7 +413,9 @@ def docker_destroy_dir(args):
     read_dict(target / '.reprounzip')
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     target.rmtree()
+    signals.post_destroy(target=target)
 
 
 def test_has_docker(pack, **kwargs):

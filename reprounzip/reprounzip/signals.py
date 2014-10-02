@@ -56,3 +56,5 @@ class Signal(object):
 
 pre_setup = Signal(['target', 'pack'])
 post_setup = Signal(['target'])
+pre_destroy = Signal(['target'])
+post_destroy = Signal(['target'])
