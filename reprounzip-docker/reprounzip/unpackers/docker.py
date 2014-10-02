@@ -243,9 +243,10 @@ def docker_run(args):
 
     # Run command in container
     logging.info("Starting container %s" % container.decode('ascii'))
-    subprocess.check_call(['docker', 'run', b'--name=' + container,
-                           '-i', '-t', image,
-                           '/bin/sh', '-c', cmds])
+    retcode = subprocess.call(['docker', 'run', b'--name=' + container,
+                               '-i', '-t', image,
+                               '/bin/sh', '-c', cmds])
+    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)
     unpacked_info['ran_container'] = container
