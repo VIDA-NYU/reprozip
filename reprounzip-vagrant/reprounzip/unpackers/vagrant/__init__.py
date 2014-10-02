@@ -80,7 +80,7 @@ def write_dict(filename, dct):
     to_write = {'unpacker': 'vagrant'}
     to_write.update(dct)
     with filename.open('wb') as fp:
-        pickle.dump(to_write, fp, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(to_write, fp, 2)
 
 
 def read_dict(filename):
