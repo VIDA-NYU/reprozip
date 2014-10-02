@@ -41,7 +41,7 @@ class Signal(object):
 
         for listener in self._listeners:
             try:
-                listener(info)
+                listener(**info)
             except Exception:
                 traceback.print_exc()
 
