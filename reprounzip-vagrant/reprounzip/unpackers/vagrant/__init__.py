@@ -26,6 +26,7 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config
+from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
@@ -140,6 +141,8 @@ def vagrant_setup_create(args):
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
+
+    signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
@@ -278,6 +281,8 @@ fi
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
+
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist

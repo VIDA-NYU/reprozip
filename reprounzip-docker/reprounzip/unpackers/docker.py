@@ -22,6 +22,7 @@ import sys
 import tarfile
 
 from reprounzip.common import Package, load_config
+from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, join_root, FileUploader, FileDownloader, get_runs
@@ -86,6 +87,8 @@ def docker_setup_create(args):
     if target.exists():
         logging.critical("Target directory exists")
         sys.exit(1)
+
+    signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
@@ -160,6 +163,8 @@ def docker_setup_create(args):
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
+
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist

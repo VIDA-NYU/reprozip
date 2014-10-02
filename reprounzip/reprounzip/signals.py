@@ -52,3 +52,7 @@ class Signal(object):
 
     def unsubscribe(self, func):
         self._listeners.discard(func)
+
+
+pre_setup = Signal(['target', 'pack'])
+post_setup = Signal(['target'])

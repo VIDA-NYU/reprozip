@@ -27,6 +27,7 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config as load_config_file
+from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
@@ -118,6 +119,8 @@ def directory_create(args):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
+    signals.pre_setup(target=target, pack=pack)
+
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
     member = tar.getmember('METADATA/config.yml')
@@ -192,6 +195,8 @@ def directory_create(args):
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
+
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist
@@ -348,6 +353,8 @@ def chroot_create(args):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
+    signals.pre_setup(target=target, pack=pack)
+
     # We can only restore owner/group of files if running as root
     restore_owner = should_restore_owner(args.restore_owner)
 
@@ -436,6 +443,8 @@ def chroot_create(args):
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
+
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist
