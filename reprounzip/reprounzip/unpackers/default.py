@@ -258,7 +258,8 @@ def directory_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
-    subprocess.check_call(cmds, shell=True)
+    retcode = subprocess.call(cmds, shell=True)
+    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
 
 @target_must_exist
@@ -495,7 +496,8 @@ def chroot_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
-    subprocess.check_call(cmds, shell=True)
+    retcode = subprocess.call(cmds, shell=True)
+    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
 
 @target_must_exist
