@@ -11,6 +11,7 @@ Bugfixes:
 
 Features:
 * 'docker upload' command
+* Adds signals (currently unused, needed for future plugins)
 
 0.4 (2014-09-15)
 ----------------
