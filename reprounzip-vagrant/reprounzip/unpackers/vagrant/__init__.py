@@ -26,6 +26,7 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config
+from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
@@ -140,6 +141,8 @@ def vagrant_setup_create(args):
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
+
+    signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
@@ -279,6 +282,8 @@ fi
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
 
+    signals.post_setup(target=target, pack=pack)
+
 
 @target_must_exist
 def vagrant_setup_start(args):
@@ -341,6 +346,8 @@ def vagrant_run(args):
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
 
+    signals.pre_run(target=target)
+
     # Connects to the machine
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(IgnoreMissingKey())
@@ -363,10 +370,13 @@ def vagrant_run(args):
             sys.stdout.flush()
     else:
         interactive_shell(chan)
+    retcode = chan.recv_exit_status()
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
-                     chan.recv_exit_status())
+                     retcode)
 
     ssh.close()
+
+    signals.post_run(target=target, retcode=retcode)
 
 
 class SSHUploader(FileUploader):
@@ -501,7 +511,9 @@ def vagrant_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    signals.pre_destroy(target=target)
     target.rmtree()
+    signals.post_destroy(target=target)
 
 
 def test_has_vagrant(pack, **kwargs):

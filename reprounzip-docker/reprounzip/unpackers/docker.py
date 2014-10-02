@@ -22,6 +22,7 @@ import sys
 import tarfile
 
 from reprounzip.common import Package, load_config
+from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, join_root, FileUploader, FileDownloader, get_runs
@@ -86,6 +87,8 @@ def docker_setup_create(args):
     if target.exists():
         logging.critical("Target directory exists")
         sys.exit(1)
+
+    signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
@@ -160,6 +163,8 @@ def docker_setup_create(args):
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
+
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist
@@ -241,6 +246,8 @@ def docker_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
+    signals.pre_run(target=target)
+
     # Run command in container
     logging.info("Starting container %s" % container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
@@ -251,6 +258,8 @@ def docker_run(args):
     # Store container name (so we can download output files)
     unpacked_info['ran_container'] = container
     write_dict(target / '.reprounzip', unpacked_info)
+
+    signals.post_run(target=target, retcode=retcode)
 
 
 class ContainerUploader(FileUploader):
@@ -408,7 +417,9 @@ def docker_destroy_dir(args):
     read_dict(target / '.reprounzip')
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     target.rmtree()
+    signals.post_destroy(target=target)
 
 
 def test_has_docker(pack, **kwargs):

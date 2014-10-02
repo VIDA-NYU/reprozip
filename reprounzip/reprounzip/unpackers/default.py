@@ -27,6 +27,7 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config as load_config_file
+from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
@@ -118,6 +119,8 @@ def directory_create(args):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
+    signals.pre_setup(target=target, pack=pack)
+
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
     member = tar.getmember('METADATA/config.yml')
@@ -193,6 +196,8 @@ def directory_create(args):
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
+    signals.post_setup(target=target, pack=pack)
+
 
 @target_must_exist
 def directory_run(args):
@@ -258,8 +263,10 @@ def directory_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
+    signals.pre_run(target=target)
     retcode = subprocess.call(cmds, shell=True)
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    signals.post_run(target=target, retcode=retcode)
 
 
 @target_must_exist
@@ -270,7 +277,9 @@ def directory_destroy(args):
     read_dict(target / '.reprounzip', 'directory')
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 def should_restore_owner(param):
@@ -347,6 +356,8 @@ def chroot_create(args):
     if DefaultAbstractPath is not PosixPath:
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
+
+    signals.pre_setup(target=target, pack=pack)
 
     # We can only restore owner/group of files if running as root
     restore_owner = should_restore_owner(args.restore_owner)
@@ -437,6 +448,8 @@ def chroot_create(args):
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
 
+    signals.post_setup(target=target, pack=pack)
+
 
 @target_must_exist
 def chroot_mount(args):
@@ -496,8 +509,10 @@ def chroot_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
+    signals.pre_run(target=target)
     retcode = subprocess.call(cmds, shell=True)
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    signals.post_run(target=target, retcode=retcode)
 
 
 @target_must_exist
@@ -534,7 +549,9 @@ def chroot_destroy_dir(args):
         sys.exit(1)
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 @target_must_exist
@@ -552,7 +569,9 @@ def chroot_destroy(args):
                 subprocess.check_call(['umount', str(d)])
 
     logging.info("Removing directory %s..." % target)
+    signals.pre_destroy(target=target)
     rmtree_fixed(target)
+    signals.post_destroy(target=target)
 
 
 class LocalUploader(FileUploader):

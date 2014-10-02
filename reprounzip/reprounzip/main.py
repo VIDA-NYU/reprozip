@@ -22,6 +22,7 @@ import traceback
 
 from reprounzip.common import setup_logging
 from reprounzip.pack_info import print_info, showfiles
+from reprounzip import signals
 
 
 __version__ = '0.4'
@@ -69,7 +70,8 @@ def main():
                         "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="formats", metavar='')
+    subparsers = parser.add_subparsers(title="formats", metavar='',
+                                       dest='selected_unpacker')
 
     parser_info = subparsers.add_parser(
             'info', parents=[options],
@@ -111,8 +113,15 @@ def main():
         unpackers[name] = info
 
     args = parser.parse_args()
+    signals.unpacker = args.selected_unpacker
     setup_logging('REPROUNZIP', args.verbosity)
-    args.func(args)
+    try:
+        args.func(args)
+    except Exception as e:
+        signals.application_finishing(reason=e)
+        raise
+    else:
+        signals.application_finishing(reason=None)
     sys.exit(0)
 
 
