@@ -36,8 +36,8 @@ class TestSignals(unittest.TestCase):
 
     def test_calls(self):
         """Tests actually emitting signals."""
-        def called(info):
-            called.last = info
+        def called(**kwargs):
+            called.last = kwargs
 
         def callsig(res_type, **kwargs):
             if res_type not in ('succ', 'warn', 'fail'):
