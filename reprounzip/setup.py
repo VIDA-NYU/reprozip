@@ -26,7 +26,9 @@ setup(name='reprounzip',
               'graph = reprounzip.unpackers.graph:setup',
               'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
               'directory = reprounzip.unpackers.default:setup_directory',
-              'chroot = reprounzip.unpackers.default:setup_chroot']},
+              'chroot = reprounzip.unpackers.default:setup_chroot'],
+          'reprounzip.plugins': [
+              'vistrails = reprounzip.plugins.vistrails:setup_vistrails']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
       extras_require={
