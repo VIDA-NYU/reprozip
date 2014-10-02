@@ -298,7 +298,7 @@ class ContainerUploader(FileUploader):
         with self.build_directory.open('w', 'Dockerfile',
                                        encoding='utf-8',
                                        newline='\n') as dockerfile:
-            dockerfile.write('FROM %s\n\n' % from_image)
+            dockerfile.write('FROM %s\n\n' % from_image.decode('ascii'))
             for src, target in self.docker_copy:
                 # FIXME : spaces in filenames will probably break Docker
                 dockerfile.write(
@@ -313,6 +313,7 @@ class ContainerUploader(FileUploader):
                                   cwd=self.build_directory.path)
         if retcode != 0:
             logging.critical("docker build failed with code %d" % retcode)
+            sys.exit(1)
         else:
             logging.info("New image created: %s" % image.decode('ascii'))
             if from_image != self.unpacked_info['initial_image']:
