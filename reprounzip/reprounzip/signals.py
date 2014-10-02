@@ -7,8 +7,7 @@ from reprounzip.utils import irange, iteritems
 class Signal(object):
     REQUIRED, OPTIONAL, DEPRECATED = irange(3)
 
-    def __init__(self, name, expected_args=[], new_args=[], old_args=[]):
-        globals()[name] = self
+    def __init__(self, expected_args=[], new_args=[], old_args=[]):
         self._args = {}
         self._args.update((arg, Signal.REQUIRED) for arg in expected_args)
         self._args.update((arg, Signal.OPTIONAL) for arg in new_args)
