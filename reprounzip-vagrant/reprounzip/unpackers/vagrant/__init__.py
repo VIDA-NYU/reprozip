@@ -94,8 +94,8 @@ def get_ssh_parameters(target):
     stdout = subprocess.check_output(['vagrant', 'ssh-config'],
                                      cwd=target.path)
     info = {}
-    for line in stdout.split('\n'):
-        line = line.strip().split(' ', 1)
+    for line in stdout.split(b'\n'):
+        line = line.strip().split(b' ', 1)
         if len(line) != 2:
             continue
         info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')

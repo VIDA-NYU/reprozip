@@ -22,7 +22,6 @@
 
 import socket
 import sys
-from paramiko.py3compat import u
 
 # windows does not have termios...
 try:
@@ -53,7 +52,7 @@ def posix_shell(chan):
             r, w, e = select.select([chan, sys.stdin], [], [])
             if chan in r:
                 try:
-                    x = u(chan.recv(1024))
+                    x = chan.recv(1024).decode('utf-8', 'replace')
                     if len(x) == 0:
                         sys.stdout.write('\r\n*** EOF\r\n')
                         break
@@ -86,7 +85,7 @@ def windows_shell(chan):
                                  "end)\r\n")
                 sys.stdout.flush()
                 break
-            sys.stdout.write(data)
+            sys.stdout.write(data.decode('utf-8', 'replace'))
             sys.stdout.flush()
 
     writer = threading.Thread(target=writeall, args=(chan,))
@@ -97,7 +96,7 @@ def windows_shell(chan):
             d = sys.stdin.read(1)
             if not d:
                 break
-            chan.send(d)
+            chan.send(d.encode('utf-8'))
     except EOFError:
         # user hit ^Z or F6
         pass
