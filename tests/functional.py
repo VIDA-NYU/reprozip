@@ -36,7 +36,8 @@ def print_arg_list(f):
     """
     @functools.wraps(f)
     def wrapper(args):
-        print(" ".join(a if isinstance(a, unicode)
+        print("reprozip-tests$ " +
+              " ".join(a if isinstance(a, unicode)
                        else a.decode('utf-8', 'replace')
                        for a in args))
         return f(args)
@@ -57,14 +58,27 @@ def check_call(args):
 
 @print_arg_list
 def check_output(args):
-    return subprocess.check_output(args)
+    output = subprocess.check_output(args)
+    sys.stdout.buffer.write(output)
+    return output
+
+
+@print_arg_list
+def check_errout(args):
+    p = subprocess.Popen(args, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    sys.stderr.buffer.write(stderr)
+    retcode = p.poll()
+    if retcode:
+        raise subprocess.CalledProcessError(retcode, args)
+    return stderr
 
 
 def build(target, sources, args=[]):
-    subprocess.check_call(['/usr/bin/env', 'CFLAGS=', 'cc', '-o', target] +
-                          [(tests / s).path
-                           for s in sources] +
-                          args)
+    check_call(['/usr/bin/env', 'CFLAGS=', 'cc', '-o', target] +
+               [(tests / s).path
+                for s in sources] +
+               args)
 
 
 @in_temp_dir
@@ -306,9 +320,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('connect', ['connect.c'])
     # Trace
-    p = subprocess.Popen(rpz + ['testrun', './connect'],
-                         stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
+    stderr = check_errout(rpz + ['testrun', './connect'])
     stderr = stderr.split(b'\n')
     assert not any(b'program exited with non-zero code' in l for l in stderr)
     assert any(l for l in stderr
