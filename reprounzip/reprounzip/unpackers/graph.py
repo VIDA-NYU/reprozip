@@ -38,6 +38,8 @@ C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
 
 
 class Process(CommonEqualityMixin):
+    """Structure representing a process in the experiment.
+    """
     def __init__(self, pid, parent, timestamp, acted, binary, created):
         self.pid = pid
         self.parent = parent

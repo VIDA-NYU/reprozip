@@ -36,16 +36,25 @@ from reprounzip.utils import unicode_, iteritems
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
+    """Policy that just ignores missing SSH host keys.
+
+    We are connecting to vagrant, checking the host doesn't make sense, and
+    accepting keys permanently is a security risk.
+    """
     def missing_host_key(self, client, hostname, key):
         pass
 
 
 def rb_escape(s):
+    """Given bl'a, returns 'bl\\'a'.
+    """
     return "'%s'" % (s.replace('\\', '\\\\')
                       .replace("'", "\\'"))
 
 
 def select_box(runs):
+    """Selects a box for the experiment, with the correct distribution.
+    """
     distribution, version = runs[0]['distribution']
     distribution = distribution.lower()
     architecture = runs[0]['architecture']
@@ -92,6 +101,8 @@ def read_dict(filename):
 
 
 def get_ssh_parameters(target):
+    """Reads the SSH parameters from ``vagrant ssh`` command output.
+    """
     stdout = subprocess.check_output(['vagrant', 'ssh-config'],
                                      cwd=target.path)
     info = {}
@@ -517,6 +528,8 @@ def vagrant_destroy_dir(args):
 
 
 def test_has_vagrant(pack, **kwargs):
+    """Compatibility test: has vagrant (ok) or not (maybe).
+    """
     pathlist = os.environ['PATH'].split(os.pathsep) + ['.']
     pathexts = os.environ.get('PATHEXT', '').split(os.pathsep)
     for path in pathlist:

@@ -53,6 +53,8 @@ class File(CommonEqualityMixin):
 
 
 class Package(CommonEqualityMixin):
+    """A distribution package, containing a set of files.
+    """
     def __init__(self, name, version, files=None, packfiles=True, size=None):
         self.name = name
         self.version = version
@@ -90,6 +92,16 @@ def read_packages(packages, File=File, Package=Package):
 
 
 def load_config(filename, canonical, File=File, Package=Package):
+    """Loads a YAML configuration file.
+
+    `File` and `Package` parameters can be used to override the classes that
+    will be used to hold files and distribution packages; useful during the
+    packing step.
+
+    `canonical` indicates whether a canonical configuration file is expected
+    (in which case the ``additional_patterns`` section is not accepted). Note
+    that this changes the number of returned values of this function.
+    """
     with filename.open(encoding='utf-8') as fp:
         config = yaml.safe_load(fp)
 
@@ -157,6 +169,11 @@ def write_package(fp, pkg, indent=0):
 
 def save_config(filename, runs, packages, other_files, reprozip_version,
                 canonical=False):
+    """Saves the configuration to a YAML file.
+
+    `canonical` indicates whether this is a canonical configuration file
+    (no ``additional_patterns`` section).
+    """
     dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
     with filename.open('w', encoding='utf-8', newline='\n') as fp:
         # Writes preamble
@@ -215,6 +232,8 @@ other_files:
 
 
 class LoggingDateFormatter(logging.Formatter):
+    """Formatter that puts milliseconds in the timestamp.
+    """
     converter = datetime.fromtimestamp
 
     def formatTime(self, record, datefmt=None):
@@ -225,6 +244,8 @@ class LoggingDateFormatter(logging.Formatter):
 
 
 def setup_logging(tag, verbosity):
+    """Sets up the logging module.
+    """
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
     level = levels[min(verbosity, 3)]
 

@@ -283,6 +283,8 @@ def directory_destroy(args):
 
 
 def should_restore_owner(param):
+    """Computes whether to restore original files' owners.
+    """
     if os.getuid() != 0:
         if param is True:
             # Restoring the owner was explicitely requested
@@ -310,6 +312,8 @@ def should_restore_owner(param):
 
 
 def should_mount_magic_dirs(param):
+    """Computes whether to mount directories inside the chroot.
+    """
     if os.getuid() != 0:
         if param is True:
             # Restoring the owner was explicitely requested
@@ -773,6 +777,8 @@ def setup_directory(parser):
 
 
 def chroot_setup(args):
+    """Does both create and mount depending on --bind-magic-dirs.
+    """
     chroot_create(args)
     if should_mount_magic_dirs(args.bind_magic_dirs):
         chroot_mount(args)

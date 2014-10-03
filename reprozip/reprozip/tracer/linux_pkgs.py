@@ -27,6 +27,8 @@ system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
 
 
 class DpkgManager(object):
+    """Package identifier for deb-based systems (Debian, Ubuntu).
+    """
     def __init__(self):
         self.unknown_files = set()
         self.packages = {}

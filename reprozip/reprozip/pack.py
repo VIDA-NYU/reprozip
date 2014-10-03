@@ -54,6 +54,8 @@ def expand_patterns(patterns):
 
 def canonicalize_config(runs, packages, other_files, additional_patterns,
                         sort_packages):
+    """Expands ``additional_patterns`` from the configuration file.
+    """
     add_files = expand_patterns(additional_patterns)
     if sort_packages:
         add_files, add_packages = identify_packages(add_files)
@@ -81,6 +83,8 @@ def data_path(filename, prefix=Path('DATA')):
 
 
 class PackBuilder(object):
+    """Higher layer on tarfile that adds intermediate directories.
+    """
     def __init__(self, filename):
         self.tar = tarfile.open(str(filename), 'w:gz')
         self.seen = set()

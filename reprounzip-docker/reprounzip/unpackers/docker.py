@@ -30,6 +30,8 @@ from reprounzip.utils import unicode_, iteritems
 
 
 def select_image(runs):
+    """Selects a base image for the experiment, with the correct distribution.
+    """
     distribution, version = runs[0]['distribution']
     distribution = distribution.lower()
     architecture = runs[0]['architecture']
@@ -423,6 +425,8 @@ def docker_destroy_dir(args):
 
 
 def test_has_docker(pack, **kwargs):
+    """Compatibility test: has docker (ok) or not (maybe).
+    """
     pathlist = os.environ['PATH'].split(os.pathsep) + ['.']
     pathexts = os.environ.get('PATHEXT', '').split(os.pathsep)
     for path in pathlist:

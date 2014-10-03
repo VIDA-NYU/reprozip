@@ -32,7 +32,7 @@ unpackers = {}
 
 
 def main():
-    """Entry point when called on the command line.
+    """Entry point when called on the command-line.
     """
     global unpackers
 

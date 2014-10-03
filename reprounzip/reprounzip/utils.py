@@ -60,6 +60,8 @@ def escape(s):
 
 
 class CommonEqualityMixin(object):
+    """Common mixin providing comparison by comparing ``__dict__`` attributes.
+    """
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
                 self.__dict__ == other.__dict__)
@@ -219,6 +221,13 @@ def rmtree_fixed(path):
 
 
 def download_file(url, dest, cachename=None):
+    """Downloads a file using a local cache.
+
+    If the file cannot be downloaded or if it wasn't modified, the cached
+    version will be used instead.
+
+    The cache lives in ``~/.cache/reprozip/``.
+    """
     if cachename is None:
         cachename = dest.name
 

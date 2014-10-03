@@ -194,7 +194,7 @@ def pack(args):
 
 
 def main():
-    """Entry point when called on the command line.
+    """Entry point when called on the command-line.
     """
     # Locale
     locale.setlocale(locale.LC_ALL, '')

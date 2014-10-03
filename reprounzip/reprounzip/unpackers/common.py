@@ -37,6 +37,12 @@ COMPAT_MAYBE = 2
 
 
 def composite_action(*functions):
+    """Makes an action that just calls several other actions in sequence.
+
+    Useful to implement ``myplugin setup`` in terms of ``myplugin setup/part1``
+    and ``myplugin setup/part2``: simply use
+    ``act1n2 = composite_action(act1, act2)``.
+    """
     def wrapper(args):
         for function in functions:
             function(args)
@@ -44,6 +50,8 @@ def composite_action(*functions):
 
 
 def target_must_exist(func):
+    """Decorator that checks that ``args.target`` exists.
+    """
     @functools.wraps(func)
     def wrapper(args):
         target = Path(args.target[0])
@@ -68,11 +76,15 @@ unique_names = unique_names()
 
 
 def make_unique_name(prefix):
+    """Makes a unique (random) bytestring name, starting with the given prefix.
+    """
     assert isinstance(prefix, bytes)
     return prefix + next(unique_names)
 
 
 def shell_escape(s):
+    """Given bl"a, returns "bl\\"a".
+    """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
     if any(c in s for c in string.whitespace + '*$\\"\''):
@@ -84,6 +96,12 @@ def shell_escape(s):
 
 
 def load_config(pack):
+    """Utility method loading the YAML configuration from inside a pack file.
+
+    Decompresses the config.yml file from the tarball to a temporary file then
+    loads it. Note that decompressing a single file is inefficient, thus
+    calling this method can be slow.
+    """
     tmp = Path.tempdir(prefix='reprozip_')
     try:
         # Loads info from package
@@ -105,6 +123,8 @@ def load_config(pack):
 
 
 class AptInstaller(object):
+    """Installer for deb-based systems (Debian, Ubuntu).
+    """
     def __init__(self, binary):
         self.bin = binary
 
@@ -166,6 +186,8 @@ class AptInstaller(object):
 
 
 def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
+    """Selects the right package installer for a Linux distribution.
+    """
     orig_distribution = runs[0]['distribution'][0].lower()
 
     # Checks that the distributions match
@@ -197,10 +219,14 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
 
 
 def busybox_url(arch):
+    """Gets the correct URL for the busybox binary given the architecture.
+    """
     return 'http://www.busybox.net/downloads/binaries/latest/busybox-%s' % arch
 
 
 def join_root(root, path):
+    """Prepends `root` to the absolute path `path`.
+    """
     p_root, p_loc = path.split_root()
     assert p_root == b'/'
     return root / p_loc
@@ -309,6 +335,8 @@ class FileUploader(object):
 
 
 class FileDownloader(object):
+    """Common logic for 'download' commands.
+    """
     def __init__(self, target, files):
         self.target = target
         self.run(files)
@@ -391,10 +419,15 @@ class FileDownloader(object):
 
 
 def get_runs(runs, selected_run, cmdline):
+    """Selects which run(s) to execute based on parts of the command-line.
+
+    Will return an iterable of run numbers. Might also fail loudly or exit
+    after printing the original command-line.
+    """
     if selected_run is None and len(runs) == 1:
         selected_run = 0
 
-    # --cmdline without arguments: display the original command line
+    # --cmdline without arguments: display the original command-line
     if cmdline == []:
         if selected_run is None:
             logging.critical("There are several runs in this pack -- you have "

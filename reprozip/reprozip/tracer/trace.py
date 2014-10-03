@@ -30,6 +30,8 @@ from reprozip.utils import PY3, izip, itervalues, listvalues, unicode_, \
 
 
 class TracedFile(File):
+    """Override of `~reprozip.common.File` that reads stats from filesystem.
+    """
     #                               read
     #                              +------+
     #                              |      |
@@ -209,6 +211,11 @@ def get_files(conn):
 
 
 def list_directories(conn):
+    """Gets additional needed directories from the trace database.
+
+    Returns the directories which are used as a process's working directory or
+    in which files are created.
+    """
     cur = conn.cursor()
     executed_files = cur.execute(
             '''
@@ -228,6 +235,8 @@ def list_directories(conn):
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
+    """Merges two sets of packages and files.
+    """
     files = set(oldfiles)
     files.update(newfiles)
 
@@ -287,6 +296,8 @@ def trace(binary, argv, directory, append, verbosity=1):
 
 
 def write_configuration(directory, sort_packages, overwrite=False):
+    """Writes the canonical YAML configuration file.
+    """
     database = directory / 'trace.sqlite3'
 
     if PY3:
@@ -358,7 +369,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        # Gets files from command line
+        # Gets files from command-line
         command_line_files = {}
         for i, arg in enumerate(argv):
             p = Path(r_workingdir, arg).resolve()
@@ -374,7 +385,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         # Labels input files
         input_files_dict = {}
         for in_file in input_files:
-            # If file is on the command line
+            # If file is on the command-line
             if in_file in command_line_files:
                 if input_files_on_cmdline > 1:
                     label = "arg_%d" % command_line_files[in_file]
@@ -391,12 +402,12 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 uniquelabel = '%s_%d' % (label, i)
             input_files_dict[uniquelabel] = str(in_file)
         # TODO : Note that right now, we keep as input files the ones that
-        # don't appear on the command line
+        # don't appear on the command-line
 
         # Labels output files
         output_files_dict = {}
         for out_file in output_files:
-            # If file is on the command line
+            # If file is on the command-line
             if out_file in command_line_files:
                 if output_files_on_cmdline > 1:
                     label = "arg_%d" % command_line_files[out_file]
@@ -413,7 +424,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 uniquelabel = '%s_%d' % (label, i)
             output_files_dict[uniquelabel] = str(out_file)
         # TODO : Note that right now, we keep as output files the ones that
-        # don't appear on the command line
+        # don't appear on the command-line
 
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': Path(r_workingdir).path,
