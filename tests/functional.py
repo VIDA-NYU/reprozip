@@ -323,8 +323,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     stderr = check_errout(rpz + ['testrun', './connect'])
     stderr = stderr.split(b'\n')
     assert not any(b'program exited with non-zero code' in l for l in stderr)
-    assert any(l for l in stderr
-               if re.search(br'process connected to [0-9.]+:80', l))
+    assert any(re.search(br'process connected to [0-9.]+:80', l)
+               for l in stderr)
 
     # ########################################
     # Copies back coverage report
