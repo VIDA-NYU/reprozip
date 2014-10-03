@@ -196,7 +196,7 @@ def directory_create(args):
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
-    signals.post_setup(target=target, pack=pack)
+    signals.post_setup(target=target)
 
 
 @target_must_exist
@@ -448,7 +448,7 @@ def chroot_create(args):
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
 
-    signals.post_setup(target=target, pack=pack)
+    signals.post_setup(target=target)
 
 
 @target_must_exist

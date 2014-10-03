@@ -282,7 +282,7 @@ fi
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
 
-    signals.post_setup(target=target, pack=pack)
+    signals.post_setup(target=target)
 
 
 @target_must_exist

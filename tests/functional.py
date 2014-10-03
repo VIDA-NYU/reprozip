@@ -19,19 +19,6 @@ from reprounzip.utils import iteritems
 tests = Path(__file__).parent.absolute()
 
 
-if 'COVER' in os.environ:
-    python = [sys.executable, '-m'] + os.environ['COVER'].split(' ')
-else:
-    python = [sys.executable]
-
-reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
-reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
-
-verbose = ['-v'] * 3
-rpz = python + [reprozip_main.absolute().path] + verbose
-rpuz = python + [reprounzip_main.absolute().path] + verbose
-
-
 def in_temp_dir(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -81,7 +68,23 @@ def build(target, sources, args=[]):
 
 
 @in_temp_dir
-def functional_tests(interactive, run_vagrant, run_docker):
+def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
+    python = [sys.executable]
+
+    # Can't match on the SignalWarning category here because of a Python bug
+    # http://bugs.python.org/issue22543
+    python.extend(['-W', 'error:signal'])
+
+    if 'COVER' in os.environ:
+        python.extend(['-m'] + os.environ['COVER'].split(' '))
+
+    reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
+    reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
+
+    verbose = ['-v'] * 3
+    rpz = python + [reprozip_main.absolute().path] + verbose
+    rpuz = python + [reprounzip_main.absolute().path] + verbose
+
     # ########################################
     # 'simple' program: trace, pack, info, unpack
     #

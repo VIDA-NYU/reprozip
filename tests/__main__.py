@@ -4,6 +4,8 @@ import locale
 import logging
 import os
 import sys
+import warnings
+
 try:
     import unittest2 as unittest
     sys.modules['unittest'] = unittest
@@ -21,6 +23,7 @@ sys.path.append(start_dir)
 
 
 from reprounzip.common import setup_logging
+from reprounzip.signals import SignalWarning
 
 from tests.functional import functional_tests
 
@@ -63,7 +66,12 @@ if __name__ == '__main__':
     parser.add_argument('--run-vagrant', action='store_true')
     parser.add_argument('--run-docker', action='store_true')
     parser.add_argument('arg', nargs=argparse.REMAINDER)
+    parser.add_argument('--no-raise-warnings', action='store_false',
+                        dest='raise_warnings', default=True)
     args = parser.parse_args()
+
+    if args.raise_warnings:
+        warnings.simplefilter('error', SignalWarning)
 
     default_map = {
         (None, None): (True, True),
@@ -84,7 +92,8 @@ if __name__ == '__main__':
         successful = prog.result.wasSuccessful()
     if functests:
         logging.info("Running functional tests")
-        functional_tests(args.interactive, args.run_vagrant, args.run_docker)
+        functional_tests(args.raise_warnings,
+                         args.interactive, args.run_vagrant, args.run_docker)
 
     if not successful:
         sys.exit(1)

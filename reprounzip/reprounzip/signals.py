@@ -4,6 +4,10 @@ import warnings
 from reprounzip.utils import irange, iteritems
 
 
+class SignalWarning(UserWarning):
+    pass
+
+
 class Signal(object):
     REQUIRED, OPTIONAL, DEPRECATED = irange(3)
 
@@ -24,25 +28,33 @@ class Signal(object):
                 try:
                     info[arg] = kwargs.pop(arg)
                 except KeyError:
-                    warnings.warn("Missing required argument %s; signal "
-                                  "ignored" % arg,
+                    warnings.warn("signal: Missing required argument %s; "
+                                  "signal ignored" % arg,
+                                  category=SignalWarning,
                                   stacklevel=2)
                     return
             else:
                 if arg in kwargs:
                     info[arg] = kwargs.pop(arg)
                     if argtype == Signal.DEPRECATED:
-                        warnings.warn("Argument %s is deprecated" % arg,
-                                      stacklevel=2)
+                        warnings.warn(
+                                "signal: Argument %s is deprecated" % arg,
+                                category=SignalWarning,
+                                stacklevel=2)
         if kwargs:
-            warnings.warn("Unexpected argument %s; signal ignored" % arg,
-                          stacklevel=2)
+            arg = next(iter(kwargs))
+            warnings.warn(
+                    "signal: Unexpected argument %s; signal ignored" % arg,
+                    category=SignalWarning,
+                    stacklevel=2)
             return
 
         for listener in self._listeners:
             try:
                 listener(**info)
             except Exception:
+                warnings.warn("signal: Got an exception calling a signal",
+                              category=SignalWarning)
                 traceback.print_exc()
 
     def subscribe(self, func):
