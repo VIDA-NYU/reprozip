@@ -51,13 +51,13 @@ def select_box(runs):
     architecture = runs[0]['architecture']
 
     if architecture not in ('i686', 'x86_64'):
-        logging.critical("Error: unsupported architecture %s" % architecture)
+        logging.critical("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
                             version)
         if architecture == 'i686':
             return 'ubuntu', 'hashicorp/precise32'
@@ -66,11 +66,11 @@ def select_box(runs):
 
     # Debian
     elif distribution != 'debian':
-        logging.warning("unsupported distribution %s, using Debian" %
+        logging.warning("unsupported distribution %s, using Debian",
                         distribution)
 
     elif version != '7' and not version.startswith('wheezy'):
-        logging.warning("using Debian 7 'Wheezy' instead of '%s'" % version)
+        logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
     else:  # architecture == 'x86_64':
@@ -109,9 +109,9 @@ def get_ssh_parameters(target):
                port=int(info.get('port', 2222)),
                username=info.get('user', 'vagrant'),
                key_filename=key_file)
-    logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s" % (
+    logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
                   ret['username'], ret['hostname'], ret['port'],
-                  ret['key_filename']))
+                  ret['key_filename'])
     return ret
 
 
@@ -159,8 +159,8 @@ def vagrant_setup_create(args):
         box = args.base_image[0]
     else:
         target_distribution, box = select_box(runs)
-    logging.info("Using box %s" % box)
-    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
+    logging.info("Using box %s", box)
+    logging.debug("Distribution: %s", target_distribution or "unknown")
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
@@ -169,8 +169,8 @@ def vagrant_setup_create(args):
         if packages:
             logging.info("Some packages were not packed, so we'll install and "
                          "copy their files\n"
-                         "Packages that are missing:\n%s" % ' '.join(
-                             pkg.name for pkg in packages))
+                         "Packages that are missing:\n%s",
+                         ' '.join(pkg.name for pkg in packages))
 
     if packages:
         installer = select_installer(pack, runs, target_distribution)
@@ -178,7 +178,7 @@ def vagrant_setup_create(args):
     target.mkdir(parents=True)
 
     # Writes setup script
-    logging.info("Writing setup script %s..." % (target / 'setup.sh'))
+    logging.info("Writing setup script %s...", target / 'setup.sh')
     with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('#!/bin/sh\n\n')
         if packages:
@@ -232,7 +232,7 @@ def vagrant_setup_create(args):
                     try:
                         tar.getmember(str(datapath))
                     except KeyError:
-                        logging.info("Missing file %s" % datapath)
+                        logging.info("Missing file %s", datapath)
                     else:
                         pathlist.append(unicode_(datapath))
             tar.close()
@@ -264,7 +264,7 @@ fi
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Vagrant file
-    logging.info("Writing %s..." % (target / 'Vagrantfile'))
+    logging.info("Writing %s...", target / 'Vagrantfile')
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
                                        newline='\n') as fp:
         # Vagrant header and version
@@ -295,7 +295,7 @@ def vagrant_setup_start(args):
     logging.info("Calling 'vagrant up'...")
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
-        logging.critical("vagrant up failed with code %d" % retcode)
+        logging.critical("vagrant up failed with code %d", retcode)
         sys.exit(1)
 
 
@@ -500,7 +500,7 @@ def vagrant_destroy_vm(args):
 
     retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
     if retcode != 0:
-        logging.critical("vagrant destroy failed with code %d, ignoring..." %
+        logging.critical("vagrant destroy failed with code %d, ignoring...",
                          retcode)
 
 

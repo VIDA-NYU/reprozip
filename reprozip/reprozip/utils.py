@@ -177,14 +177,14 @@ def make_dir_writable(directory):
             path = path / c
             stat = path.stat()
             if stat.st_uid == uid and not stat.st_mode & 0o100:
-                logging.debug("Temporarily setting u+x on %s" % path)
+                logging.debug("Temporarily setting u+x on %s", path)
                 restore_perms.append((path, stat.st_mode))
                 path.chmod(stat.st_mode | 0o700)
 
         # Add u+wx to the target
         stat = directory.stat()
         if stat.st_uid == uid and stat.st_mode & 0o700 != 0o700:
-            logging.debug("Temporarily setting u+wx on %s" % directory)
+            logging.debug("Temporarily setting u+wx on %s", directory)
             restore_perms.append((directory, stat.st_mode))
             directory.chmod(stat.st_mode | 0o700)
 
@@ -236,20 +236,20 @@ def download_file(url, dest, cachename=None):
     except URLError as e:
         if cache.exists():
             if isinstance(e, HTTPError) and e.code == 304:
-                logging.info("Cached file %s is up to date" % cachename)
+                logging.info("Cached file %s is up to date", cachename)
             else:
-                logging.warning("Couldn't download %s: %s" % (url, e))
+                logging.warning("Couldn't download %s: %s", url, e)
             cache.copy(dest)
             return
         else:
             raise
 
     if response is None:
-        logging.info("Cached file %s is up to date" % cachename)
+        logging.info("Cached file %s is up to date", cachename)
         cache.copy(dest)
         return
 
-    logging.info("Downloading %s" % url)
+    logging.info("Downloading %s", url)
     try:
         CHUNK_SIZE = 4096
         with cache.open('wb') as f:

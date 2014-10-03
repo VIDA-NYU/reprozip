@@ -134,8 +134,8 @@ def testrun(args):
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        logging.debug("Starting tracer, binary=%r, argv=%r" % (
-                      args.cmdline[0], argv))
+        logging.debug("Starting tracer, binary=%r, argv=%r",
+                      args.cmdline[0], argv)
         c = _pytracer.execute(args.cmdline[0], argv, database.path,
                               args.verbosity)
         print("\n\n-----------------------------------------------------------"
@@ -189,7 +189,7 @@ def pack(args):
     target = Path(args.target)
     if not target.unicodename.lower().endswith('.rpz'):
         target = Path(target.path + '.rpz')
-        logging.warning("Changing output filename to %s" % target.unicodename)
+        logging.warning("Changing output filename to %s", target.unicodename)
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 

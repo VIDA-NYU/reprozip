@@ -31,9 +31,9 @@ def expand_patterns(patterns):
     # Finds all matching paths
     for pattern in patterns:
         if logging.root.isEnabledFor(logging.DEBUG):
-            logging.debug("Expanding pattern %r into %d paths" % (
+            logging.debug("Expanding pattern %r into %d paths",
                           pattern,
-                          len(list(Path('/').recursedir(pattern)))))
+                          len(list(Path('/').recursedir(pattern))))
         for path in Path('/').recursedir(pattern):
             if path.is_dir():
                 dirs.add(path)
@@ -99,7 +99,7 @@ class PackBuilder(object):
             path = path / c
             if path in self.seen:
                 continue
-            logging.debug("%s -> %s" % (path, data_path(path)))
+            logging.debug("%s -> %s", path, data_path(path))
             self.tar.add(str(path), str(data_path(path)), recursive=False)
             self.seen.add(path)
 
@@ -132,7 +132,7 @@ def pack(target, directory, sort_packages):
     runs, packages, other_files = canonicalize_config(
             runs, packages, other_files, additional_patterns, sort_packages)
 
-    logging.info("Creating pack %s..." % target)
+    logging.info("Creating pack %s...", target)
     tar = PackBuilder(target)
 
     # Stores the original trace
@@ -143,25 +143,25 @@ def pack(target, directory, sort_packages):
     # Add the files from the packages
     for pkg in packages:
         if pkg.packfiles:
-            logging.info("Adding files from package %s..." % pkg.name)
+            logging.info("Adding files from package %s...", pkg.name)
             files = []
             for f in pkg.files:
                 if not Path(f.path).exists():
-                    logging.warning("Missing file %s from package %s" % (
-                                    f.path, pkg.name))
+                    logging.warning("Missing file %s from package %s",
+                                    f.path, pkg.name)
                 else:
                     tar.add_data(f.path)
                     files.append(f)
             pkg.files = files
         else:
-            logging.info("NOT adding files from package %s" % pkg.name)
+            logging.info("NOT adding files from package %s", pkg.name)
 
     # Add the rest of the files
     logging.info("Adding other files...")
     files = set()
     for f in other_files:
         if not Path(f.path).exists():
-            logging.warning("Missing file %s" % f.path)
+            logging.warning("Missing file %s", f.path)
         else:
             tar.add_data(f.path)
             files.add(f)

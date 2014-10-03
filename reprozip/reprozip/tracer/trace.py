@@ -197,7 +197,7 @@ def get_files(conn):
         logging.warning(
                 "Some files were read and then written. We will only pack the "
                 "final version of the file; reproducible experiments "
-                "shouldn't change their input files:\n%s" %
+                "shouldn't change their input files:\n%s",
                 ", ".join(unicode_(fi.path for fi in read_then_written_files)))
 
     files = set(
@@ -263,13 +263,13 @@ def trace(binary, argv, directory, append, verbosity=1):
     # Trace directory
     if not append:
         if directory.exists():
-            logging.info("Removing existing directory %s" % directory)
+            logging.info("Removing existing directory %s", directory)
             directory.rmtree()
         directory.mkdir(parents=True)
     else:
         if not directory.exists():
             logging.warning("--continue was specified but %s does not exist "
-                            "-- creating" % directory)
+                            "-- creating", directory)
             directory.mkdir(parents=True)
 
     # Runs the trace
@@ -280,9 +280,9 @@ def trace(binary, argv, directory, append, verbosity=1):
     if c != 0:
         if c & 0x0100:
             logging.warning("Program appears to have been terminated by "
-                            "signal %d" % (c & 0xFF))
+                            "signal %d", c & 0xFF)
         else:
-            logging.warning("Program exited with non-zero code %d" % c)
+            logging.warning("Program exited with non-zero code %d", c)
     logging.info("Program completed")
 
 

@@ -123,7 +123,7 @@ class AptInstaller(object):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
-            logging.error("Error: some packages could not be installed:%s" %
+            logging.error("Error: some packages could not be installed:%s",
                           ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
@@ -172,13 +172,13 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
     if (set([orig_distribution, target_distribution]) ==
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
-        logging.warning("Installing on %s but pack was generated on %s" % (
+        logging.warning("Installing on %s but pack was generated on %s",
                         target_distribution.capitalize(),
-                        orig_distribution.capitalize()))
+                        orig_distribution.capitalize())
     elif orig_distribution != target_distribution:
-        logging.error("Installing on %s but pack was generated on %s" % (
+        logging.error("Installing on %s but pack was generated on %s",
                       target_distribution.capitalize(),
-                      orig_distribution.capitalize()))
+                      orig_distribution.capitalize())
         sys.exit(1)
 
     # Selects installation method
@@ -189,7 +189,7 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         installer = AptInstaller('apt-get')
     else:
         logging.critical("Your current distribution, \"%s\", is not "
-                         "supported" %
+                         "supported",
                          (target_distribution or "(unknown)").capitalize())
         sys.exit(1)
 
@@ -243,7 +243,7 @@ class FileUploader(object):
             for filespec in files:
                 filespec_split = filespec.rsplit(':', 1)
                 if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r" %
+                    logging.critical("Invalid file specification: %r",
                                      filespec)
                     sys.exit(1)
                 local_path, input_name = filespec_split
@@ -251,14 +251,14 @@ class FileUploader(object):
                 try:
                     input_path = PosixPath(all_input_files[input_name])
                 except KeyError:
-                    logging.critical("Invalid input file: %r" % input_name)
+                    logging.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
 
                 temp = None
 
                 if not local_path:
                     # Restore original file from pack
-                    logging.debug("Restoring input file %s" % input_path)
+                    logging.debug("Restoring input file %s", input_path)
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
@@ -266,10 +266,10 @@ class FileUploader(object):
                                                              temp)
                 else:
                     local_path = Path(local_path)
-                    logging.debug("Uploading file %s to %s" % (local_path,
-                                                               input_path))
+                    logging.debug("Uploading file %s to %s",
+                                  local_path, input_path)
                     if not local_path.exists():
-                        logging.critical("Local file %s doesn't exist" %
+                        logging.critical("Local file %s doesn't exist",
                                          local_path)
                         sys.exit(1)
 
@@ -338,7 +338,7 @@ class FileDownloader(object):
             for filespec in files:
                 filespec_split = filespec.split(':', 1)
                 if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r" %
+                    logging.critical("Invalid file specification: %r",
                                      filespec)
                     sys.exit(1)
                 output_name, local_path = filespec_split
@@ -346,10 +346,10 @@ class FileDownloader(object):
                 try:
                     remote_path = PosixPath(all_output_files[output_name])
                 except KeyError:
-                    logging.critical("Invalid output file: %r" % output_name)
+                    logging.critical("Invalid output file: %r", output_name)
                     sys.exit(1)
 
-                logging.debug("Downloading file %s" % remote_path)
+                logging.debug("Downloading file %s", remote_path)
                 if not local_path:
                     self.download_and_print(remote_path)
                 else:

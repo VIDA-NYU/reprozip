@@ -38,19 +38,19 @@ def select_image(runs):
         logging.info("wanted architecture was i686, but we'll use x86_64 with "
                      "Docker")
     elif architecture != 'x86_64':
-        logging.error("Error: unsupported architecture %s" % architecture)
+        logging.error("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
     # Ubuntu
     if distribution == 'ubuntu':
         if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'" %
+            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
                             version)
         return 'ubuntu', 'ubuntu:12.04'
 
     # Debian
     elif distribution != 'debian':
-        logging.warning("unsupported distribution %s, using Debian" %
+        logging.warning("unsupported distribution %s, using Debian",
                         distribution)
         distribution, version = 'debian', '7'
 
@@ -60,8 +60,7 @@ def select_image(runs):
         return 'debian', 'debian:jessie'
     else:
         if version != '7' and not version.startswith('wheezy'):
-            logging.warning("using Debian 7 'Wheezy' instead of '%s'" %
-                            version)
+            logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
         return 'debian', 'debian:wheezy'
 
 
@@ -105,14 +104,14 @@ def docker_setup_create(args):
         base_image = args.base_image[0]
     else:
         target_distribution, base_image = select_image(runs)
-    logging.info("Using base image %s" % base_image)
-    logging.debug("Distribution: %s" % (target_distribution or "unknown"))
+    logging.info("Using base image %s", base_image)
+    logging.debug("Distribution: %s", target_distribution or "unknown")
 
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
 
     # Writes Dockerfile
-    logging.info("Writing %s..." % (target / 'Dockerfile'))
+    logging.info("Writing %s...", target / 'Dockerfile')
     with (target / 'Dockerfile').open('w',
                                       encoding='utf-8', newline='\n') as fp:
         fp.write('FROM %s\n\n' % base_image)
@@ -131,7 +130,7 @@ def docker_setup_create(args):
             # Installs necessary packages
             fp.write('    %s && \\\n' % installer.install_script(packages))
         logging.info("Dockerfile will install the %d software packages that "
-                     "were not packed" % len(packages))
+                     "were not packed", len(packages))
 
         # Untar
         paths = set()
@@ -150,7 +149,7 @@ def docker_setup_create(args):
                 try:
                     tar.getmember(str(datapath))
                 except KeyError:
-                    logging.info("Missing file %s" % datapath)
+                    logging.info("Missing file %s", datapath)
                 else:
                     pathlist.append(unicode_(datapath))
         tar.close()
@@ -183,9 +182,9 @@ def docker_setup_build(args):
     retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                               cwd=target.path)
     if retcode != 0:
-        logging.critical("docker build failed with code %d" % retcode)
+        logging.critical("docker build failed with code %d", retcode)
         sys.exit(1)
-    logging.info("Initial image created: %s" % image.decode('ascii'))
+    logging.info("Initial image created: %s", image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
@@ -208,18 +207,18 @@ def docker_run(args):
     # Destroy previous container
     if 'ran_container' in unpacked_info:
         container = unpacked_info.pop('ran_container')
-        logging.info("Destroying previous container %s" %
+        logging.info("Destroying previous container %s",
                      container.decode('ascii'))
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            logging.error("Error deleting previous container %s" %
+            logging.error("Error deleting previous container %s",
                           container.decode('ascii'))
         write_dict(target / '.reprounzip', unpacked_info)
 
     # Use the initial image directly
     if 'current_image' in unpacked_info:
         image = unpacked_info['current_image']
-        logging.debug("Running from image %s" % image.decode('ascii'))
+        logging.debug("Running from image %s", image.decode('ascii'))
     else:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
@@ -249,7 +248,7 @@ def docker_run(args):
     signals.pre_run(target=target)
 
     # Run command in container
-    logging.info("Starting container %s" % container.decode('ascii'))
+    logging.info("Starting container %s", container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
                                '-i', '-t', image,
                                '/bin/sh', '-c', cmds])
@@ -285,7 +284,7 @@ class ContainerUploader(FileUploader):
             name = stem + ('_%d' % nb).encode('ascii') + ext
         name = Path(name)
         local_path.copyfile(self.build_directory / name)
-        logging.info("Copied file %s to %s" % (local_path, name))
+        logging.info("Copied file %s to %s", local_path, name)
         self.docker_copy.append((name, input_path))
 
     def finalize(self):
@@ -312,15 +311,15 @@ class ContainerUploader(FileUploader):
         retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
                                   cwd=self.build_directory.path)
         if retcode != 0:
-            logging.critical("docker build failed with code %d" % retcode)
+            logging.critical("docker build failed with code %d", retcode)
             sys.exit(1)
         else:
-            logging.info("New image created: %s" % image.decode('ascii'))
+            logging.info("New image created: %s", image.decode('ascii'))
             if from_image != self.unpacked_info['initial_image']:
                 retcode = subprocess.call(['docker', 'rmi', from_image])
                 if retcode != 0:
                     logging.warning("Can't remove previous image, docker "
-                                    "returned %d" % retcode)
+                                    "returned %d", retcode)
             self.unpacked_info['current_image'] = image
             write_dict(self.target / '.reprounzip', self.unpacked_info)
 
@@ -373,7 +372,7 @@ def docker_download(args):
                          "experiment?")
         sys.exit(1)
     container = unpacked_info['ran_container']
-    logging.debug("Downloading from container %s" % container.decode('ascii'))
+    logging.debug("Downloading from container %s", container.decode('ascii'))
 
     ContainerDownloader(target, files, container)
 
@@ -393,21 +392,21 @@ def docker_destroy_docker(args):
         logging.info("Destroying container...")
         retcode = subprocess.call(['docker', 'rm', '-f', container])
         if retcode != 0:
-            logging.error("Error deleting container %s" %
+            logging.error("Error deleting container %s",
                           container.decode('ascii'))
 
     if 'current_image' in unpacked_info:
         image = unpacked_info.pop('current_image')
-        logging.info("Destroying image %s..." % image.decode('ascii'))
+        logging.info("Destroying image %s...", image.decode('ascii'))
         retcode = subprocess.call(['docker', 'rmi', image])
         if retcode != 0:
-            logging.error("Error deleting image %s" % image.decode('ascii'))
+            logging.error("Error deleting image %s", image.decode('ascii'))
 
     image = unpacked_info.pop('initial_image')
-    logging.info("Destroying image %s..." % image.decode('ascii'))
+    logging.info("Destroying image %s...", image.decode('ascii'))
     retcode = subprocess.call(['docker', 'rmi', image])
     if retcode != 0:
-        logging.error("Error deleting image %s" % image.decode('ascii'))
+        logging.error("Error deleting image %s", image.decode('ascii'))
 
 
 @target_must_exist
@@ -417,7 +416,7 @@ def docker_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
-    logging.info("Removing directory %s..." % target)
+    logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     target.rmtree()
     signals.post_destroy(target=target)

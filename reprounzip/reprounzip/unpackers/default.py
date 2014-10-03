@@ -73,10 +73,10 @@ def installpkgs(args):
             req = pkg.version
             real = pkgs[pkg.name][1]
             if real == PKG_NOT_INSTALLED:
-                logging.warning("package %s was not installed" % pkg.name)
+                logging.warning("package %s was not installed", pkg.name)
             else:
                 logging.warning("version %s of %s was installed, instead of "
-                                "%s" % (real, pkg.name, req))
+                                "%s", real, pkg.name, req)
         if r != 0:
             sys.exit(r)
 
@@ -144,8 +144,8 @@ def directory_create(args):
             if not f.exists():
                 logging.error(
                         "Missing file %s (from package %s that wasn't packed) "
-                        "on host, experiment will probably miss it." % (
-                            f, pkg.name))
+                        "on host, experiment will probably miss it.",
+                        f, pkg.name)
                 missing_files = True
     if missing_files:
         logging.error(
@@ -276,7 +276,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'directory')
 
-    logging.info("Removing directory %s..." % target)
+    logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)
@@ -380,16 +380,17 @@ def chroot_create(args):
     if packages_not_packed:
         logging.warning("According to configuration, some files were left out "
                         "because they belong to the following packages:%s"
-                        "\nWill copy files from HOST SYSTEM" % ''.join(
-                            '\n    %s' % pkg for pkg in packages_not_packed))
+                        "\nWill copy files from HOST SYSTEM",
+                        ''.join('\n    %s' % pkg
+                                for pkg in packages_not_packed))
         for pkg in packages_not_packed:
             for f in pkg.files:
                 f = Path(f.path)
                 if not f.exists():
                     logging.error(
                             "Missing file %s (from package %s) on host, "
-                            "experiment will probably miss it" % (
-                                f, pkg.name))
+                            "experiment will probably miss it",
+                            f, pkg.name)
                 dest = join_root(root, f)
                 dest.parent.mkdir(parents=True)
                 if f.is_link():
@@ -461,7 +462,7 @@ def chroot_mount(args):
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
-        logging.info("Mounting %s on %s..." % (m, d))
+        logging.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '--bind', m, str(d)])
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
@@ -533,7 +534,7 @@ def chroot_destroy_unmount(args):
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         if d.exists():
-            logging.info("Unmounting %s..." % d)
+            logging.info("Unmounting %s...", d)
             subprocess.check_call(['umount', str(d)])
 
 
@@ -548,7 +549,7 @@ def chroot_destroy_dir(args):
         logging.critical("Magic directories might still be mounted")
         sys.exit(1)
 
-    logging.info("Removing directory %s..." % target)
+    logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)
@@ -565,10 +566,10 @@ def chroot_destroy(args):
         for m in ('/dev', '/proc'):
             d = join_root(target / 'root', Path(m))
             if d.exists():
-                logging.info("Unmounting %s..." % d)
+                logging.info("Unmounting %s...", d)
                 subprocess.check_call(['umount', str(d)])
 
-    logging.info("Removing directory %s..." % target)
+    logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)

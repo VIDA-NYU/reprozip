@@ -276,7 +276,7 @@ def graph(args):
                 tar.extract('METADATA/config.yml', path=str(tmp))
                 tar.extract('METADATA/trace.sqlite3', path=str(tmp))
             except KeyError as e:
-                logging.critical("Error extracting from pack: %s" % e.args[0])
+                logging.critical("Error extracting from pack: %s", e.args[0])
             generate(Path(args.target[0]),
                      tmp / 'METADATA',
                      args.all_forks)

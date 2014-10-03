@@ -168,7 +168,7 @@ def showfiles(args):
     pack = Path(args.pack[0])
 
     if not pack.exists():
-        logging.critical("Pack or directory %s does not exist" % pack)
+        logging.critical("Pack or directory %s does not exist", pack)
         sys.exit(1)
 
     if pack.is_dir():
