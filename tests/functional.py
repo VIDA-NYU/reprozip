@@ -191,11 +191,15 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         if run_vagrant:
             check_call(rpuz + ['vagrant', 'run', '--no-stdin',
                                '/vagrant/simplevagrantchroot'])
+            # Destroy
+            check_call(rpuz + ['vagrant', 'destroy',
+                               '/vagrant/simplevagrantchroot'])
         elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        Path('/vagrant/simplevagrantchroot').rmtree()
+        if Path('/vagrant/simplevagrantchroot').exists():
+            Path('/vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
@@ -205,11 +209,14 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         if run_vagrant:
             check_call(rpuz + ['vagrant', 'run', '--no-stdin',
                                '/vagrant/simplevagrant'])
+            # Destroy
+            check_call(rpuz + ['vagrant', 'destroy', '/vagrant/simplevagrant'])
         elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        Path('/vagrant/simplevagrant').rmtree()
+        if Path('/vagrant/simplevagrant').exists():
+            Path('/vagrant/simplevagrant').rmtree()
 
     # Unpack Docker
     check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
