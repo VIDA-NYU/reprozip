@@ -7,6 +7,7 @@ run_lines(){
 case "$TEST_MODE"
 in
     run_program|coverage_c)
+        export PYTHONUNBUFFERED=1
         run_lines<<'EOF'
         reprozip testrun bash -c "cat ../../../../../etc/passwd;cd /var/lib;cat ../../etc/group"
         reprozip trace bash -c "cat /etc/passwd;echo"
@@ -18,6 +19,7 @@ in
 EOF
         ;;
     coverage_py)
+        export PYTHONUNBUFFERED=1
         export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-vagrant/reprounzip --branch"
         run_lines<<'EOF'
         $COVER reprozip/reprozip/main.py testrun bash -c "cat ../../../../../etc/passwd;cd /var/lib;cat ../../etc/group"
