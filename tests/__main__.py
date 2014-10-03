@@ -1,4 +1,6 @@
 import argparse
+import codecs
+import locale
 import logging
 import os
 import sys
@@ -34,6 +36,18 @@ class Program(unittest.TestProgram):
 
 
 if __name__ == '__main__':
+    # Locale
+    locale.setlocale(locale.LC_ALL, '')
+
+    # Encoding for output streams
+    if str == bytes:  # PY2
+        writer = codecs.getwriter(locale.getpreferredencoding())
+        o_stdout, o_stderr = sys.stdout, sys.stderr
+        sys.stdout = writer(sys.stdout)
+        sys.stdout.buffer = o_stdout
+        sys.stderr = writer(sys.stderr)
+        sys.stderr.buffer = o_stderr
+
     setup_logging('TESTSUITE', 999)
 
     parser = argparse.ArgumentParser(description="reprozip tests")

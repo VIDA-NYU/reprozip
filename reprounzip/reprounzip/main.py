@@ -40,10 +40,13 @@ def main():
     locale.setlocale(locale.LC_ALL, '')
 
     # Encoding for output streams
-    if str == bytes:
+    if str == bytes:  # PY2
         writer = codecs.getwriter(locale.getpreferredencoding())
+        o_stdout, o_stderr = sys.stdout, sys.stderr
         sys.stdout = writer(sys.stdout)
+        sys.stdout.buffer = o_stdout
         sys.stderr = writer(sys.stderr)
+        sys.stderr.buffer = o_stderr
 
     # http://bugs.python.org/issue13676
     # This prevents reprozip from reading argv and envp arrays from trace
