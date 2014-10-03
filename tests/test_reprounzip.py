@@ -44,6 +44,7 @@ class TestSignals(unittest.TestCase):
                 raise TypeError
             called.last = None
             with warnings.catch_warnings(record=True) as w:
+                warnings.resetwarnings()
                 sig(**kwargs)
             if res_type == 'fail' or res_type == 'warn':
                 self.assertEqual(len(w), 1)
