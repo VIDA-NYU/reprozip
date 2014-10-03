@@ -295,7 +295,7 @@ def vagrant_setup_start(args):
     logging.info("Calling 'vagrant up'...")
     retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
     if retcode != 0:
-        sys.stderr("vagrant up failed with code %d\n" % retcode)
+        logging.critical("vagrant up failed with code %d" % retcode)
         sys.exit(1)
 
 
@@ -500,8 +500,8 @@ def vagrant_destroy_vm(args):
 
     retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
     if retcode != 0:
-        sys.stderr("vagrant destroy failed with code %d, ignoring...\n" %
-                   retcode)
+        logging.critical("vagrant destroy failed with code %d, ignoring..." %
+                         retcode)
 
 
 @target_must_exist
