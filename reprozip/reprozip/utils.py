@@ -162,11 +162,11 @@ def make_dir_writable(directory):
     uid = os.getuid()
 
     try:
-        stat = directory.stat()
+        sb = directory.stat()
     except OSError:
         pass
     else:
-        if stat.st_uid != uid or stat.st_mode & 0o700 == 0o700:
+        if sb.st_uid != uid or sb.st_mode & 0o700 == 0o700:
             yield
             return
 
@@ -177,18 +177,18 @@ def make_dir_writable(directory):
         path = Path('/')
         for c in directory.components[1:-1]:
             path = path / c
-            stat = path.stat()
-            if stat.st_uid == uid and not stat.st_mode & 0o100:
+            sb = path.stat()
+            if sb.st_uid == uid and not sb.st_mode & 0o100:
                 logging.debug("Temporarily setting u+x on %s", path)
-                restore_perms.append((path, stat.st_mode))
-                path.chmod(stat.st_mode | 0o700)
+                restore_perms.append((path, sb.st_mode))
+                path.chmod(sb.st_mode | 0o700)
 
         # Add u+wx to the target
-        stat = directory.stat()
-        if stat.st_uid == uid and stat.st_mode & 0o700 != 0o700:
+        sb = directory.stat()
+        if sb.st_uid == uid and sb.st_mode & 0o700 != 0o700:
             logging.debug("Temporarily setting u+wx on %s", directory)
-            restore_perms.append((directory, stat.st_mode))
-            directory.chmod(stat.st_mode | 0o700)
+            restore_perms.append((directory, sb.st_mode))
+            directory.chmod(sb.st_mode | 0o700)
 
         yield
     finally:

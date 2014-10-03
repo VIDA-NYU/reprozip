@@ -331,6 +331,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         runs, oldpkgs, oldfiles, patterns = load_config(config,
                                                         canonical=False,
                                                         File=TracedFile)
+        # Here, additional patterns are discarded
 
         executions = cur.execute(
                 '''
@@ -357,7 +358,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ORDER BY p.id;
                 ''')
     for ((r_name, r_argv, r_envp, r_workingdir, r_exitcode),
-            input_files, output_files) in (izip(executions, inputs, outputs)):
+            input_files, output_files) in izip(executions, inputs, outputs):
         # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:

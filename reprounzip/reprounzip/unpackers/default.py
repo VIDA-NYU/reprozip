@@ -251,7 +251,7 @@ def directory_run(args):
                     for d in path
                     if d.root == '/']
         # Rebuild string
-        path = ':'.join(unicode_(d) for d in (dir_path + path))
+        path = ':'.join(unicode_(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
 
         # FIXME : Use exec -a or something if binary != argv[0]

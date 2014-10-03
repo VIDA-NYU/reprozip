@@ -34,8 +34,6 @@ unpackers = {}
 def main():
     """Entry point when called on the command-line.
     """
-    global unpackers
-
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 

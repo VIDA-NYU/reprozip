@@ -170,7 +170,7 @@ class AptInstaller(object):
                 else:
                     name = fields[0].decode('ascii')
                     status = PKG_NOT_INSTALLED
-                pkg, _s = pkgs_dict[name]
+                pkg, _ = pkgs_dict[name]
                 pkgs_dict[name] = pkg, status
         finally:
             p.wait()
