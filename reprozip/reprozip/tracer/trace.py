@@ -200,7 +200,7 @@ def get_files(conn):
                 "Some files were read and then written. We will only pack the "
                 "final version of the file; reproducible experiments "
                 "shouldn't change their input files:\n%s",
-                ", ".join(unicode_(fi.path for fi in read_then_written_files)))
+                ", ".join(unicode_(fi.path) for fi in read_then_written_files))
 
     files = set(
             fi
