@@ -1,13 +1,15 @@
 Changelog
 =========
 
-0.4.1 (???)
------------
+0.4.1 (2014-10-06)
+------------------
 
 Bugfixes:
 * reprounzip showed duplicated logging messages
 * Makes 'run' commands not fail if the command returns an error code
 * Unicode issues with Vagrant on Windows Python 3
+* Warning for files read then written didn't show the filenames
+* Fixes resetted input files breaking 'showfiles'
 
 Features:
 * 'docker upload' command
