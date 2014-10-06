@@ -190,7 +190,7 @@ def showfiles(args):
                     print("    %s (%s)" % (input_name, path))
                 else:
                     print("    %s" % input_name)
-                if input_name in input_files:
+                if input_files.get(input_name) is not None:
                     assigned = PosixPath(input_files[input_name])
                 else:
                     assigned = "(original)"

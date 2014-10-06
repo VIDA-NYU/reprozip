@@ -250,7 +250,7 @@ class FileUploader(object):
                 if len(runs) > 1:
                     print("  Run %d:" % i)
                 for input_name in run['input_files']:
-                    if input_name in self.input_files:
+                    if self.input_files.get(input_name) is not None:
                         assigned = PosixPath(self.input_files[input_name])
                     else:
                         assigned = "(original)"
@@ -303,7 +303,7 @@ class FileUploader(object):
 
                 if temp is not None:
                     temp.remove()
-                    self.input_files[input_name] = None
+                    del self.input_files[input_name]
                 else:
                     self.input_files[input_name] = local_path.absolute().path
         finally:
