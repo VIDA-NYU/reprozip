@@ -9,14 +9,14 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 setup(name='reprounzip-docker',
-      version='0.4',
+      version='0.4.1',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
               'docker = reprounzip.unpackers.docker:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
-          'reprounzip>=0.4',
+          'reprounzip>=0.4.1',
           'rpaths>=0.8'],
       description="Allows the ReproZip unpacker to create Docker containers",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",

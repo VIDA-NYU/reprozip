@@ -25,7 +25,7 @@ from reprounzip.pack_info import print_info, showfiles
 from reprounzip import signals
 
 
-__version__ = '0.4'
+__version__ = '0.4.1'
 
 
 unpackers = {}
