@@ -404,11 +404,11 @@ class FileDownloader(object):
         with temp.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
-                sys.stdout.write(chunk)
+                sys.stdout.buffer.write(chunk)
             while len(chunk) == 1024:
                 chunk = fp.read(1024)
                 if chunk:
-                    sys.stdout.write(chunk)
+                    sys.stdout.buffer.write(chunk)
         temp.remove()
 
     def download(self, remote_path, local_path):

@@ -641,11 +641,11 @@ class LocalDownloader(FileDownloader):
         with remote_path.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
-                sys.stdout.write(chunk)
+                sys.stdout.buffer.write(chunk)
             while len(chunk) == 1024:
                 chunk = fp.read(1024)
                 if chunk:
-                    sys.stdout.write(chunk)
+                    sys.stdout.buffer.write(chunk)
 
     def download(self, remote_path, local_path):
         remote_path = join_root(self.root, remote_path)
