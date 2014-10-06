@@ -78,7 +78,8 @@ def select_box(runs):
         logging.warning("unsupported distribution %s, using Debian",
                         distribution)
 
-    elif version != '7' and not version.startswith('wheezy'):
+    elif (version != '7' and not version.startswith('7.') and
+            not version.startswith('wheezy')):
         logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
     if architecture == 'i686':
         return 'debian', 'remram/debian-7-i386'
