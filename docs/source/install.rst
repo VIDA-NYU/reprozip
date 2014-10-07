@@ -40,11 +40,13 @@ Obtaining the Software
 
 In ReproZip, the components must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_. Then, to install a ReproZip component, simply run the following command::
 
-    $ pip install <name>
+    $ pip install reprozip
+    $ # or:
+    $ pip install reprounzip
 
-where `<name>` is the name of the component.
+The additional plugins for *reprounzip* can also be installed using the same command, or you can also install all of them using::
 
-The additional plugins for *reprounzip* can also be installed using the same command. They depend on *reprounzip*, so it will be installed automatically if you simply install the plugin.
+    $ pip install reprounzip[all]
 
 ..  rubric:: Footnotes
 
