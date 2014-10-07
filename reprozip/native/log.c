@@ -13,7 +13,7 @@ void log_real_(pid_t tid, const char *tag, const char *format, ...)
         struct timeval tv;
         gettimeofday(&tv, NULL);
         strftime(datestr, 13, "%H:%M:%S", localtime(&tv.tv_sec));
-        sprintf(datestr+8, ".%03d", tv.tv_usec / 1000);
+        sprintf(datestr+8, ".%03u", (unsigned int)(tv.tv_usec / 1000));
     }
     fprintf(stderr, "[REPROZIP] %s %s: ", datestr, tag);
     if(tid > 0)
