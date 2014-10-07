@@ -27,6 +27,8 @@ setup(name='reprounzip',
               'chroot = reprounzip.unpackers.default:setup_chroot']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
+      extras_require={
+          'all': ['reprounzip-vagrant>=0.4', 'reprounzip-docker>=0.4']},
       description="Linux tool enabling reproducible experiments (unpacker)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',
