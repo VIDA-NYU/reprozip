@@ -1,5 +1,6 @@
 # This is paramiko/demos/interactive.py
 # Part of the Paramiko project; https://github.com/paramiko/paramiko/
+# Adapted by Remi Rampin
 
 # Copyright (C) 2003-2007  Robey Pointer <robeypointer@gmail.com>
 #
@@ -20,6 +21,8 @@
 # 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
+from __future__ import unicode_literals
+
 import socket
 import sys
 
@@ -32,32 +35,39 @@ except ImportError:
     has_termios = False
 
 
-def interactive_shell(chan):
+def interactive_shell(chan, raw=False):
     if has_termios:
-        posix_shell(chan)
+        posix_shell(chan, raw)
     else:
         windows_shell(chan)
 
 
-def posix_shell(chan):
+def posix_shell(chan, raw):
     import select
 
     oldtty = termios.tcgetattr(sys.stdin)
     try:
-        tty.setraw(sys.stdin.fileno())
-        tty.setcbreak(sys.stdin.fileno())
+        if raw:
+            tty.setraw(sys.stdin.fileno())
+            tty.setcbreak(sys.stdin.fileno())
         chan.settimeout(0.0)
 
         while True:
             r, w, e = select.select([chan, sys.stdin], [], [])
             if chan in r:
                 try:
-                    x = chan.recv(1024).decode('utf-8', 'replace')
-                    if len(x) == 0:
-                        sys.stdout.write('\r\n*** EOF\r\n')
-                        break
-                    sys.stdout.write(x)
-                    sys.stdout.flush()
+                    if chan.recv_stderr_ready():
+                        x = chan.recv_stderr(1024)
+                        if len(x) > 0:
+                            sys.stderr.buffer.write(x)
+                            sys.stderr.flush()
+                    else:
+                        x = chan.recv(1024)
+                        if len(x) == 0:
+                            sys.stdout.write('\r\n*** EOF\r\n')
+                            break
+                        sys.stdout.buffer.write(x)
+                        sys.stdout.flush()
                 except socket.timeout:
                     pass
             if sys.stdin in r:
@@ -67,7 +77,8 @@ def posix_shell(chan):
                 chan.send(x)
 
     finally:
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
+        if raw:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
 
 # thanks to Mike Looijmans for this code
@@ -76,27 +87,36 @@ def windows_shell(chan):
 
     sys.stdout.write("*** Line-buffered terminal emulation. "
                      "Press F6 or ^Z then enter to send EOF.\r\n")
+    sys.stdout.flush()
 
-    def writeall(sock):
+    out_lock = threading.RLock()
+
+    def write(recv, std):
         while True:
-            data = sock.recv(256)
+            data = recv(256)
             if not data:
-                sys.stdout.write("\r\n*** EOF (press F6 or ^Z then enter to "
-                                 "end)\r\n")
-                sys.stdout.flush()
+                if std:
+                    with out_lock:
+                        sys.stdout.write(
+                                "\r\n*** EOF (press F6 or ^Z then enter to "
+                                "end)\r\n")
+                        sys.stdout.flush()
                 break
-            sys.stdout.write(data.decode('utf-8', 'replace'))
-            sys.stdout.flush()
+            stream = [sys.stderr, sys.stdout][std]
+            with out_lock:
+                stream.buffer.write(data)
+                stream.flush()
 
-    writer = threading.Thread(target=writeall, args=(chan,))
-    writer.start()
+    threading.Thread(target=write, args=(chan.recv, True)).start()
+    threading.Thread(target=write, args=(chan.recv_stderr, False,)).start()
 
     try:
         while True:
             d = sys.stdin.read(1)
             if not d:
+                chan.shutdown_write()
                 break
-            chan.send(d.encode('utf-8'))
+            chan.send(d)
     except EOFError:
         # user hit ^Z or F6
         pass

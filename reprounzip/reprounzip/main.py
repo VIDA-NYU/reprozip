@@ -45,6 +45,8 @@ def main():
         sys.stdout.buffer = o_stdout
         sys.stderr = writer(sys.stderr)
         sys.stderr.buffer = o_stderr
+    else:
+        sys.stdin = sys.stdin.buffer
 
     # http://bugs.python.org/issue13676
     # This prevents reprozip from reading argv and envp arrays from trace

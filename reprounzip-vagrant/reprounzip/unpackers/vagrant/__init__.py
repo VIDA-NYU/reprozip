@@ -378,7 +378,7 @@ def vagrant_run(args):
             data = chan.recv(1024)
             if len(data) == 0:
                 break
-            sys.stdout.write(data)
+            sys.stdout.buffer.write(data)
             sys.stdout.flush()
     else:
         interactive_shell(chan)
