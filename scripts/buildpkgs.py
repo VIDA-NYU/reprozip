@@ -17,7 +17,8 @@ def update_version(gitversion, foundversion):
 
 if __name__ == '__main__':
     # Get version from git describe
-    version = subprocess.check_output(['git', 'describe', '--always'],
+    version = subprocess.check_output(['git', 'describe',
+                                       '--always', '--tags'],
                                       cwd=toplevel).strip()
 
     dest = os.path.join(toplevel, 'dist')
