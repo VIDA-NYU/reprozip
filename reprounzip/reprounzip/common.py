@@ -276,7 +276,8 @@ def setup_usage_report(name, version):
                               disable='%s usage_report --disable' % name),
             'http://usagestats.remram.fr/',
             version=version,
-            unique_user_id=True)
+            unique_user_id=True,
+            env_var='REPROZIP_USAGE_STATS')
 
 
 def record_usage_report(**kwargs):

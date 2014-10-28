@@ -4,6 +4,8 @@ run_lines(){
     while read line; do echo "$line"; sh -c "$line" || exit $?; done
 }
 
+export REPROZIP_USAGE_STATS=off
+
 case "$TEST_MODE"
 in
     run_program|coverage_c)

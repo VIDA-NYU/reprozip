@@ -51,6 +51,9 @@ if __name__ == '__main__':
         sys.stderr = writer(sys.stderr)
         sys.stderr.buffer = o_stderr
 
+    # Disables usage reporting
+    os.environ['REPROZIP_USAGE_STATS'] = 'off'
+
     setup_logging('TESTSUITE', 999)
 
     parser = argparse.ArgumentParser(description="reprozip tests")
