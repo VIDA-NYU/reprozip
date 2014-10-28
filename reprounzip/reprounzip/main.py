@@ -20,7 +20,7 @@ from pkg_resources import iter_entry_points
 import sys
 import traceback
 
-from reprounzip.common import setup_logging
+from reprounzip.common import setup_logging, setup_usage_stats
 from reprounzip.pack_info import print_info, showfiles
 from reprounzip import signals
 
@@ -118,6 +118,7 @@ def main():
     args = parser.parse_args()
     signals.unpacker = args.selected_unpacker
     setup_logging('REPROUNZIP', args.verbosity)
+    setup_usage_stats('reprounzip', __version__)
     try:
         args.func(args)
     except Exception as e:

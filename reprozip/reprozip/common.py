@@ -24,6 +24,7 @@ from datetime import datetime
 from distutils.version import LooseVersion
 import logging
 from rpaths import PosixPath
+import usagestats
 import yaml
 
 from .utils import CommonEqualityMixin, escape, hsize, unicode_
@@ -259,3 +260,20 @@ def setup_logging(tag, verbosity):
     logger = logging.root
     logger.setLevel(level)
     logger.addHandler(handler)
+
+
+usage_report = None
+
+
+def setup_usage_stats(name, version):
+    """Sets up the usagestats module.
+    """
+    global usage_report
+
+    usage_report = usagestats.Stats(
+            '~/.reprozip/usage_stats',
+            usagestats.Prompt(enable='%s usage_report --enable' % name,
+                              disable='%s usage_report --disable' % name),
+            'http://usagestats.remram.fr/',
+            version=version,
+            unique_user_id=True)
