@@ -23,7 +23,8 @@ import sys
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import setup_logging, setup_usage_stats
+from reprozip.common import setup_logging, \
+    setup_usage_report, submit_usage_report, record_usage_report
 import reprozip.pack
 import reprozip.tracer.trace
 from reprozip.utils import PY3
@@ -239,7 +240,8 @@ def main():
                         "tracing and packing the execution of an experiment",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="commands", metavar='')
+    subparsers = parser.add_subparsers(title="commands", metavar='',
+                                       dest='selected_command')
 
     # trace command
     parser_trace = subparsers.add_parser(
@@ -284,10 +286,16 @@ def main():
 
     args = parser.parse_args()
     setup_logging('REPROZIP', args.verbosity)
-    setup_usage_stats('reprozip', reprozip_version)
+    setup_usage_report('reprozip', reprozip_version)
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
-    args.func(args)
+    record_usage_report(command=args.selected_command)
+    try:
+        args.func(args)
+    except Exception as e:
+        submit_usage_report(result=type(e).__name__)
+    else:
+        submit_usage_report(result='success')
     sys.exit(0)
 
 

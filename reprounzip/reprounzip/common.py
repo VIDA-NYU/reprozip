@@ -262,18 +262,29 @@ def setup_logging(tag, verbosity):
     logger.addHandler(handler)
 
 
-usage_report = None
+_usage_report = None
 
 
-def setup_usage_stats(name, version):
+def setup_usage_report(name, version):
     """Sets up the usagestats module.
     """
-    global usage_report
+    global _usage_report
 
-    usage_report = usagestats.Stats(
+    _usage_report = usagestats.Stats(
             '~/.reprozip/usage_stats',
             usagestats.Prompt(enable='%s usage_report --enable' % name,
                               disable='%s usage_report --disable' % name),
             'http://usagestats.remram.fr/',
             version=version,
             unique_user_id=True)
+
+
+def record_usage_report(**kwargs):
+    _usage_report.note(kwargs)
+
+
+def submit_usage_report(**kwargs):
+    _usage_report.submit(kwargs,
+                         usagestats.OPERATING_SYSTEM,
+                         usagestats.SESSION_TIME,
+                         usagestats.PYTHON_VERSION)
