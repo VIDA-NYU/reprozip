@@ -14,6 +14,7 @@ in
         sudo apt-get update -qq
         sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
+        pip install 'git+https://github.com/remram44/usagestats.git#egg=usagestats'
         if [ $TEST_MODE = "coverage_c" ]; then pip install cpp-coveralls; fi
         cd reprozip && python setup.py install
         cd reprounzip && python setup.py install
@@ -26,6 +27,7 @@ EOF
         sudo apt-get update -qq
         sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
+        pip install 'git+https://github.com/remram44/usagestats.git#egg=usagestats'
         pip install coveralls
         cd reprozip && python setup.py develop
         cd reprounzip && python setup.py develop
