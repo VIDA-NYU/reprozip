@@ -96,8 +96,7 @@ def main():
                         "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="formats", metavar='',
-                                       dest='selected_unpacker')
+    subparsers = parser.add_subparsers(title="subcommands", metavar='')
 
     # Loads unpackers
     for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
@@ -106,6 +105,7 @@ def main():
                 help=descr_1, description=descr,
                 formatter_class=argparse.RawDescriptionHelpFormatter)
         info = func(plugin_parser)
+        plugin_parser.set_defaults(selected_unpacker=name)
         if info is None:
             info = {}
         unpackers[name] = info
@@ -113,7 +113,10 @@ def main():
     signals.pre_parse_args(parser=parser)
     args = parser.parse_args()
     signals.post_parse_args(args=args)
-    signals.unpacker = args.selected_unpacker
+    try:
+        signals.unpacker = args.selected_unpacker
+    except AttributeError:
+        signals.unpacker = None
     setup_logging('REPROUNZIP', args.verbosity)
     try:
         args.func(args)
