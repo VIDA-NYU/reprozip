@@ -110,7 +110,7 @@ def main():
             info = {}
         unpackers[name] = info
 
-    signals.pre_parse_args(parser=parser)
+    signals.pre_parse_args(parser=parser, subparsers=subparsers)
     args = parser.parse_args()
     signals.post_parse_args(args=args)
     try:
