@@ -84,9 +84,9 @@ class Signal(object):
             try:
                 listener(**info)
             except Exception:
+                traceback.print_exc()
                 warnings.warn("signal: Got an exception calling a signal",
                               category=SignalWarning)
-                traceback.print_exc()
 
     def subscribe(self, func):
         """Adds the given callable to the listeners.
