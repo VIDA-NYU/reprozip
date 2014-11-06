@@ -16,7 +16,7 @@ if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip',
       version='0.4.1',
-      packages=['reprounzip', 'reprounzip.unpackers'],
+      packages=['reprounzip', 'reprounzip.unpackers', 'reprounzip.plugins'],
       entry_points={
           'console_scripts': [
               'reprounzip = reprounzip.main:main'],
