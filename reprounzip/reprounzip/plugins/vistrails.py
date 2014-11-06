@@ -159,7 +159,7 @@ def setup_vistrails():
     signals.post_setup.subscribe(do_vistrails)
 
 
-if __name__ == '__main__':
+def run_from_vistrails():
     setup_logging('REPROUNZIP-VISTRAILS', logging.INFO)
 
     parser = argparse.ArgumentParser()
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     os.environ['REPROUNZIP_NON_INTERACTIVE'] = 'y'
 
     def cmd(lst):
-        logging.info("cmd: %s" % ' '.join(lst))
+        logging.info("cmd: %s", ' '.join(lst))
         subprocess.check_call(rpuz + lst,
                               cwd=args.directory)
 
@@ -197,3 +197,7 @@ if __name__ == '__main__':
         output_name, filename = output_file.split(':', 1)
         cmd(['download', '.',
              '%s:%s' % (output_name, filename)])
+
+
+if __name__ == '__main__':
+    run_from_vistrails()
