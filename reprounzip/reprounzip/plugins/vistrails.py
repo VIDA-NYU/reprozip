@@ -47,6 +47,7 @@ def do_vistrails(target):
             output_files.add(output_name)
 
     # Writes CLTools JSON definition
+    (dot_vistrails / 'CLTools').mkdir(parents=True)
     fd, cltools_module = Path.tempfile(prefix='reprounzip_',
                                        dir=dot_vistrails / 'CLTools',
                                        suffix='.clt')
