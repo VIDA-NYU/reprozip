@@ -19,6 +19,7 @@ in
         cd reprounzip && python setup.py install
         cd reprounzip-docker && python setup.py install
         cd reprounzip-vagrant && python setup.py install
+        cd reprounzip-vistrails && python setup.py install
 EOF
         ;;
     coverage_py)
@@ -31,6 +32,7 @@ EOF
         cd reprounzip && python setup.py develop
         cd reprounzip-docker && python setup.py develop
         cd reprounzip-vagrant && python setup.py develop
+        cd reprounzip-vistrails && python setup.py install
 EOF
         ;;
     check_style)
