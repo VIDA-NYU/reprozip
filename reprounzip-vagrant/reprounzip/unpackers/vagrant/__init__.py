@@ -373,7 +373,7 @@ def vagrant_run(args):
     chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
 
     # Get output
-    if args.no_stdin:
+    if args.no_stdin or os.environ.get('REPROUNZIP_NON_INTERACTIVE'):
         while True:
             data = chan.recv(1024)
             if len(data) == 0:
