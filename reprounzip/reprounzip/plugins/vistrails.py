@@ -19,10 +19,11 @@ import logging
 import os
 from reprounzip import signals
 from rpaths import Path
+import subprocess
 import sys
 import zipfile
 
-from reprounzip.common import load_config
+from reprounzip.common import load_config, setup_logging
 from reprounzip.main import __version__ as version
 from reprounzip.utils import iteritems, escape
 
@@ -89,7 +90,7 @@ def do_vistrails(target):
                  '            "flag",\n'
                  '            {}\n'
                  '        ]%s\n' % (
-                     escape(str(target)),
+                     escape(str(target.absolute())),
                      ',' if input_files or output_files else ''))
         # Input files
         for i, input_name in enumerate(input_files):
@@ -159,12 +160,38 @@ def setup_vistrails():
 
 
 if __name__ == '__main__':
+    setup_logging('REPROUNZIP-VISTRAILS', logging.INFO)
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('directory')
     parser.add_argument('unpacker')
+    parser.add_argument('directory')
     parser.add_argument('--input-file', action='append', default=[])
     parser.add_argument('--output-file', action='append', default=[])
 
     args = parser.parse_args()
 
-    # TODO: Actually call reprounzip
+    python = sys.executable
+    rpuz = [python, '-m', 'reprounzip.main', args.unpacker]
+
+    def cmd(lst):
+        logging.info("cmd: %s" % ' '.join(lst))
+        subprocess.check_call(rpuz + lst,
+                              cwd=args.directory)
+
+    logging.info("reprounzip-vistrails calling reprounzip; dir=%s",
+                 args.directory)
+
+    # Sets up input files
+    for input_file in args.input_file:
+        input_name, filename = input_file.split(':', 1)
+        cmd(['upload', '.',
+             '%s:%s' % (filename, input_name)])
+
+    # Runs
+    cmd(['run', '.'])
+
+    # Gets output files
+    for output_file in args.output_file:
+        output_name, filename = output_file.split(':', 1)
+        cmd(['download', '.',
+             '%s:%s' % (output_name, filename)])
