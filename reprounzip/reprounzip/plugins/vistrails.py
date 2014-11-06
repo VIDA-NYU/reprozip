@@ -173,6 +173,8 @@ if __name__ == '__main__':
     python = sys.executable
     rpuz = [python, '-m', 'reprounzip.main', args.unpacker]
 
+    os.environ['REPROUNZIP_NON_INTERACTIVE'] = 'y'
+
     def cmd(lst):
         logging.info("cmd: %s" % ' '.join(lst))
         subprocess.check_call(rpuz + lst,
