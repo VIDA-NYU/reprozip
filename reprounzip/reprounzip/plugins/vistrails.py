@@ -119,6 +119,11 @@ def do_vistrails(target):
                      '        ]%(comma)s\n' % {
                          'name': escape(output_name),
                          'comma': comma})
+        # Use "std file processing" since VisTrails <=2.1.4 has a bug without
+        # this (also, it's inefficient)
+        fp.write('    "options": {\n'
+                 '        "std_using_files": ""\n'
+                 '    },\n')
 
         fp.write('    ],\n'
                  '    "stdout": [\n'
@@ -130,7 +135,7 @@ def do_vistrails(target):
 
     # Writes VisTrails workflow
     vistrail = target / 'vistrails.vt'
-    logging.info("Writing VisTrails workflow %s..." % vistrail)
+    logging.info("Writing VisTrails workflow %s...", vistrail)
     vtdir = Path.tempdir(prefix='reprounzip_vistrails_')
     try:
         with vtdir.open('w', 'vistrail', encoding='utf-8', newline='\n') as fp:
