@@ -107,7 +107,7 @@ def write_cltools_module(run, dot_vistrails):
 
     # Writes CLTools JSON definition
     (dot_vistrails / 'CLTools').mkdir(parents=True)
-    cltools_module = dot_vistrails / 'CLTools' / module_name
+    cltools_module = (dot_vistrails / 'CLTools' / module_name) + '.clt'
     logging.info("Writing CLTools definition %s...", cltools_module)
     with cltools_module.open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('{\n'
