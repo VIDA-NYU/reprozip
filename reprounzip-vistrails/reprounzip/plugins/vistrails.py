@@ -120,14 +120,14 @@ def do_vistrails(target):
                      '        ]%(comma)s\n' % {
                          'name': escape(output_name),
                          'comma': comma})
+        fp.write('    ],\n')
         # Use "std file processing" since VisTrails <=2.1.4 has a bug without
         # this (also, it's inefficient)
         fp.write('    "options": {\n'
                  '        "std_using_files": ""\n'
                  '    },\n')
 
-        fp.write('    ],\n'
-                 '    "stdout": [\n'
+        fp.write('    "stdout": [\n'
                  '        "stdout",\n'
                  '        "file",\n'
                  '        {}\n'
