@@ -88,8 +88,8 @@ def do_vistrails(target):
             with vtdir.open('w', 'vistrail',
                             encoding='utf-8', newline='\n') as fp:
                 vistrail = pkg_resources.resource_string(
-                        'reprounzip.plugins.vistrails',
-                        'pipeline.tpl.xml')
+                        'reprounzip.plugins',
+                        'vistrails-pipeline.tpl.xml')
                 vistrail = vistrail.decode('ascii')
                 vistrail = vistrail.format(date='2014-11-12 15:31:18',
                                            unpacker=unpacker,
