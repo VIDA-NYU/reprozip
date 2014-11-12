@@ -80,16 +80,43 @@ def do_vistrails(target):
         module_name = write_cltools_module(run, dot_vistrails)
 
         # Writes VisTrails workflow
-        vistrail = target / 'vistrails.vt'
-        logging.info("Writing VisTrails workflow %s...", vistrail)
+        bundle = target / 'vistrails.vt'
+        logging.info("Writing VisTrails workflow %s...", bundle)
         vtdir = Path.tempdir(prefix='reprounzip_vistrails_')
         try:
             with vtdir.open('w', 'vistrail',
                             encoding='utf-8', newline='\n') as fp:
-                fp.write('todo\n%s\n%s\n' % (module_name, unpacker))
-                # TODO : write XML vistrail
+                vistrail = '''\
+<vistrail id="" name="" version="1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vistrails.org/vistrail.xsd">
+  <action date="{date}" id="1" prevId="0" session="0" user="ReproUnzip">
+    <add id="0" objectId="0" parentObjId="" parentObjType="" what="module">
+      <module cache="1" id="0" name="{module_name}" namespace="" package="org.vistrails.vistrails.cltools" version="0.1.2" />
+    </add>
+    <add id="1" objectId="0" parentObjId="0" parentObjType="module" what="location">
+      <location id="0" x="0.0" y="0.0" />
+    </add>
+    <add id="2" objectId="0" parentObjId="0" parentObjType="module" what="function">
+      <function id="0" name="directory" pos="0" />
+    </add>
+    <add id="3" objectId="0" parentObjId="0" parentObjType="function" what="parameter">
+      <parameter alias="" id="0" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{directory}" />
+    </add>
+    <add id="4" objectId="1" parentObjId="0" parentObjType="module" what="function">
+      <function id="1" name="unpacker" pos="1" />
+    </add>
+    <add id="5" objectId="1" parentObjId="1" parentObjType="function" what="parameter">
+      <parameter alias="" id="1" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{unpacker}" />
+    </add>
+  </action>
+</vistrail>
+'''
+                vistrail = vistrail.format(date='2014-11-12 15:31:18',
+                                           unpacker=unpacker,
+                                           directory=target.absolute(),
+                                           module_name=module_name)
+                fp.write(vistrail)
 
-            with vistrail.open('wb') as fp:
+            with bundle.open('wb') as fp:
                 z = zipfile.ZipFile(fp, 'w')
                 with vtdir.in_dir():
                     for path in Path('.').recursedir():
