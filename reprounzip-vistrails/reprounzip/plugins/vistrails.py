@@ -19,7 +19,6 @@ from datetime import datetime
 import hashlib
 import logging
 import os
-import pkg_resources
 from reprounzip import signals
 from rpaths import Path
 import subprocess
@@ -87,10 +86,7 @@ def do_vistrails(target):
         try:
             with vtdir.open('w', 'vistrail',
                             encoding='utf-8', newline='\n') as fp:
-                vistrail = pkg_resources.resource_string(
-                        'reprounzip.plugins',
-                        'vistrails-pipeline.tpl.xml')
-                vistrail = vistrail.decode('ascii')
+                vistrail = VISTRAILS_TEMPLATE
                 vistrail = vistrail.format(date='2014-11-12 15:31:18',
                                            unpacker=unpacker,
                                            directory=target.absolute(),
@@ -273,3 +269,50 @@ def run_from_vistrails():
 
 if __name__ == '__main__':
     run_from_vistrails()
+
+
+# This should be package_data, however it doesn't work with namespace packages
+VISTRAILS_TEMPLATE = (
+    '<vistrail id="" name="" version="1.0.4" xmlns:xsi="http://www.w3.org/2001'
+    '/XMLSchema-instance" xsi:schemaLocation="http://www.vistrails.org/vistrai'
+    'l.xsd">\n'
+    '  <action date="{date}" id="1" prevId="0" session="0" user="ReproUnzip">'
+    '\n'
+    '    <add id="0" objectId="0" parentObjId="" parentObjType="" what="module'
+    '">\n'
+    '      <module cache="1" id="0" name="{module_name}" namespace="" package='
+    '"org.vistrails.vistrails.cltools" version="0.1.2" />\n'
+    '    </add>\n'
+    '    <add id="1" objectId="0" parentObjId="0" parentObjType="module" what='
+    '"location">\n'
+    '      <location id="0" x="0.0" y="0.0" />\n'
+    '    </add>\n'
+    '    <add id="2" objectId="0" parentObjId="0" parentObjType="module" what='
+    '"function">\n'
+    '      <function id="0" name="directory" pos="0" />\n'
+    '    </add>\n'
+    '    <add id="3" objectId="0" parentObjId="0" parentObjType="function" wha'
+    't="parameter">\n'
+    '      <parameter alias="" id="0" name="&lt;no description&gt;" pos="0" ty'
+    'pe="org.vistrails.vistrails.basic:String" val="{directory}" />\n'
+    '    </add>\n'
+    '    <add id="4" objectId="1" parentObjId="0" parentObjType="module" what='
+    '"function">\n'
+    '      <function id="1" name="unpacker" pos="1" />\n'
+    '    </add>\n'
+    '    <add id="5" objectId="1" parentObjId="1" parentObjType="function" wha'
+    't="parameter">\n'
+    '      <parameter alias="" id="1" name="&lt;no description&gt;" pos="0" ty'
+    'pe="org.vistrails.vistrails.basic:String" val="{unpacker}" />\n'
+    '    </add>\n'
+    '    <add id="6" objectId="2" parentObjId="0" parentObjType="module" what='
+    '"function">\n'
+    '      <function id="2" name="run" pos="1" />\n'
+    '    </add>\n'
+    '    <add id="7" objectId="2" parentObjId="2" parentObjType="function" wha'
+    't="parameter">\n'
+    '      <parameter alias="" id="2" name="&lt;no description&gt;" pos="0" ty'
+    'pe="org.vistrails.vistrails.basic:String" val="{run}" />\n'
+    '    </add>\n'
+    '  </action>\n'
+    '</vistrail>\n')

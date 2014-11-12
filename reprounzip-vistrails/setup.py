@@ -17,7 +17,6 @@ if sys.version_info < (2, 7):
 setup(name='reprounzip-vistrails',
       version='0.4.1',
       packages=['reprounzip', 'reprounzip.plugins'],
-      package_data={'reprounzip.plugins': ['vistrails-pipeline.tpl.xml']},
       entry_points={
           'reprounzip.plugins': [
               'vistrails = reprounzip.plugins.vistrails:setup_vistrails']},
