@@ -180,7 +180,7 @@ def write_cltools_module(run, dot_vistrails):
                  '        "std_using_files": ""\n'
                  '    },\n')
         # Makes the module check for errors
-        fp.write('    "return_code": 0,')
+        fp.write('    "return_code": 0,\n')
         # Enable 'stdout' port
         fp.write('    "stdout": [\n'
                  '        "stdout",\n'
