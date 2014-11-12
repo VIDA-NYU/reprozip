@@ -245,13 +245,23 @@ def run_from_vistrails():
     logging.info("reprounzip-vistrails calling reprounzip; dir=%s",
                  args.directory)
 
-    # Sets up input files
+    # Parses input files from the command-line
+    upload_command = []
+    seen_input_names = set()
     for input_file in args.input_file:
         input_name, filename = input_file.split(':', 1)
-        cmd(['upload', '.',
-             '%s:%s' % (filename, input_name)])
+        upload_command.append('%s:%s' % (filename, input_name))
+        seen_input_names.add(input_name)
 
-    # Runs
+    # Resets the input files that were not given
+    for input_name in run['input_files']:
+        if input_name not in seen_input_names:
+            upload_command.append(':%s' % input_name)
+
+    # Runs the command
+    cmd(['upload', '.'] + upload_command)
+
+    # Runs the experiment
     cmd(['run', '.'])
 
     # Gets output files
