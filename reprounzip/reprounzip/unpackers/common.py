@@ -303,7 +303,7 @@ class FileUploader(object):
 
                 if temp is not None:
                     temp.remove()
-                    del self.input_files[input_name]
+                    self.input_files.pop(input_name, None)
                 else:
                     self.input_files[input_name] = local_path.absolute().path
         finally:
