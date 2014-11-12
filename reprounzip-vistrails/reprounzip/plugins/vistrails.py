@@ -19,6 +19,7 @@ from datetime import datetime
 import hashlib
 import logging
 import os
+import pkg_resources
 from reprounzip import signals
 from rpaths import Path
 import subprocess
@@ -86,30 +87,10 @@ def do_vistrails(target):
         try:
             with vtdir.open('w', 'vistrail',
                             encoding='utf-8', newline='\n') as fp:
-                vistrail = '''\
-<vistrail id="" name="" version="1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.vistrails.org/vistrail.xsd">
-  <action date="{date}" id="1" prevId="0" session="0" user="ReproUnzip">
-    <add id="0" objectId="0" parentObjId="" parentObjType="" what="module">
-      <module cache="1" id="0" name="{module_name}" namespace="" package="org.vistrails.vistrails.cltools" version="0.1.2" />
-    </add>
-    <add id="1" objectId="0" parentObjId="0" parentObjType="module" what="location">
-      <location id="0" x="0.0" y="0.0" />
-    </add>
-    <add id="2" objectId="0" parentObjId="0" parentObjType="module" what="function">
-      <function id="0" name="directory" pos="0" />
-    </add>
-    <add id="3" objectId="0" parentObjId="0" parentObjType="function" what="parameter">
-      <parameter alias="" id="0" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{directory}" />
-    </add>
-    <add id="4" objectId="1" parentObjId="0" parentObjType="module" what="function">
-      <function id="1" name="unpacker" pos="1" />
-    </add>
-    <add id="5" objectId="1" parentObjId="1" parentObjType="function" what="parameter">
-      <parameter alias="" id="1" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{unpacker}" />
-    </add>
-  </action>
-</vistrail>
-'''
+                vistrail = pkg_resources.resource_string(
+                        'reprounzip.plugins.vistrails',
+                        'pipeline.tpl.xml')
+                vistrail = vistrail.decode('ascii')
                 vistrail = vistrail.format(date='2014-11-12 15:31:18',
                                            unpacker=unpacker,
                                            directory=target.absolute(),
