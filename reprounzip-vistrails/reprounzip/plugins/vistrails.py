@@ -77,7 +77,7 @@ def do_vistrails(target):
 
     runs, packages, other_files = load_config(target / 'config.yml',
                                               canonical=True)
-    for run in runs:
+    for i, run in enumerate(runs):
         module_name = write_cltools_module(run, dot_vistrails)
 
         # Writes VisTrails workflow
@@ -94,7 +94,8 @@ def do_vistrails(target):
                 vistrail = vistrail.format(date='2014-11-12 15:31:18',
                                            unpacker=unpacker,
                                            directory=target.absolute(),
-                                           module_name=module_name)
+                                           module_name=module_name,
+                                           run=i)
                 fp.write(vistrail)
 
             with bundle.open('wb') as fp:
@@ -149,6 +150,14 @@ def write_cltools_module(run, dot_vistrails):
         fp.write('        [\n'
                  '            "input",\n'
                  '            "directory",\n'
+                 '            "string",\n'
+                 '            {}\n'
+                 '        ]%s\n' % (
+                     ',' if input_files or output_files else ''))
+        # Run number
+        fp.write('        [\n'
+                 '            "input",\n'
+                 '            "run",\n'
                  '            "string",\n'
                  '            {}\n'
                  '        ]%s\n' % (
@@ -212,10 +221,16 @@ def run_from_vistrails():
     parser = argparse.ArgumentParser()
     parser.add_argument('unpacker')
     parser.add_argument('directory')
+    parser.add_argument('run')
     parser.add_argument('--input-file', action='append', default=[])
     parser.add_argument('--output-file', action='append', default=[])
 
     args = parser.parse_args()
+
+    runs, packages, other_files = load_config(
+            Path(args.directory) / 'config.yml',
+            canonical=True)
+    run = runs[int(args.run)]
 
     python = sys.executable
     rpuz = [python, '-m', 'reprounzip.main', args.unpacker]

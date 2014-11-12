@@ -18,5 +18,11 @@
     <add id="5" objectId="1" parentObjId="1" parentObjType="function" what="parameter">
       <parameter alias="" id="1" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{unpacker}" />
     </add>
+    <add id="6" objectId="2" parentObjId="0" parentObjType="module" what="function">
+      <function id="2" name="run" pos="1" />
+    </add>
+    <add id="7" objectId="2" parentObjId="2" parentObjType="function" what="parameter">
+      <parameter alias="" id="2" name="&lt;no description&gt;" pos="0" type="org.vistrails.vistrails.basic:String" val="{run}" />
+    </add>
   </action>
 </vistrail>
