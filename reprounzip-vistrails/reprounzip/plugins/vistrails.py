@@ -267,10 +267,6 @@ def run_from_vistrails():
              '%s:%s' % (output_name, filename)])
 
 
-if __name__ == '__main__':
-    run_from_vistrails()
-
-
 # This should be package_data, however it doesn't work with namespace packages
 VISTRAILS_TEMPLATE = (
     '<vistrail id="" name="" version="1.0.4" xmlns:xsi="http://www.w3.org/2001'
@@ -316,3 +312,7 @@ VISTRAILS_TEMPLATE = (
     '    </add>\n'
     '  </action>\n'
     '</vistrail>\n')
+
+
+if __name__ == '__main__':
+    run_from_vistrails()
