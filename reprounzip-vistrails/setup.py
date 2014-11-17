@@ -10,28 +10,19 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 req = [
-    'PyYAML',
+    'reprounzip>=0.4.1',
     'rpaths>=0.8']
 if sys.version_info < (2, 7):
     req.append('argparse')
-setup(name='reprounzip',
+setup(name='reprounzip-vistrails',
       version='0.4.1',
-      packages=['reprounzip', 'reprounzip.unpackers', 'reprounzip.plugins'],
+      packages=['reprounzip', 'reprounzip.plugins'],
       entry_points={
-          'console_scripts': [
-              'reprounzip = reprounzip.main:main'],
-          'reprounzip.unpackers': [
-              'info = reprounzip.pack_info:setup_info',
-              'showfiles = reprounzip.pack_info:setup_showfiles',
-              'graph = reprounzip.unpackers.graph:setup',
-              'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
-              'directory = reprounzip.unpackers.default:setup_directory',
-              'chroot = reprounzip.unpackers.default:setup_chroot']},
-      namespace_packages=['reprounzip', 'reprounzip.unpackers'],
+          'reprounzip.plugins': [
+              'vistrails = reprounzip.plugins.vistrails:setup_vistrails']},
+      namespace_packages=['reprounzip', 'reprounzip.plugins'],
       install_requires=req,
-      extras_require={
-          'all': ['reprounzip-vagrant>=0.4', 'reprounzip-docker>=0.4']},
-      description="Linux tool enabling reproducible experiments (unpacker)",
+      description="Allows the ReproZip unpacker to create virtual machines",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
@@ -40,7 +31,7 @@ setup(name='reprounzip',
       long_description=description,
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
-                'vida', 'nyu'],
+                'vida', 'nyu', 'vistrails'],
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',

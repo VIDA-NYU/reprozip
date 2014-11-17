@@ -21,7 +21,6 @@ import sys
 import traceback
 
 from reprounzip.common import setup_logging
-from reprounzip.pack_info import print_info, showfiles
 from reprounzip import signals
 
 
@@ -29,6 +28,26 @@ __version__ = '0.4.1'
 
 
 unpackers = {}
+
+
+def get_plugins(entry_point_name):
+    for entry_point in iter_entry_points(entry_point_name):
+        try:
+            func = entry_point.load()
+        except Exception:
+            print("Plugin %s from %s %s failed to initialize!" % (
+                  entry_point.name,
+                  entry_point.dist.project_name, entry_point.dist.version),
+                  file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            continue
+        name = entry_point.name
+        # Docstring is used as description (used for detailed help)
+        descr = func.__doc__.strip()
+        # First line of docstring is the help (used for general help)
+        descr_1 = descr.split('\n', 1)[0]
+
+        yield name, func, descr, descr_1
 
 
 def main():
@@ -67,56 +86,37 @@ def main():
                          dest='verbosity',
                          help="augments verbosity level")
 
+    # Loads plugins
+    for name, func, descr, descr_1 in get_plugins('reprounzip.plugins'):
+        func()
+
     parser = argparse.ArgumentParser(
             description="reprounzip is the ReproZip component responsible for "
                         "unpacking and reproducing an experiment previously "
                         "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="formats", metavar='',
-                                       dest='selected_unpacker')
+    subparsers = parser.add_subparsers(title="subcommands", metavar='')
 
-    parser_info = subparsers.add_parser(
-            'info', parents=[options],
-            help="Prints out some information about a pack")
-    parser_info.add_argument('pack', nargs=1,
-                             help="Pack to read")
-    parser_info.set_defaults(func=lambda args: print_info(args, unpackers))
-
-    parser_showfiles = subparsers.add_parser(
-            'showfiles', parents=[options],
-            help="Prints out input and output file names")
-    parser_showfiles.add_argument('pack', nargs=1,
-                                  help="Pack or directory to read from")
-    parser_showfiles.set_defaults(func=showfiles)
-
-    # Loads commands from plugins
-    for entry_point in iter_entry_points('reprounzip.unpackers'):
-        try:
-            setup_function = entry_point.load()
-        except Exception:
-            print("Plugin %s from %s %s failed to initialize!" % (
-                  entry_point.name,
-                  entry_point.dist.project_name, entry_point.dist.version),
-                  file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            continue
-        name = entry_point.name
-        # Docstring is used as description (used for detailed help)
-        descr = setup_function.__doc__.strip()
-        # First line of docstring is the help (used for general help)
-        descr_1 = descr.split('\n', 1)[0]
+    # Loads unpackers
+    for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
         plugin_parser = subparsers.add_parser(
                 name, parents=[options],
                 help=descr_1, description=descr,
                 formatter_class=argparse.RawDescriptionHelpFormatter)
-        info = setup_function(plugin_parser)
+        info = func(plugin_parser)
+        plugin_parser.set_defaults(selected_unpacker=name)
         if info is None:
             info = {}
         unpackers[name] = info
 
+    signals.pre_parse_args(parser=parser, subparsers=subparsers)
     args = parser.parse_args()
-    signals.unpacker = args.selected_unpacker
+    signals.post_parse_args(args=args)
+    try:
+        signals.unpacker = args.selected_unpacker
+    except AttributeError:
+        signals.unpacker = None
     setup_logging('REPROUNZIP', args.verbosity)
     try:
         args.func(args)

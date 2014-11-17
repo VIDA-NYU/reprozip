@@ -21,12 +21,13 @@ import sys
 import tarfile
 
 from reprounzip.common import load_config as load_config_file
+from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, shell_escape
 from reprounzip.utils import iteritems, hsize
 
 
-def print_info(args, unpackers):
+def print_info(args):
     """Writes out some information about a pack file.
     """
     pack = Path(args.pack[0])
@@ -229,3 +230,19 @@ def showfiles(args):
                     print("    %s (%s)" % (output_name, path))
                 else:
                     print("    %s" % output_name)
+
+
+def setup_info(parser, **kwargs):
+    """Prints out some information about a pack
+    """
+    parser.add_argument('pack', nargs=1,
+                        help="Pack to read")
+    parser.set_defaults(func=print_info)
+
+
+def setup_showfiles(parser, **kwargs):
+    """Prints out input and output file names
+    """
+    parser.add_argument('pack', nargs=1,
+                        help="Pack or directory to read from")
+    parser.set_defaults(func=showfiles)

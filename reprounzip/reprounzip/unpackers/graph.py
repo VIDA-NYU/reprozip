@@ -288,7 +288,7 @@ def graph(args):
         generate(Path(args.target[0]), Path(args.dir), args.all_forks)
 
 
-def setup(parser):
+def setup(parser, **kwargs):
     """Generates a provenance graph from the trace data
     """
     parser.add_argument('target', nargs=1, help="Destination DOT file")

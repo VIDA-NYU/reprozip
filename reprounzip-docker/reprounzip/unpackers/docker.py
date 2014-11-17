@@ -438,7 +438,7 @@ def test_has_docker(pack, **kwargs):
     return COMPAT_MAYBE, "docker not found in PATH"
 
 
-def setup(parser):
+def setup(parser, **kwargs):
     """Runs the experiment in a Docker container
 
     You will need Docker to be installed on your machine if you want to run the
