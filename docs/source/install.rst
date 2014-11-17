@@ -30,7 +30,8 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending 
 +------------------------------+-----------------------------------------+
 | *reprounzip*                 | None                                    |
 +------------------------------+-----------------------------------------+
-| *reprounzip-vagrant*         | `Vagrant <https://www.vagrantup.com/>`_ |
+| *reprounzip-vagrant*         | pycrypto [#pycrypto]_,                  |
+|                              | `Vagrant <https://www.vagrantup.com/>`_ |
 +------------------------------+-----------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_     |
 +------------------------------+-----------------------------------------+
@@ -52,3 +53,4 @@ The additional plugins for *reprounzip* can also be installed using the same com
 
 ..  [#plgn] By using either *reprounzip-vagrant* or *reprounzip-docker*.
 ..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+..  [#pycrypto] For installation on Windows see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_
