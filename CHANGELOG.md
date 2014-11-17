@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.4.2 (???)
+-----------
+
+Features:
+* All reprounzip plugins can be installed with `pip install reprounzip[all]`
+* Various improvements to interactive vagrant console
+* Adds support for generic plugins (alongside unpackers)
+* Adds reprounzip-vistrails plugin
+
 0.4.1 (2014-10-06)
 ------------------
 
