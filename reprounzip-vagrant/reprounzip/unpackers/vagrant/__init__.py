@@ -317,10 +317,15 @@ def vagrant_setup_start(args):
     read_dict(target / '.reprounzip')
 
     logging.info("Calling 'vagrant up'...")
-    retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
-    if retcode != 0:
-        logging.critical("vagrant up failed with code %d", retcode)
+    try:
+        retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
+    except OSError:
+        logging.critical("vagrant executable not found")
         sys.exit(1)
+    else:
+        if retcode != 0:
+            logging.critical("vagrant up failed with code %d", retcode)
+            sys.exit(1)
 
 
 @target_must_exist
