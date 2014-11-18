@@ -148,8 +148,7 @@ def write_cltools_module(run, dot_vistrails):
                  '            "directory",\n'
                  '            "string",\n'
                  '            {}\n'
-                 '        ]%s\n' % (
-                     ',' if input_files or output_files else ''))
+                 '        ],\n')
         # Run number
         fp.write('        [\n'
                  '            "input",\n'
