@@ -99,7 +99,7 @@ The *directory* unpacker (``reprounzip directory``) allows users to unpack the e
 
 Note however that, although this unpacker is easy to use and does not require any privilege on the reproducing machine, it is unreliable since the directory is not isolated in any way from the rest of the system; in particular, should the experiment use absolute paths, they will hit the host system instead. This is fine if the system has the required packages (see :ref:`unpack-installpkgs`), and the experiment's own files are addressed with relative paths.
 
-**Limitation:** ``reprounzip directory`` will fail if the binaries involved in the experiment use hardcoded paths, as they will point outside the unpacked directory. The other unpackers are more reliable in that regard.
+**Limitation:** ``reprounzip directory`` provides no isolation of the filesystem. If the experiment uses absolute paths, either provided by you or hardcoded in its program, as **they will point outside the unpacked directory**. The other unpackers are more reliable in that regard. Please be careful to use relative paths in the configuration and command-line if you want this unpacker to work with your experiment.
 
 ..  _unpack-chroot:
 
