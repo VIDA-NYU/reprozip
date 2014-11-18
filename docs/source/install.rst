@@ -10,31 +10,42 @@ ReproZip is comprised of two components: **reprozip** (for the packing step) and
 
 These are all standard Python packages that you can install using pip. However, *reprozip* only works on Linux and needs a C compiler recognized by distutils since it includes a C extension module that will be built during installation.
 
-The operating system compatibility for the two ReproZip components is the following:
+The operating system compatibility for the ReproZip components is as follows:
 
-+------------------+------------+--------------+--------------+
-| Component        | Linux      | Mac OS X     | Windows      |
-+==================+============+==============+==============+
-| *reprozip*       | Yes        | No           | No           |
-+------------------+------------+--------------+--------------+
-| *reprounzip*     | Yes        | Yes [#plgn]_ | Yes [#plgn]_ |
-+------------------+------------+--------------+--------------+
++----------------------+----------+--------------+--------------+
+| Component            | Linux    | Mac OS X     | Windows      |
++======================+==========+==============+==============+
+| *reprozip*           | Yes      | No           | No           |
++----------------------+----------+--------------+--------------+
+| *reprounzip*         | Yes      | Yes [#plgn]_ | Yes [#plgn]_ |
++----------------------+----------+--------------+--------------+
+| *reprounzip-docker*  | Yes      | No           | No           |
++----------------------+----------+--------------+--------------+
+| *reprounzip-vagrant* | Yes      | Yes          | Yes          |
++----------------------+----------+--------------+--------------+
+
+..  [#plgn] The tool works and you can install additional unpackers, but the default bundled unpackers will only work on Linux.
 
 Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
-+------------------------------+-----------------------------------------+
-| Component / Plugin           | Required Software Packages              |
-+==============================+=========================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_,     |
-|                              | a working C compiler                    |
-+------------------------------+-----------------------------------------+
-| *reprounzip*                 | None                                    |
-+------------------------------+-----------------------------------------+
-| *reprounzip-vagrant*         | pycrypto [#pycrypto]_,                  |
-|                              | `Vagrant <https://www.vagrantup.com/>`_ |
-+------------------------------+-----------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`_     |
-+------------------------------+-----------------------------------------+
++------------------------------+---------------------------------------------+
+| Component / Plugin           | Required Software Packages                  |
++==============================+=============================================+
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_,         |
+|                              | Python headers (python-dev on Debian),      |
+|                              | a working C compiler                        |
++------------------------------+---------------------------------------------+
+| *reprounzip*                 | None                                        |
++------------------------------+---------------------------------------------+
+| *reprounzip-vagrant*         | pycrypto [#pycrypto]_,                      |
+|                              | `Vagrant <https://www.vagrantup.com/>`_,    |
+|                              | `VirtualBox <https://www.virtualbox.org/>`_ |
++------------------------------+---------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`_         |
++------------------------------+---------------------------------------------+
+
+..  [#pycrypto] Building PyCrypto on POSIX will require a C compiler and the Python development headers (*python-dev* package on Debian and derived). For installation on Windows without building from source see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
+..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 
 Obtaining the Software
 ======================
@@ -48,9 +59,3 @@ In ReproZip, the components must be installed separately as they fulfill differe
 The additional plugins for *reprounzip* can also be installed using the same command, or you can also install all of them using::
 
     $ pip install reprounzip[all]
-
-..  rubric:: Footnotes
-
-..  [#plgn] By using either *reprounzip-vagrant* or *reprounzip-docker*.
-..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
-..  [#pycrypto] For installation on Windows see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_
