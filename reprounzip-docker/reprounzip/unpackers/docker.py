@@ -183,11 +183,16 @@ def docker_setup_build(args):
     image = make_unique_name(b'reprounzip_image_')
 
     logging.info("Calling 'docker build'...")
-    retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
-                              cwd=target.path)
-    if retcode != 0:
-        logging.critical("docker build failed with code %d", retcode)
+    try:
+        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+                                  cwd=target.path)
+    except OSError:
+        logging.critical("docker executable not found")
         sys.exit(1)
+    else:
+        if retcode != 0:
+            logging.critical("docker build failed with code %d", retcode)
+            sys.exit(1)
     logging.info("Initial image created: %s", image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
