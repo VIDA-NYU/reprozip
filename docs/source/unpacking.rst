@@ -196,7 +196,7 @@ where `<new-command-line>` is the modified command line. This is particularly us
 Destroying the experiment directory
 +++++++++++++++++++++++++++++++++++
 
-This command will unmount mounted paths, destroy virtual machines, free container images, ... and delete the experiment directory for you. Make sure you use it instead of simply deleting, to avoid surprises; unpackers can do very funny stuff.
+This command will unmount mounted paths, destroy virtual machines, free container images, ... and delete the experiment directory for you. Make sure you use it instead of simply deleting, to avoid surprises; unpackers can do very funny stuff::
 
     $ reprounzip vagrant destroy <path>
 
