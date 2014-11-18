@@ -187,10 +187,7 @@ def showfiles(args):
             if len(runs) > 1:
                 print("  Run %d:" % i)
             for input_name, path in iteritems(run['input_files']):
-                if args.verbosity >= 2:
-                    print("    %s (%s)" % (input_name, path))
-                else:
-                    print("    %s" % input_name)
+                print("    %s (%s)" % (input_name, path))
                 if input_files.get(input_name) is not None:
                     assigned = PosixPath(input_files[input_name])
                 else:
@@ -202,10 +199,7 @@ def showfiles(args):
             if len(runs) > 1:
                 print("  Run %d:" % i)
             for output_name, path in iteritems(run['output_files']):
-                if args.verbosity >= 2:
-                    print("    %s (%s)" % (output_name, path))
-                else:
-                    print("    %s" % output_name)
+                print("    %s (%s)" % (output_name, path))
 
     else:  # pack.is_file()
         # Reads info from a pack file
@@ -216,20 +210,14 @@ def showfiles(args):
             if len(runs) > 1:
                 print("  Run %d:" % i)
             for input_name, path in iteritems(run['input_files']):
-                if args.verbosity >= 2:
-                    print("    %s (%s)" % (input_name, path))
-                else:
-                    print("    %s" % input_name)
+                print("    %s (%s)" % (input_name, path))
 
         print("Output files:")
         for i, run in enumerate(runs):
             if len(runs) > 1:
                 print("  Run %d:" % i)
             for output_name, path in iteritems(run['output_files']):
-                if args.verbosity >= 2:
-                    print("    %s (%s)" % (output_name, path))
-                else:
-                    print("    %s" % output_name)
+                print("    %s (%s)" % (output_name, path))
 
 
 def setup_info(parser, **kwargs):
