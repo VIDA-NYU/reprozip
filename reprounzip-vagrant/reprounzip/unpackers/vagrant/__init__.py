@@ -106,8 +106,18 @@ def read_dict(filename):
 def get_ssh_parameters(target):
     """Reads the SSH parameters from ``vagrant ssh`` command output.
     """
-    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                     cwd=target.path)
+    try:
+        stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                         cwd=target.path,
+                                         stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        # Makes sure the VM is running
+        subprocess.check_call(['vagrant', 'up'],
+                              cwd=target.path)
+        # Try again
+        stdout = subprocess.check_output(['vagrant', 'ssh-config'],
+                                         cwd=target.path)
+
     info = {}
     for line in stdout.split(b'\n'):
         line = line.strip().split(b' ', 1)
@@ -352,10 +362,6 @@ def vagrant_run(args):
             cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
-
-    # Makes sure the VM is running
-    subprocess.check_call(['vagrant', 'up'],
-                          cwd=target.path)
 
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
