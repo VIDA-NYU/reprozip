@@ -26,13 +26,13 @@ The operating system compatibility for the ReproZip components is as follows:
 
 ..  [#plgn] The tool works and you can install additional unpackers, but the default bundled unpackers will only work on Linux.
 
-Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
+Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x [#deb]. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
 +------------------------------+---------------------------------------------+
 | Component / Plugin           | Required Software Packages                  |
 +==============================+=============================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_,         |
-|                              | Python headers (python-dev on Debian),      |
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_ [#deb],  |
+|                              | Python headers [#deb],                      |
 |                              | a working C compiler                        |
 +------------------------------+---------------------------------------------+
 | *reprounzip*                 | None                                        |
@@ -44,6 +44,7 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have i
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_         |
 +------------------------------+---------------------------------------------+
 
+..  [#deb] On Debian and derived, these are provided by *python*, *python-dev* and *libsqlite3-dev*.
 ..  [#pycrypto] Building PyCrypto on POSIX will require a C compiler and the Python development headers (*python-dev* package on Debian and derived). For installation on Windows without building from source see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
 ..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 
