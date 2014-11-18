@@ -97,7 +97,9 @@ def write_dict(filename, dct):
 def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    assert dct['unpacker'] == 'vagrant'
+    if dct['unpacker'] != 'vagrant':
+        raise ValueError("Wrong unpacker used: %s != vagrant" %
+                         dct['unpacker'])
     return dct
 
 

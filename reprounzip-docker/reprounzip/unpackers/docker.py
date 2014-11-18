@@ -77,7 +77,8 @@ def write_dict(filename, dct):
 def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    assert dct['unpacker'] == 'docker'
+    if dct['unpacker'] != 'docker':
+        raise ValueError("Wrong unpacker used: %s != docker" % dct['unpacker'])
     return dct
 
 

@@ -91,8 +91,9 @@ def write_dict(filename, dct, type_):
 def read_dict(filename, type_):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    if type is not None:
-        assert dct['unpacker'] == type_
+    if type_ is not None and dct['unpacker'] != type_:
+        raise ValueError("Wrong unpacker used: %s != %s" % (dct['unpacker'],
+                                                            type_))
     return dct
 
 
