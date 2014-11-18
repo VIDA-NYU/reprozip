@@ -26,7 +26,7 @@ The operating system compatibility for the ReproZip components is as follows:
 
 ..  [#plgn] The tool works and you can install additional unpackers, but the default bundled unpackers will only work on Linux.
 
-Python 2.7.3 or greater [#bug]_ is required to run ReproZip. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
+Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
 +------------------------------+---------------------------------------------+
 | Component / Plugin           | Required Software Packages                  |
