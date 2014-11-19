@@ -22,6 +22,7 @@ Contents
     install
     packing
     unpacking
+    faq
     developerguide
 
 Links
