@@ -27,6 +27,7 @@ import zipfile
 
 from reprounzip.common import load_config, setup_logging
 from reprounzip.main import __version__ as version
+from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import escape
 
 
@@ -87,11 +88,15 @@ def do_vistrails(target):
             with vtdir.open('w', 'vistrail',
                             encoding='utf-8', newline='\n') as fp:
                 vistrail = VISTRAILS_TEMPLATE
-                vistrail = vistrail.format(date='2014-11-12 15:31:18',
-                                           unpacker=unpacker,
-                                           directory=target.absolute(),
-                                           module_name=module_name,
-                                           run=i)
+                cmdline = ' '.join(shell_escape(arg)
+                                   for arg in run['argv'])
+                vistrail = vistrail.format(
+                        date='2014-11-12 15:31:18',
+                        unpacker=unpacker,
+                        directory=escape(str(target.absolute())),
+                        cmdline=escape(cmdline),
+                        module_name=module_name,
+                        run=i)
                 fp.write(vistrail)
 
             with bundle.open('wb') as fp:
@@ -159,7 +164,6 @@ def write_cltools_module(run, dot_vistrails):
                      ',' if input_files or output_files else ''))
         # Input files
         for i, input_name in enumerate(input_files):
-            comma = ',' if i + 1 < len(input_files) or output_files else ''
             fp.write('        [\n'
                      '            "input",\n'
                      '            "input %(name)s",\n'
@@ -168,12 +172,9 @@ def write_cltools_module(run, dot_vistrails):
                      '                "flag": "--input-file",\n'
                      '                "prefix": "%(name)s:"\n'
                      '            }\n'
-                     '        ]%(comma)s\n' % {
-                         'name': escape(input_name),
-                         'comma': comma})
+                     '        ],\n' % {'name': escape(input_name)})
         # Output files
         for i, output_name in enumerate(output_files):
-            comma = ',' if i + 1 < len(output_files) else ''
             fp.write('        [\n'
                      '            "output",\n'
                      '            "output %(name)s",\n'
@@ -182,10 +183,17 @@ def write_cltools_module(run, dot_vistrails):
                      '                "flag": "--output-file",\n'
                      '                "prefix": "%(name)s:"\n'
                      '            }\n'
-                     '        ]%(comma)s\n' % {
-                         'name': escape(output_name),
-                         'comma': comma})
-        fp.write('    ],\n')
+                     '        ],\n' % {'name': escape(output_name)})
+        # Command-line
+        fp.write('        [\n'
+                 '            "input",\n'
+                 '            "cmdline",\n'
+                 '            "string",\n'
+                 '            {\n'
+                 '                "flag": "--cmdline"\n'
+                 '            }\n'
+                 '        ]\n'
+                 '    ],\n')
         # Use "std file processing" since VisTrails <=2.1.4 has a bug without
         # this (also, it's inefficient)
         fp.write('    "options": {\n'
@@ -219,6 +227,7 @@ def run_from_vistrails():
     parser.add_argument('run')
     parser.add_argument('--input-file', action='append', default=[])
     parser.add_argument('--output-file', action='append', default=[])
+    parser.add_argument('--cmdline', action='store')
 
     args = parser.parse_args()
 
@@ -232,10 +241,17 @@ def run_from_vistrails():
 
     os.environ['REPROUNZIP_NON_INTERACTIVE'] = 'y'
 
-    def cmd(lst):
-        logging.info("cmd: %s", ' '.join(lst))
-        subprocess.check_call(rpuz + lst,
-                              cwd=args.directory)
+    def cmd(lst, add=None):
+        if add:
+            logging.info("cmd: %s %s", ' '.join(lst), add)
+            string = ' '.join(shell_escape(a) for a in (rpuz + lst))
+            string += ' ' + add
+            subprocess.check_call(string, shell=True,
+                                  cwd=args.directory)
+        else:
+            logging.info("cmd: %s", ' '.join(lst))
+            subprocess.check_call(rpuz + lst,
+                                  cwd=args.directory)
 
     logging.info("reprounzip-vistrails calling reprounzip; dir=%s",
                  args.directory)
@@ -257,7 +273,10 @@ def run_from_vistrails():
     cmd(['upload', '.'] + upload_command)
 
     # Runs the experiment
-    cmd(['run', '.'])
+    if args.cmdline:
+        cmd(['run', '.', '--cmdline'], add=args.cmdline)
+    else:
+        cmd(['run', '.'])
 
     # Gets output files
     for output_file in args.output_file:
@@ -308,6 +327,15 @@ VISTRAILS_TEMPLATE = (
     't="parameter">\n'
     '      <parameter alias="" id="2" name="&lt;no description&gt;" pos="0" ty'
     'pe="org.vistrails.vistrails.basic:String" val="{run}" />\n'
+    '    </add>\n'
+    '    <add id="6" objectId="3" parentObjId="0" parentObjType="module" what='
+    '"function">\n'
+    '      <function id="3" name="cmdline" pos="1" />\n'
+    '    </add>\n'
+    '    <add id="7" objectId="3" parentObjId="3" parentObjType="function" wha'
+    't="parameter">\n'
+    '      <parameter alias="" id="3" name="&lt;no description&gt;" pos="0" ty'
+    'pe="org.vistrails.vistrails.basic:String" val="{cmdline}" />\n'
     '    </add>\n'
     '  </action>\n'
     '</vistrail>\n')
