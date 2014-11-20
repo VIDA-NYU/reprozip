@@ -65,13 +65,18 @@ def select_box(runs):
 
     # Ubuntu
     if distribution == 'ubuntu':
-        if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
+        if version == '12.04':
+            if architecture == 'i686':
+                return 'ubuntu', 'hashicorp/precise32'
+            else:  # architecture == 'x86_64'
+                return 'ubuntu', 'hashicorp/precise64'
+        if version != '14.04':
+            logging.warning("using Ubuntu 14.04 'Trusty' instead of '%s'",
                             version)
         if architecture == 'i686':
-            return 'ubuntu', 'hashicorp/precise32'
+            return 'ubuntu', 'ubuntu/trusty32'
         else:  # architecture == 'x86_64':
-            return 'ubuntu', 'hashicorp/precise64'
+            return 'ubuntu', 'ubuntu/trusty64'
 
     # Debian
     else:
