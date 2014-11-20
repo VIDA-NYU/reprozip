@@ -524,13 +524,22 @@ static void cleanup(void)
     }
 }
 
+static time_t last_int = 0;
+
 static void sigint_handler(int signo)
 {
-    if(verbosity >= 1)
-        log_info(0, "cleaning up on SIGINT");
+    time_t now = time(NULL);
     (void)signo;
-    cleanup();
-    exit(1);
+    if(now - last_int < 2)
+    {
+        if(verbosity >= 1)
+            log_info(0, "cleaning up on SIGINT");
+        cleanup();
+        exit(1);
+    }
+    else if(verbosity >= 1)
+        log_info(0, "Got SIGINT, press twice to abort...");
+    last_int = now;
 }
 
 static void trace_init(void)
