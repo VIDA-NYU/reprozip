@@ -116,7 +116,10 @@ def windows_shell(chan):
             if not d:
                 chan.shutdown_write()
                 break
-            chan.send(d)
+            try:
+                chan.send(d)
+            except socket.error:
+                break
     except EOFError:
         # user hit ^Z or F6
         pass
