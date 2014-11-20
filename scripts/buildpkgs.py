@@ -26,7 +26,8 @@ if __name__ == '__main__':
     if not os.path.exists(dest):
         os.mkdir(dest)
 
-    for project in ('reprozip', 'reprounzip', 'reprounzip-vagrant'):
+    for project in ('reprozip', 'reprounzip', 'reprounzip-docker',
+                    'reprounzip-vagrant', 'reprounzip-vistrails'):
         pdir = os.path.join(toplevel, project)
         setup_py = os.path.join(pdir, 'setup.py')
 
