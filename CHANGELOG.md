@@ -9,6 +9,7 @@ Features:
 * Various improvements to interactive vagrant console
 * Adds support for generic plugins (alongside unpackers)
 * Adds reprounzip-vistrails plugin
+* Pressing Ctrl+C while tracing won't abort anymore; press it twice for SIGKILL
 
 0.4.1 (2014-10-06)
 ------------------
