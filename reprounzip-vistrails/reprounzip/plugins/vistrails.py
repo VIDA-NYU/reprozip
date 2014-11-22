@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import escape
 
 
-class sha1(object):
+class SHA1(object):
     def __init__(self, arg=b''):
         self._hash = hashlib.sha1()
         if arg:
@@ -58,7 +58,7 @@ def hash_experiment_run(run):
 
     This is used to name the CLTools modules.
     """
-    h = sha1()
+    h = SHA1()
     for input_name in sorted(run['input_files']):
         h.update('input %s\n' % input_name)
     for output_name in sorted(run['output_files']):

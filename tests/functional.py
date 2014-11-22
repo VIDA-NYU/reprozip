@@ -87,7 +87,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     # Can't match on the SignalWarning category here because of a Python bug
     # http://bugs.python.org/issue22543
-    python.extend(['-W', 'error:signal'])
+    if raise_warnings:
+        python.extend(['-W', 'error:signal'])
 
     if 'COVER' in os.environ:
         python.extend(['-m'] + os.environ['COVER'].split(' '))
