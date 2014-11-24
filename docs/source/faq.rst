@@ -30,11 +30,11 @@ I'm tracing a daemon, but no files get packed
 
 If you are starting the daemon via the `service` tool, it might be calling init over a client/server connection. In this kind of situation, ReproZip will successfully pack the client, but anything the server (init) does won't be captured.
 
-However, you can still trace the binary or initscript directly. For example, instead of::
+However, you can still trace the binary or a non-systemd initscript directly. For example, instead of::
 
     reprozip trace service mysql start
 
-Use either the initscript::
+Use either the initscript (make sure it doesn't call systemd!)::
 
     reprozip trace /etc/init.d/mysql start
 
