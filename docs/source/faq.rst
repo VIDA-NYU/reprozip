@@ -56,6 +56,14 @@ ReproUnzip should have no problem with experiment that interact with the user th
 
 Running GUI tools (connecting to an X server) isn't supported by ReproUnzip so far, but we are planning on it.
 
+Can ReproZip pack a database?
+=============================
+
+ReproZip can trace a database *server*, however because of the format it uses to store data, it might be hard for you to control exactly what data will be packed. You also probably want to pack all the data from the databases/tables your experiment uses, and not just the pages that were touched while tracing; you can do that by inspecting the configuration file and adding the relevant patterns, for example::
+
+    additional_patterns:
+      - /var/lib/mysql/**
+
 ..  _scp-py3:
 
 I have trouble with *reprounzip-vagrant* on Python 3
