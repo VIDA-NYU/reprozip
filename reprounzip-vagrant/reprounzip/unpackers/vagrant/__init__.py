@@ -212,7 +212,7 @@ def vagrant_setup_create(args):
     # Writes setup script
     logging.info("Writing setup script %s...", target / 'setup.sh')
     with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('#!/bin/sh\n\n')
+        fp.write('#!/bin/sh\n\nset -e\n\n')
         if packages:
             # Updates package sources
             fp.write(installer.update_script())
