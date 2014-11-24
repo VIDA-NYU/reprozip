@@ -101,6 +101,19 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     rpuz = python + [reprounzip_main.absolute().path] + verbose
 
     # ########################################
+    # testrun /bin/echo
+    #
+
+    output = check_output(rpz + ['testrun', '/bin/echo', 'outputhere'])
+    assert any(b' 1 | /bin/echo outputhere ' in l
+               for l in output.splitlines())
+
+    output = check_output(rpz + ['testrun', '-a', '/fake/path/echo',
+                                 '/bin/echo', 'outputhere'])
+    assert any(b' 1 | (/bin/echo) /fake/path/echo outputhere ' in l
+               for l in output.splitlines())
+
+    # ########################################
     # 'simple' program: trace, pack, info, unpack
     #
 
