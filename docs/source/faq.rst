@@ -69,6 +69,11 @@ What if my experiment runs on a distributed environment?
 
 ReproZip cannot trace across multiple machines. You can however trace each component separately, but ReproUnzip has no support to help you setup these multiple machines in the right way from the multiple ``.rpz`` files you will get this way. In particular, you will probably need to set up the same network for the components to talk to each other.
 
+ReproZip does not identify my input/output file
+===============================================
+
+ReproZip uses some heuristics to determine what is and isn't an input or output file. However, this is intended as a starting point, not the full mechanism; you should check the configuration file and add/remove paths in there; giving readable names like "database-log" or "lookup-table" also helps.
+
 ..  _scp-py3:
 
 I have trouble with *reprounzip-vagrant* on Python 3
