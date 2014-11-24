@@ -91,6 +91,8 @@ From the same ``.rpz`` package, `reprounzip` allows users to set up the experime
 
 The `reprounzip` tool comes with three unpackers that are only compatible with Linux (``reprounzip directory``, ``reprounzip chroot``, and ``reprounzip installpkgs``). Additional unpackers, such as ``reprounzip vagrant`` and ``reprounzip docker``, can be installed separately. Next, each unpacker is described in more details; for more information on how to use an unpacker, please refer to :ref:`unpacker-commands`.
 
+Note that most unpackers assume an Internet connection and will be downloading required software from the Internet (during the ``setup`` step).
+
 ..  _linux_unpacker:
 
 ..  _unpack-directory:
