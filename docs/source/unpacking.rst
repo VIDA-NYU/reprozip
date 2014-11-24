@@ -17,7 +17,7 @@ Before unpacking an experiment, it is often useful to have further information w
 
     $ reprounzip info <package>
 
-where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can use ``-v`` for `verbose`, or ``-v -v`` to get more detailed information on the package.
+where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can use ``-v`` for `verbose` to get more detailed information on the package.
 
 The output of this command has three sections. The first section, `Pack Information`, contains general information about the experiment package, including size and total number of files::
 
