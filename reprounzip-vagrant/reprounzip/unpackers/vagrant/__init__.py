@@ -282,7 +282,7 @@ def vagrant_setup_create(args):
 mkdir -p /experimentroot/bin
 mkdir -p /experimentroot/usr/bin
 if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
-    wget -O /experimentroot/bin/busybox {url}
+    wget --quiet -O /experimentroot/bin/busybox {url}
     chmod +x /experimentroot/bin/busybox
 fi
 [ -e /experimentroot/bin/sh ] || \
