@@ -28,13 +28,9 @@ The easiest way to solve that is to write a simple bash script that runs your ex
 I'm tracing a daemon, but no files get packed
 =============================================
 
-If you are starting the daemon via the `service` tool, it might be calling init
-over a client/server connection. In this kind of situation, ReproZip will
-successfully pack the client, but anything the server (init) does won't be
-captured.
+If you are starting the daemon via the `service` tool, it might be calling init over a client/server connection. In this kind of situation, ReproZip will successfully pack the client, but anything the server (init) does won't be captured.
 
-However, you can still trace the binary or initscript directly. For example,
-instead of::
+However, you can still trace the binary or initscript directly. For example, instead of::
 
     reprozip trace service mysql start
 
