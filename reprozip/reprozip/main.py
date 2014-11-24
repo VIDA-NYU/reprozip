@@ -26,7 +26,7 @@ from reprozip import _pytracer
 from reprozip.common import setup_logging
 import reprozip.pack
 import reprozip.tracer.trace
-from reprozip.utils import PY3
+from reprozip.utils import PY3, unicode_
 
 
 def print_db(database):
@@ -38,6 +38,7 @@ def print_db(database):
     else:
         conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
+    conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
     processes = cur.execute(
