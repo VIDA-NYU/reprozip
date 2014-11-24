@@ -64,6 +64,11 @@ ReproZip can trace a database *server*, however because of the format it uses to
     additional_patterns:
       - /var/lib/mysql/**
 
+What if my experiment runs on a distributed environment?
+========================================================
+
+ReproZip cannot trace across multiple machines. You can however trace each component separately, but ReproUnzip has no support to help you setup these multiple machines in the right way from the multiple ``.rpz`` files you will get this way. In particular, you will probably need to set up the same network for the components to talk to each other.
+
 ..  _scp-py3:
 
 I have trouble with *reprounzip-vagrant* on Python 3
