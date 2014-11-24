@@ -49,6 +49,13 @@ Yes! Note however that only tracing the client will not capture the full story.
 
 The easiest way is to write a script that starts the server, runs your client(s), then shuts down the server; see :ref:`Further considerations when packing <packing-further>`.
 
+Can I pack interactive tools?
+=============================
+
+ReproUnzip should have no problem with experiment that interact with the user through the terminal. If your experiment runs until it receives Ctrl+C, that is fine too; ReproZip won't interfere unless you press Ctrl+C twice, stopping the experiment.
+
+Running GUI tools (connecting to an X server) isn't supported by ReproUnzip so far, but we are planning on it.
+
 ..  _scp-py3:
 
 I have trouble with *reprounzip-vagrant* on Python 3
