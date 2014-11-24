@@ -42,6 +42,13 @@ or the binary (you will have to figure out the right options...)::
 
     reprozip trace /usr/bin/mysqld
 
+Can I pack a client-server scenario?
+====================================
+
+Yes! Note however that only tracing the client will not capture the full story.
+
+The easiest way is to write a script that starts the server, runs your client(s), then shuts down the server; see :ref:`Further considerations when packing <packing-further>`.
+
 ..  _scp-py3:
 
 I have trouble with *reprounzip-vagrant* on Python 3
