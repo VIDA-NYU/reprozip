@@ -7,8 +7,11 @@ While *reprozip* is responsible for tracing and packing an experiment, *reprounz
 
 ..  _unpack-info:
 
+Inspecting a Package
+====================
+
 Showing Package Information
-===========================
++++++++++++++++++++++++++++
 
 Before unpacking an experiment, it is often useful to have further information with respect to its package. The ``reprounzip info`` command allows users to do so::
 
@@ -54,7 +57,7 @@ As an example, for an experiment originally packed on Ubuntu and a user reproduc
 ..  _showfiles:
 
 Showing Input and Output Files
-==============================
+++++++++++++++++++++++++++++++
 
 The ``reprounzip showfiles`` command can be used to list the input and output files defined for the experiment. These files are identified by an id, which is either choosen by ReproZip or set in the configuration file before creating the ``.rpz`` file::
 
@@ -72,7 +75,7 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
 This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
 Creating a Provenance Graph
-===========================
++++++++++++++++++++++++++++
 
 ReproZip also allows users to generate a *provenance graph* related to the experiment execution. This graph shows the relationships between files, library dependencies, and binaries during the execution. To generate such a graph, the ``reprounzip graph`` command should be used::
 
@@ -149,7 +152,7 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
     
-**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
+**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
 
 ..  _docker-plugin:
 
@@ -158,7 +161,7 @@ The `docker` Unpacker: Building a Docker Container
 
 ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`_ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
 
-**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker <https://pypi.python.org/pypi/reprounzip-docker/>`_).
+**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
 
 ..  _unpacker-commands:
 
