@@ -160,8 +160,7 @@ def write_cltools_module(run, dot_vistrails):
                  '            "run",\n'
                  '            "string",\n'
                  '            {}\n'
-                 '        ]%s\n' % (
-                     ',' if input_files or output_files else ''))
+                 '        ],\n')
         # Input files
         for i, input_name in enumerate(input_files):
             fp.write('        [\n'
