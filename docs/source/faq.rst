@@ -54,6 +54,4 @@ The *reprounzip-vagrant* plugin is compatible with Python 3, however the **scp.p
 ReproUnzip shows ``running in chroot, ignoring request``
 ========================================================
 
-This message comes from the systemd client. Using systemd in your experiments
-is not a good idea and will probably not work. This experiment should be
-repacked without using systemd, see the :ref:`corresponding section <systemd>`.
+This message comes from the systemd client. Using systemd in your experiments is not a good idea and will probably not work. This experiment should be repacked without using systemd, see the :ref:`corresponding section <systemd>`.
