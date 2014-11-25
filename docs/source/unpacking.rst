@@ -59,7 +59,7 @@ As an example, for an experiment originally packed on Ubuntu and a user reproduc
 Showing Input and Output Files
 ++++++++++++++++++++++++++++++
 
-The ``reprounzip showfiles`` command can be used to list the input and output files defined for the experiment. These files are identified by an id, which is either choosen by ReproZip or set in the configuration file before creating the ``.rpz`` file::
+The ``reprounzip showfiles`` command can be used to list the input and output files defined for the experiment. These files are identified by an id, which is either chosen by ReproZip or set in the configuration file before creating the ``.rpz`` file::
 
     $ reprounzip showfiles package.rpz
     Input files:
@@ -111,9 +111,9 @@ Please note that, although this unpacker is easy to use and does not require any
 The `chroot` Unpacker: Providing Isolation with the *chroot* Mechanism
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment package; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of harcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
+In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment package; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of hardcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
 
-**Warning:** do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudofiles (these can be restored by rebooting or running the ``MAKEDEV`` script).
+**Warning:** do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
 **Limitation:** although *chroot* offers pretty good isolation, it is not considered completely safe: it is possible for processes owned by root to "escape" to the outer system. We recommend not running untrusted programs with this plugin.
 
