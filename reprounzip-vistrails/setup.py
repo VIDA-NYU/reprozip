@@ -10,12 +10,12 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 req = [
-    'reprounzip>=0.4.2-dev',
+    'reprounzip>=0.5',
     'rpaths>=0.8']
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip-vistrails',
-      version='0.4.2-dev',
+      version='0.5',
       packages=['reprounzip', 'reprounzip.plugins'],
       entry_points={
           'reprounzip.plugins': [
