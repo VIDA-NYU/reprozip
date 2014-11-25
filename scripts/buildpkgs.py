@@ -59,6 +59,14 @@ def make_pkg():
         # Run sdist
         subprocess.check_call([sys.executable, setup_py, 'sdist'])
 
+        # Run bdist_wheel
+        try:
+            __import__('wheel')
+        except ImportError:
+            pass
+        else:
+            subprocess.check_call([sys.executable, setup_py, 'bdist_wheel'])
+
         # Move output to top-level dist/
         for f in os.listdir(os.path.join(pdir, 'dist')):
             shutil.copyfile(os.path.join(pdir, 'dist', f),
