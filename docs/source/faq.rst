@@ -83,23 +83,33 @@ The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.
 
     pip install 'git+https://github.com/remram44/scp.py.git#egg=scp'
 
-Why `reprounzip directory` shows ``IOError``?
-=============================================
+Why `reprounzip directory` fails with ``IOError``?
+==================================================
 
 The `directory` unpacker does not provide any isolation from the filesystem, so if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
 
 ..  _distribnotfound:
 
-Why `reprounzip` shows ``DistributionNotFound`` errors?
-=======================================================
+Why `reprounzip` fails with ``DistributionNotFound`` errors?
+============================================================
 
 You probably have some plugins left over from a previous installation. Be sure to upgrade or remove outdated plugins when you upgrade reprounzip.
 
 The following command might help::
 
     pip install -U reprounzip[all]
-    
+
 Why `reprounzip` shows ``running in chroot, ignoring request``?
 ===============================================================
 
 This message comes from the systemd client, which will probably not work with ReproZip. In this case, the experiment should be re-packed without using systemd (see :ref:`this question <systemd>` for more information).
+
+Why ``reprounzip vagrant setup`` fails to resolve a host address?
+=================================================================
+
+When running ``reprounzip vagrant setup``, if you get an error similar to this::
+
+    ==> default: failed: Temporary failure in name resolution.
+    ==> default: wget: unable to resolve host address ...
+
+there is probably a firewall blocking the Vagrant VM to have Internet connection; the VM needs Internet connection to download required software for setting up the experiment for you. Please make sure that your anti-virus/firewall is not causing this issue.

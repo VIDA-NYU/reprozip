@@ -185,7 +185,7 @@ Note that, once this is done, you should only remove `<path>` with the `destroy`
 
 The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
 
-**Note:** most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet.
+**Note:** most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
 
 Reproducing the Experiment
 ++++++++++++++++++++++++++
