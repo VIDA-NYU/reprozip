@@ -83,7 +83,7 @@ The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.
 
     pip install 'git+https://github.com/remram44/scp.py.git#egg=scp'
     
-    ..  _distribnotfound:
+..  _distribnotfound:
 
 Why `reprounzip` shows DistributionNotFound errors?
 ===================================================
