@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.4.2 (???)
------------
+0.5 (2014-11-24)
+----------------
 
 Features:
 * All reprounzip plugins can be installed with `pip install reprounzip[all]`

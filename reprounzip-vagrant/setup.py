@@ -9,7 +9,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 setup(name='reprounzip-vagrant',
-      version='0.4.2-dev',
+      version='0.5',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.vagrant'],
       entry_points={
