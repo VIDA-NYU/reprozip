@@ -38,7 +38,7 @@ The next section, `Metadata`, contains information about dependencies (i.e., sof
             wd: <working-directory>
             exitcode: 0
 
-Note that, for `architecture` and `distribution`, the command shows information with respect to both the original environment (i.e., the environment where the experiment was packed) and the current one (i.e., the environment where the experiment is to be unpacked). This helps users understand the differences between the environments in order to provide a better guidance in choosing the most appropriate unpacker.
+Note that, for `Architecture` and `Distribution`, the command shows information with respect to both the original environment (i.e., the environment where the experiment was packed) and the current one (i.e., the environment where the experiment is to be unpacked). This helps users understand the differences between the environments in order to provide a better guidance in choosing the most appropriate unpacker.
 
 Last, the section `Unpackers` shows which of the installed *reprounzip* unpackers can be successfully used in the current environment::
 
@@ -90,8 +90,6 @@ Unpackers
 From the same ``.rpz`` package, `reprounzip` allows users to set up the experiment for reproduction in several ways by the use of different `unpackers`. Unpackers are plugins that have general interface and commands, but that can also provide their own command-line syntax and options. Thanks to the decoupling between packing and unpacking steps, ``.rpz`` files from older versions of ReproZip can be used with new unpackers.
 
 The `reprounzip` tool comes with three unpackers that are only compatible with Linux (``reprounzip directory``, ``reprounzip chroot``, and ``reprounzip installpkgs``). Additional unpackers, such as ``reprounzip vagrant`` and ``reprounzip docker``, can be installed separately. Next, each unpacker is described in more details; for more information on how to use an unpacker, please refer to :ref:`unpacker-commands`.
-
-Note that most unpackers assume an Internet connection and will be downloading required software from the Internet (during the ``setup`` step).
 
 ..  _linux_unpacker:
 
@@ -187,6 +185,8 @@ Note that, once this is done, you should only remove `<path>` with the `destroy`
 
 The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
 
+**Note:** most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet.
+
 Reproducing the Experiment
 ++++++++++++++++++++++++++
 
@@ -232,7 +232,7 @@ To replace an input file with your own, `reprounzip`, you can use the ``upload``
 
     $ reprounzip vagrant upload <path> <input-path>:<input-id>
 
-where `<input-path>` is the new file's path and `<input-id>` is the input file to be replaced (from `showfiles`). This command overwrites the original path in the environment with the file you provided from your system. To restore the original input file, the same command, but in the following format, should be used::
+where `<input-path>` is the new file's path and `<input-id>` is the input file to be replaced (from ``showfiles``). This command overwrites the original path in the environment with the file you provided from your system. To restore the original input file, the same command, but in the following format, should be used::
 
     $ reprounzip vagrant upload <path> :<input-id>
 
@@ -252,7 +252,7 @@ After running the experiment, all the generated output files will be located und
 
     $ reprounzip vagrant download <path> <output-id>:<output-path>
 
-where `<output-id>` is the output file to be copied (from `showfiles`) and `<output-path>` is the desired destination of the file. If no destination is specified, the file will be printed to stdout::
+where `<output-id>` is the output file to be copied (from ``showfiles``) and `<output-path>` is the desired destination of the file. If no destination is specified, the file will be printed to stdout::
 
     $ reprounzip vagrant download <path> <output-id>:
 

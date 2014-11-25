@@ -6,9 +6,9 @@ ReproZip is available as open source, released under the Revised BSD License. Pl
 Software Requirements
 =====================
 
-ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container (please see :ref:`unpackers` for more information). More plugins may be developed in the future (and of course, you are free to :ref:`roll your own <develop-plugins>`).
+ReproZip is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container. More plugins may be developed in the future (and of course, you are free to :ref:`roll your own <develop-plugins>`).
 
-These are all standard Python packages that you can install using pip. However, *reprozip* only works on Linux and needs a C compiler recognized by distutils since it includes a C extension module that will be built during installation.
+These are all standard Python packages that you can install using `pip <https://pip.pypa.io/en/latest/installing.html>`_. However, the *reprozip* component only works on Linux and needs a C compiler recognized by distutils since it includes a C extension module that will be built during installation.
 
 The operating system compatibility for the ReproZip components is as follows:
 
@@ -19,20 +19,20 @@ The operating system compatibility for the ReproZip components is as follows:
 +----------------------+----------+--------------+--------------+
 | *reprounzip*         | Yes      | Yes [#plgn]_ | Yes [#plgn]_ |
 +----------------------+----------+--------------+--------------+
-| *reprounzip-docker*  | Yes      | No           | No           |
+| *reprounzip-docker*  | Yes      | Yes          | Yes          |
 +----------------------+----------+--------------+--------------+
 | *reprounzip-vagrant* | Yes      | Yes          | Yes          |
 +----------------------+----------+--------------+--------------+
 
-..  [#plgn] The tool works and you can install additional unpackers, but the default bundled unpackers will only work on Linux.
+..  [#plgn] By installing additional unpackers; the default bundled unpackers only work on Linux.
 
-Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x [#deb]. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
+Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x [#deb]_. Besides, depending on the component or plugin to be used, some additional software packages are also required, as described below:
 
 +------------------------------+---------------------------------------------+
 | Component / Plugin           | Required Software Packages                  |
 +==============================+=============================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_ [#deb],  |
-|                              | Python headers [#deb],                      |
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`_ [#deb]_, |
+|                              | Python headers [#deb]_,                     |
 |                              | a working C compiler                        |
 +------------------------------+---------------------------------------------+
 | *reprounzip*                 | None                                        |
@@ -44,19 +44,24 @@ Python 2.7.3 or greater [#bug]_ is required to run ReproZip. If you don't have i
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_         |
 +------------------------------+---------------------------------------------+
 
-..  [#deb] On Debian and derived, these are provided by *python*, *python-dev* and *libsqlite3-dev*.
-..  [#pycrypto] Building PyCrypto on POSIX will require a C compiler and the Python development headers (*python-dev* package on Debian and derived). For installation on Windows without building from source see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
+..  [#deb] On Debian and Debian-based, these are provided by *python*, *python-dev*, and *libsqlite3-dev*.
+..  [#pycrypto] Building PyCrypto on POSIX will require a C compiler and the Python development headers (*python-dev* package on Debian and derived). For installation on Windows without building from source, please see `here <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
 ..  [#bug] This is because of `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 
 Obtaining the Software
 ======================
 
-In ReproZip, the components must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_. Then, to install a ReproZip component, simply run the following command::
+In ReproZip, the components must be installed separately as they fulfill different purposes (and typically, you will use them on different machines). First, you will need Python and `pip <https://pip.pypa.io/en/latest/installing.html>`_, as mentioned before. Then, to install a ReproZip component, simply run the following command::
 
     $ pip install reprozip
     $ # or:
     $ pip install reprounzip
 
-The additional plugins for *reprounzip* can also be installed using the same command, or you can also install all of them using::
+The additional plugins for *reprounzip* can also be installed using the same command::
+
+    $ pip install reprounzip-vagrant
+    $ pip install reprounzip-docker
+    
+Alternatively, you can install *reprounzip* with all the available plugins using::
 
     $ pip install reprounzip[all]
