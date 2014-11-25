@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 
 
 toplevel = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,10 +13,12 @@ re_version = re.compile(r'(?<=\bversion=[\'"])([0-9a-zA-Z._+-]+)')
 
 
 def update_version(gitversion, foundversion):
+    """Chooses version string to write to setup.py.
+    """
     return gitversion
 
 
-if __name__ == '__main__':
+def make_pkg():
     # Get version from git describe
     version = subprocess.check_output(['git', 'describe',
                                        '--always', '--tags'],
@@ -54,9 +57,13 @@ if __name__ == '__main__':
                 fp.write(line)
 
         # Run sdist
-        subprocess.check_call(['python', setup_py, 'sdist'])
+        subprocess.check_call([sys.executable, setup_py, 'sdist'])
 
         # Move output to top-level dist/
         for f in os.listdir(os.path.join(pdir, 'dist')):
             shutil.copyfile(os.path.join(pdir, 'dist', f),
                             os.path.join(dest, f))
+
+
+if __name__ == '__main__':
+    make_pkg()
