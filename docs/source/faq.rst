@@ -82,11 +82,16 @@ Why I am having issues with `reprounzip-vagrant` on Python 3?
 The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.py** library used to transfer files to and from the virtual machine has a number of issues. Until the maintainer accepts our patch, you can install our fixed version from GitHub using::
 
     pip install 'git+https://github.com/remram44/scp.py.git#egg=scp'
-    
+
+Why `reprounzip directory` shows ``IOError``?
+=============================================
+
+The `directory` unpacker does not provide any isolation from the filesystem, so if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
+
 ..  _distribnotfound:
 
-Why `reprounzip` shows DistributionNotFound errors?
-===================================================
+Why `reprounzip` shows ``DistributionNotFound`` errors?
+=======================================================
 
 You probably have some plugins left over from a previous installation. Be sure to upgrade or remove outdated plugins when you upgrade reprounzip.
 
