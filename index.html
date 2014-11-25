@@ -18,7 +18,7 @@
     <link href="css/docs.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="theme.css" rel="stylesheet">
+    <link href="css/theme.css" rel="stylesheet">
 
     <style type="text/css" rel="stylesheet">
 /* Sample code areas */
@@ -85,14 +85,7 @@ body > .container {
 }
     </style>
 
-    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-    <!--[if lt IE 9]><script src="js/ie8-responsive-file-warning.js"></script><![endif]-->
-    <script src="js/ie-emulation-modes-warning.js"></script>
-
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <script src="js/ie10-viewport-bug-workaround.js"></script>
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -113,10 +106,10 @@ body > .container {
   <body role="document">
 
     <!-- Fixed navbar -->
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -124,13 +117,13 @@ body > .container {
           </button>
           <a class="navbar-brand" href="#">ReproZip</a>
         </div>
-        <div class="navbar-collapse collapse">
+        <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
             <li class="active"><a href="#">About</a></li>
             <li><a href="http://reprozip.readthedocs.org/">Documentation</a></li>
             <li><a href="https://github.com/ViDA-NYU/reprozip">Github Project</a></li>
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">PyPI Packages<span class="caret"></span></a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="https://pypi.python.org/pypi/reprozip">reprozip</a></li>
                 <li><a href="https://pypi.python.org/pypi/reprounzip">reprounzip</a></li>
@@ -142,7 +135,7 @@ body > .container {
           </ul>
         </div><!--/.nav-collapse -->
       </div>
-    </div>
+    </nav>
 
     <div class="container" role="main">
 
@@ -253,5 +246,7 @@ result: -17.814</span></code></pre></div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <!--<script src="js/docs.min.js"></script>-->
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="js/ie10-viewport-bug-workaround.js"></script>
   </body>
 </html>
