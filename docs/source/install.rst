@@ -67,8 +67,7 @@ To update the software, use the flag ``-U``::
 
 The additional plugins for *reprounzip* can also be installed using the same command::
 
-    $ pip install reprounzip-vagrant
-    $ pip install reprounzip-docker
+    $ pip install reprounzip-docker reprounzip-vagrant
 
 Alternatively, you can install *reprounzip* with all the available plugins using::
 
@@ -84,7 +83,7 @@ For Mac OS X, only the *reprounzip* component is available.
 Binaries
 --------
 
-Comming soon!
+Coming soon!
 
 Required Software Packages
 --------------------------
@@ -115,7 +114,9 @@ Besides Python and pip, each component or plugin to be used may have additional 
 Installing *reprounzip*
 -----------------------
 
-First, upgrade `setuptools`::
+First, install `pip` if you don't already have it (see `their installation instructions here <https://pip.pypa.io/en/latest/installing.html>`_).
+
+Also, be sure to upgrade `setuptools`::
 
     $ pip install -U setuptools
 
@@ -129,8 +130,7 @@ To update the software, use the flag ``-U``::
 
 The additional plugins for *reprounzip* can also be installed using the same command::
 
-    $ pip install reprounzip-vagrant
-    $ pip install reprounzip-docker
+    $ pip install reprounzip-docker reprounzip-vagrant
 
 Alternatively, you can install *reprounzip* with all the available plugins using::
 
@@ -146,7 +146,7 @@ For Windows, only the *reprounzip* component is available.
 Binaries
 --------
 
-Comming soon!
+Coming soon!
 
 Required Software Packages
 --------------------------

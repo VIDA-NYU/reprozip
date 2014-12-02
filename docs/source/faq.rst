@@ -91,11 +91,11 @@ This is an issue with the Apple LLVM compiler, which treats unrecognized command
     $ sudo -s
     $ export CFLAGS="-Wno-error=unused-command-line-argument-hard-error-in-future"
 
-Then install `reprounzip-vagrant`::
+Then re-install `reprounzip-vagrant`::
 
     $ pip install -I reprounzip-vagrant
 
-Or use the following command in case you want to install all the available plugins::
+Or use the following command in case you want all the available plugins::
 
     $ pip install -I reprounzip[all]
 
