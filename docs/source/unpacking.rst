@@ -3,7 +3,7 @@
 Using *reprounzip*
 ******************
 
-While *reprozip* is responsible for tracing and packing an experiment, *reprounzip* is the component used for the unpacking step. *reprounzip* is distributed with three **unpackers** for Linux (`reprounzip directory <#unpack-directory>`_, `reprounzip chroot <#unpack-chroot>`_, and `reprounzip installpkgs <#unpack-installpkgs>`_), but more unpackers are supported by installing additional plugins; some of these plugins are compatible with different environments as well (e.g.: `reprounzip-vagrant <#unpack-vagrant>`_ and `reprounzip-docker <#docker-plugin>`_).
+While *reprozip* is responsible for tracing and packing an experiment, *reprounzip* is the component used for the unpacking step. *reprounzip* is distributed with three **unpackers** for Linux (:ref:`reprounzip directory <unpack-directory>`, :ref:`reprounzip chroot <unpack-chroot>`, and :ref:`reprounzip installpkgs <unpack-installpkgs>`), but more unpackers are supported by installing additional plugins; some of these plugins are compatible with different environments as well (e.g.: :ref:`reprounzip-vagrant <unpack-vagrant>` and :ref:`reprounzip-docker <docker-plugin>`).
 
 ..  _unpack-info:
 
@@ -52,7 +52,7 @@ Last, the section `Unpackers` shows which of the installed *reprounzip* unpacker
 
 `Compatible` lists the unpackers that can be used in the current environment, while `Incompatible` lists the unpackers that are not supported in the current environment. An additional `Unknown` list shows the installed unpackers that might not work.
 
-As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the `reprounzip-vagrant <#unpack-vagrant>`_ plugin) is compatible, but `installpkgs <#unpack-installpkgs>`_ is not; `vagrant` may also be listed under `Unknown` if the `vagrant` command is not found in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`_ is not installed).
+As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the :ref:`reprounzip-vagrant <unpack-vagrant>` plugin) is compatible, but :ref:`installpkgs <unpack-installpkgs>` is not; `vagrant` may also be listed under `Unknown` if the `vagrant` command is not found in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`_ is not installed).
 
 ..  _showfiles:
 
