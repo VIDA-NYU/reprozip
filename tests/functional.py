@@ -114,6 +114,22 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                for l in output.splitlines())
 
     # ########################################
+    # testrun multiple commands
+    #
+
+    check_call(rpz + ['testrun', 'bash', '-c',
+                      'cat ../../../../../etc/passwd;'
+                      'cd /var/lib;'
+                      'cat ../../etc/group'])
+    check_call(rpz + ['trace',
+                      'bash', '-c', 'cat /etc/passwd;echo'])
+    check_call(rpz + ['trace', '--continue',
+                      'sh', '-c', 'cat /etc/group;/usr/bin/id'])
+    check_call(rpuz + ['graph', 'graph.dot'])
+    check_call(rpz + ['pack'])
+    check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
+
+    # ########################################
     # 'simple' program: trace, pack, info, unpack
     #
 
