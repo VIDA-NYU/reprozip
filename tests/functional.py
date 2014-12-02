@@ -110,6 +110,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     rpz.extend([reprozip_main.absolute().path] + verbose)
     rpuz.extend([reprounzip_main.absolute().path] + verbose)
 
+    print("Command lines are:\n%r\n%r" % (rpz, rpuz))
+
     # ########################################
     # testrun /bin/echo
     #

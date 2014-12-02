@@ -8,6 +8,7 @@ case "$TEST_MODE"
 in
     run_program|coverage_c)
         export PYTHONUNBUFFERED=1
+        if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then export REPROZIP_PYTHON=/usr/bin/python2.7; fi
         run_lines<<'EOF'
         reprozip testrun bash -c "cat ../../../../../etc/passwd;cd /var/lib;cat ../../etc/group"
         reprozip trace bash -c "cat /etc/passwd;echo"
