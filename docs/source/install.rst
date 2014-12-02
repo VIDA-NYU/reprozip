@@ -6,7 +6,7 @@ In our `website <http://vida-nyu.github.io/reprozip/>`_, you can find links to o
 
 In the following, you will find installation instructions for :ref:`linux`, :ref:`mac`, and :ref:`windows`.
 
-.. _linux:
+..  _linux:
 
 Linux
 =====
@@ -74,7 +74,7 @@ Alternatively, you can install *reprounzip* with all the available plugins using
 
     $ pip install reprounzip[all]
 
-.. _mac:
+..  _mac:
 
 Mac OS X
 ========
@@ -110,7 +110,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`_).
 ..  [#pycrypton2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_.
 
-.. seealso:: :ref:`compiler_mac`
+..  seealso:: :ref:`compiler_mac`
 
 Installing *reprounzip*
 -----------------------
@@ -136,7 +136,7 @@ Alternatively, you can install *reprounzip* with all the available plugins using
 
     $ pip install reprounzip[all]
 
-.. _windows:
+..  _windows:
 
 Windows
 =======
@@ -170,7 +170,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 ..  [#bug3] Due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 ..  [#pycrypton3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
 
-.. seealso:: :ref:`pycrypto_windows`
+..  seealso:: :ref:`pycrypto_windows`
 
 Installing *reprounzip*
 -----------------------
