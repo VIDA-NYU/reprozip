@@ -83,22 +83,32 @@ def build(target, sources, args=[]):
 
 @in_temp_dir
 def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
-    python = [sys.executable]
+    # Tests on Python < 2.7.3: need to use separate reprozip Python (with known
+    # working version of Python)
+    if sys.version_info < (2, 7, 3) and 'REPROZIP_PYTHON' not in os.environ:
+        sys.stderr.write("Error: using reprozip with Python %s!\n" %
+                         sys.version.split(' ', 1)[0])
+        sys.exit(1)
+
+    rpz = [os.environ.get('REPROZIP_PYTHON', sys.executable)]
+    rpuz = [os.environ.get('REPROUNZIP_PYTHON', sys.executable)]
 
     # Can't match on the SignalWarning category here because of a Python bug
     # http://bugs.python.org/issue22543
     if raise_warnings:
-        python.extend(['-W', 'error:signal'])
+        rpz.extend(['-W', 'error:signal'])
+        rpuz.extend(['-W', 'error:signal'])
 
     if 'COVER' in os.environ:
-        python.extend(['-m'] + os.environ['COVER'].split(' '))
+        rpz.extend(['-m'] + os.environ['COVER'].split(' '))
+        rpuz.extend(['-m'] + os.environ['COVER'].split(' '))
 
     reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
     reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
 
     verbose = ['-v'] * 3
-    rpz = python + [reprozip_main.absolute().path] + verbose
-    rpuz = python + [reprounzip_main.absolute().path] + verbose
+    rpz.extend([reprozip_main.absolute().path] + verbose)
+    rpuz.extend([reprounzip_main.absolute().path] + verbose)
 
     # ########################################
     # testrun /bin/echo
