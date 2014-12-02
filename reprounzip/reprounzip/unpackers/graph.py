@@ -26,7 +26,7 @@ import tarfile
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.unpackers.common import COMPAT_OK
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
 from reprounzip.utils import PY3, unicode_, iteritems, escape, \
     CommonEqualityMixin
 
@@ -288,9 +288,26 @@ def graph(args):
         generate(Path(args.target[0]), Path(args.dir), args.all_forks)
 
 
+def disabled_bug13676(args):
+    sys.stderr.write("Error: your version of Python, %s, is not "
+                     "supported\nVersions before 2.7.3 are affected by bug "
+                     "13676 and will not work be able to\nread the trace "
+                     "database\n" % sys.version.split(' ', 1)[0])
+    sys.exit(1)
+
+
 def setup(parser, **kwargs):
     """Generates a provenance graph from the trace data
     """
+
+    # http://bugs.python.org/issue13676
+    # This prevents repro(un)zip from reading argv and envp arrays from trace
+    if sys.version_info < (2, 7, 3):
+        parser.add_argument('rest_of_cmdline', nargs=argparse.REMAINDER,
+                            help=argparse.SUPPRESS)
+        parser.set_defaults(func=disabled_bug13676)
+        return {'test_compatibility': (COMPAT_NO, "Python >2.7.3 required")}
+
     parser.add_argument('target', nargs=1, help="Destination DOT file")
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
