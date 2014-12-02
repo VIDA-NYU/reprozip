@@ -102,9 +102,9 @@ The *directory* unpacker (``reprounzip directory``) allows users to unpack the e
 
 Please note that, although this unpacker is easy to use and does not require any privilege on the reproducing machine, it is **unreliable** since the directory is not isolated in any way from the remainder of the system. In particular, should the experiment use absolute paths, they will hit the host system instead. However, if the system has all the required packages (see :ref:`unpack-installpkgs`), and the experiment's files are addressed with relative paths, the use of this unpacker should not cause any problems.
 
-**Limitation:** ``reprounzip directory`` provides no isolation of the filesystem, as mentioned before. If the experiment uses absolute paths, either provided by you or hardcoded in the experiment, **they will point outside the unpacked directory**.  Please be careful to use relative paths in the configuration and command line if you want this unpacker to work with your experiment. Other unpackers are more reliable in this regard.
+..  warning:: ``reprounzip directory`` provides no isolation of the filesystem, as mentioned before. If the experiment uses absolute paths, either provided by you or hardcoded in the experiment, **they will point outside the unpacked directory**.  Please be careful to use relative paths in the configuration and command line if you want this unpacker to work with your experiment. Other unpackers are more reliable in this regard.
 
-**Note:** ``reprounzip directory`` is automatically distributed with `reprounzip`.
+..  note:: ``reprounzip directory`` is automatically distributed with `reprounzip`.
 
 ..  _unpack-chroot:
 
@@ -113,11 +113,11 @@ The `chroot` Unpacker: Providing Isolation with the *chroot* Mechanism
 
 In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment package; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of hardcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
 
-**Warning:** do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
+..  warning:: do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
-**Limitation:** although *chroot* offers pretty good isolation, it is not considered completely safe: it is possible for processes owned by root to "escape" to the outer system. We recommend not running untrusted programs with this plugin.
+..  note:: although *chroot* offers pretty good isolation, it is not considered completely safe: it is possible for processes owned by root to "escape" to the outer system. We recommend not running untrusted programs with this plugin.
 
-**Note:** ``reprounzip chroot`` is automatically distributed with `reprounzip`.
+..  note:: ``reprounzip chroot`` is automatically distributed with `reprounzip`.
 
 ..  _unpack-installpkgs:
 
@@ -134,9 +134,9 @@ To install the required dependencies, the following command should be used::
 
 Users may use flag *y* or *assume-yes* to automatically confirm all the questions from the package manager; flag *missing* to install only the software packages that were not originally included in the experiment package (i.e.: software packages excluded in the configuration file); and flag *summary* to simply provide a summary of which software packages are installed or not in the current environment **without installing any dependency**.
 
-**Note:** this unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
+..  note:: this unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
 
-**Note:** ``reprounzip installpkgs`` is automatically distributed with `reprounzip`.
+..  note:: ``reprounzip installpkgs`` is automatically distributed with `reprounzip`.
 
 ..  _unpackers:
 
@@ -152,7 +152,7 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
     
-**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
+..  note:: this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
 
 ..  _docker-plugin:
 
@@ -161,7 +161,7 @@ The `docker` Unpacker: Building a Docker Container
 
 ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`_ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
 
-**Note:** this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
+..  note:: this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
 
 ..  _unpacker-commands:
 
@@ -185,7 +185,7 @@ Note that, once this is done, you should only remove `<path>` with the `destroy`
 
 The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
 
-**Note:** most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
+..  note:: most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
 
 Reproducing the Experiment
 ++++++++++++++++++++++++++

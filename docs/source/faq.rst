@@ -74,6 +74,31 @@ What if I need to pack multiple command lines?
 
 The easiest way, in this case, is to write a script that runs all the desired command lines, and then to trace the execution of this script with `reprozip`.
 
+..  _pycrypto_windows:
+
+Why `reprounzip-vagrant` installation fails with error ``Unable to find vcvarsall.bat`` on Windows?
+===================================================================================================
+
+Python is trying to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_, one of the dependencies of `reprounzip-vagrant`, but there is no C compiler available. You can either build PyCrypto from source, or follow the instructions on `this website <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_ to get the non-official binaries.
+
+..  _compiler_mac:
+
+Why `reprounzip-vagrant` installation fails with error ``unknown argument: '-mno-fused-madd'`` on Mac OS X?
+===========================================================================================================
+
+This is an issue with the Apple LLVM compiler, which treats unrecognized command-line options as errors. As a workaround, before installing `reprounzip-vagrant`, run the following::
+
+    $ sudo -s
+    $ export CFLAGS="-Wno-error=unused-command-line-argument-hard-error-in-future"
+
+Then re-install `reprounzip-vagrant`::
+
+    $ pip install -I reprounzip-vagrant
+
+Or use the following command in case you want all the available plugins::
+
+    $ pip install -I reprounzip[all]
+
 ..  _scp-py3:
 
 Why I am having issues with `reprounzip-vagrant` on Python 3?
