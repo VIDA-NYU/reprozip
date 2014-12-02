@@ -91,6 +91,23 @@ def read_packages(packages, File=File, Package=Package):
     return new_pkgs
 
 
+# Pack format history:
+# 0.2: used by reprozip 0.2
+# 0.2.1:
+#     config: comments directories as such in config
+#     trace database: adds executed_files.workingdir, adds processes.exitcode
+#     data: packs dynamic linkers
+# 0.3:
+#     config: don't list missing (unpacked) files in config
+#     trace database: adds opened_files.is_directory
+# 0.3.1: no change
+# 0.3.2: no change
+# 0.4:
+#     config: adds input_files, output_files, lists parent directories
+# 0.4.1: no change
+# 0.5: no change
+
+
 def load_config(filename, canonical, File=File, Package=Package):
     """Loads a YAML configuration file.
 
