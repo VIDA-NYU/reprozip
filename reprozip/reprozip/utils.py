@@ -21,6 +21,7 @@ import logging
 import os
 from rpaths import Path
 import stat
+import subprocess
 import sys
 
 
@@ -218,6 +219,22 @@ def rmtree_fixed(path):
             entry.remove()
 
     path.rmdir()
+
+
+def check_output(*popenargs, **kwargs):
+    """Runs a command and returns its output, raising on non-zero exit code.
+    """
+    if 'stdout' in kwargs:
+        raise ValueError("stdout argument not allowed")
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    stdout, stderr = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get('args')
+        if cmd is None:
+            cmd = [popenargs[0]]
+        raise subprocess.CalledProcessError(retcode, cmd)
+    return stdout
 
 
 def download_file(url, dest, cachename=None):

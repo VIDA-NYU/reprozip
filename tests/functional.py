@@ -13,7 +13,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import iteritems
+from reprounzip.utils import iteritems, check_output as _check_output
 
 
 tests = Path(__file__).parent.absolute()
@@ -58,7 +58,7 @@ def check_call(args):
 
 @print_arg_list
 def check_output(args):
-    output = subprocess.check_output(args)
+    output = _check_output(args)
     sys.stdout.buffer.write(output)
     return output
 
