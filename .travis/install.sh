@@ -10,6 +10,13 @@ in
         if [ "$TEST_MODE" = "coverage_c" ]; then
             export CFLAGS="-fprofile-arcs -ftest-coverage"
         fi
+        if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then
+            run_lines<<'EOF'
+            virtualenv -p python2.7 /tmp/rpz2.7
+            /tmp/rpz2.7/bin/pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
+            cd reprozip && /tmp/rpz2.7/bin/python setup.py install
+EOF
+        fi
         run_lines<<'EOF'
         sudo apt-get update -qq
         sudo apt-get install -qq libc6-dev-i386 gcc-multilib

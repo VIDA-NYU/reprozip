@@ -8,7 +8,7 @@ case "$TEST_MODE"
 in
     run_program|coverage_c)
         export PYTHONUNBUFFERED=1
-        if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then export REPROZIP_PYTHON=/usr/bin/python2.7; fi
+        if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then export REPROZIP_PYTHON=/tmp/rpz2.7/bin/python; fi
         python tests
         ;;
     coverage_py)
