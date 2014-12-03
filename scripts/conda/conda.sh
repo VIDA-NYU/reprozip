@@ -32,6 +32,7 @@ sedi(){
 }
 
 absolutepathname(){
+    mkdir "$(dirname "$1")"
     cd "$(dirname "$1")"
     echo "$(pwd)/$(basename "$1")"
 }
