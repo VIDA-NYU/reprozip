@@ -4,6 +4,10 @@ Changelog
 0.5.1 (???)
 -----------
 
+Bugfixes:
+* Goes back to pack format 0.4: generates `.rpz` files readable by older
+  reprounzip versions
+
 Features:
 * Python 2.6 support for reprounzip (except 'graph')
 
