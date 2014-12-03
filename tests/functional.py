@@ -85,10 +85,14 @@ def build(target, sources, args=[]):
 def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Tests on Python < 2.7.3: need to use separate reprozip Python (with known
     # working version of Python)
-    if sys.version_info < (2, 7, 3) and 'REPROZIP_PYTHON' not in os.environ:
-        sys.stderr.write("Error: using reprozip with Python %s!\n" %
-                         sys.version.split(' ', 1)[0])
-        sys.exit(1)
+    if sys.version_info < (2, 7, 3):
+        bug13676 = True
+        if 'REPROZIP_PYTHON' not in os.environ:
+            sys.stderr.write("Error: using reprozip with Python %s!\n" %
+                             sys.version.split(' ', 1)[0])
+            sys.exit(1)
+    else:
+        bug13676 = False
 
     rpz = [os.environ.get('REPROZIP_PYTHON', sys.executable)]
     rpuz = [os.environ.get('REPROUNZIP_PYTHON', sys.executable)]
@@ -137,9 +141,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                       'bash', '-c', 'cat /etc/passwd;echo'])
     check_call(rpz + ['trace', '--continue',
                       'sh', '-c', 'cat /etc/group;/usr/bin/id'])
-    check_call(rpuz + ['graph', 'graph.dot'])
     check_call(rpz + ['pack'])
-    check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
+    if not bug13676:
+        check_call(rpuz + ['graph', 'graph.dot'])
+        check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
 
     # ########################################
     # 'simple' program: trace, pack, info, unpack
