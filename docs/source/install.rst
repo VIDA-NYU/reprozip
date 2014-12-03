@@ -192,3 +192,13 @@ Alternatively, you can install *reprounzip* with all the available plugins using
 
     $ pip install reprounzip[all]
 
+..  _conda:
+
+Anaconda
+========
+
+*reprozip* and *reprounzip* can also be installed on the `Anaconda <https://store.continuum.io/cshop/anaconda>`_ Python distribution, from Binstar::
+
+    $ conda install -c https://conda.binstar.org/remram reprozip reprounzip reprounzip-docker reprounzip-vagrant
+
+Note that reprozip is only available for Linux.
