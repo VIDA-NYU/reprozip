@@ -16,7 +16,7 @@ For Linux distributions, both *reprozip* and *reprounzip* components are availab
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_ [#deb]_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_ [#deb]_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -37,7 +37,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_         |
 +------------------------------+---------------------------------------------+
 
-..  [#bug] Due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+..  [#bug] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 ..  [#deb] On Debian and Debian-based, this is provided by *python*: ``sudo apt-get install python``.
 ..  [#deb2] On Debian and Debian-based, this is provided by *libsqlite3-dev*: ``sudo apt-get install libsqlite3-dev``.
 ..  [#deb3] On Debian and Debian-based, this is provided by *python-dev*: ``sudo apt-get install python-dev``.
@@ -88,7 +88,7 @@ Coming soon!
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug2]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug2]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the pip installer (see `their installation instructions here <https://pip.pypa.io/en/latest/installing.html>`_).
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -105,7 +105,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_          |
 +------------------------------+----------------------------------------------+
 
-..  [#bug2] Due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+..  [#bug2] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`_).
 ..  [#pycrypton2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_.
 
@@ -114,9 +114,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 Installing *reprounzip*
 -----------------------
 
-First, install `pip` if you don't already have it (see `their installation instructions here <https://pip.pypa.io/en/latest/installing.html>`_).
-
-Also, be sure to upgrade `setuptools`::
+First, be sure to upgrade `setuptools`::
 
     $ pip install -U setuptools
 
@@ -151,7 +149,7 @@ Coming soon!
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug3]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug3]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -167,7 +165,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`_                                    |
 +------------------------------+------------------------------------------------------------------------+
 
-..  [#bug3] Due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+..  [#bug3] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
 ..  [#pycrypton3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`_.
 
 ..  seealso:: :ref:`pycrypto_windows`

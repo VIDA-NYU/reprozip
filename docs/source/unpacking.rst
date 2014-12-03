@@ -84,6 +84,8 @@ ReproZip also allows users to generate a *provenance graph* related to the exper
 
 where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ language.
 
+..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+
 Unpackers
 =========
 
@@ -113,9 +115,9 @@ The `chroot` Unpacker: Providing Isolation with the *chroot* Mechanism
 
 In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment package; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of hardcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
 
-..  warning:: do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
+..  warning:: Do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
-..  note:: although *chroot* offers pretty good isolation, it is not considered completely safe: it is possible for processes owned by root to "escape" to the outer system. We recommend not running untrusted programs with this plugin.
+..  note:: Although *chroot* offers pretty good isolation, it is not considered completely safe: it is possible for processes owned by root to "escape" to the outer system. We recommend not running untrusted programs with this plugin.
 
 ..  note:: ``reprounzip chroot`` is automatically distributed with `reprounzip`.
 
@@ -134,7 +136,7 @@ To install the required dependencies, the following command should be used::
 
 Users may use flag *y* or *assume-yes* to automatically confirm all the questions from the package manager; flag *missing* to install only the software packages that were not originally included in the experiment package (i.e.: software packages excluded in the configuration file); and flag *summary* to simply provide a summary of which software packages are installed or not in the current environment **without installing any dependency**.
 
-..  note:: this unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
+..  note:: This unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
 
 ..  note:: ``reprounzip installpkgs`` is automatically distributed with `reprounzip`.
 
@@ -152,7 +154,7 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
     
-..  note:: this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
 
 ..  _docker-plugin:
 
@@ -161,7 +163,7 @@ The `docker` Unpacker: Building a Docker Container
 
 ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`_ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
 
-..  note:: this unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
 
 ..  _unpacker-commands:
 
@@ -185,7 +187,7 @@ Note that, once this is done, you should only remove `<path>` with the `destroy`
 
 The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
 
-..  note:: most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
+..  note:: Most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
 
 Reproducing the Experiment
 ++++++++++++++++++++++++++
