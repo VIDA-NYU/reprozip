@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.5.1 (???)
+-----------
+
+Features:
+* Python 2.6 support for reprounzip (except 'graph')
+
 0.5 (2014-11-24)
 ----------------
 
