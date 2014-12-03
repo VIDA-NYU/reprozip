@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_, iteritems
+from reprounzip.utils import unicode_, iteritems, check_output
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -115,16 +115,16 @@ def get_ssh_parameters(target):
     """Reads the SSH parameters from ``vagrant ssh`` command output.
     """
     try:
-        stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                         cwd=target.path,
-                                         stderr=subprocess.PIPE)
+        stdout = check_output(['vagrant', 'ssh-config'],
+                              cwd=target.path,
+                              stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
         subprocess.check_call(['vagrant', 'up'],
                               cwd=target.path)
         # Try again
-        stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                         cwd=target.path)
+        stdout = check_output(['vagrant', 'ssh-config'],
+                              cwd=target.path)
 
     info = {}
     for line in stdout.split(b'\n'):

@@ -67,15 +67,6 @@ def main():
     else:
         sys.stdin = sys.stdin.buffer
 
-    # http://bugs.python.org/issue13676
-    # This prevents reprozip from reading argv and envp arrays from trace
-    if sys.version_info < (2, 7, 3):
-        sys.stderr.write("Error: your version of Python, %s, is not "
-                         "supported\nVersions before 2.7.3 are affected by "
-                         "bug 13676 and will not work with ReproZip\n" %
-                         sys.version.split(' ', 1)[0])
-        sys.exit(1)
-
     # Parses command-line
 
     # General options

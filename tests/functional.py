@@ -13,7 +13,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import iteritems
+from reprounzip.utils import iteritems, check_output as _check_output
 
 
 tests = Path(__file__).parent.absolute()
@@ -58,7 +58,7 @@ def check_call(args):
 
 @print_arg_list
 def check_output(args):
-    output = subprocess.check_output(args)
+    output = _check_output(args)
     sys.stdout.buffer.write(output)
     return output
 
@@ -83,22 +83,38 @@ def build(target, sources, args=[]):
 
 @in_temp_dir
 def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
-    python = [sys.executable]
+    # Tests on Python < 2.7.3: need to use separate reprozip Python (with known
+    # working version of Python)
+    if sys.version_info < (2, 7, 3):
+        bug13676 = True
+        if 'REPROZIP_PYTHON' not in os.environ:
+            sys.stderr.write("Error: using reprozip with Python %s!\n" %
+                             sys.version.split(' ', 1)[0])
+            sys.exit(1)
+    else:
+        bug13676 = False
+
+    rpz = [os.environ.get('REPROZIP_PYTHON', sys.executable)]
+    rpuz = [os.environ.get('REPROUNZIP_PYTHON', sys.executable)]
 
     # Can't match on the SignalWarning category here because of a Python bug
     # http://bugs.python.org/issue22543
     if raise_warnings:
-        python.extend(['-W', 'error:signal'])
+        rpz.extend(['-W', 'error:signal'])
+        rpuz.extend(['-W', 'error:signal'])
 
     if 'COVER' in os.environ:
-        python.extend(['-m'] + os.environ['COVER'].split(' '))
+        rpz.extend(['-m'] + os.environ['COVER'].split(' '))
+        rpuz.extend(['-m'] + os.environ['COVER'].split(' '))
 
     reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
     reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
 
     verbose = ['-v'] * 3
-    rpz = python + [reprozip_main.absolute().path] + verbose
-    rpuz = python + [reprounzip_main.absolute().path] + verbose
+    rpz.extend([reprozip_main.absolute().path] + verbose)
+    rpuz.extend([reprounzip_main.absolute().path] + verbose)
+
+    print("Command lines are:\n%r\n%r" % (rpz, rpuz))
 
     # ########################################
     # testrun /bin/echo
@@ -112,6 +128,23 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                  '/bin/echo', 'outputhere'])
     assert any(b' 1 | (/bin/echo) /fake/path/echo outputhere ' in l
                for l in output.splitlines())
+
+    # ########################################
+    # testrun multiple commands
+    #
+
+    check_call(rpz + ['testrun', 'bash', '-c',
+                      'cat ../../../../../etc/passwd;'
+                      'cd /var/lib;'
+                      'cat ../../etc/group'])
+    check_call(rpz + ['trace',
+                      'bash', '-c', 'cat /etc/passwd;echo'])
+    check_call(rpz + ['trace', '--continue',
+                      'sh', '-c', 'cat /etc/group;/usr/bin/id'])
+    check_call(rpz + ['pack'])
+    if not bug13676:
+        check_call(rpuz + ['graph', 'graph.dot'])
+        check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
 
     # ########################################
     # 'simple' program: trace, pack, info, unpack
