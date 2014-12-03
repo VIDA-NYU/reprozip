@@ -16,7 +16,7 @@ For Linux distributions, both *reprozip* and *reprounzip* components are availab
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater [#bug]_ is **required** to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_ [#deb]_; you should prefer a 2.x releases to 3.x. You will also need `pip <https://pip.pypa.io/en/latest/installing.html>`_.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_ [#deb]_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -88,7 +88,7 @@ Coming soon!
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater [#bug2]_ is **required** to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need `pip <https://pip.pypa.io/en/latest/installing.html>`_.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug2]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -151,7 +151,7 @@ Coming soon!
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater [#bug3]_ is **required** to run ReproZip. If you don't have it yet on your machine, you can get it from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need `pip <https://pip.pypa.io/en/latest/installing.html>`_.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work but some features will not be available [#bug3]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`_ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
