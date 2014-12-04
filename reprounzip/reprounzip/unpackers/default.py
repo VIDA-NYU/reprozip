@@ -639,6 +639,10 @@ class LocalDownloader(FileDownloader):
         remote_path = join_root(self.root, remote_path)
 
         # Output to stdout
+        if not remote_path.exists():
+            logging.critical("Can't get output file (doesn't exist): %s",
+                             remote_path)
+            sys.exit(1)
         with remote_path.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
@@ -652,6 +656,10 @@ class LocalDownloader(FileDownloader):
         remote_path = join_root(self.root, remote_path)
 
         # Copy
+        if not remote_path.exists():
+            logging.critical("Can't get output file (doesn't exist): %s",
+                             remote_path)
+            sys.exit(1)
         remote_path.copyfile(local_path)
         remote_path.copymode(local_path)
 

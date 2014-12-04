@@ -362,9 +362,12 @@ class ContainerDownloader(FileDownloader):
         # a file name (#4272)
         tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
         try:
-            subprocess.check_call(['docker', 'cp',
-                                   self.container + b':' + remote_path.path,
-                                   tmpdir.path])
+            ret = subprocess.call(['docker', 'cp',
+                                  self.container + b':' + remote_path.path,
+                                  tmpdir.path])
+            if ret != 0:
+                logging.critical("Can't get output file: %s", remote_path)
+                sys.exit(1)
             (tmpdir / remote_path.name).copyfile(local_path)
         finally:
             tmpdir.rmtree()

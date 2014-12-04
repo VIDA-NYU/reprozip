@@ -506,8 +506,13 @@ class SSHDownloader(FileDownloader):
     def download(self, remote_path, local_path):
         if self.use_chroot:
             remote_path = join_root(PosixPath('/experimentroot'), remote_path)
-        self.client_scp.get(remote_path.path, local_path.path,
-                            recursive=False)
+        try:
+            self.client_scp.get(remote_path.path, local_path.path,
+                                recursive=False)
+        except scp.SCPException as e:
+            logging.critical("Couldn't download output file: %s\n%s",
+                             remote_path, str(e))
+            sys.exit(1)
 
     def finalize(self):
         self.ssh.close()
