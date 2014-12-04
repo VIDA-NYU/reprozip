@@ -13,3 +13,4 @@ OutputDir=output
 [Files]
 ; Base Python files
 Source: C:\Python2.7\*; DestDir: {app}\python2.7; Flags: recursesubdirs
+Source: input\reprounzip.bat; DestDir: {app}
