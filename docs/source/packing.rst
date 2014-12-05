@@ -54,7 +54,9 @@ The first part of the configuration file gives general information with respect 
       uid: <user-id>
       workingdir: <working-directory>
 
-If necessary, users may change the command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Besides, ``input_files`` and ``output_files`` can be modified to inform ReproZip about any input/output file that the tool may have failed in detecting, and also to give meaningful id names to these files (this may be useful for the unpacking step). Other attributes should mostly not be changed
+If necessary, users may change the command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Besides, ``input_files`` and ``output_files`` can be modified to inform ReproZip about any input/output file that the tool may have failed in detecting, and also to give meaningful id names to these files (this may be useful for the unpacking step). Other attributes should mostly not be changed.
+
+..  seealso:: :ref:`file_id`
 
 The next section in the configuration file shows the files to be packed. If the software dependencies were identified by the package manager of the system during the ``reprozip trace`` command, they will be listed under ``packages``; the file dependencies not identified in software packages are listed under ``other_files``::
 

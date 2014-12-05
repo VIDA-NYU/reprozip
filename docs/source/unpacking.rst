@@ -93,8 +93,6 @@ From the same ``.rpz`` package, `reprounzip` allows users to set up the experime
 
 The `reprounzip` tool comes with three unpackers that are only compatible with Linux (``reprounzip directory``, ``reprounzip chroot``, and ``reprounzip installpkgs``). Additional unpackers, such as ``reprounzip vagrant`` and ``reprounzip docker``, can be installed separately. Next, each unpacker is described in more details; for more information on how to use an unpacker, please refer to :ref:`unpacker-commands`.
 
-..  _linux_unpacker:
-
 ..  _unpack-directory:
 
 The `directory` Unpacker: Unpacking as a Plain Directory
@@ -107,6 +105,8 @@ Please note that, although this unpacker is easy to use and does not require any
 ..  warning:: ``reprounzip directory`` provides no isolation of the filesystem, as mentioned before. If the experiment uses absolute paths, either provided by you or hardcoded in the experiment, **they will point outside the unpacked directory**.  Please be careful to use relative paths in the configuration and command line if you want this unpacker to work with your experiment. Other unpackers are more reliable in this regard.
 
 ..  note:: ``reprounzip directory`` is automatically distributed with `reprounzip`.
+
+..  seealso:: :ref:`directory_error`
 
 ..  _unpack-chroot:
 
@@ -259,6 +259,8 @@ where `<output-id>` is the output file to be copied (from ``showfiles``) and `<o
     $ reprounzip vagrant download <path> <output-id>:
 
 Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination).
+
+..  seealso:: :ref:`moving-outputs`
 
 
 Further Considerations

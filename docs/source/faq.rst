@@ -2,11 +2,13 @@
 
 Frequently Asked Questions
 **************************
-    
+
+.. _file_id:
+
 Why `reprozip` does not identify my input/output file?
 ======================================================
 
-ReproZip uses some heuristics to determine what is and what is not an input or output file. However, this is intended to be a starting point: you should check the configuration file (``input_files`` and ``output_files`` sections) and add/remove paths there; giving readable id names to input/output files, such as `database-log` or `lookup-table` also helps.
+ReproZip uses some heuristics to determine what is and what is not an input or output file. However, this is intended to be a starting point: you should check the configuration file (``input_files`` and ``output_files`` sections) and add/remove paths there; giving readable id names to input/output files, such as `database-log` or `lookup-table`, also helps.
 
 ..  _moving-outputs:
 
@@ -107,6 +109,8 @@ Why I am having issues with `reprounzip-vagrant` on Python 3?
 The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.py** library used to transfer files to and from the virtual machine has a number of issues. Until the maintainer accepts our patch, you can install our fixed version from GitHub using::
 
     pip install 'git+https://github.com/remram44/scp.py.git#egg=scp'
+
+.. _directory_error:
 
 Why `reprounzip directory` fails with ``IOError``?
 ==================================================
