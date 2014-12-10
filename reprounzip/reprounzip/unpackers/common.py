@@ -62,7 +62,7 @@ def target_must_exist(func):
         target = Path(args.target[0])
         if not target.is_dir():
             logging.critical("Error: Target directory doesn't exist")
-            sys.exit(1)
+            raise UsageError
         return func(args)
     return wrapper
 
