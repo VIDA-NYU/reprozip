@@ -22,6 +22,7 @@ import traceback
 
 from reprounzip.common import setup_logging
 from reprounzip import signals
+from reprounzip.unpackers.common import UsageError
 
 
 __version__ = '0.5'
@@ -48,6 +49,13 @@ def get_plugins(entry_point_name):
         descr_1 = descr.split('\n', 1)[0]
 
         yield name, func, descr, descr_1
+
+
+class RPUZArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help(sys.stderr)
+        sys.exit(2)
 
 
 def main():
@@ -81,7 +89,7 @@ def main():
     for name, func, descr, descr_1 in get_plugins('reprounzip.plugins'):
         func()
 
-    parser = argparse.ArgumentParser(
+    parser = RPUZArgumentParser(
             description="reprounzip is the ReproZip component responsible for "
                         "unpacking and reproducing an experiment previously "
                         "packed with reprozip",
@@ -110,12 +118,16 @@ def main():
         signals.unpacker = None
     setup_logging('REPROUNZIP', args.verbosity)
     try:
-        args.func(args)
-    except Exception as e:
-        signals.application_finishing(reason=e)
-        raise
-    else:
-        signals.application_finishing(reason=None)
+        try:
+            args.func(args)
+        except Exception as e:
+            signals.application_finishing(reason=e)
+            raise
+        else:
+            signals.application_finishing(reason=None)
+    except UsageError:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     sys.exit(0)
 
 

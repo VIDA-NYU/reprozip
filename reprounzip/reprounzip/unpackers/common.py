@@ -36,6 +36,11 @@ COMPAT_NO = 1
 COMPAT_MAYBE = 2
 
 
+class UsageError(Exception):
+    def __init__(self, msg="Invalid command-line"):
+        Exception.__init__(self, msg)
+
+
 def composite_action(*functions):
     """Makes an action that just calls several other actions in sequence.
 
