@@ -432,7 +432,11 @@ def get_runs(runs, selected_run, cmdline):
     if selected_run is None and len(runs) == 1:
         selected_run = 0
     elif selected_run is not None:
-        selected_run = int(selected_run)
+        try:
+            selected_run = int(selected_run)
+        except ValueError:
+            logging.critical("Error: Run is not a number")
+            raise UsageError
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
