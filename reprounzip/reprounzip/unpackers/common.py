@@ -36,6 +36,11 @@ COMPAT_NO = 1
 COMPAT_MAYBE = 2
 
 
+class UsageError(Exception):
+    def __init__(self, msg="Invalid command-line"):
+        Exception.__init__(self, msg)
+
+
 def composite_action(*functions):
     """Makes an action that just calls several other actions in sequence.
 
@@ -57,7 +62,7 @@ def target_must_exist(func):
         target = Path(args.target[0])
         if not target.is_dir():
             logging.critical("Error: Target directory doesn't exist")
-            sys.exit(1)
+            raise UsageError
         return func(args)
     return wrapper
 
@@ -427,7 +432,11 @@ def get_runs(runs, selected_run, cmdline):
     if selected_run is None and len(runs) == 1:
         selected_run = 0
     elif selected_run is not None:
-        selected_run = int(selected_run)
+        try:
+            selected_run = int(selected_run)
+        except ValueError:
+            logging.critical("Error: Run is not a number")
+            raise UsageError
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
