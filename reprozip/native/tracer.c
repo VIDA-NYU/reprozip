@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -290,8 +291,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         {
             /* LCOV_EXCL_START : internal error: waitpid() won't fail unless we
              * mistakingly call it while there is no child to wait for */
-            log_critical_(0, "waitpid failed: ");
-            perror(NULL);
+            log_critical(0, "waitpid failed: %s", strerror(errno));
             return -1;
             /* LCOV_EXCL_END */
         }
@@ -490,7 +490,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 {
                     /* LCOV_EXCL_START : Not sure what this is for... doesn't
                      * seem to happen in practice */
-                    perror("    NOT delivering");
+                    log_error(tid, "    NOT delivering: %s", strerror(errno));
                     if(signum != SIGSTOP)
                         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                     /* LCOV_EXCL_END */
@@ -591,9 +591,8 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(binary, args);
-        log_critical_(0, "couldn't execute the target command (execvp "
-                      "returned): ");
-        perror(NULL);
+        log_critical(0, "couldn't execute the target command (execvp "
+                     "returned): %s", strerror(errno));
         exit(1);
     }
 

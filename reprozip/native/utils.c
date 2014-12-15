@@ -91,7 +91,7 @@ char *get_wd(void)
             {
                 /* LCOV_EXCL_START : getcwd() really shouldn't fail */
                 free(path);
-                perror("getcwd failed");
+                log_error(0, "getcwd failed: %s", strerror(errno));
                 return strdup("/UNKNOWN");
                 /* LCOV_EXCL_END */
             }
@@ -147,8 +147,7 @@ int path_is_dir(const char *pathname)
         {
             /* LCOV_EXCL_START : shouldn't happen because a tracer process just
              * accessed it */
-            log_error_(0, "error stat()ing %s: ", pathname);
-            perror(NULL);
+            log_error(0, "error stat()ing %s: %s", pathname, strerror(errno));
             /* LCOV_EXCL_END */
         }
         return 0;
