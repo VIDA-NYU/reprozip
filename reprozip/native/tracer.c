@@ -597,9 +597,18 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         exit(1);
     }
 
+    /* Open log file */
+    {
+        char logfilename[1024];
+        strcpy(logfilename, getenv("HOME"));
+        strcat(logfilename, "/.reprozip/log");
+        log_open_file(logfilename);
+    }
+
     if(db_init(database_path) != 0)
     {
         kill(child, SIGKILL);
+        log_close_file();
         return 1;
     }
 
@@ -619,6 +628,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             cleanup();
+            log_close_file();
             return 1;
             /* LCOV_EXCL_END */
         }
@@ -628,11 +638,15 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         cleanup();
         db_close();
+        log_close_file();
         return 1;
     }
 
     if(db_close() != 0)
+    {
+        log_close_file();
         return 1;
+    }
 
     return 0;
 }
