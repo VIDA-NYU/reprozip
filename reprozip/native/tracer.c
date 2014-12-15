@@ -138,8 +138,8 @@ struct Process *trace_get_empty_process(void)
 
     /* Allocate more! */
     if(verbosity >= 3)
-        log_info(0, "process table full (%d), reallocating",
-                 (int)processes_size);
+        log_debug(0, "process table full (%d), reallocating",
+                  (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -340,7 +340,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         if(process == NULL)
         {
             if(verbosity >= 3)
-                log_info(tid, "process appeared");
+                log_debug(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCESS_UNKNOWN;
             process->tid = tid;
@@ -356,7 +356,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ATTACHED;
 
             if(verbosity >= 3)
-                log_info(tid, "process attached");
+                log_debug(tid, "process attached");
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(verbosity >= 2)
@@ -512,7 +512,7 @@ static void cleanup(void)
                 ++nb;
         /* size_t size is implementation dependent; %u for size_t can trigger
          * a warning */
-        log_info(0, "cleaning up, %u processes to kill...", (unsigned int)nb);
+        log_error(0, "cleaning up, %u processes to kill...", (unsigned int)nb);
     }
     for(i = 0; i < processes_size; ++i)
     {
@@ -533,12 +533,12 @@ static void sigint_handler(int signo)
     if(now - last_int < 2)
     {
         if(verbosity >= 1)
-            log_info(0, "cleaning up on SIGINT");
+            log_error(0, "cleaning up on SIGINT");
         cleanup();
         exit(1);
     }
     else if(verbosity >= 1)
-        log_info(0, "Got SIGINT, press twice to abort...");
+        log_error(0, "Got SIGINT, press twice to abort...");
     last_int = now;
 }
 
