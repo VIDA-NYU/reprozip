@@ -340,7 +340,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
             const char *const *v = (const char* const*)execi->argv;
             while(*v)
             {
-                fprintf(stderr, "    %s\n", *v);
+                log_debug(process->tid, "    %s", *v);
                 ++v;
             }
         }
@@ -348,7 +348,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
             size_t nb = 0;
             while(execi->envp[nb] != NULL)
                 ++nb;
-            fprintf(stderr, "  envp: (%u entries)\n", (unsigned int)nb);
+            log_debug(process->tid, "  envp: (%u entries)", (unsigned int)nb);
         }
     }
     process->syscall_info = execi;
