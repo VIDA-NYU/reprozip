@@ -76,13 +76,14 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
 }
 
 
-static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
+static const char *print_sockaddr(void *address, socklen_t addrlen)
 {
+    static char buffer[512];
     const short family = ((struct sockaddr*)address)->sa_family;
     if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
     {
         struct sockaddr_in *address_ = address;
-        fprintf(stream, "%s:%d",
+        snprintf(buffer, 512, "%s:%d",
                 inet_ntoa(address_->sin_addr),
                 ntohs(address_->sin_port));
     }
@@ -92,10 +93,11 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
         struct sockaddr_in6 *address_ = address;
         char buf[50];
         inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
-        fprintf(stream, "[%s]:%d", buf, ntohs(address_->sin6_port));
+        snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
     }
     else
-        fprintf(stream, "<unknown destination, sa_family=%d>", family);
+        snprintf(buffer, 512, "<unknown destination, sa_family=%d>", family);
+    return buffer;
 }
 
 
@@ -524,9 +526,8 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_(process->tid, "process accepted a connection from ");
-        print_sockaddr(stderr, address, addrlen);
-        fprintf(stderr, "\n");
+        log_warn(process->tid, "process accepted a connection from %s",
+                 print_sockaddr(address, addrlen));
         free(address);
     }
     return 0;
@@ -539,9 +540,8 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_(process->tid, "process connected to ");
-        print_sockaddr(stderr, address, addrlen);
-        fprintf(stderr, "\n");
+        log_warn(process->tid, "process connected to %s",
+                 print_sockaddr(address, addrlen));
         free(address);
     }
     return 0;
