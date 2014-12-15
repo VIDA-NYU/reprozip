@@ -51,20 +51,22 @@ def select_image(runs):
         return 'ubuntu', 'ubuntu:12.04'
 
     # Debian
-    elif distribution != 'debian':
-        logging.warning("unsupported distribution %s, using Debian",
-                        distribution)
-        distribution, version = 'debian', '7'
-
-    if version == '6' or version.startswith('squeeze'):
-        return 'debian', 'debian:squeeze'
-    if version == '8' or version.startswith('jessie'):
-        return 'debian', 'debian:jessie'
     else:
-        if (version != '7' and not version.startswith('7.') and
-                not version.startswith('wheezy')):
-            logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
-        return 'debian', 'debian:wheezy'
+        if distribution != 'debian':
+            logging.warning("unsupported distribution %s, using Debian",
+                            distribution)
+            version = '7'
+
+        if version == '6' or version.startswith('squeeze'):
+            return 'debian', 'debian:squeeze'
+        elif version == '8' or version.startswith('jessie'):
+            return 'debian', 'debian:jessie'
+        else:
+            if (version != '7' and not version.startswith('7.') and
+                    not version.startswith('wheezy')):
+                logging.warning("using Debian 7 'Wheezy' instead of '%s'",
+                                version)
+            return 'debian', 'debian:wheezy'
 
 
 def write_dict(filename, dct):
@@ -77,7 +79,8 @@ def write_dict(filename, dct):
 def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    assert dct['unpacker'] == 'docker'
+    if dct['unpacker'] != 'docker':
+        raise ValueError("Wrong unpacker used: %s != docker" % dct['unpacker'])
     return dct
 
 
@@ -182,11 +185,16 @@ def docker_setup_build(args):
     image = make_unique_name(b'reprounzip_image_')
 
     logging.info("Calling 'docker build'...")
-    retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
-                              cwd=target.path)
-    if retcode != 0:
-        logging.critical("docker build failed with code %d", retcode)
+    try:
+        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+                                  cwd=target.path)
+    except OSError:
+        logging.critical("docker executable not found")
         sys.exit(1)
+    else:
+        if retcode != 0:
+            logging.critical("docker build failed with code %d", retcode)
+            sys.exit(1)
     logging.info("Initial image created: %s", image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
@@ -354,9 +362,12 @@ class ContainerDownloader(FileDownloader):
         # a file name (#4272)
         tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
         try:
-            subprocess.check_call(['docker', 'cp',
-                                   self.container + b':' + remote_path.path,
-                                   tmpdir.path])
+            ret = subprocess.call(['docker', 'cp',
+                                  self.container + b':' + remote_path.path,
+                                  tmpdir.path])
+            if ret != 0:
+                logging.critical("Can't get output file: %s", remote_path)
+                sys.exit(1)
             (tmpdir / remote_path.name).copyfile(local_path)
         finally:
             tmpdir.rmtree()
@@ -438,7 +449,7 @@ def test_has_docker(pack, **kwargs):
     return COMPAT_MAYBE, "docker not found in PATH"
 
 
-def setup(parser):
+def setup(parser, **kwargs):
     """Runs the experiment in a Docker container
 
     You will need Docker to be installed on your machine if you want to run the
@@ -460,6 +471,11 @@ def setup(parser):
         $ reprounzip docker run .
         $ reprounzip docker download . results:/home/user/theresults.txt
         $ cd ..; reprounzip docker destroy experiment
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
 
     Download specifications are either:
       output_id:            print the output file to stdout

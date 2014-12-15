@@ -1,6 +1,26 @@
 Changelog
 =========
 
+0.5.1 (???)
+-----------
+
+Bugfixes:
+* Goes back to pack format 0.4: generates `.rpz` files readable by older
+  reprounzip versions
+
+Features:
+* Python 2.6 support for reprounzip (except 'graph')
+
+0.5 (2014-11-24)
+----------------
+
+Features:
+* All reprounzip plugins can be installed with `pip install reprounzip[all]`
+* Various improvements to interactive vagrant console
+* Adds support for generic plugins (alongside unpackers)
+* Adds reprounzip-vistrails plugin
+* Pressing Ctrl+C while tracing won't abort anymore; press it twice for SIGKILL
+
 0.4.1 (2014-10-06)
 ------------------
 

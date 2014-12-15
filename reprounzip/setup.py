@@ -16,12 +16,14 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip',
-      version='0.4.1',
-      packages=['reprounzip', 'reprounzip.unpackers'],
+      version='0.5',
+      packages=['reprounzip', 'reprounzip.unpackers', 'reprounzip.plugins'],
       entry_points={
           'console_scripts': [
               'reprounzip = reprounzip.main:main'],
           'reprounzip.unpackers': [
+              'info = reprounzip.pack_info:setup_info',
+              'showfiles = reprounzip.pack_info:setup_showfiles',
               'graph = reprounzip.unpackers.graph:setup',
               'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
               'directory = reprounzip.unpackers.default:setup_directory',
@@ -29,7 +31,7 @@ setup(name='reprounzip',
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
       extras_require={
-          'all': ['reprounzip-vagrant>=0.4', 'reprounzip-docker>=0.4']},
+          'all': ['reprounzip-vagrant>=0.5', 'reprounzip-docker>=0.5']},
       description="Linux tool enabling reproducible experiments (unpacker)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',

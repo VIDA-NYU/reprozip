@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 
 
 toplevel = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,10 +13,12 @@ re_version = re.compile(r'(?<=\bversion=[\'"])([0-9a-zA-Z._+-]+)')
 
 
 def update_version(gitversion, foundversion):
+    """Chooses version string to write to setup.py.
+    """
     return gitversion
 
 
-if __name__ == '__main__':
+def make_pkg():
     # Get version from git describe
     version = subprocess.check_output(['git', 'describe',
                                        '--always', '--tags'],
@@ -26,7 +29,8 @@ if __name__ == '__main__':
     if not os.path.exists(dest):
         os.mkdir(dest)
 
-    for project in ('reprozip', 'reprounzip', 'reprounzip-vagrant'):
+    for project in ('reprozip', 'reprounzip', 'reprounzip-docker',
+                    'reprounzip-vagrant', 'reprounzip-vistrails'):
         pdir = os.path.join(toplevel, project)
         setup_py = os.path.join(pdir, 'setup.py')
 
@@ -53,9 +57,21 @@ if __name__ == '__main__':
                 fp.write(line)
 
         # Run sdist
-        subprocess.check_call(['python', setup_py, 'sdist'])
+        subprocess.check_call([sys.executable, setup_py, 'sdist'])
+
+        # Run bdist_wheel
+        try:
+            __import__('wheel')
+        except ImportError:
+            pass
+        else:
+            subprocess.check_call([sys.executable, setup_py, 'bdist_wheel'])
 
         # Move output to top-level dist/
         for f in os.listdir(os.path.join(pdir, 'dist')):
             shutil.copyfile(os.path.join(pdir, 'dist', f),
                             os.path.join(dest, f))
+
+
+if __name__ == '__main__':
+    make_pkg()

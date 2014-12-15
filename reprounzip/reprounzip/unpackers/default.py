@@ -91,8 +91,9 @@ def write_dict(filename, dct, type_):
 def read_dict(filename, type_):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    if type is not None:
-        assert dct['unpacker'] == type_
+    if type_ is not None and dct['unpacker'] != type_:
+        raise ValueError("Wrong unpacker used: %s != %s" % (dct['unpacker'],
+                                                            type_))
     return dct
 
 
@@ -638,6 +639,10 @@ class LocalDownloader(FileDownloader):
         remote_path = join_root(self.root, remote_path)
 
         # Output to stdout
+        if not remote_path.exists():
+            logging.critical("Can't get output file (doesn't exist): %s",
+                             remote_path)
+            sys.exit(1)
         with remote_path.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
@@ -651,6 +656,10 @@ class LocalDownloader(FileDownloader):
         remote_path = join_root(self.root, remote_path)
 
         # Copy
+        if not remote_path.exists():
+            logging.critical("Can't get output file (doesn't exist): %s",
+                             remote_path)
+            sys.exit(1)
         remote_path.copyfile(local_path)
         remote_path.copymode(local_path)
 
@@ -716,7 +725,7 @@ def setup_installpkgs(parser):
     return {'test_compatibility': test_same_pkgmngr}
 
 
-def setup_directory(parser):
+def setup_directory(parser, **kwargs):
     """Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
 
     setup       creates the directory (needs the pack filename)
@@ -784,7 +793,7 @@ def chroot_setup(args):
         chroot_mount(args)
 
 
-def setup_chroot(parser):
+def setup_chroot(parser, **kwargs):
     """Unpacks the files and run with chroot
 
     setup/create    creates the directory (needs the pack filename)

@@ -19,6 +19,7 @@ import logging
 import os
 from rpaths import Path
 import sqlite3
+import string
 import sys
 
 from reprozip import __version__ as reprozip_version
@@ -27,7 +28,20 @@ from reprozip.common import setup_logging, \
     setup_usage_report, submit_usage_report, record_usage_report
 import reprozip.pack
 import reprozip.tracer.trace
-from reprozip.utils import PY3
+from reprozip.utils import PY3, unicode_
+
+
+def shell_escape(s):
+    """Given bl"a, returns "bl\\"a".
+    """
+    if isinstance(s, bytes):
+        s = s.decode('utf-8')
+    if any(c in s for c in string.whitespace + '*$\\"\''):
+        return '"%s"' % (s.replace('\\', '\\\\')
+                          .replace('"', '\\"')
+                          .replace('$', '\\$'))
+    else:
+        return s
 
 
 def print_db(database):
@@ -39,6 +53,7 @@ def print_db(database):
     else:
         conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
+    conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
     processes = cur.execute(
@@ -86,9 +101,9 @@ def print_db(database):
         argv = r_argv.split('\0')
         if not argv[-1]:
             argv = argv[:-1]
-        cmdline = ' '.join(repr(a) for a in argv)
-        if argv[0] != os.path.basename(r_name):
-            cmdline = "(%s) %s" % (r_name, cmdline)
+        cmdline = ' '.join(shell_escape(a) for a in argv)
+        if argv[0] not in (r_name, os.path.basename(r_name)):
+            cmdline = "(%s) %s" % (shell_escape(r_name), cmdline)
         f_cmdline = " {0: <37s} ".format(cmdline)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
         print(header)

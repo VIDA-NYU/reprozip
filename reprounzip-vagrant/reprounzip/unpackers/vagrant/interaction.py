@@ -64,7 +64,6 @@ def posix_shell(chan, raw):
                     else:
                         x = chan.recv(1024)
                         if len(x) == 0:
-                            sys.stdout.write('\r\n*** EOF\r\n')
                             break
                         sys.stdout.buffer.write(x)
                         sys.stdout.flush()
@@ -85,8 +84,9 @@ def posix_shell(chan, raw):
 def windows_shell(chan):
     import threading
 
-    sys.stdout.write("*** Line-buffered terminal emulation. "
-                     "Press F6 or ^Z then enter to send EOF.\r\n")
+    sys.stdout.write("*** Emulating terminal on Windows; press F6 or Ctrl+Z "
+                     "then enter to send EOF,\r\nor at the end of the "
+                     "execution.\r\n")
     sys.stdout.flush()
 
     out_lock = threading.RLock()
@@ -98,8 +98,8 @@ def windows_shell(chan):
                 if std:
                     with out_lock:
                         sys.stdout.write(
-                                "\r\n*** EOF (press F6 or ^Z then enter to "
-                                "end)\r\n")
+                                "\r\n*** EOF reached; (press F6 or ^Z then "
+                                "enter to end)\r\n")
                         sys.stdout.flush()
                 break
             stream = [sys.stderr, sys.stdout][std]
@@ -116,7 +116,10 @@ def windows_shell(chan):
             if not d:
                 chan.shutdown_write()
                 break
-            chan.send(d)
+            try:
+                chan.send(d)
+            except socket.error:
+                break
     except EOFError:
         # user hit ^Z or F6
         pass

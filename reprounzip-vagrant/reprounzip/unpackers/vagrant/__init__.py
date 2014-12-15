@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_, iteritems
+from reprounzip.utils import unicode_, iteritems, check_output
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -65,26 +65,34 @@ def select_box(runs):
 
     # Ubuntu
     if distribution == 'ubuntu':
-        if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
+        if version == '12.04':
+            if architecture == 'i686':
+                return 'ubuntu', 'hashicorp/precise32'
+            else:  # architecture == 'x86_64'
+                return 'ubuntu', 'hashicorp/precise64'
+        if version != '14.04':
+            logging.warning("using Ubuntu 14.04 'Trusty' instead of '%s'",
                             version)
         if architecture == 'i686':
-            return 'ubuntu', 'hashicorp/precise32'
+            return 'ubuntu', 'ubuntu/trusty32'
         else:  # architecture == 'x86_64':
-            return 'ubuntu', 'hashicorp/precise64'
+            return 'ubuntu', 'ubuntu/trusty64'
 
     # Debian
-    elif distribution != 'debian':
-        logging.warning("unsupported distribution %s, using Debian",
-                        distribution)
+    else:
+        if distribution != 'debian':
+            logging.warning("unsupported distribution %s, using Debian",
+                            distribution)
+            version = '7'
 
-    elif (version != '7' and not version.startswith('7.') and
-            not version.startswith('wheezy')):
-        logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
-    if architecture == 'i686':
-        return 'debian', 'remram/debian-7-i386'
-    else:  # architecture == 'x86_64':
-        return 'debian', 'remram/debian-7-amd64'
+        if (version != '7' and not version.startswith('7.') and
+                not version.startswith('wheezy')):
+            logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
+
+        if architecture == 'i686':
+            return 'debian', 'remram/debian-7-i386'
+        else:  # architecture == 'x86_64':
+            return 'debian', 'remram/debian-7-amd64'
 
 
 def write_dict(filename, dct):
@@ -97,15 +105,27 @@ def write_dict(filename, dct):
 def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
-    assert dct['unpacker'] == 'vagrant'
+    if dct['unpacker'] != 'vagrant':
+        raise ValueError("Wrong unpacker used: %s != vagrant" %
+                         dct['unpacker'])
     return dct
 
 
 def get_ssh_parameters(target):
     """Reads the SSH parameters from ``vagrant ssh`` command output.
     """
-    stdout = subprocess.check_output(['vagrant', 'ssh-config'],
-                                     cwd=target.path)
+    try:
+        stdout = check_output(['vagrant', 'ssh-config'],
+                              cwd=target.path,
+                              stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        # Makes sure the VM is running
+        subprocess.check_call(['vagrant', 'up'],
+                              cwd=target.path)
+        # Try again
+        stdout = check_output(['vagrant', 'ssh-config'],
+                              cwd=target.path)
+
     info = {}
     for line in stdout.split(b'\n'):
         line = line.strip().split(b' ', 1)
@@ -192,7 +212,7 @@ def vagrant_setup_create(args):
     # Writes setup script
     logging.info("Writing setup script %s...", target / 'setup.sh')
     with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('#!/bin/sh\n\n')
+        fp.write('#!/bin/sh\n\nset -e\n\n')
         if packages:
             # Updates package sources
             fp.write(installer.update_script())
@@ -262,7 +282,7 @@ def vagrant_setup_create(args):
 mkdir -p /experimentroot/bin
 mkdir -p /experimentroot/usr/bin
 if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
-    wget -O /experimentroot/bin/busybox {url}
+    wget --quiet -O /experimentroot/bin/busybox {url}
     chmod +x /experimentroot/bin/busybox
 fi
 [ -e /experimentroot/bin/sh ] || \
@@ -305,10 +325,15 @@ def vagrant_setup_start(args):
     read_dict(target / '.reprounzip')
 
     logging.info("Calling 'vagrant up'...")
-    retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
-    if retcode != 0:
-        logging.critical("vagrant up failed with code %d", retcode)
+    try:
+        retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
+    except OSError:
+        logging.critical("vagrant executable not found")
         sys.exit(1)
+    else:
+        if retcode != 0:
+            logging.critical("vagrant up failed with code %d", retcode)
+            sys.exit(1)
 
 
 @target_must_exist
@@ -351,10 +376,6 @@ def vagrant_run(args):
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
-    # Makes sure the VM is running
-    subprocess.check_call(['vagrant', 'up'],
-                          cwd=target.path)
-
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
 
@@ -373,7 +394,7 @@ def vagrant_run(args):
     chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
 
     # Get output
-    if args.no_stdin:
+    if args.no_stdin or os.environ.get('REPROUNZIP_NON_INTERACTIVE'):
         while True:
             data = chan.recv(1024)
             if len(data) == 0:
@@ -485,8 +506,13 @@ class SSHDownloader(FileDownloader):
     def download(self, remote_path, local_path):
         if self.use_chroot:
             remote_path = join_root(PosixPath('/experimentroot'), remote_path)
-        self.client_scp.get(remote_path.path, local_path.path,
-                            recursive=False)
+        try:
+            self.client_scp.get(remote_path.path, local_path.path,
+                                recursive=False)
+        except scp.SCPException as e:
+            logging.critical("Couldn't download output file: %s\n%s",
+                             remote_path, str(e))
+            sys.exit(1)
 
     def finalize(self):
         self.ssh.close()
@@ -541,7 +567,7 @@ def test_has_vagrant(pack, **kwargs):
     return COMPAT_MAYBE, "vagrant not found in PATH"
 
 
-def setup(parser):
+def setup(parser, **kwargs):
     """Runs the experiment in a virtual machine created through Vagrant
 
     You will need Vagrant to be installed on your machine if you want to run
