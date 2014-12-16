@@ -76,13 +76,14 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
 }
 
 
-static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
+static const char *print_sockaddr(void *address, socklen_t addrlen)
 {
+    static char buffer[512];
     const short family = ((struct sockaddr*)address)->sa_family;
     if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
     {
         struct sockaddr_in *address_ = address;
-        fprintf(stream, "%s:%d",
+        snprintf(buffer, 512, "%s:%d",
                 inet_ntoa(address_->sin_addr),
                 ntohs(address_->sin_port));
     }
@@ -92,10 +93,11 @@ static void print_sockaddr(FILE *stream, void *address, socklen_t addrlen)
         struct sockaddr_in6 *address_ = address;
         char buf[50];
         inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
-        fprintf(stream, "[%s]:%d", buf, ntohs(address_->sin6_port));
+        snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
     }
     else
-        fprintf(stream, "<unknown destination, sa_family=%d>", family);
+        snprintf(buffer, 512, "<unknown destination, sa_family=%d>", family);
+    return buffer;
 }
 
 
@@ -171,21 +173,21 @@ static int syscall_fileopening(const char *name, struct Process *process,
         s_mode = mode_buf[0]?mode_buf + 1:"0";
 
         if(syscall == SYSCALL_OPENING_OPEN)
-            log_info(process->tid,
-                     "open(\"%s\", mode=%s) = %d (%s)",
-                     pathname,
-                     s_mode,
-                     (int)process->retvalue.i,
-                     (process->retvalue.i >= 0)?"success":"failure");
+            log_debug(process->tid,
+                      "open(\"%s\", mode=%s) = %d (%s)",
+                      pathname,
+                      s_mode,
+                      (int)process->retvalue.i,
+                      (process->retvalue.i >= 0)?"success":"failure");
         else /* creat or access */
-            log_info(process->tid,
-                     "%s(\"%s\") (mode=%s) = %d (%s)",
-                     (syscall == SYSCALL_OPENING_OPEN)?"open":
-                         (syscall == SYSCALL_OPENING_CREAT)?"creat":"access",
-                     pathname,
-                     s_mode,
-                     (int)process->retvalue.i,
-                     (process->retvalue.i >= 0)?"success":"failure");
+            log_debug(process->tid,
+                      "%s(\"%s\") (mode=%s) = %d (%s)",
+                      (syscall == SYSCALL_OPENING_OPEN)?"open":
+                          (syscall == SYSCALL_OPENING_CREAT)?"creat":"access",
+                      pathname,
+                      s_mode,
+                      (int)process->retvalue.i,
+                      (process->retvalue.i >= 0)?"success":"failure");
     }
 
     if(process->retvalue.i >= 0)
@@ -332,15 +334,15 @@ static int syscall_execve_in(const char *name, struct Process *process,
                                      process->params[2].p);
     if(verbosity >= 3)
     {
-        log_info(process->tid, "execve called:\n  binary=%s\n  argv:",
-                 execi->binary);
+        log_debug(process->tid, "execve called:\n  binary=%s\n  argv:",
+                  execi->binary);
         {
             /* Note: this conversion is correct and shouldn't need a
              * cast */
             const char *const *v = (const char* const*)execi->argv;
             while(*v)
             {
-                fprintf(stderr, "    %s\n", *v);
+                log_debug(process->tid, "    %s", *v);
                 ++v;
             }
         }
@@ -348,7 +350,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
             size_t nb = 0;
             while(execi->envp[nb] != NULL)
                 ++nb;
-            fprintf(stderr, "  envp: (%u entries)\n", (unsigned int)nb);
+            log_debug(process->tid, "  envp: (%u entries)", (unsigned int)nb);
         }
     }
     process->syscall_info = execi;
@@ -524,9 +526,8 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_(process->tid, "process accepted a connection from ");
-        print_sockaddr(stderr, address, addrlen);
-        fprintf(stderr, "\n");
+        log_warn(process->tid, "process accepted a connection from %s",
+                 print_sockaddr(address, addrlen));
         free(address);
     }
     return 0;
@@ -539,9 +540,8 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn_(process->tid, "process connected to ");
-        print_sockaddr(stderr, address, addrlen);
-        fprintf(stderr, "\n");
+        log_warn(process->tid, "process connected to %s",
+                 print_sockaddr(address, addrlen));
         free(address);
     }
     return 0;
@@ -926,21 +926,21 @@ int syscall_handle(struct Process *process)
     {
         syscall_type = SYSCALL_I386;
         if(verbosity >= 4)
-            log_info(process->tid, "syscall %d (i386)", syscall);
+            log_debug(process->tid, "syscall %d (i386)", syscall);
     }
     else if(process->current_syscall & __X32_SYSCALL_BIT)
     {
         /* LCOV_EXCL_START : x32 is not supported right now */
         syscall_type = SYSCALL_X86_64_x32;
         if(verbosity >= 4)
-            log_info(process->tid, "syscall %d (x32)", syscall);
+            log_debug(process->tid, "syscall %d (x32)", syscall);
         /* LCOV_EXCL_END */
     }
     else
     {
         syscall_type = SYSCALL_X86_64;
         if(verbosity >= 4)
-            log_info(process->tid, "syscall %d (x64)", syscall);
+            log_debug(process->tid, "syscall %d (x64)", syscall);
     }
 
     {
@@ -962,9 +962,9 @@ int syscall_handle(struct Process *process)
                  && processes[i]->syscall_info != NULL)
                 {
                     if(verbosity >= 3)
-                        log_info(process->tid,
-                                 "transition x64 -> i386, syscall 59 is still "
-                                 "execve");
+                        log_debug(process->tid,
+                                  "transition x64 -> i386, syscall 59 is still "
+                                  "execve");
                     entry = &syscall_tables[SYSCALL_X86_64].entries[59];
                 }
             }
@@ -982,9 +982,9 @@ int syscall_handle(struct Process *process)
                  && processes[i]->syscall_info != NULL)
                 {
                     if(verbosity >= 3)
-                        log_info(process->tid,
-                                 "transition i386 -> x64, syscall 11 is still "
-                                 "execve");
+                        log_debug(process->tid,
+                                  "transition i386 -> x64, syscall 11 is still "
+                                  "execve");
                     entry = &syscall_tables[SYSCALL_I386].entries[11];
                 }
             }
@@ -997,7 +997,7 @@ int syscall_handle(struct Process *process)
         {
             int ret = 0;
             if(entry->name && verbosity >= 3)
-                log_info(process->tid, "%s()", entry->name);
+                log_debug(process->tid, "%s()", entry->name);
             if(!process->in_syscall && entry->proc_entry)
                 ret = entry->proc_entry(entry->name, process, entry->udata);
             else if(process->in_syscall && entry->proc_exit)

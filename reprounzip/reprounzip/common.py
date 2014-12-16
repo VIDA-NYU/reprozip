@@ -23,7 +23,8 @@ from __future__ import unicode_literals
 from datetime import datetime
 from distutils.version import LooseVersion
 import logging
-from rpaths import PosixPath
+import logging.handlers
+from rpaths import PosixPath, Path
 import yaml
 
 from .utils import CommonEqualityMixin, escape, hsize, unicode_
@@ -268,15 +269,37 @@ def setup_logging(tag, verbosity):
     """Sets up the logging module.
     """
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
-    level = levels[min(verbosity, 3)]
+    console_level = levels[min(verbosity, 3)]
+    file_level = logging.INFO
+    max_level = max(console_level, file_level)
 
+    # Create formatter, with same format as C extension
     fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
-
     formatter = LoggingDateFormatter(fmt)
 
+    # Console logger
     handler = logging.StreamHandler()
+    handler.setLevel(console_level)
     handler.setFormatter(formatter)
 
+    # Set up logger
     logger = logging.root
-    logger.setLevel(level)
+    logger.setLevel(max_level)
     logger.addHandler(handler)
+
+    # File logger
+    dotrpz = Path('~/.reprozip').expand_user()
+    try:
+        if not dotrpz.is_dir():
+            dotrpz.mkdir()
+        filehandler = logging.handlers.RotatingFileHandler(str(dotrpz / 'log'),
+                                                           mode='a',
+                                                           delay=False,
+                                                           maxBytes=400000,
+                                                           backupCount=5)
+    except (IOError, OSError):
+        logging.warning("Couldn't create log file %s", dotrpz / 'log')
+    else:
+        filehandler.setFormatter(formatter)
+        filehandler.setLevel(file_level)
+        logger.addHandler(filehandler)

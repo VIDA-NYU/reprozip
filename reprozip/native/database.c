@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,8 @@ static sqlite3_uint64 gettime(void)
     if(clock_gettime(CLOCK_MONOTONIC, &now) == -1)
     {
         /* LCOV_EXCL_START : clock_gettime() is unlikely to fail */
-        log_critical_(0, "getting time failed (clock_gettime): ");
-        perror(NULL);
+        log_critical(0, "getting time failed (clock_gettime): %s",
+                     strerror(errno));
         exit(1);
         /* LCOV_EXCL_END */
     }
