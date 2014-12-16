@@ -20,10 +20,12 @@ package that reprozip and reprounzip would both depend on.
 
 from __future__ import unicode_literals
 
+import atexit
 from datetime import datetime
 from distutils.version import LooseVersion
 import logging
-from rpaths import PosixPath
+import os
+from rpaths import PosixPath, Path
 import usagestats
 import yaml
 
@@ -291,14 +293,22 @@ def setup_usage_report(name, version):
     """
     global _usage_report
 
+    # Unpack CA certificate
+    fd, certificate_file = Path.tempfile(prefix='rpz_stats_ca_', suffix='.pem')
+    with certificate_file.open('wb') as fp:
+        fp.write(usage_report_ca)
+    os.close(fd)
+    atexit.register(os.remove, certificate_file.path)
+
     _usage_report = usagestats.Stats(
             '~/.reprozip/usage_stats',
             usagestats.Prompt(enable='%s usage_report --enable' % name,
                               disable='%s usage_report --disable' % name),
-            'http://usagestats.remram.fr/',
+            'https://reprozip-stats.poly.edu/',
             version=version,
             unique_user_id=True,
-            env_var='REPROZIP_USAGE_STATS')
+            env_var='REPROZIP_USAGE_STATS',
+            ssl_verify=certificate_file.path)
 
 
 def record_usage_report(**kwargs):
@@ -310,3 +320,30 @@ def submit_usage_report(**kwargs):
                          usagestats.OPERATING_SYSTEM,
                          usagestats.SESSION_TIME,
                          usagestats.PYTHON_VERSION)
+
+
+usage_report_ca = b'''\
+-----BEGIN CERTIFICATE-----
+MIIDzzCCAregAwIBAgIJAMmlcDnTidBEMA0GCSqGSIb3DQEBCwUAMH4xCzAJBgNV
+BAYTAlVTMREwDwYDVQQIDAhOZXcgWW9yazERMA8GA1UEBwwITmV3IFlvcmsxDDAK
+BgNVBAoMA05ZVTERMA8GA1UEAwwIUmVwcm9aaXAxKDAmBgkqhkiG9w0BCQEWGXJl
+cHJvemlwLWRldkB2Z2MucG9seS5lZHUwHhcNMTQxMTA3MDUxOTA5WhcNMjQxMTA0
+MDUxOTA5WjB+MQswCQYDVQQGEwJVUzERMA8GA1UECAwITmV3IFlvcmsxETAPBgNV
+BAcMCE5ldyBZb3JrMQwwCgYDVQQKDANOWVUxETAPBgNVBAMMCFJlcHJvWmlwMSgw
+JgYJKoZIhvcNAQkBFhlyZXByb3ppcC1kZXZAdmdjLnBvbHkuZWR1MIIBIjANBgkq
+hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1fuTW2snrVji51vGVl9hXAAZbNJ+dxG+
+/LOOxZrF2f1RRNy8YWpeCfGbsZqiIEjorBv8lvdd9P+tD3M5sh9L0zQPU9dFvDb+
+OOrV0jx59hbK3QcCQju3YFuAtD1lu8TBIPgGEab0eJhLVIX+XU5cYXrfoBmwCpN/
+1wXWkUhN91ZVMA0ylATAxTpnoNuMKzfTxT8pyOWajiTskYkKmVBAxgYJQe1YDFA8
+fglBNkQuHqP8jgYAniEBCAPZRMMq8WpOtyFx+L9LX9/WcHtAQyDPPb9M81KKgPQq
+urtCqtuDKxuqcX9zg4/O8l4nZ50pwaJjbH4kMW/wnLzTPvzZCPtJYQIDAQABo1Aw
+TjAdBgNVHQ4EFgQUJjhDDOup4P0cdrAVq1F9ap3yTj8wHwYDVR0jBBgwFoAUJjhD
+DOup4P0cdrAVq1F9ap3yTj8wDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOC
+AQEAeKpTiy2WYPqevHseTCJDIL44zghDJ9w5JmECOhFgPXR9Hl5Nh9S1j4qHBs4G
+cn8d1p2+8tgcJpNAysjuSl4/MM6hQNecW0QVqvJDQGPn33bruMB4DYRT5du1Zpz1
+YIKRjGU7Of3CycOCbaT50VZHhEd5GS2Lvg41ngxtsE8JKnvPuim92dnCutD0beV+
+4TEvoleIi/K4AZWIaekIyqazd0c7eQjgSclNGgePcdbaxIo0u6tmdTYk3RNzo99t
+DCfXxuMMg3wo5pbqG+MvTdECaLwt14zWU259z8JX0BoeVG32kHlt2eUpm5PCfxqc
+dYuwZmAXksp0T0cWo0DnjJKRGQ==
+-----END CERTIFICATE-----
+'''
