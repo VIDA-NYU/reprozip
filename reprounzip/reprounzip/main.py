@@ -136,9 +136,13 @@ def main():
     except AttributeError:
         signals.unpacker = None
     setup_logging('REPROUNZIP', args.verbosity)
+
     setup_usage_report('reprounzip', __version__)
     if hasattr(args, 'selected_unpacker'):
         record_usage_report(unpacker=args.selected_unpacker)
+    signals.pre_setup.subscribe(lambda **kw: record_usage_report(setup=True))
+    signals.pre_run.subscribe(lambda **kw: record_usage_report(run=True))
+
     try:
         try:
             args.func(args)
