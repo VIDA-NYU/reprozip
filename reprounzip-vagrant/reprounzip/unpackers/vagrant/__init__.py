@@ -358,7 +358,7 @@ def run_interactive(ssh_info, interactive, cmds):
                                 '-p', '%d' % ssh_info['port'],
                                 '%s@%s' % (ssh_info['username'],
                                            ssh_info['hostname']),
-                                shell_escape(cmds)])
+                                cmds])
     else:
         # Connects to the machine
         ssh = paramiko.SSHClient()
@@ -370,8 +370,7 @@ def run_interactive(ssh_info, interactive, cmds):
 
         # Execute command
         logging.info("Connected via SSH, running command...")
-        chan.exec_command('/usr/bin/sudo /bin/sh -c %s' %
-                          shell_escape(cmds))
+        chan.exec_command(cmds)
 
         # Get output
         if interactive:
@@ -420,13 +419,14 @@ def vagrant_run(args):
         if use_chroot:
             userspec = '%s:%s' % (uid, gid)
             cmd = ('chroot --userspec=%s /experimentroot '
-                   '/bin/sh -c %s\n' % (
+                   '/bin/sh -c %s' % (
                        userspec,
                        shell_escape(cmd)))
         else:
-            cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+            cmd = 'sudo -u \'#%d\' sh -c %s' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
+    cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
