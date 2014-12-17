@@ -25,7 +25,7 @@ import subprocess
 import sys
 import zipfile
 
-from reprounzip.common import load_config, setup_logging
+from reprounzip.common import load_config, setup_logging, record_usage_report
 from reprounzip.main import __version__ as version
 from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import escape
@@ -72,6 +72,7 @@ def do_vistrails(target):
     This is called from signals after an experiment has been setup by any
     unpacker.
     """
+    record_usage_report(do_vistrails=True)
     unpacker = signals.unpacker
     dot_vistrails = Path('~/.vistrails').expand_user()
 

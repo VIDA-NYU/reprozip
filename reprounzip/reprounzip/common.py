@@ -340,6 +340,12 @@ def setup_usage_report(name, version):
             unique_user_id=True,
             env_var='REPROZIP_USAGE_STATS',
             ssl_verify=certificate_file.path)
+    try:
+        os.getcwd().encode('ascii')
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        record_usage_report(cwd_ascii=False)
+    else:
+        record_usage_report(cwd_ascii=True)
 
 
 def enable_usage_report(enable):

@@ -26,7 +26,8 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import load_config as load_config_file
+from reprounzip.common import load_config as load_config_file, \
+    record_usage_report
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
@@ -68,6 +69,7 @@ def installpkgs(args):
             packages = [pkg for pkg in packages if not pkg.packfiles]
 
         # Installs packages
+        record_usage_report(installpkgs_installing=len(packages))
         r, pkgs = installer.install(packages, assume_yes=args.assume_yes)
         for pkg in packages:
             req = pkg.version
@@ -149,6 +151,7 @@ def directory_create(args):
                         f, pkg.name)
                 missing_files = True
     if missing_files:
+        record_usage_report(directory_missing_pkgs=True)
         logging.error(
                 "Some packages are missing, you should probably install "
                 "them.\nUse 'reprounzip installpkgs -h' for help")
@@ -296,21 +299,23 @@ def should_restore_owner(param):
             # Nothing was requested
             logging.warning("Not running as root, won't restore files' "
                             "owner/group")
-            return False
+            ret = False
         else:
             # If False: skip warning
-            return False
+            ret = False
     else:
         if param is None:
             # Nothing was requested
             logging.info("Running as root, we will restore files' "
                          "owner/group")
-            return True
+            ret = True
         elif param is True:
-            return True
+            ret = True
         else:
             # If False: skip warning
-            return False
+            ret = False
+    record_usage_report(restore_owner=ret)
+    return ret
 
 
 def should_mount_magic_dirs(param):
@@ -325,20 +330,22 @@ def should_mount_magic_dirs(param):
         elif param is None:
             # Nothing was requested
             logging.warning("Not running as root, won't mount /dev and /proc")
-            return False
+            ret = False
         else:
             # If False: skip warning
-            return False
+            ret = False
     else:
         if param is None:
             # Nothing was requested
             logging.info("Running as root, will mount /dev and /proc")
-            return True
+            ret = True
         elif param is True:
-            return True
+            ret = True
         else:
             # If False: skip warning
-            return False
+            ret = False
+    record_usage_report(mount_magic_dirs=ret)
+    return ret
 
 
 def chroot_create(args):
@@ -385,6 +392,7 @@ def chroot_create(args):
     # Checks that everything was packed
     packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
     if packages_not_packed:
+        record_usage_report(chroot_missing_pkgs=True)
         logging.warning("According to configuration, some files were left out "
                         "because they belong to the following packages:%s"
                         "\nWill copy files from HOST SYSTEM",
