@@ -347,6 +347,8 @@ def record_usage_report(**kwargs):
 def record_usage_package(runs, packages, other_files, pack_id=None):
     """Records the info on some pack file into the current usage report.
     """
+    for run in runs:
+        record_usage_report(argv0=run['argv'][0])
     record_usage_report(pack_id=pack_id,
                         nb_packages=len(packages),
                         nb_package_files=sum(len(pkg.files)
