@@ -339,10 +339,26 @@ def setup_usage_report(name, version):
 
 
 def record_usage_report(**kwargs):
+    """Records some info in the current usage report.
+    """
     _usage_report.note(kwargs)
 
 
+def record_usage_package(runs, packages, other_files, pack_id=None):
+    """Records the info on some pack file into the current usage report.
+    """
+    record_usage_report(pack_id=pack_id,
+                        nb_packages=len(packages),
+                        nb_package_files=sum(len(pkg.files)
+                                             for pkg in packages),
+                        packed_packages=sum(1 for pkg in packages
+                                            if pkg.packfiles),
+                        nb_other_files=len(other_files))
+
+
 def submit_usage_report(**kwargs):
+    """Submits the current usage report to the usagestats server.
+    """
     _usage_report.submit(kwargs,
                          usagestats.OPERATING_SYSTEM,
                          usagestats.SESSION_TIME,

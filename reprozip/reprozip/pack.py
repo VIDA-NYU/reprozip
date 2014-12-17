@@ -20,7 +20,8 @@ import tarfile
 import uuid
 
 from reprozip import __version__ as reprozip_version
-from reprozip.common import File, load_config, save_config, record_usage_report
+from reprozip.common import File, load_config, save_config, \
+    record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.tracer.trace import merge_files
 
@@ -201,10 +202,4 @@ def pack(target, directory, sort_packages):
     tar.close()
 
     # Record some info to the usage report
-    record_usage_report(pack_id=pack_id,
-                        nb_packages=len(packages),
-                        nb_package_files=sum(len(pkg.files)
-                                             for pkg in packages),
-                        packed_packages=sum(1 for pkg in packages
-                                            if pkg.packfiles),
-                        nb_other_files=len(other_files))
+    record_usage_package(runs, packages, other_files, pack_id)
