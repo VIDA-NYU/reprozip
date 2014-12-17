@@ -17,6 +17,7 @@ import os
 from rpaths import Path
 import sys
 import tarfile
+import uuid
 
 from reprozip import __version__ as reprozip_version
 from reprozip.common import File, load_config, save_config, record_usage_report
@@ -182,12 +183,16 @@ def pack(target, directory, sort_packages):
     finally:
         manifest.remove()
 
+    # Generates a unique identifier for the pack (for usage reports purposes)
+    pack_id = str(uuid.uuid4())
+
     # Stores canonical config
     fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
     os.close(fd)
     try:
         save_config(can_configfile, runs, packages, other_files,
-                    reprozip_version, canonical=True)
+                    reprozip_version, canonical=True,
+                    pack_id=pack_id)
 
         tar.add(can_configfile, Path('METADATA/config.yml'))
     finally:
@@ -196,7 +201,8 @@ def pack(target, directory, sort_packages):
     tar.close()
 
     # Record some info to the usage report
-    record_usage_report(nb_packages=len(packages),
+    record_usage_report(pack_id=pack_id,
+                        nb_packages=len(packages),
                         nb_package_files=sum(len(pkg.files)
                                              for pkg in packages),
                         packed_packages=sum(1 for pkg in packages
