@@ -342,6 +342,15 @@ def setup_usage_report(name, version):
             ssl_verify=certificate_file.path)
 
 
+def enable_usage_report(enable):
+    """Enables or disables usage reporting.
+    """
+    if enable:
+        _usage_report.enable_reporting()
+    else:
+        _usage_report.disable_reporting()
+
+
 def record_usage_report(**kwargs):
     """Records some info in the current usage report.
     """
