@@ -333,7 +333,7 @@ def setup_usage_report(name, version):
                               disable='%s usage_report --disable' % name),
             os.environ.get('REPROZIP_USAGE_URL',
                            'https://reprozip-stats.poly.edu/'),
-            version=version,
+            version='%s %s' % (name, version),
             unique_user_id=True,
             env_var='REPROZIP_USAGE_STATS',
             ssl_verify=certificate_file.path)
