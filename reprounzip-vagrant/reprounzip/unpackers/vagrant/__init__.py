@@ -353,12 +353,16 @@ def run_interactive(ssh_info, interactive, cmds):
         ssh_exe = None
 
     if interactive and ssh_exe:
-        return subprocess.call([ssh_exe,
-                                '-i', ssh_info['key_filename'],
-                                '-p', '%d' % ssh_info['port'],
-                                '%s@%s' % (ssh_info['username'],
-                                           ssh_info['hostname']),
-                                cmds])
+        return subprocess.call(
+                [ssh_exe,
+                 '-t',  # Force allocation of PTY
+                 '-o', 'StrictHostKeyChecking=no',  # Silently accept host keys
+                 '-o', 'UserKnownHostsFile=/dev/null',  # Don't store host keys
+                 '-i', ssh_info['key_filename'],
+                 '-p', '%d' % ssh_info['port'],
+                 '%s@%s' % (ssh_info['username'],
+                            ssh_info['hostname']),
+                 cmds])
     else:
         # Connects to the machine
         ssh = paramiko.SSHClient()
