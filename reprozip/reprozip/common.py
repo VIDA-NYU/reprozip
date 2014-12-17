@@ -134,10 +134,12 @@ def load_config(filename, canonical, File=File, Package=Package):
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "
                             "%s" % (ver, pkgname))
-    elif not keys_.issubset(set(['version', 'runs',
-                                 'packages', 'other_files',
-                                 'additional_patterns'])):
-        raise InvalidConfig("Unrecognized sections")
+    unknown_keys = keys_ - set(['version', 'runs',
+                                'packages', 'other_files',
+                                'additional_patterns'])
+    if unknown_keys:
+        logging.warning("Unrecognized sections in configuration: %s",
+                        ', '.join(unknown_keys))
 
     runs = config.get('runs', [])
     packages = read_packages(config.get('packages', []), File, Package)
