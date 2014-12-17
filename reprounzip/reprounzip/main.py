@@ -123,6 +123,8 @@ def main():
     try:
         try:
             args.func(args)
+        except UsageError:
+            raise
         except Exception as e:
             signals.application_finishing(reason=e)
             submit_usage_report(result=type(e).__name__)
