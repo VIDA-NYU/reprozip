@@ -132,6 +132,7 @@ def main():
     except UsageError:
         parser.print_help(sys.stderr)
         sys.exit(1)
+    submit_usage_report(result='success')
     sys.exit(0)
 
 
