@@ -155,6 +155,9 @@ def load_config(filename, canonical, File=File, Package=Package):
         if 'output_files' not in run:
             run['output_files'] = {}
 
+    record_usage_package(runs, packages, other_files,
+                         pack_id=config.get('pack_id'))
+
     if canonical:
         if 'additional_patterns' in config:
             raise InvalidConfig("Canonical configuration file shouldn't have "
@@ -350,7 +353,7 @@ def record_usage_package(runs, packages, other_files, pack_id=None):
     """
     for run in runs:
         record_usage_report(argv0=run['argv'][0])
-    record_usage_report(pack_id=pack_id,
+    record_usage_report(pack_id=pack_id or '',
                         nb_packages=len(packages),
                         nb_package_files=sum(len(pkg.files)
                                              for pkg in packages),
