@@ -336,6 +336,61 @@ def vagrant_setup_start(args):
             sys.exit(1)
 
 
+def find_ssh_executable(name='ssh'):
+    exts = os.environ.get('PATHEXT', '').split(os.pathsep)
+    for pathdir in os.environ.get('PATH', '').split(os.pathsep):
+        for ext in exts:
+            fullpath = os.path.join(pathdir, name + ext)
+            if os.path.isfile(fullpath):
+                return fullpath
+    return None
+
+
+def run_interactive(ssh_info, interactive, cmds):
+    if interactive:
+        ssh_exe = find_ssh_executable()
+    else:
+        ssh_exe = None
+
+    if interactive and ssh_exe:
+        return subprocess.call(
+                [ssh_exe,
+                 '-t',  # Force allocation of PTY
+                 '-o', 'StrictHostKeyChecking=no',  # Silently accept host keys
+                 '-o', 'UserKnownHostsFile=/dev/null',  # Don't store host keys
+                 '-i', ssh_info['key_filename'],
+                 '-p', '%d' % ssh_info['port'],
+                 '%s@%s' % (ssh_info['username'],
+                            ssh_info['hostname']),
+                 cmds])
+    else:
+        # Connects to the machine
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(IgnoreMissingKey())
+        ssh.connect(**ssh_info)
+
+        chan = ssh.get_transport().open_session()
+        chan.get_pty()
+
+        # Execute command
+        logging.info("Connected via SSH, running command...")
+        chan.exec_command(cmds)
+
+        # Get output
+        if interactive:
+            interactive_shell(chan)
+        else:
+            while True:
+                data = chan.recv(1024)
+                if len(data) == 0:
+                    break
+                sys.stdout.buffer.write(data)
+                sys.stdout.flush()
+        retcode = chan.recv_exit_status()
+        ssh.close()
+        return retcode
+
+
 @target_must_exist
 def vagrant_run(args):
     """Runs the experiment in the virtual machine.
@@ -368,46 +423,26 @@ def vagrant_run(args):
         if use_chroot:
             userspec = '%s:%s' % (uid, gid)
             cmd = ('chroot --userspec=%s /experimentroot '
-                   '/bin/sh -c %s\n' % (
+                   '/bin/sh -c %s' % (
                        userspec,
                        shell_escape(cmd)))
         else:
-            cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+            cmd = 'sudo -u \'#%d\' sh -c %s' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
+    cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
     info = get_ssh_parameters(target)
 
     signals.pre_run(target=target)
 
-    # Connects to the machine
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(IgnoreMissingKey())
-    ssh.connect(**info)
-
-    chan = ssh.get_transport().open_session()
-    chan.get_pty()
-
-    # Execute command
-    logging.info("Connected via SSH, running command...")
-    chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds))
-
-    # Get output
-    if args.no_stdin or os.environ.get('REPROUNZIP_NON_INTERACTIVE'):
-        while True:
-            data = chan.recv(1024)
-            if len(data) == 0:
-                break
-            sys.stdout.buffer.write(data)
-            sys.stdout.flush()
-    else:
-        interactive_shell(chan)
-    retcode = chan.recv_exit_status()
+    interactive = not (args.no_stdin or
+                       os.environ.get('REPROUNZIP_NON_INTERACTIVE'))
+    retcode = run_interactive(info, interactive,
+                              cmds)
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
                      retcode)
-
-    ssh.close()
 
     signals.post_run(target=target, retcode=retcode)
 
