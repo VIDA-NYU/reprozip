@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -138,8 +139,8 @@ struct Process *trace_get_empty_process(void)
 
     /* Allocate more! */
     if(verbosity >= 3)
-        log_info(0, "process table full (%d), reallocating",
-                 (int)processes_size);
+        log_debug(0, "process table full (%d), reallocating",
+                  (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -290,8 +291,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         {
             /* LCOV_EXCL_START : internal error: waitpid() won't fail unless we
              * mistakingly call it while there is no child to wait for */
-            log_critical_(0, "waitpid failed: ");
-            perror(NULL);
+            log_critical(0, "waitpid failed: %s", strerror(errno));
             return -1;
             /* LCOV_EXCL_END */
         }
@@ -340,7 +340,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         if(process == NULL)
         {
             if(verbosity >= 3)
-                log_info(tid, "process appeared");
+                log_debug(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCESS_UNKNOWN;
             process->tid = tid;
@@ -356,7 +356,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process->status = PROCESS_ATTACHED;
 
             if(verbosity >= 3)
-                log_info(tid, "process attached");
+                log_debug(tid, "process attached");
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(verbosity >= 2)
@@ -490,7 +490,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 {
                     /* LCOV_EXCL_START : Not sure what this is for... doesn't
                      * seem to happen in practice */
-                    perror("    NOT delivering");
+                    log_error(tid, "    NOT delivering: %s", strerror(errno));
                     if(signum != SIGSTOP)
                         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                     /* LCOV_EXCL_END */
@@ -512,7 +512,7 @@ static void cleanup(void)
                 ++nb;
         /* size_t size is implementation dependent; %u for size_t can trigger
          * a warning */
-        log_info(0, "cleaning up, %u processes to kill...", (unsigned int)nb);
+        log_error(0, "cleaning up, %u processes to kill...", (unsigned int)nb);
     }
     for(i = 0; i < processes_size; ++i)
     {
@@ -533,12 +533,12 @@ static void sigint_handler(int signo)
     if(now - last_int < 2)
     {
         if(verbosity >= 1)
-            log_info(0, "cleaning up on SIGINT");
+            log_error(0, "cleaning up on SIGINT");
         cleanup();
         exit(1);
     }
     else if(verbosity >= 1)
-        log_info(0, "Got SIGINT, press twice to abort...");
+        log_error(0, "Got SIGINT, press twice to abort...");
     last_int = now;
 }
 
@@ -591,15 +591,23 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         kill(getpid(), SIGSTOP);
         /* Execute the target */
         execvp(binary, args);
-        log_critical_(0, "couldn't execute the target command (execvp "
-                      "returned): ");
-        perror(NULL);
+        log_critical(0, "couldn't execute the target command (execvp "
+                     "returned): %s", strerror(errno));
         exit(1);
+    }
+
+    /* Open log file */
+    {
+        char logfilename[1024];
+        strcpy(logfilename, getenv("HOME"));
+        strcat(logfilename, "/.reprozip/log");
+        log_open_file(logfilename);
     }
 
     if(db_init(database_path) != 0)
     {
         kill(child, SIGKILL);
+        log_close_file();
         return 1;
     }
 
@@ -619,6 +627,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             cleanup();
+            log_close_file();
             return 1;
             /* LCOV_EXCL_END */
         }
@@ -628,11 +637,15 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         cleanup();
         db_close();
+        log_close_file();
         return 1;
     }
 
     if(db_close() != 0)
+    {
+        log_close_file();
         return 1;
+    }
 
     return 0;
 }

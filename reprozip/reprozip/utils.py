@@ -250,7 +250,11 @@ def download_file(url, dest, cachename=None):
 
     request = Request(url)
 
-    cache = Path('~/.cache/reprozip').expand_user() / cachename
+    if 'XDG_CACHE_HOME' in os.environ:
+        cache = Path(os.environ['XDG_CACHE_HOME'])
+    else:
+        cache = Path('~/.cache').expand_user()
+    cache = cache / 'reprozip' / cachename
     if cache.exists():
         mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
         request.add_header('If-Modified-Since', mtime)
