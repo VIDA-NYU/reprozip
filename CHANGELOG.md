@@ -7,9 +7,15 @@ Changelog
 Bugfixes:
 * Goes back to pack format 0.4: generates `.rpz` files readable by older
   reprounzip versions
+* Fixes experiment not having a PTY in some conditions
+* Rewrite absolute paths on command-line for directory unpacker
 
 Features:
 * Python 2.6 support for reprounzip (except 'graph')
+* Makes error messages more readable
+* Adds a log file under $HOME/.reprozip/log
+* reprounzip-vagrant will use 'ssh' executable if it's available; should be
+  more reliable, especially on Windows
 
 0.5 (2014-11-24)
 ----------------
