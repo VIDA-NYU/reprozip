@@ -35,7 +35,7 @@ except ImportError:
     has_termios = False
 
 
-def interactive_shell(chan, raw=False):
+def interactive_shell(chan, raw=True):
     if has_termios:
         posix_shell(chan, raw)
     else:
