@@ -231,9 +231,9 @@ def vagrant_setup_create(args):
             if mount_bind:
                 fp.write('\n'
                          'mkdir -p /experimentroot/dev\n'
-                         'mount --bind /dev /experimentroot/dev\n'
+                         'mount -o rbind /dev /experimentroot/dev\n'
                          'mkdir -p /experimentroot/proc\n'
-                         'mount --bind /proc /experimentroot/proc\n')
+                         'mount -o rbind /proc /experimentroot/proc\n')
 
             for pkg in packages:
                 fp.write('\n# Copies files from package %s\n' % pkg.name)

@@ -470,7 +470,7 @@ def chroot_mount(args):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
         logging.info("Mounting %s on %s...", m, d)
-        subprocess.check_call(['mount', '--bind', m, str(d)])
+        subprocess.check_call(['mount', '-o', 'rbind', m, str(d)])
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
 
@@ -523,17 +523,14 @@ def chroot_run(args):
     signals.post_run(target=target, retcode=retcode)
 
 
-@target_must_exist
-def chroot_destroy_unmount(args):
-    """Unmounts the bound magic dirs.
+def chroot_unmount(target):
+    """Unmount magic directories, if they are mounted.
     """
-    target = Path(args.target[0])
     unpacked_info = read_dict(target / '.reprounzip', 'chroot')
     mounted = unpacked_info.get('mounted', False)
 
     if not mounted:
-        logging.critical("Magic directories were not mounted")
-        sys.exit(1)
+        return False
 
     unpacked_info['mounted'] = False
     write_dict(target / '.reprounzip', unpacked_info, 'chroot')
@@ -542,7 +539,25 @@ def chroot_destroy_unmount(args):
         d = join_root(target / 'root', Path(m))
         if d.exists():
             logging.info("Unmounting %s...", d)
-            subprocess.check_call(['umount', str(d)])
+            # Unmounts recursively
+            subprocess.check_call(
+                    'grep %s /proc/mounts | '
+                    'cut -f2 -d" " | '
+                    'sort -r | '
+                    'xargs umount' % d,
+                    shell=True)
+    return True
+
+
+@target_must_exist
+def chroot_destroy_unmount(args):
+    """Unmounts the bound magic dirs.
+    """
+    target = Path(args.target[0])
+
+    if not chroot_unmount(target):
+        logging.critical("Magic directories were not mounted")
+        sys.exit(1)
 
 
 @target_must_exist
@@ -567,14 +582,8 @@ def chroot_destroy(args):
     """Destroys the directory, unmounting first if necessary.
     """
     target = Path(args.target[0])
-    mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
 
-    if mounted:
-        for m in ('/dev', '/proc'):
-            d = join_root(target / 'root', Path(m))
-            if d.exists():
-                logging.info("Unmounting %s...", d)
-                subprocess.check_call(['umount', str(d)])
+    chroot_unmount(target)
 
     logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
