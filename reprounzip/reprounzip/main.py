@@ -23,7 +23,7 @@ import traceback
 
 from reprounzip.common import setup_logging, \
     setup_usage_report, enable_usage_report, \
-    submit_usage_report, record_usage_report
+    submit_usage_report, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
 
@@ -139,9 +139,9 @@ def main():
 
     setup_usage_report('reprounzip', __version__)
     if hasattr(args, 'selected_unpacker'):
-        record_usage_report(unpacker=args.selected_unpacker)
-    signals.pre_setup.subscribe(lambda **kw: record_usage_report(setup=True))
-    signals.pre_run.subscribe(lambda **kw: record_usage_report(run=True))
+        record_usage(unpacker=args.selected_unpacker)
+    signals.pre_setup.subscribe(lambda **kw: record_usage(setup=True))
+    signals.pre_run.subscribe(lambda **kw: record_usage(run=True))
 
     try:
         try:

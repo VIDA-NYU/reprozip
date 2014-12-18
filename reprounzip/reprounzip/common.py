@@ -344,9 +344,9 @@ def setup_usage_report(name, version):
     try:
         os.getcwd().encode('ascii')
     except (UnicodeEncodeError, UnicodeDecodeError):
-        record_usage_report(cwd_ascii=False)
+        record_usage(cwd_ascii=False)
     else:
-        record_usage_report(cwd_ascii=True)
+        record_usage(cwd_ascii=True)
 
 
 def enable_usage_report(enable):
@@ -361,7 +361,7 @@ def enable_usage_report(enable):
         sys.stderr.write("Usage reports will not be collected nor sent.\n")
 
 
-def record_usage_report(**kwargs):
+def record_usage(**kwargs):
     """Records some info in the current usage report.
     """
     _usage_report.note(kwargs)
@@ -371,14 +371,14 @@ def record_usage_package(runs, packages, other_files, pack_id=None):
     """Records the info on some pack file into the current usage report.
     """
     for run in runs:
-        record_usage_report(argv0=run['argv'][0])
-    record_usage_report(pack_id=pack_id or '',
-                        nb_packages=len(packages),
-                        nb_package_files=sum(len(pkg.files)
-                                             for pkg in packages),
-                        packed_packages=sum(1 for pkg in packages
-                                            if pkg.packfiles),
-                        nb_other_files=len(other_files))
+        record_usage(argv0=run['argv'][0])
+    record_usage(pack_id=pack_id or '',
+                 nb_packages=len(packages),
+                 nb_package_files=sum(len(pkg.files)
+                                      for pkg in packages),
+                 packed_packages=sum(1 for pkg in packages
+                                     if pkg.packfiles),
+                 nb_other_files=len(other_files))
 
 
 def submit_usage_report(**kwargs):

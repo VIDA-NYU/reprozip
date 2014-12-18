@@ -26,7 +26,7 @@ from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import setup_logging, \
     setup_usage_report, enable_usage_report, \
-    submit_usage_report, record_usage_report
+    submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
 from reprozip.utils import PY3, unicode_
@@ -321,7 +321,7 @@ def main():
     setup_usage_report('reprozip', reprozip_version)
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
-    record_usage_report(command=args.selected_command)
+    record_usage(command=args.selected_command)
     try:
         args.func(args)
     except Exception as e:

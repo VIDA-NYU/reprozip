@@ -21,7 +21,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import Package, load_config, record_usage_report
+from reprounzip.common import Package, load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
@@ -36,8 +36,8 @@ def select_image(runs):
     distribution = distribution.lower()
     architecture = runs[0]['architecture']
 
-    record_usage_report(docker_select_box='%s;%s;%s' % (distribution, version,
-                                                        architecture))
+    record_usage(docker_select_box='%s;%s;%s' % (distribution, version,
+                                                 architecture))
 
     if architecture == 'i686':
         logging.info("wanted architecture was i686, but we'll use x86_64 with "
@@ -109,7 +109,7 @@ def docker_setup_create(args):
     runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image:
-        record_usage_report(docker_explicit_base=True)
+        record_usage(docker_explicit_base=True)
         target_distribution = None
         base_image = args.base_image[0]
     else:
@@ -133,9 +133,9 @@ def docker_setup_create(args):
         # FIXME : Right now, we need 'sudo' to be available (and it's not
         # necessarily in the base image)
         if packages:
-            record_usage_report(docker_install_pkgs=True)
+            record_usage(docker_install_pkgs=True)
         else:
-            record_usage_report(docker_install_pkgs="sudo")
+            record_usage(docker_install_pkgs="sudo")
         packages += [Package('sudo', None, packfiles=False)]
         if packages:
             installer = select_installer(pack, runs, target_distribution)
