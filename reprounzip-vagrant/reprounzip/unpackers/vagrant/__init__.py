@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import unicode_, iteritems, check_output
+from reprounzip.utils import irange, unicode_, iteritems, check_output
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -338,7 +338,16 @@ def vagrant_setup_start(args):
 
 def find_ssh_executable(name='ssh'):
     exts = os.environ.get('PATHEXT', '').split(os.pathsep)
-    for pathdir in os.environ.get('PATH', '').split(os.pathsep):
+    dirs = list(os.environ.get('PATH', '').split(os.pathsep))
+    par, join = os.path.dirname, os.path.join
+    # executable might be bin/python or ReproUnzip\python
+    # or ReproUnzip\Python27\python or ReproUnzip\Python27\Scripts\something
+    loc = par(sys.executable)
+    local_dirs = []
+    for i in irange(3):
+        local_dirs.extend([loc, join(loc, 'ssh')])
+        loc = par(loc)
+    for pathdir in local_dirs + dirs:
         for ext in exts:
             fullpath = os.path.join(pathdir, name + ext)
             if os.path.isfile(fullpath):
