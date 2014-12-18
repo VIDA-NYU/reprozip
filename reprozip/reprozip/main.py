@@ -241,9 +241,9 @@ def main():
     options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
-    options.add_argument('-d', '--dir', default='.reprozip',
+    options.add_argument('-d', '--dir', default='.reprozip-trace',
                          help="where to store database and configuration file "
-                         "(default: ./.reprozip)")
+                         "(default: ./.reprozip-trace)")
     options.add_argument(
             '--dont-identify-packages', action='store_false', default=True,
             dest='identify_packages',
