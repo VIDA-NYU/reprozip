@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.5.1 (???)
------------
+0.5.1 (2014-12-18)
+------------------
 
 Bugfixes:
 * Goes back to pack format 0.4: generates `.rpz` files readable by older
@@ -16,6 +16,8 @@ Features:
 * Adds a log file under $HOME/.reprozip/log
 * reprounzip-vagrant will use 'ssh' executable if it's available; should be
   more reliable, especially on Windows
+* Automatically collects usage information. Nothing will be sent before you
+  opt-in, and we made sure to only collect general details
 
 0.5 (2014-11-24)
 ----------------
