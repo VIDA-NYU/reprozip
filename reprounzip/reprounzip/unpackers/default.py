@@ -213,7 +213,7 @@ def directory_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
-    root = target / 'root'
+    root = (target / 'root').absolute()
 
     # Gets library paths
     lib_dirs = []
