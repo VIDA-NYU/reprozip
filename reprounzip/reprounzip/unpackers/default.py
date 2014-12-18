@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
-from reprounzip.utils import unicode_, iteritems, itervalues, \
+from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     make_dir_writable, rmtree_fixed, download_file
 
 
@@ -213,7 +213,7 @@ def directory_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
-    root = target / 'root'
+    root = (target / 'root').absolute()
 
     # Gets library paths
     lib_dirs = []
@@ -258,6 +258,23 @@ def directory_run(args):
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
             argv = run['argv']
+
+            # Rewrites command-line arguments that are absolute filenames
+            rewritten = False
+            for i in irange(len(argv)):
+                try:
+                    p = Path(argv[i])
+                except UnicodeEncodeError:
+                    continue
+                if p.is_absolute:
+                    rp = join_root(root, p)
+                    if (rp.exists() or
+                            (len(rp.components) > 3 and rp.parent.exists())):
+                        argv[i] = str(rp)
+                        rewritten = True
+            if rewritten:
+                logging.warning("Rewrote command-line as: %s",
+                                ' '.join(shell_escape(a) for a in argv))
         else:
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
