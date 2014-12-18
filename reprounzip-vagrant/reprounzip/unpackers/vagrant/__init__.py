@@ -346,7 +346,7 @@ def find_ssh_executable(name='ssh'):
     return None
 
 
-def run_interactive(ssh_info, interactive, cmds):
+def run_interactive(ssh_info, interactive, cmds, request_pty):
     if interactive:
         ssh_exe = find_ssh_executable()
     else:
@@ -355,7 +355,7 @@ def run_interactive(ssh_info, interactive, cmds):
     if interactive and ssh_exe:
         return subprocess.call(
                 [ssh_exe,
-                 '-t',  # Force allocation of PTY
+                 '-t' if request_pty else '-T',  # Force allocation of PTY
                  '-o', 'StrictHostKeyChecking=no',  # Silently accept host keys
                  '-o', 'UserKnownHostsFile=/dev/null',  # Don't store host keys
                  '-i', ssh_info['key_filename'],
@@ -370,7 +370,8 @@ def run_interactive(ssh_info, interactive, cmds):
         ssh.connect(**ssh_info)
 
         chan = ssh.get_transport().open_session()
-        chan.get_pty()
+        if request_pty:
+            chan.get_pty()
 
         # Execute command
         logging.info("Connected via SSH, running command...")
@@ -380,6 +381,7 @@ def run_interactive(ssh_info, interactive, cmds):
         if interactive:
             interactive_shell(chan)
         else:
+            chan.shutdown_write()
             while True:
                 data = chan.recv(1024)
                 if len(data) == 0:
@@ -440,7 +442,8 @@ def vagrant_run(args):
     interactive = not (args.no_stdin or
                        os.environ.get('REPROUNZIP_NON_INTERACTIVE'))
     retcode = run_interactive(info, interactive,
-                              cmds)
+                              cmds,
+                              not args.no_pty)
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
                      retcode)
 
@@ -688,6 +691,8 @@ def setup(parser, **kwargs):
     parser_run.add_argument('--no-stdin', action='store_true', default=False,
                             help=("Don't connect program's input stream to "
                                   "this terminal"))
+    parser_run.add_argument('--no-pty', action='store_true', default=False,
+                            help="Don't request a PTY from the SSH server")
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
     parser_run.set_defaults(func=vagrant_run)
