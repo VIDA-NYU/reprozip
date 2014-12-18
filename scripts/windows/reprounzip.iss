@@ -16,3 +16,7 @@ Source: C:\Python2.7\*; DestDir: {app}\python2.7; Flags: recursesubdirs
 Source: input\reprounzip.bat; DestDir: {app}
 ; SSH
 Source: input\ssh\*; DestDir: {app}\ssh
+
+[UninstallDelete]
+; Makes sure .pyc files don't get left behind
+Type: filesandordirs; Name: {app}\python2.7\Lib
