@@ -31,7 +31,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprozip',
-      version='0.5',
+      version='0.5.1',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [

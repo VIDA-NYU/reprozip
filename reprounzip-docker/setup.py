@@ -9,7 +9,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 setup(name='reprounzip-docker',
-      version='0.5',
+      version='0.5.1',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
