@@ -116,7 +116,7 @@ def directory_create(args):
         logging.critical("Target directory exists")
         sys.exit(1)
 
-    if DefaultAbstractPath is not PosixPath:
+    if not issubclass(DefaultAbstractPath, PosixPath):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
@@ -296,6 +296,7 @@ def should_restore_owner(param):
             # Nothing was requested
             logging.warning("Not running as root, won't restore files' "
                             "owner/group")
+            return False
         else:
             # If False: skip warning
             return False
@@ -324,6 +325,7 @@ def should_mount_magic_dirs(param):
         elif param is None:
             # Nothing was requested
             logging.warning("Not running as root, won't mount /dev and /proc")
+            return False
         else:
             # If False: skip warning
             return False
