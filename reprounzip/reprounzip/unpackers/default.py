@@ -539,7 +539,13 @@ def chroot_unmount(target):
         d = join_root(target / 'root', Path(m))
         if d.exists():
             logging.info("Unmounting %s...", d)
-            subprocess.check_call(['umount', str(d)])
+            # Unmounts recursively
+            subprocess.check_call(
+                    'grep %s /proc/mounts | '
+                    'cut -f2 -d" " | '
+                    'sort -r | '
+                    'xargs umount' % d,
+                    shell=True)
     return True
 
 
