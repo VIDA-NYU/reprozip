@@ -146,6 +146,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_call(rpuz + ['graph', 'graph.dot'])
         check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
 
+    sudo = ['sudo', '-E']  # -E to keep REPROZIP_USAGE_STATS
+
     # ########################################
     # 'simple' program: trace, pack, info, unpack
     #
@@ -199,25 +201,25 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Delete directory
     check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
-    check_call(['sudo'] + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
-                                  'simple.rpz', 'simplechroot'])
+    check_call(sudo + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
+                              'simple.rpz', 'simplechroot'])
     # Run chroot
-    check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
+    check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
     with output_in_chroot.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     # Get output file
-    check_call(['sudo'] + rpuz + ['chroot', 'download', 'simplechroot',
-                                  'arg:output1.txt'])
+    check_call(sudo + rpuz + ['chroot', 'download', 'simplechroot',
+                              'arg:output1.txt'])
     with Path('output1.txt').open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     # Replace input file
-    check_call(['sudo'] + rpuz + ['chroot', 'upload', 'simplechroot',
-                                  '%s:arg' % (tests / 'simple_input2.txt')])
-    check_call(['sudo'] + rpuz + ['chroot', 'upload', 'simplechroot'])
+    check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
+                              '%s:arg' % (tests / 'simple_input2.txt')])
+    check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
     # Run again
-    check_call(['sudo'] + rpuz + ['chroot', 'run', 'simplechroot'])
+    check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
     output_in_chroot = join_root(Path('simplechroot/root'),
                                  orig_output_location)
     with output_in_chroot.open(encoding='utf-8') as fp:
@@ -225,7 +227,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Delete with wrong command (should fail)
     assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
     # Delete chroot
-    check_call(['sudo'] + rpuz + ['chroot', 'destroy', 'simplechroot'])
+    check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
 
     if not Path('/vagrant').exists():
         check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
@@ -327,25 +329,25 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Pack
     check_call(rpz + ['pack', 'exec_echo.rpz'])
     # Unpack chroot
-    check_call(['sudo'] + rpuz + ['chroot', 'setup',
-                                  'exec_echo.rpz', 'echochroot'])
+    check_call(sudo + rpuz + ['chroot', 'setup',
+                              'exec_echo.rpz', 'echochroot'])
     try:
         # Run original command-line
-        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
-                                                 'echochroot'])
+        output = check_output(sudo + rpuz + ['chroot', 'run',
+                                             'echochroot'])
         assert output == b'originalexecechooutput\n'
         # Prints out command-line
-        output = check_output(['sudo'] + rpuz + ['chroot', 'run',
-                                                 'echochroot', '--cmdline'])
+        output = check_output(sudo + rpuz + ['chroot', 'run',
+                                             'echochroot', '--cmdline'])
         assert any(b'./exec_echo originalexecechooutput' == s.strip()
                    for s in output.split(b'\n'))
         # Run with different command-line
-        output = check_output(['sudo'] + rpuz + [
+        output = check_output(sudo + rpuz + [
                 'chroot', 'run', 'echochroot',
                 '--cmdline', './exec_echo', 'changedexecechooutput'])
         assert output == b'changedexecechooutput\n'
     finally:
-        check_call(['sudo'] + rpuz + ['chroot', 'destroy', 'echochroot'])
+        check_call(sudo + rpuz + ['chroot', 'destroy', 'echochroot'])
 
     # ########################################
     # 'exec_echo' program: testrun

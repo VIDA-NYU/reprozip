@@ -25,7 +25,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import load_config
+from reprounzip.common import load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
@@ -58,6 +58,9 @@ def select_box(runs):
     distribution, version = runs[0]['distribution']
     distribution = distribution.lower()
     architecture = runs[0]['architecture']
+
+    record_usage(vagrant_select_box='%s;%s;%s' % (distribution, version,
+                                                  architecture))
 
     if architecture not in ('i686', 'x86_64'):
         logging.critical("Error: unsupported architecture %s", architecture)
@@ -173,6 +176,8 @@ def vagrant_setup_create(args):
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
+    record_usage(use_chroot=use_chroot,
+                 mount_bind=mount_bind)
 
     signals.pre_setup(target=target, pack=pack)
 
@@ -187,6 +192,7 @@ def vagrant_setup_create(args):
     runs, packages, other_files = load_config(target / 'config.yml', True)
 
     if args.base_image and args.base_image[0]:
+        record_usage(vagrant_explicit_image=True)
         target_distribution = None
         box = args.base_image[0]
     else:
@@ -199,6 +205,7 @@ def vagrant_setup_create(args):
     if use_chroot:
         packages = [pkg for pkg in packages if not pkg.packfiles]
         if packages:
+            record_usage(vagrant_install_pkgs=True)
             logging.info("Some packages were not packed, so we'll install and "
                          "copy their files\n"
                          "Packages that are missing:\n%s",
@@ -362,6 +369,7 @@ def run_interactive(ssh_info, interactive, cmds, request_pty):
         ssh_exe = None
 
     if interactive and ssh_exe:
+        record_usage(vagrant_ssh='ssh')
         return subprocess.call(
                 [ssh_exe,
                  '-t' if request_pty else '-T',  # Force allocation of PTY
@@ -373,6 +381,7 @@ def run_interactive(ssh_info, interactive, cmds, request_pty):
                             ssh_info['hostname']),
                  cmds])
     else:
+        record_usage(vagrant_ssh='interactive' if interactive else 'simple')
         # Connects to the machine
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnoreMissingKey())

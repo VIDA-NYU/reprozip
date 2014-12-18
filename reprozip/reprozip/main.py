@@ -24,7 +24,9 @@ import sys
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import setup_logging
+from reprozip.common import setup_logging, \
+    setup_usage_report, enable_usage_report, \
+    submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
 from reprozip.utils import PY3, unicode_
@@ -208,6 +210,14 @@ def pack(args):
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 
+def usage_report(args):
+    if bool(args.enable) == bool(args.disable):
+        logging.critical("What do you want to do?")
+        sys.exit(1)
+    enable_usage_report(args.enable)
+    sys.exit(0)
+
+
 def main():
     """Entry point when called on the command-line.
     """
@@ -254,7 +264,16 @@ def main():
                         "tracing and packing the execution of an experiment",
             epilog="Please report issues to reprozip-users@vgc.poly.edu",
             parents=[options])
-    subparsers = parser.add_subparsers(title="commands", metavar='')
+    subparsers = parser.add_subparsers(title="commands", metavar='',
+                                       dest='selected_command')
+
+    # usage_report subcommand
+    parser_stats = subparsers.add_parser(
+            'usage_report', parents=[options],
+            help="Enables or disables anonymous usage reports")
+    parser_stats.add_argument('--enable', action='store_true')
+    parser_stats.add_argument('--disable', action='store_true')
+    parser_stats.set_defaults(func=usage_report)
 
     # trace command
     parser_trace = subparsers.add_parser(
@@ -299,9 +318,16 @@ def main():
 
     args = parser.parse_args()
     setup_logging('REPROZIP', args.verbosity)
+    setup_usage_report('reprozip', reprozip_version)
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
-    args.func(args)
+    record_usage(command=args.selected_command)
+    try:
+        args.func(args)
+    except Exception as e:
+        submit_usage_report(result=type(e).__name__)
+    else:
+        submit_usage_report(result='success')
     sys.exit(0)
 
 

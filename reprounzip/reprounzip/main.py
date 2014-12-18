@@ -16,11 +16,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import codecs
 import locale
+import logging
 from pkg_resources import iter_entry_points
 import sys
 import traceback
 
-from reprounzip.common import setup_logging
+from reprounzip.common import setup_logging, \
+    setup_usage_report, enable_usage_report, \
+    submit_usage_report, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
 
@@ -56,6 +59,14 @@ class RPUZArgumentParser(argparse.ArgumentParser):
         sys.stderr.write('error: %s\n' % message)
         self.print_help(sys.stderr)
         sys.exit(2)
+
+
+def usage_report(args):
+    if bool(args.enable) == bool(args.disable):
+        logging.critical("What do you want to do?")
+        raise UsageError
+    enable_usage_report(args.enable)
+    sys.exit(0)
 
 
 def main():
@@ -97,6 +108,14 @@ def main():
             parents=[options])
     subparsers = parser.add_subparsers(title="subcommands", metavar='')
 
+    # usage_report subcommand
+    parser_stats = subparsers.add_parser(
+            'usage_report', parents=[options],
+            help="Enables or disables anonymous usage reports")
+    parser_stats.add_argument('--enable', action='store_true')
+    parser_stats.add_argument('--disable', action='store_true')
+    parser_stats.set_defaults(func=usage_report)
+
     # Loads unpackers
     for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
         plugin_parser = subparsers.add_parser(
@@ -117,17 +136,28 @@ def main():
     except AttributeError:
         signals.unpacker = None
     setup_logging('REPROUNZIP', args.verbosity)
+
+    setup_usage_report('reprounzip', __version__)
+    if hasattr(args, 'selected_unpacker'):
+        record_usage(unpacker=args.selected_unpacker)
+    signals.pre_setup.subscribe(lambda **kw: record_usage(setup=True))
+    signals.pre_run.subscribe(lambda **kw: record_usage(run=True))
+
     try:
         try:
             args.func(args)
+        except UsageError:
+            raise
         except Exception as e:
             signals.application_finishing(reason=e)
+            submit_usage_report(result=type(e).__name__)
             raise
         else:
             signals.application_finishing(reason=None)
     except UsageError:
         parser.print_help(sys.stderr)
         sys.exit(1)
+    submit_usage_report(result='success')
     sys.exit(0)
 
 

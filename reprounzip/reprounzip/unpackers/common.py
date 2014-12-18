@@ -246,6 +246,7 @@ class FileUploader(object):
         self.run(files)
 
     def run(self, files):
+        reprounzip.common.record_usage(upload_files=len(files))
         runs = self.get_runs_from_config()
 
         # No argument: list all the input files and exit
@@ -347,6 +348,7 @@ class FileDownloader(object):
         self.run(files)
 
     def run(self, files):
+        reprounzip.common.record_usage(download_files=len(files))
         runs = self.get_runs_from_config()
 
         # No argument: list all the output files and exit
