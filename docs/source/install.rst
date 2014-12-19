@@ -144,7 +144,7 @@ For Windows, only the *reprounzip* component is available.
 Binaries
 --------
 
-Coming soon!
+An installer containing Python 2.7, reprounzip and the plugins can be `downloaded from Github <https://github.com/ViDA-NYU/reprozip/releases/download/0.5.1/reprounzip-0.5.1-setup.exe>`_.
 
 Required Software Packages
 --------------------------
