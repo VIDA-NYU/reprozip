@@ -37,7 +37,7 @@ absolutepathname(){
     echo "$(pwd)/$(basename "$1")"
 }
 
-for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant; do
+for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
     TEMP_DIR=$(mktemp -d /tmp/rpz_conda_XXXXXXXX)
 
     cd "$TOPLEVEL/$pkgname"
