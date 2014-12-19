@@ -312,9 +312,9 @@ def setup(parser, **kwargs):
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
     parser.add_argument(
-            '-d', '--dir', default='.reprozip',
+            '-d', '--dir', default='.reprozip-trace',
             help="where the database and configuration file are stored "
-            "(default: ./.reprozip)")
+            "(default: ./.reprozip-trace)")
     parser.add_argument(
             'pack', nargs=argparse.OPTIONAL,
             help="Pack to extract (defaults to reading from --dir)")
