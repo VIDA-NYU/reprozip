@@ -13,6 +13,7 @@ Bugfixes:
 Features:
 * Python 2.6 support for reprounzip (except 'graph')
 * Makes error messages more readable
+* Default trace directory renamed from `.reprozip` to `.reprozip-trace`
 * Adds a log file under $HOME/.reprozip/log
 * reprounzip-vagrant will use 'ssh' executable if it's available; should be
   more reliable, especially on Windows
