@@ -27,7 +27,8 @@ requirements:
 
   run:
     - python
-    - reprounzip >=0.4.1
+    - reprounzip >=0.5.1
+    - rpaths >=0.8
     - paramiko
     - scp
 
