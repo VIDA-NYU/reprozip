@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -xe
+
 ./linux \
     quiet \
     mem=2G \
