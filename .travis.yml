@@ -1,7 +1,6 @@
 install:
 #- curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
 - sh -xe install.sh
-- echo -e "test:\n  image: ubuntu" | sudo tee fig.yml
 
 script:
 - PATH="${TRAVIS_BUILD_DIR}:${PATH}" docker run ubuntu /bin/echo hello world
