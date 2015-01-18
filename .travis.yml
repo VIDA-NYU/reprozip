@@ -4,5 +4,5 @@ install:
 script:
 - ./run docker run ubuntu /bin/echo hello world
 - ./run fig build test
-- ./run "fig up -d test && fig logs | head -n 1"
+- ./run "fig up test && echo Yeah"
 #- ./run fig run test /bin/echo hello world
