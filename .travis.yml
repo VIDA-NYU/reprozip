@@ -1,0 +1,5 @@
+install:
+- curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
+  
+script:
+- ./docker run ubuntu /bin/echo hello world

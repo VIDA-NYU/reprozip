@@ -1,0 +1,10 @@
+#!/bin/sh
+
+./linux \
+    quiet \
+    mem=2G \
+    rootfstype=hostfs rw \
+    eth0=slirp,,/usr/bin/slirp-fullbolt \
+    init=$(pwd)/linux-init \
+    WORKDIR=$(pwd) HOME=$HOME \
+    DOCKER_COMMAND="$@"
