@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Exit on first error
-set -xe
+set -e
 
 # Print env
 env
@@ -68,3 +68,5 @@ sleep 5
 # Use docker
 docker_command=$(cat ${WORKDIR}/.docker_command)
 docker ${docker_command}
+
+echo $? > .exit_code
