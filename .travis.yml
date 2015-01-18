@@ -1,9 +1,8 @@
 install:
-#- curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
 - sh -xe install.sh
 
 script:
-- PATH="${TRAVIS_BUILD_DIR}:${PATH}" docker run ubuntu /bin/echo hello world
-- PATH="${TRAVIS_BUILD_DIR}:${PATH}" fig build test
-- PATH="${TRAVIS_BUILD_DIR}:${PATH}" fig up -d test && fig logs | head -n 30
-#- PATH="${TRAVIS_BUILD_DIR}:${PATH}" fig run test /bin/echo hello world
+- ./run docker run ubuntu /bin/echo hello world
+- ./run fig build test
+- ./run "fig up -d test && fig logs | head -n 1"
+#- ./run fig run test /bin/echo hello world
