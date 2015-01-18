@@ -67,5 +67,5 @@ sleep 5
 
 # Call command
 command=$(cat ${WORKDIR}/.command)
-${command}
+/bin/bash -c "${command}"
 echo $? > .exit_code
