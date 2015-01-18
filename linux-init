@@ -65,8 +65,7 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 docker -d &
 sleep 5
 
-# Use docker
-docker_command=$(cat ${WORKDIR}/.docker_command)
-docker ${docker_command}
-
+# Call command
+command=$(cat ${WORKDIR}/.command)
+${command}
 echo $? > .exit_code

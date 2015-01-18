@@ -2,7 +2,7 @@
 
 set -xe
 
-echo "docker $@" > .command
+echo "fig $@" > .command
 
 ./linux \
     quiet \
