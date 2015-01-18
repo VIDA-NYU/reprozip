@@ -15,5 +15,5 @@ sudo chmod +x /usr/local/bin/fig
 curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
 curl -sLo linux-init https://github.com/moul/travis-docker/raw/master/linux-init
 curl -sLo docker https://github.com/moul/travis-docker/raw/master/docker
-curl -sLo docker https://github.com/moul/travis-docker/raw/master/fig
+curl -sLo fig https://github.com/moul/travis-docker/raw/master/fig
 chmod +x linux linux-init docker fig
