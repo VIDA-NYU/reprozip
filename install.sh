@@ -9,6 +9,8 @@ sudo mkdir -p /var/lib/docker
 echo exit 101 | sudo tee /usr/sbin/policy-rc.d
 sudo chmod +x /usr/sbin/policy-rc.d
 sudo apt-get install -y slirp lxc lxc-docker aufs-tools cgroup-lite
+sudo curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` -o /usr/local/bin/fig
+sudo chmod +x /usr/local/bin/fig
 
 curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
 curl -sLo linux-init https://github.com/moul/travis-docker/raw/master/linux-init
