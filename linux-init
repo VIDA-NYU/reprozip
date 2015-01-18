@@ -66,4 +66,5 @@ docker -d &
 sleep 5
 
 # Use docker
-docker ${DOCKER_COMMAND}
+docker_command=$(cat ${WORKDIR}/.docker_command)
+docker ${docker_command}
