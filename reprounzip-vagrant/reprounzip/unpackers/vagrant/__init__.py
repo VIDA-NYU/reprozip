@@ -30,8 +30,9 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
-from reprounzip.unpackers.vagrant.run_command import run_interactive, \
-    IgnoreMissingKey
+from reprounzip.unpackers.common.x11 import X11Handler
+from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
+    run_interactive
 from reprounzip.utils import unicode_, iteritems, check_output
 
 
@@ -346,13 +347,17 @@ def vagrant_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
+    # X11 handler
+    x11 = X11Handler(args.x11, args.x11_display)
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
+        environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run['environ']))
+                        for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -371,6 +376,11 @@ def vagrant_run(args):
         else:
             cmd = 'sudo -u \'#%d\' sh -c %s' % (uid, shell_escape(cmd))
         cmds.append(cmd)
+    if use_chroot:
+        cmds = ['chroot /experimentroot /bin/sh -c %s' % shell_escape(c)
+                for c in x11.init_cmds] + cmds
+    else:
+        cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
@@ -383,7 +393,8 @@ def vagrant_run(args):
                        os.environ.get('REPROUNZIP_NON_INTERACTIVE'))
     retcode = run_interactive(info, interactive,
                               cmds,
-                              not args.no_pty)
+                              not args.no_pty,
+                              x11.port_forward)
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
                      retcode)
 
@@ -635,6 +646,14 @@ def setup(parser, **kwargs):
                             help="Don't request a PTY from the SSH server")
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help=("Enable X11 support (needs an X server on "
+                                  "the host"))
+    parser_run.add_argument('--x11-display', dest='x11_display',
+                            help=("Display number to use on the experiment "
+                                  "side (change the host display with the "
+                                  "DISPLAY environment variable)"))
     parser_run.set_defaults(func=vagrant_run)
 
     # download
