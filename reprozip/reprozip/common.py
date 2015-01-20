@@ -282,7 +282,7 @@ def setup_logging(tag, verbosity):
     levels = [logging.CRITICAL, logging.WARNING, logging.INFO, logging.DEBUG]
     console_level = levels[min(verbosity, 3)]
     file_level = logging.INFO
-    max_level = max(console_level, file_level)
+    min_level = min(console_level, file_level)
 
     # Create formatter, with same format as C extension
     fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
@@ -295,7 +295,7 @@ def setup_logging(tag, verbosity):
 
     # Set up logger
     logger = logging.root
-    logger.setLevel(max_level)
+    logger.setLevel(min_level)
     logger.addHandler(handler)
 
     # File logger
