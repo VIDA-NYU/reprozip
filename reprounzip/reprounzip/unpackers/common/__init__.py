@@ -13,22 +13,24 @@ from __future__ import unicode_literals
 import functools
 import logging
 import os
-import platform
 import random
 from rpaths import PosixPath, Path
 import string
-import subprocess
 import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange, itervalues
+from reprounzip.utils import irange
+from reprounzip.unpackers.common.packages import THIS_DISTRIBUTION, \
+    PKG_NOT_INSTALLED, select_installer
 
 
-THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
-
-
-PKG_NOT_INSTALLED = "(not installed)"
+__all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
+           'COMPAT_OK, COMPAT_NO, COMPAT_MAYBE',
+           'UsageError',
+           'composite_action', 'target_must_exist', 'unique_names',
+           'make_unique_name', 'shell_escape', 'load_config', 'busybox_url',
+           'join_root', 'FileUploader', 'FileDownloader', 'get_runs']
 
 
 COMPAT_OK = 0
@@ -125,102 +127,6 @@ def load_config(pack):
         tmp.rmtree()
 
     return ret
-
-
-class AptInstaller(object):
-    """Installer for deb-based systems (Debian, Ubuntu).
-    """
-    def __init__(self, binary):
-        self.bin = binary
-
-    def install(self, packages, assume_yes=False):
-        # Installs
-        options = []
-        if assume_yes:
-            options.append('-y')
-        required_pkgs = set(pkg.name for pkg in packages)
-        r = subprocess.call([self.bin, 'install'] +
-                            options + list(required_pkgs))
-
-        # Checks on packages
-        pkgs_status = self.get_packages_info(packages)
-        for pkg, status in itervalues(pkgs_status):
-            if status is not None:
-                required_pkgs.discard(pkg.name)
-        if required_pkgs:
-            logging.error("Error: some packages could not be installed:%s",
-                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
-
-        return r, pkgs_status
-
-    @staticmethod
-    def get_packages_info(packages):
-        if not packages:
-            return {}
-
-        p = subprocess.Popen(['dpkg-query',
-                              '--showformat=${Package;-50}\t${Version}\n',
-                              '-W'] +
-                             [pkg.name for pkg in packages],
-                             stdout=subprocess.PIPE)
-        # name -> (pkg, installed_version)
-        pkgs_dict = dict((pkg.name, (pkg, PKG_NOT_INSTALLED))
-                         for pkg in packages)
-        try:
-            for l in p.stdout:
-                fields = l.split()
-                if len(fields) == 2:
-                    name = fields[0].decode('ascii')
-                    status = fields[1].decode('ascii')
-                else:
-                    name = fields[0].decode('ascii')
-                    status = PKG_NOT_INSTALLED
-                pkg, _ = pkgs_dict[name]
-                pkgs_dict[name] = pkg, status
-        finally:
-            p.wait()
-
-        return pkgs_dict
-
-    def update_script(self):
-        return '%s update' % self.bin
-
-    def install_script(self, packages):
-        return '%s install -y %s' % (self.bin,
-                                     ' '.join(pkg.name for pkg in packages))
-
-
-def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
-    """Selects the right package installer for a Linux distribution.
-    """
-    orig_distribution = runs[0]['distribution'][0].lower()
-
-    # Checks that the distributions match
-    if (set([orig_distribution, target_distribution]) ==
-            set(['ubuntu', 'debian'])):
-        # Packages are more or less the same on Debian and Ubuntu
-        logging.warning("Installing on %s but pack was generated on %s",
-                        target_distribution.capitalize(),
-                        orig_distribution.capitalize())
-    elif orig_distribution != target_distribution:
-        logging.error("Installing on %s but pack was generated on %s",
-                      target_distribution.capitalize(),
-                      orig_distribution.capitalize())
-        sys.exit(1)
-
-    # Selects installation method
-    if target_distribution == 'ubuntu':
-        installer = AptInstaller('apt-get')
-    elif target_distribution == 'debian':
-        # aptitude is not installed by default, so use apt-get here too
-        installer = AptInstaller('apt-get')
-    else:
-        logging.critical("Your current distribution, \"%s\", is not "
-                         "supported",
-                         (target_distribution or "(unknown)").capitalize())
-        sys.exit(1)
-
-    return installer
 
 
 def busybox_url(arch):
