@@ -347,6 +347,8 @@ def vagrant_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
+    hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
+
     # X11 handler
     x11 = X11Handler(args.x11, args.x11_display)
 
@@ -382,6 +384,13 @@ def vagrant_run(args):
     else:
         cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
+    # Sets the hostname to the original experiment's machine's
+    # FIXME: not reentrant: this restores the Vagrant machine's hostname after
+    # the run, which might cause issues if several "reprounzip vagrant run" are
+    # running at once
+    cmds = ('OLD_HOSTNAME=$(/bin/hostname); /bin/hostname %s; ' % hostname +
+            cmds +
+            '; RES=$?; /bin/hostname "$OLD_HOSTNAME"; exit $RES')
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
