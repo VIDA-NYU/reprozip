@@ -424,6 +424,8 @@ def vagrant_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
+    hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
@@ -450,6 +452,13 @@ def vagrant_run(args):
             cmd = 'sudo -u \'#%d\' sh -c %s' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
+    # Sets the hostname to the original experiment's machine's
+    # FIXME: not reentrant: this restores the Vagrant machine's hostname after
+    # the run, which might cause issues if several "reprounzip vagrant run" are
+    # running at once
+    cmds = ('OLD_HOSTNAME=$(/bin/hostname); /bin/hostname %s; ' % hostname +
+            cmds +
+            '; RES=$?; /bin/hostname "$OLD_HOSTNAME"; exit $RES')
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
