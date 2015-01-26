@@ -104,10 +104,12 @@ class X11Handler(object):
               socket.AF_INET6: Xauth.FAMILY_INTERNET6}
     X2SOCK = dict((v, k) for k, v in iteritems(SOCK2X))
 
-    def __init__(self, enabled, display=None):
+    def __init__(self, enabled, hostname, display=None):
         self.enabled = enabled
         if not self.enabled:
             return
+
+        self.hostname = hostname
 
         self.xauth = PosixPath('/.reprounzip_xauthority')
         self.display = display if display is not None else self.DISPLAY_NUMBER
@@ -296,7 +298,7 @@ class X11Handler(object):
             return []
 
         xauth_record = Xauth(Xauth.FAMILY_LOCAL,
-                             'localhost',  # FIXME: this HAS to be the hostname
+                             self.hostname,
                              self.display,
                              self.xauth_record.name,
                              self.xauth_record.data)
