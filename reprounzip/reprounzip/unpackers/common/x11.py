@@ -118,7 +118,9 @@ class X11Handler(object):
                       self.display)
 
         # List of addresses that match the $DISPLAY variable
-        possible, tcp_portnum = self._locate_display()
+        possible, local_display = self._locate_display()
+        tcp_portnum = ((6000 + local_display) if local_display is not None
+                       else None)
 
         if ('XAUTHORITY' in os.environ and
                 Path(os.environ['XAUTHORITY']).is_file()):
@@ -136,14 +138,15 @@ class X11Handler(object):
                 fp.seek(0, os.SEEK_SET)
                 while fp.tell() < size:
                     entry = Xauth.from_file(fp)
-                    if entry.name == 'MIT-MAGIC-COOKIE-1':
+                    if (entry.name == 'MIT-MAGIC-COOKIE-1' and
+                            entry.number == local_display):
                         if entry.family == Xauth.FAMILY_LOCAL:
                             xauth_entries[(entry.family, None)] = entry
                         elif (entry.family == Xauth.FAMILY_INTERNET or
                                 entry.family == Xauth.FAMILY_INTERNET6):
                             xauth_entries[(entry.family,
                                            entry.address)] = entry
-        # FIXME: this completely ignores display numbers
+        # FIXME: this completely ignores addresses
 
         logging.debug("Possible X endpoints: %s", (possible,))
 
@@ -223,7 +226,6 @@ class X11Handler(object):
 
         # Network addresses of the local machine
         local_addresses = []
-        port_num = 6000 + local_display
         for family, socktype, proto, canonname, sockaddr in \
                 sort_families(socket.getaddrinfo(socket.gethostname(), 6000)):
             try:
@@ -255,7 +257,7 @@ class X11Handler(object):
                 possible = [(Xauth.FAMILY_LOCAL,
                              '/tmp/.X11-unix/X%d' % local_display)] + possible
 
-        return possible, port_num
+        return possible, local_display
 
     @property
     def port_forward(self):
