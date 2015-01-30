@@ -601,7 +601,8 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         char logfilename[1024];
         strcpy(logfilename, getenv("HOME"));
         strcat(logfilename, "/.reprozip/log");
-        log_open_file(logfilename);
+        if(log_open_file(logfilename) != 0)
+            return 1;
     }
 
     if(db_init(database_path) != 0)

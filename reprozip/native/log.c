@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdarg.h>
+#include <string.h>
 #include <time.h>
 
 #include "log.h"
@@ -11,11 +13,16 @@ extern int trace_verbosity;
 static FILE *logfile = NULL;
 
 
-void log_open_file(const char *filename)
+int log_open_file(const char *filename)
 {
     assert(logfile == NULL);
     logfile = fopen(filename, "ab");
-    assert(logfile != NULL);
+    if(logfile == NULL)
+    {
+        log_critical(0, "couldn't open log file: %s", strerror(errno));
+        return 1;
+    }
+    return 0;
 }
 
 

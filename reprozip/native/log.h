@@ -8,7 +8,7 @@
 #include <sys/types.h>
 
 
-void log_open_file(const char *filename);
+int log_open_file(const char *filename);
 void log_close_file(void);
 
 
