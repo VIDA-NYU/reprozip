@@ -6,6 +6,7 @@ Changelog
 
 Bugfixes:
 * Fixes `debug` log messages not being printed
+* Pressing Ctrl+C wouldn't stop package identification with KeyboardInterrupt
 
 0.5.1 (2014-12-18)
 ------------------
