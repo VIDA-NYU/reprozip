@@ -502,6 +502,23 @@ static int trace(pid_t first_proc, int *first_exit_code)
     return 0;
 }
 
+static void (*python_sigchld_handler)(int) = NULL;
+static void (*python_sigint_handler)(int) = NULL;
+
+static void restore_signals(void)
+{
+    if(python_sigchld_handler != NULL)
+    {
+        signal(SIGCHLD, python_sigchld_handler);
+        python_sigchld_handler = NULL;
+    }
+    if(python_sigint_handler != NULL)
+    {
+        signal(SIGINT, python_sigint_handler);
+        python_sigint_handler = NULL;
+    }
+}
+
 static void cleanup(void)
 {
     size_t i;
@@ -535,6 +552,7 @@ static void sigint_handler(int signo)
         if(verbosity >= 1)
             log_error(0, "cleaning up on SIGINT");
         cleanup();
+        restore_signals();
         exit(1);
     }
     else if(verbosity >= 1)
@@ -544,8 +562,9 @@ static void sigint_handler(int signo)
 
 static void trace_init(void)
 {
-    signal(SIGCHLD, SIG_DFL);
-    signal(SIGINT, sigint_handler);
+    /* Store Python's handlers for restore_signals() */
+    python_sigchld_handler = signal(SIGCHLD, SIG_DFL);
+    python_sigint_handler = signal(SIGINT, sigint_handler);
 
     if(processes == NULL)
     {
@@ -602,13 +621,17 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         strcpy(logfilename, getenv("HOME"));
         strcat(logfilename, "/.reprozip/log");
         if(log_open_file(logfilename) != 0)
+        {
+            restore_signals();
             return 1;
+        }
     }
 
     if(db_init(database_path) != 0)
     {
         kill(child, SIGKILL);
         log_close_file();
+        restore_signals();
         return 1;
     }
 
@@ -629,6 +652,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             cleanup();
             log_close_file();
+            restore_signals();
             return 1;
             /* LCOV_EXCL_END */
         }
@@ -639,14 +663,17 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         cleanup();
         db_close();
         log_close_file();
+        restore_signals();
         return 1;
     }
 
     if(db_close() != 0)
     {
         log_close_file();
+        restore_signals();
         return 1;
     }
 
+    restore_signals();
     return 0;
 }
