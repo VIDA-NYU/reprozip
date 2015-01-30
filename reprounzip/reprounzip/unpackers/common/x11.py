@@ -332,13 +332,11 @@ class BaseForwarder(object):
                 r, w, x = select.select([local_fd, client_fd], [], [])
                 if local_fd in r:
                     data = local_connection.recv(4096)
-                    print("> %d" % len(data))
                     if not data:
                         break
                     client.sendall(data)
                 elif client_fd in r:
                     data = client.recv(4096)
-                    print("< %d" % len(data))
                     if not data:
                         break
                     local_connection.sendall(data)
