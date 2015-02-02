@@ -104,12 +104,12 @@ class X11Handler(object):
               socket.AF_INET6: Xauth.FAMILY_INTERNET6}
     X2SOCK = dict((v, k) for k, v in iteritems(SOCK2X))
 
-    def __init__(self, enabled, hostname, display=None):
+    def __init__(self, enabled, target, display=None):
         self.enabled = enabled
         if not self.enabled:
             return
 
-        self.hostname = hostname
+        self.target = target
 
         self.xauth = PosixPath('/.reprounzip_xauthority')
         self.display = display if display is not None else self.DISPLAY_NUMBER
@@ -289,7 +289,10 @@ class X11Handler(object):
             return env
         new_env = dict(env)
         new_env['XAUTHORITY'] = str(self.xauth)
-        new_env['DISPLAY'] = '127.0.0.1:%d' % self.display
+        if self.target[0] == 'local':
+            new_env['DISPLAY'] = '127.0.0.1:%d' % self.display
+        elif self.target[0] == 'internet':
+            new_env['DISPLAY'] = '%s:%d' % (self.target[1], self.display)
         return new_env
 
     @property
@@ -299,11 +302,20 @@ class X11Handler(object):
         if not self.enabled or self.xauth_record is None:
             return []
 
-        xauth_record = Xauth(Xauth.FAMILY_LOCAL,
-                             self.hostname,
-                             self.display,
-                             self.xauth_record.name,
-                             self.xauth_record.data)
+        if self.target[0] == 'local':
+            xauth_record = Xauth(Xauth.FAMILY_LOCAL,
+                                 self.target[1],
+                                 self.display,
+                                 self.xauth_record.name,
+                                 self.xauth_record.data)
+        elif self.target[0] == 'internet':
+            xauth_record = Xauth(Xauth.FAMILY_INTERNET,
+                                 socket.inet_aton(self.target[1]),
+                                 self.display,
+                                 self.xauth_record.name,
+                                 self.xauth_record.data)
+        else:
+            raise RuntimeError("Invalid target display type")
         buf = xauth_record.as_bytes()
         xauth = ''.join(('\\x%02x' % ord(buf[i:i + 1]))
                         for i in xrange(len(buf)))

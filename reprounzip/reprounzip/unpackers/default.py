@@ -521,7 +521,8 @@ def chroot_run(args):
     root = target / 'root'
 
     # X11 handler
-    x11 = X11Handler(args.x11, socket.gethostname(), args.x11_display)
+    x11 = X11Handler(args.x11, ('local', socket.gethostname()),
+                     args.x11_display)
 
     cmds = []
     for run_number in selected_runs:

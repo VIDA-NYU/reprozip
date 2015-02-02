@@ -350,7 +350,7 @@ def vagrant_run(args):
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
     # X11 handler
-    x11 = X11Handler(args.x11, hostname, args.x11_display)
+    x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
 
     cmds = []
     for run_number in selected_runs:
