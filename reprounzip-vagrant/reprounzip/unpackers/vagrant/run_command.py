@@ -136,8 +136,10 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
         ssh.connect(**ssh_info)
 
         # Starts forwarding
+        forwarders = []
         for remote_port, connector in forwarded_ports:
-            SSHForwarder(ssh.get_transport(), remote_port, connector)
+            forwarders.append(
+                    SSHForwarder(ssh.get_transport(), remote_port, connector))
 
         chan = ssh.get_transport().open_session()
         if request_pty:

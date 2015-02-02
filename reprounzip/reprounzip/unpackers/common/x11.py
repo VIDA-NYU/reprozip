@@ -263,7 +263,7 @@ class X11Handler(object):
     def port_forward(self):
         """Builds the port forwarding info, for `run_interactive()`.
 
-        Just requests port 6000 on the remote host to be forwarded to the X
+        Just requests port 6015 on the remote host to be forwarded to the X
         socket identified by `self.connection_info`.
         """
         if not self.enabled:
