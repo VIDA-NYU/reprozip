@@ -417,18 +417,20 @@ def docker_destroy_docker(args):
             logging.error("Error deleting container %s",
                           container.decode('ascii'))
 
+    initial_image = unpacked_info.pop('initial_image')
+
     if 'current_image' in unpacked_info:
         image = unpacked_info.pop('current_image')
-        logging.info("Destroying image %s...", image.decode('ascii'))
-        retcode = subprocess.call(['docker', 'rmi', image])
-        if retcode != 0:
-            logging.error("Error deleting image %s", image.decode('ascii'))
+        if image != initial_image:
+            logging.info("Destroying image %s...", image.decode('ascii'))
+            retcode = subprocess.call(['docker', 'rmi', image])
+            if retcode != 0:
+                logging.error("Error deleting image %s", image.decode('ascii'))
 
-    image = unpacked_info.pop('initial_image')
-    logging.info("Destroying image %s...", image.decode('ascii'))
-    retcode = subprocess.call(['docker', 'rmi', image])
+    logging.info("Destroying image %s...", initial_image.decode('ascii'))
+    retcode = subprocess.call(['docker', 'rmi', initial_image])
     if retcode != 0:
-        logging.error("Error deleting image %s", image.decode('ascii'))
+        logging.error("Error deleting image %s", initial_image.decode('ascii'))
 
 
 @target_must_exist
