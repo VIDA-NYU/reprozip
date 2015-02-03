@@ -13,6 +13,7 @@ See http://www.docker.io/
 from __future__ import unicode_literals
 
 import argparse
+from itertools import chain
 import logging
 import os
 import pickle
@@ -25,8 +26,9 @@ from reprounzip.common import Package, load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    select_installer, join_root, FileUploader, FileDownloader, get_runs
-from reprounzip.utils import unicode_, iteritems
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
+    get_runs
+from reprounzip.utils import unicode_, iteritems, download_file
 
 
 def select_image(runs):
@@ -48,10 +50,15 @@ def select_image(runs):
 
     # Ubuntu
     if distribution == 'ubuntu':
-        if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
-                            version)
-        return 'ubuntu', 'ubuntu:12.04'
+        if version == '12.04':
+            return 'ubuntu', 'ubuntu:12.04'
+        elif version == '14.04':
+            return 'ubuntu', 'ubuntu:14.04'
+        else:
+            if version != '14.10':
+                logging.warning("using Ubuntu 14.10 'Utopic' instead of '%s'",
+                                version)
+            return 'ubuntu', 'ubuntu:14.10'
 
     # Debian
     else:
@@ -125,11 +132,23 @@ def docker_setup_create(args):
     with (target / 'Dockerfile').open('w',
                                       encoding='utf-8', newline='\n') as fp:
         fp.write('FROM %s\n\n' % base_image)
-        fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
-        fp.write('RUN \\\n')
 
-        # Installs missing packages
-        packages = [pkg for pkg in packages if not pkg.packfiles]
+        # Installs busybox
+        download_file(busybox_url(runs[0]['architecture']),
+                      target / 'busybox')
+        fp.write('COPY busybox /bin/busybox\n')
+
+        fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
+        fp.write('RUN \\\n'
+                 '    chmod +x /bin/busybox && \\\n')
+
+        if args.install_pkgs:
+            # Install every package through package manager
+            missing_packages = []
+        else:
+            # Only install packages that were not packed
+            missing_packages = [pkg for pkg in packages if pkg.packfiles]
+            packages = [pkg for pkg in packages if not pkg.packfiles]
         # FIXME : Right now, we need 'sudo' to be available (and it's not
         # necessarily in the base image)
         if packages:
@@ -152,7 +171,9 @@ def docker_setup_create(args):
         dataroot = PosixPath('DATA')
         # Adds intermediate directories, and checks for existence in the tar
         tar = tarfile.open(str(pack), 'r:*')
-        for f in other_files:
+        missing_files = chain.from_iterable(pkg.files
+                                            for pkg in missing_packages)
+        for f in chain(other_files, missing_files):
             path = PosixPath('/')
             for c in f.path.components[1:]:
                 path = path / c
@@ -245,6 +266,8 @@ def docker_run(args):
     # Name of new container
     container = make_unique_name(b'reprounzip_run_')
 
+    hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
@@ -260,7 +283,8 @@ def docker_run(args):
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
         uid = run.get('uid', 1000)
-        cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+        cmd = 'sudo -u \'#%d\' /bin/busybox sh -c %s\n' % (uid,
+                                                           shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
@@ -269,8 +293,9 @@ def docker_run(args):
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
+                               '-h', hostname,
                                '-i', '-t', image,
-                               '/bin/sh', '-c', cmds])
+                               '/bin/busybox', 'sh', '-c', cmds])
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)
@@ -417,18 +442,20 @@ def docker_destroy_docker(args):
             logging.error("Error deleting container %s",
                           container.decode('ascii'))
 
+    initial_image = unpacked_info.pop('initial_image')
+
     if 'current_image' in unpacked_info:
         image = unpacked_info.pop('current_image')
-        logging.info("Destroying image %s...", image.decode('ascii'))
-        retcode = subprocess.call(['docker', 'rmi', image])
-        if retcode != 0:
-            logging.error("Error deleting image %s", image.decode('ascii'))
+        if image != initial_image:
+            logging.info("Destroying image %s...", image.decode('ascii'))
+            retcode = subprocess.call(['docker', 'rmi', image])
+            if retcode != 0:
+                logging.error("Error deleting image %s", image.decode('ascii'))
 
-    image = unpacked_info.pop('initial_image')
-    logging.info("Destroying image %s...", image.decode('ascii'))
-    retcode = subprocess.call(['docker', 'rmi', image])
+    logging.info("Destroying image %s...", initial_image.decode('ascii'))
+    retcode = subprocess.call(['docker', 'rmi', initial_image])
     if retcode != 0:
-        logging.error("Error deleting image %s", image.decode('ascii'))
+        logging.error("Error deleting image %s", initial_image.decode('ascii'))
 
 
 @target_must_exist
@@ -499,6 +526,14 @@ def setup(parser, **kwargs):
     opt_setup = argparse.ArgumentParser(add_help=False)
     opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
+    opt_setup.add_argument('--install-pkgs', action='store_true',
+                           default=False,
+                           help=("Install packages rather than extracting "
+                                 "them from RPZ file"))
+    opt_setup.add_argument('--unpack-pkgs', action='store_false',
+                           default=False,
+                           help=("Extract packed packages rather than "
+                                 "installing them"))
     parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=docker_setup_create)

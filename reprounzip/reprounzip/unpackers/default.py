@@ -571,9 +571,7 @@ def chroot_unmount(target):
     if not mounted:
         return False
 
-    unpacked_info['mounted'] = False
-    write_dict(target / '.reprounzip', unpacked_info, 'chroot')
-
+    target = target.resolve()
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         if d.exists():
@@ -585,6 +583,10 @@ def chroot_unmount(target):
                     'sort -r | '
                     'xargs umount' % d,
                     shell=True)
+
+    unpacked_info['mounted'] = False
+    write_dict(target / '.reprounzip', unpacked_info, 'chroot')
+
     return True
 
 
