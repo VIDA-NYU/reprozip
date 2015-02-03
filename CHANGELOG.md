@@ -13,6 +13,8 @@ Bugfixes:
 Features:
 * Adds `--install-pkgs` options to `docker setup`, to prefer installing
 from package manager over unpacking the packed files
+* With vagrant or docker, original machine hostname is restored
+* X11 support for chroot, vagrant and docker unpackers
 
 0.5.1 (2014-12-18)
 ------------------
