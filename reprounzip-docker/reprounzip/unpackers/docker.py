@@ -13,6 +13,7 @@ See http://www.docker.io/
 from __future__ import unicode_literals
 
 import argparse
+from itertools import chain
 import logging
 import os
 import pickle
@@ -128,8 +129,13 @@ def docker_setup_create(args):
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
         fp.write('RUN \\\n')
 
-        # Installs missing packages
-        packages = [pkg for pkg in packages if not pkg.packfiles]
+        if args.install_pkgs:
+            # Install every package through package manager
+            missing_packages = []
+        else:
+            # Only install packages that were not packed
+            missing_packages = [pkg for pkg in packages if pkg.packfiles]
+            packages = [pkg for pkg in packages if not pkg.packfiles]
         # FIXME : Right now, we need 'sudo' to be available (and it's not
         # necessarily in the base image)
         if packages:
@@ -152,7 +158,9 @@ def docker_setup_create(args):
         dataroot = PosixPath('DATA')
         # Adds intermediate directories, and checks for existence in the tar
         tar = tarfile.open(str(pack), 'r:*')
-        for f in other_files:
+        missing_files = chain.from_iterable(pkg.files
+                                            for pkg in missing_packages)
+        for f in chain(other_files, missing_files):
             path = PosixPath('/')
             for c in f.path.components[1:]:
                 path = path / c
@@ -501,6 +509,14 @@ def setup(parser, **kwargs):
     opt_setup = argparse.ArgumentParser(add_help=False)
     opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
+    opt_setup.add_argument('--install-pkgs', action='store_true',
+                           default=False,
+                           help=("Install packages rather than extracting "
+                                 "them from RPZ file"))
+    opt_setup.add_argument('--unpack-pkgs', action='store_false',
+                           default=False,
+                           help=("Extract packed packages rather than "
+                                 "installing them"))
     parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=docker_setup_create)

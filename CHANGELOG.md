@@ -8,6 +8,11 @@ Bugfixes:
 * Fixes `debug` log messages not being printed
 * Pressing Ctrl+C wouldn't stop package identification with KeyboardInterrupt
 * Fixes an error message while destroying a docker experiment
+* Fixes docker not installing packages if they were packed
+
+Features:
+* Adds `--install-pkgs` options to `docker setup`, to prefer installing
+from package manager over unpacking the packed files
 
 0.5.1 (2014-12-18)
 ------------------
