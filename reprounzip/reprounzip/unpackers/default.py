@@ -22,6 +22,7 @@ import os
 import pickle
 import platform
 from rpaths import PosixPath, DefaultAbstractPath, Path
+import socket
 import subprocess
 import sys
 import tarfile
@@ -32,6 +33,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
+from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     make_dir_writable, rmtree_fixed, download_file
 
@@ -518,13 +520,18 @@ def chroot_run(args):
 
     root = target / 'root'
 
+    # X11 handler
+    x11 = X11Handler(args.x11, ('local', socket.gethostname()),
+                     args.x11_display)
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
+        environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run['environ']))
+                        for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -539,7 +546,16 @@ def chroot_run(args):
                 shell_escape(unicode_(root)),
                 shell_escape(cmd))
         cmds.append(cmd)
+    cmds = ['chroot %s /bin/sh -c %s' % (shell_escape(unicode_(root)),
+                                         shell_escape(c))
+            for c in x11.init_cmds] + cmds
     cmds = ' && '.join(cmds)
+
+    # Starts forwarding
+    forwarders = []
+    for portnum, connector in x11.port_forward:
+        fwd = LocalForwarder(connector, portnum)
+        forwarders.append(fwd)
 
     signals.pre_run(target=target)
     retcode = subprocess.call(cmds, shell=True)
@@ -906,6 +922,14 @@ def setup_chroot(parser, **kwargs):
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help=("Enable X11 support (needs an X server on "
+                                  "the host"))
+    parser_run.add_argument('--x11-display', dest='x11_display',
+                            help=("Display number to use on the experiment "
+                                  "side (change the host display with the "
+                                  "DISPLAY environment variable)"))
     parser_run.set_defaults(func=chroot_run)
 
     # download

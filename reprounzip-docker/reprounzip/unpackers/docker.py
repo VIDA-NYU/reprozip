@@ -17,6 +17,7 @@ from itertools import chain
 import logging
 import os
 import pickle
+import re
 from rpaths import Path, PosixPath
 import subprocess
 import sys
@@ -28,6 +29,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
+from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, download_file
 
 
@@ -231,6 +233,26 @@ def docker_setup_build(args):
     write_dict(target / '.reprounzip', unpacked_info)
 
 
+_addr_re = re.compile(br'inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+
+
+def get_iface_addr(iface):
+    """Gets the local IP address of a named network interface.
+
+    Returns an IPv4 address as a unicode object, in digits-and-dots format.
+
+    >>> get_iface_addr('lo')
+    '127.0.0.1'
+    """
+    p = subprocess.Popen(['/bin/ip', 'addr', 'show', iface],
+                         stdout=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    for line in stdout.splitlines():
+        m = _addr_re.search(line)
+        if m is not None:
+            return m.group(1).decode('ascii')
+
+
 @target_must_exist
 def docker_run(args):
     """Runs the experiment in the container.
@@ -268,13 +290,20 @@ def docker_run(args):
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
+    # Get the local bridge IP
+    ip_str = get_iface_addr('docker0')
+
+    # X11 handler
+    x11 = X11Handler(args.x11, ('internet', ip_str), args.x11_display)
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
+        environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run['environ']))
+                        for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -286,9 +315,16 @@ def docker_run(args):
         cmd = 'sudo -u \'#%d\' /bin/busybox sh -c %s\n' % (uid,
                                                            shell_escape(cmd))
         cmds.append(cmd)
+    cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
 
     signals.pre_run(target=target)
+
+    # Creates forwarders
+    forwarders = []
+    for port, connector in x11.port_forward:
+        forwarders.append(
+                LocalForwarder(connector, port))
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
@@ -559,6 +595,14 @@ def setup(parser, **kwargs):
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help=("Enable X11 support (needs an X server on "
+                                  "the host"))
+    parser_run.add_argument('--x11-display', dest='x11_display',
+                            help=("Display number to use on the experiment "
+                                  "side (change the host display with the "
+                                  "DISPLAY environment variable)"))
     parser_run.set_defaults(func=docker_run)
 
     # download

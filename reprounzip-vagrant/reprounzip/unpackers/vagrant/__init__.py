@@ -17,7 +17,6 @@ import argparse
 import logging
 import os
 import paramiko
-from paramiko.client import MissingHostKeyPolicy
 import pickle
 from rpaths import PosixPath, Path
 import scp
@@ -31,18 +30,10 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
     select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
     get_runs
-from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import irange, unicode_, iteritems, check_output
-
-
-class IgnoreMissingKey(MissingHostKeyPolicy):
-    """Policy that just ignores missing SSH host keys.
-
-    We are connecting to vagrant, checking the host doesn't make sense, and
-    accepting keys permanently is a security risk.
-    """
-    def missing_host_key(self, client, hostname, key):
-        pass
+from reprounzip.unpackers.common.x11 import X11Handler
+from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
+    run_interactive
+from reprounzip.utils import unicode_, iteritems, check_output
 
 
 def rb_escape(s):
@@ -343,74 +334,6 @@ def vagrant_setup_start(args):
             sys.exit(1)
 
 
-def find_ssh_executable(name='ssh'):
-    exts = os.environ.get('PATHEXT', '').split(os.pathsep)
-    dirs = list(os.environ.get('PATH', '').split(os.pathsep))
-    par, join = os.path.dirname, os.path.join
-    # executable might be bin/python or ReproUnzip\python
-    # or ReproUnzip\Python27\python or ReproUnzip\Python27\Scripts\something
-    loc = par(sys.executable)
-    local_dirs = []
-    for i in irange(3):
-        local_dirs.extend([loc, join(loc, 'ssh')])
-        loc = par(loc)
-    for pathdir in local_dirs + dirs:
-        for ext in exts:
-            fullpath = os.path.join(pathdir, name + ext)
-            if os.path.isfile(fullpath):
-                return fullpath
-    return None
-
-
-def run_interactive(ssh_info, interactive, cmds, request_pty):
-    if interactive:
-        ssh_exe = find_ssh_executable()
-    else:
-        ssh_exe = None
-
-    if interactive and ssh_exe:
-        record_usage(vagrant_ssh='ssh')
-        return subprocess.call(
-                [ssh_exe,
-                 '-t' if request_pty else '-T',  # Force allocation of PTY
-                 '-o', 'StrictHostKeyChecking=no',  # Silently accept host keys
-                 '-o', 'UserKnownHostsFile=/dev/null',  # Don't store host keys
-                 '-i', ssh_info['key_filename'],
-                 '-p', '%d' % ssh_info['port'],
-                 '%s@%s' % (ssh_info['username'],
-                            ssh_info['hostname']),
-                 cmds])
-    else:
-        record_usage(vagrant_ssh='interactive' if interactive else 'simple')
-        # Connects to the machine
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(IgnoreMissingKey())
-        ssh.connect(**ssh_info)
-
-        chan = ssh.get_transport().open_session()
-        if request_pty:
-            chan.get_pty()
-
-        # Execute command
-        logging.info("Connected via SSH, running command...")
-        chan.exec_command(cmds)
-
-        # Get output
-        if interactive:
-            interactive_shell(chan)
-        else:
-            chan.shutdown_write()
-            while True:
-                data = chan.recv(1024)
-                if len(data) == 0:
-                    break
-                sys.stdout.buffer.write(data)
-                sys.stdout.flush()
-        retcode = chan.recv_exit_status()
-        ssh.close()
-        return retcode
-
-
 @target_must_exist
 def vagrant_run(args):
     """Runs the experiment in the virtual machine.
@@ -426,13 +349,17 @@ def vagrant_run(args):
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
+    # X11 handler
+    x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
+        environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run['environ']))
+                        for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -451,6 +378,11 @@ def vagrant_run(args):
         else:
             cmd = 'sudo -u \'#%d\' sh -c %s' % (uid, shell_escape(cmd))
         cmds.append(cmd)
+    if use_chroot:
+        cmds = ['chroot /experimentroot /bin/sh -c %s' % shell_escape(c)
+                for c in x11.init_cmds] + cmds
+    else:
+        cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
     # Sets the hostname to the original experiment's machine's
     # FIXME: not reentrant: this restores the Vagrant machine's hostname after
@@ -470,7 +402,8 @@ def vagrant_run(args):
                        os.environ.get('REPROUNZIP_NON_INTERACTIVE'))
     retcode = run_interactive(info, interactive,
                               cmds,
-                              not args.no_pty)
+                              not args.no_pty,
+                              x11.port_forward)
     sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
                      retcode)
 
@@ -722,6 +655,14 @@ def setup(parser, **kwargs):
                             help="Don't request a PTY from the SSH server")
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help=("Enable X11 support (needs an X server on "
+                                  "the host"))
+    parser_run.add_argument('--x11-display', dest='x11_display',
+                            help=("Display number to use on the experiment "
+                                  "side (change the host display with the "
+                                  "DISPLAY environment variable)"))
     parser_run.set_defaults(func=vagrant_run)
 
     # download
