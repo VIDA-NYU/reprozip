@@ -50,10 +50,15 @@ def select_image(runs):
 
     # Ubuntu
     if distribution == 'ubuntu':
-        if version != '12.04':
-            logging.warning("using Ubuntu 12.04 'Precise' instead of '%s'",
-                            version)
-        return 'ubuntu', 'ubuntu:12.04'
+        if version == '12.04':
+            return 'ubuntu', 'ubuntu:12.04'
+        elif version == '14.04':
+            return 'ubuntu', 'ubuntu:14.04'
+        else:
+            if version != '14.10':
+                logging.warning("using Ubuntu 14.10 'Utopic' instead of '%s'",
+                                version)
+            return 'ubuntu', 'ubuntu:14.10'
 
     # Debian
     else:
