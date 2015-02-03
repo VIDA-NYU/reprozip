@@ -11,10 +11,15 @@ aptitude install -y make gcc sqlite3 libsqlite3-dev python2.7-dev python-virtual
 SCRIPT
 
   config.vm.define "x86" do |m|
-    m.vm.box = "hashicorp/precise32"
+    m.vm.box = "ubuntu/trusty32"
   end
 
   config.vm.define "x86_64", autostart: false do |m|
-    m.vm.box = "hashicorp/precise64"
+    m.vm.box = "ubuntu/trusty64"
+  end
+
+  config.vm.provider "virtualbox" do |v|
+    v.gui = true
+    v.memory = 1024
   end
 end
