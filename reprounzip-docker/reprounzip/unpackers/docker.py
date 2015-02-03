@@ -26,8 +26,9 @@ from reprounzip.common import Package, load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     composite_action, target_must_exist, make_unique_name, shell_escape, \
-    select_installer, join_root, FileUploader, FileDownloader, get_runs
-from reprounzip.utils import unicode_, iteritems
+    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
+    get_runs
+from reprounzip.utils import unicode_, iteritems, download_file
 
 
 def select_image(runs):
@@ -126,8 +127,15 @@ def docker_setup_create(args):
     with (target / 'Dockerfile').open('w',
                                       encoding='utf-8', newline='\n') as fp:
         fp.write('FROM %s\n\n' % base_image)
+
+        # Installs busybox
+        download_file(busybox_url(runs[0]['architecture']),
+                      target / 'busybox')
+        fp.write('COPY busybox /bin/busybox\n')
+
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
-        fp.write('RUN \\\n')
+        fp.write('RUN \\\n'
+                 '    chmod +x /bin/busybox && \\\n')
 
         if args.install_pkgs:
             # Install every package through package manager
@@ -268,7 +276,8 @@ def docker_run(args):
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
         uid = run.get('uid', 1000)
-        cmd = 'sudo -u \'#%d\' sh -c %s\n' % (uid, shell_escape(cmd))
+        cmd = 'sudo -u \'#%d\' /bin/busybox sh -c %s\n' % (uid,
+                                                           shell_escape(cmd))
         cmds.append(cmd)
     cmds = ' && '.join(cmds)
 
@@ -278,7 +287,7 @@ def docker_run(args):
     logging.info("Starting container %s", container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
                                '-i', '-t', image,
-                               '/bin/sh', '-c', cmds])
+                               '/bin/busybox', 'sh', '-c', cmds])
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)
