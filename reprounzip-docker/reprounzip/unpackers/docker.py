@@ -266,6 +266,8 @@ def docker_run(args):
     # Name of new container
     container = make_unique_name(b'reprounzip_run_')
 
+    hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
+
     cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
@@ -291,6 +293,7 @@ def docker_run(args):
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
+                               '-h', hostname,
                                '-i', '-t', image,
                                '/bin/busybox', 'sh', '-c', cmds])
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
