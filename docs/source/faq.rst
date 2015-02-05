@@ -128,15 +128,15 @@ The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.
 
 .. _directory_error:
 
-Why `reprounzip directory` fails with ``IOError``?
-==================================================
+Why does `reprounzip directory` fail with ``IOError``?
+======================================================
 
 The `directory` unpacker does not provide any isolation from the filesystem, so if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
 
 ..  _distribnotfound:
 
-Why `reprounzip` fails with ``DistributionNotFound`` errors?
-============================================================
+Why does `reprounzip` fail with ``DistributionNotFound`` errors?
+================================================================
 
 You probably have some plugins left over from a previous installation. Be sure to upgrade or remove outdated plugins when you upgrade reprounzip.
 
@@ -144,13 +144,13 @@ The following command might help::
 
     pip install -U reprounzip[all]
 
-Why `reprounzip` shows ``running in chroot, ignoring request``?
-===============================================================
+Why does `reprounzip` show ``running in chroot, ignoring request``?
+===================================================================
 
 This message comes from the systemd client, which will probably not work with ReproZip. In this case, the experiment should be re-packed without using systemd (see :ref:`this question <systemd>` for more information).
 
-Why ``reprounzip vagrant setup`` fails to resolve a host address?
-=================================================================
+Why does ``reprounzip vagrant setup`` fail to resolve a host address?
+=====================================================================
 
 When running ``reprounzip vagrant setup``, if you get an error similar to this::
 
