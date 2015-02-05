@@ -658,7 +658,7 @@ def setup(parser, **kwargs):
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
                             help=("Enable X11 support (needs an X server on "
-                                  "the host"))
+                                  "the host)"))
     parser_run.add_argument('--x11-display', dest='x11_display',
                             help=("Display number to use on the experiment "
                                   "side (change the host display with the "
