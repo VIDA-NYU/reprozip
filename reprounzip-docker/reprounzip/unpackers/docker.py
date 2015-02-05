@@ -26,9 +26,9 @@ import tarfile
 from reprounzip.common import Package, load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
-    composite_action, target_must_exist, make_unique_name, shell_escape, \
-    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
-    get_runs
+    CantFindInstaller, composite_action, target_must_exist, make_unique_name, \
+    shell_escape, select_installer, busybox_url, join_root, \
+    FileUploader, FileDownloader, get_runs
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, download_file
 
@@ -159,7 +159,13 @@ def docker_setup_create(args):
             record_usage(docker_install_pkgs="sudo")
         packages += [Package('sudo', None, packfiles=False)]
         if packages:
-            installer = select_installer(pack, runs, target_distribution)
+            try:
+                installer = select_installer(pack, runs, target_distribution)
+            except CantFindInstaller as e:
+                logging.error("Need to install %d packages but couldn't "
+                              "select a package installer: %s",
+                              len(packages), e)
+                sys.exit(1)
             # Updates package sources
             fp.write('    %s && \\\n' % installer.update_script())
             # Installs necessary packages

@@ -30,9 +30,9 @@ import tarfile
 from reprounzip.common import load_config as load_config_file, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
-    COMPAT_OK, COMPAT_NO, target_must_exist, shell_escape, load_config, \
-    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
-    get_runs
+    COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, shell_escape, \
+    load_config, select_installer, busybox_url, join_root, \
+    FileUploader, FileDownloader, get_runs
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     make_dir_writable, rmtree_fixed, download_file
@@ -51,7 +51,10 @@ def installpkgs(args):
     # Loads config
     runs, packages, other_files = load_config(pack)
 
-    installer = select_installer(pack, runs)
+    try:
+        installer = select_installer(pack, runs)
+    except CantFindInstaller as e:
+        logging.error("Couldn't select a package installer: %s", e)
 
     if args.summary:
         # Print out a list of packages with their status

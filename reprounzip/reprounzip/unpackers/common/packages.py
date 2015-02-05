@@ -10,8 +10,8 @@ from __future__ import unicode_literals
 import logging
 import platform
 import subprocess
-import sys
 
+from reprounzip.unpackers.common import UsageError
 from reprounzip.utils import itervalues
 
 
@@ -19,6 +19,11 @@ THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
 PKG_NOT_INSTALLED = "(not installed)"
+
+
+class CantFindInstaller(UsageError):
+    def __init__(self, msg="Can't select a package installer"):
+        UsageError.__init__(self, msg)
 
 
 class AptInstaller(object):
@@ -97,13 +102,12 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
                         target_distribution.capitalize(),
                         orig_distribution.capitalize())
     elif target_distribution is None:
-        logging.error("Can't use package installer, target distribution is "
-                      "unknown")
+        raise CantFindInstaller("Target distribution is unknown")
     elif orig_distribution != target_distribution:
-        logging.error("Installing on %s but pack was generated on %s",
-                      target_distribution.capitalize(),
-                      orig_distribution.capitalize())
-        sys.exit(1)
+        raise CantFindInstaller(
+                "Installing on %s but pack was generated on %s",
+                target_distribution.capitalize(),
+                orig_distribution.capitalize())
 
     # Selects installation method
     if target_distribution == 'ubuntu':
@@ -112,9 +116,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         # aptitude is not installed by default, so use apt-get here too
         installer = AptInstaller('apt-get')
     else:
-        logging.critical("Your current distribution, \"%s\", is not "
-                         "supported",
-                         (target_distribution or "(unknown)").capitalize())
-        sys.exit(1)
+        raise CantFindInstaller(
+                "This distribution, \"%s\", is not supported",
+                target_distribution.capitalize())
 
     return installer

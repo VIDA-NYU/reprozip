@@ -27,9 +27,9 @@ import tarfile
 from reprounzip.common import load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
-    composite_action, target_must_exist, make_unique_name, shell_escape, \
-    select_installer, busybox_url, join_root, FileUploader, FileDownloader, \
-    get_runs
+    CantFindInstaller, composite_action, target_must_exist, make_unique_name, \
+    shell_escape, select_installer, busybox_url, join_root, \
+    FileUploader, FileDownloader, get_runs
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -203,7 +203,12 @@ def vagrant_setup_create(args):
                          ' '.join(pkg.name for pkg in packages))
 
     if packages:
-        installer = select_installer(pack, runs, target_distribution)
+        try:
+            installer = select_installer(pack, runs, target_distribution)
+        except CantFindInstaller as e:
+            logging.error("Need to install %d packages but couldn't select a "
+                          "package installer: %s",
+                          len(packages), e)
 
     target.mkdir(parents=True)
 
