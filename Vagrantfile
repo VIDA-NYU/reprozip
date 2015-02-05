@@ -10,11 +10,11 @@ aptitude update -y
 aptitude install -y make gcc sqlite3 libsqlite3-dev python2.7-dev python-virtualenv
 SCRIPT
 
-  config.vm.define "x86" do |m|
+  config.vm.define "x86", autostart: false do |m|
     m.vm.box = "ubuntu/trusty32"
   end
 
-  config.vm.define "x86_64", autostart: false do |m|
+  config.vm.define "x86_64" do |m|
     m.vm.box = "ubuntu/trusty64"
   end
 
