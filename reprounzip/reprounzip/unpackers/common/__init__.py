@@ -26,7 +26,7 @@ from reprounzip.unpackers.common.packages import THIS_DISTRIBUTION, \
 
 
 __all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
-           'COMPAT_OK, COMPAT_NO, COMPAT_MAYBE',
+           'COMPAT_OK', 'COMPAT_NO', 'COMPAT_MAYBE',
            'UsageError',
            'composite_action', 'target_must_exist', 'unique_names',
            'make_unique_name', 'shell_escape', 'load_config', 'busybox_url',
