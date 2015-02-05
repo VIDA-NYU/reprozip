@@ -64,7 +64,23 @@ Can ReproZip pack interactive tools?
 
 Yes! The `reprounzip` component should have no problems with experiments that interact with the user through the terminal. If your experiment runs until it receives a Ctrl+C signal, that is fine as well: ReproZip will not interfere unless you press Ctrl+C twice, stopping the experiment.
 
-Note, however, that running GUI tools (connecting to an X server) is yet not supported by ReproZip.
+GUI tools are also supported, see :ref:`next section <gui-tools>`.
+
+..  _gui-tools:
+
+Can ReproZip pack graphical (GUI) tools?
+========================================
+
+On Linux, graphical display is handled by the X server, to which applications can connect as clients to display their windows and components, and get user input.
+
+Most unpackers now support forwarding the X connection from the experiment to the X server running on your machine. Note that you will need a running X server for this to work, such as `Xming <http://sourceforge.net/projects/xming/>`_ for Windows or `XQuartz <http://xquartz.macosforge.org/>`_ for Mac OS. If you are running Linux, chances are that an X server is already configured and running.
+
+Note that X support is not enabled by default; use the ``--enable-x11`` flag to your unpacker of choice's ``run`` command to use it.
+
+My experiment fails to run with ``Error: Can't open display: :0``
+=================================================================
+
+`reprounzip` now supports GUI tools, but it is not enabled by default. Add the ``--enable-x11`` flag to the ``run`` command to use it. See :ref:`gui-tools`.
 
 What if my experiment runs on a distributed environment?
 ========================================================
