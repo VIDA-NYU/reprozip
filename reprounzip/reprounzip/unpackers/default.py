@@ -242,8 +242,14 @@ def directory_run(args):
                 unicode_(join_root(root,
                                    Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
+        environ = run['environ']
+        if args.x11:
+            if 'DISPLAY' in os.environ:
+                environ['DISPLAY'] = os.environ['DISPLAY']
+            if 'XAUTHORITY' in os.environ:
+                environ['XAUTHORITY'] = os.environ['XAUTHORITY']
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
-                        for k, v in iteritems(run['environ'])
+                        for k, v in iteritems(environ)
                         if k != 'PATH')
         cmd += ' '
 
@@ -822,6 +828,9 @@ def setup_directory(parser, **kwargs):
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help=("Enable X11 support (needs an X server)"))
     parser_run.set_defaults(func=directory_run)
 
     # download
