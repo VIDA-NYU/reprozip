@@ -184,8 +184,11 @@ def vagrant_setup_create(args):
 
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
-        target_distribution = None
         box = args.base_image[0]
+        if args.distribution:
+            target_distribution = args.distribution[0]
+        else:
+            target_distribution = None
     else:
         target_distribution, box = select_box(runs)
     logging.info("Using box %s", box)
@@ -630,6 +633,9 @@ def setup(parser, **kwargs):
             help="Don't mount /dev and /proc inside the chroot (no effect if "
             "--dont-use-chroot is set)")
     opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
+    opt_setup.add_argument('--distribution', nargs=1,
+                           help=("Distribution used in the Vagrant box (for "
+                                 "package installer selection)"))
     parser_setup_create = subparsers.add_parser('setup/create',
                                                 parents=[opt_setup, options])
     parser_setup_create.set_defaults(func=vagrant_setup_create)

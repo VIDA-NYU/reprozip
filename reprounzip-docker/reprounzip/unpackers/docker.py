@@ -119,8 +119,11 @@ def docker_setup_create(args):
 
     if args.base_image:
         record_usage(docker_explicit_base=True)
-        target_distribution = None
         base_image = args.base_image[0]
+        if args.distribution:
+            target_distribution = args.distribution[0]
+        else:
+            target_distribution = None
     else:
         target_distribution, base_image = select_image(runs)
     logging.info("Using base image %s", base_image)
@@ -568,6 +571,9 @@ def setup(parser, **kwargs):
     opt_setup = argparse.ArgumentParser(add_help=False)
     opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
     opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
+    opt_setup.add_argument('--distribution', nargs=1,
+                           help=("Distribution used in the base image (for "
+                                 "package installer selection)"))
     opt_setup.add_argument('--install-pkgs', action='store_true',
                            default=False,
                            help=("Install packages rather than extracting "

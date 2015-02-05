@@ -102,7 +102,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
                         target_distribution.capitalize(),
                         orig_distribution.capitalize())
     elif target_distribution is None:
-        raise CantFindInstaller("Target distribution is unknown")
+        raise CantFindInstaller("Target distribution is unknown; try using "
+                                "--distribution")
     elif orig_distribution != target_distribution:
         raise CantFindInstaller(
                 "Installing on %s but pack was generated on %s",
