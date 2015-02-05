@@ -77,6 +77,21 @@ Most unpackers now support forwarding the X connection from the experiment to th
 
 Note that X support is not enabled by default; use the ``--enable-x11`` flag to your unpacker of choice's ``run`` command to use it.
 
+Can I access the generated system or virtual machine directly?
+==============================================================
+
+You can connect to the Vagrant virtual machine by running "vagrant ssh", or connecting via SSH to the destination listed by "vagrant ssh-config" (usually localhost:2222). These commands should be run from inside the directory created by unpacking.
+
+You can inspect the containers created by `docker`, or start one based on the image created by reprounzip. They are named with the ``reprounzip_`` prefix.
+
+With `chroot` and `directory`, the filesystem is in the ``root`` subdirectory below the unpacked path.
+
+..  warning::
+
+    Only the files necessary for running the experiment are required to work correctly. This means that you could very well have only parts of a software distribution, if the pack author didn't edit the configuration to add them in their entirety. For example, you could have the parts of Python that the experiment ran, but nothing else, and in particular not the ones needed to run Python interactively or install new libraries.
+
+    The utilities from the base system might also not work correctly (if they are not part of the experiment) because `reprounzip` will overwrite their libraries with the experiment's. In the worse case, the dynamic linker or the shell might not be usable. Some unpackers install ``/bin/busybox`` which you might find helpful.
+
 My experiment fails to run with ``Error: Can't open display: :0``
 =================================================================
 
