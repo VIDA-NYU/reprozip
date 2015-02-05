@@ -158,3 +158,12 @@ When running ``reprounzip vagrant setup``, if you get an error similar to this::
     ==> default: wget: unable to resolve host address ...
 
 there is probably a firewall blocking the Vagrant VM to have Internet connection; the VM needs Internet connection to download required software for setting up the experiment for you. Please make sure that your anti-virus/firewall is not causing this issue.
+
+Why does ``reprounzip run`` fail with ``no such file or directory`` or similar?
+===============================================================================
+
+This cryptic error message can come from different sources, for instance missing a specific version of a library or dynamic linker.
+
+While ReproZip usually packs every file that is needed for the experiment to run, but you can optionally request `reprounzip` to install packages from the distribution's package manager instead. The pack author can also choose not to include some packages, meaning that `reprounzip` will have to install the distribution's, which is not guaranteed to be compatible.
+
+Using a base system that's closer to the one the experiment was packed on can also help; see the ``--base-image`` option for the Vagrant and Docker unpackers.
