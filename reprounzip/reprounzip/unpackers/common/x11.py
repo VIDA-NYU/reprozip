@@ -337,21 +337,23 @@ class BaseForwarder(object):
         self.connector = connector
 
     def _forward(self, client, src_addr):
-        with self.connector(src_addr) as local_connection:
-            local_fd = local_connection.fileno()
-            client_fd = client.fileno()
-            while True:
-                r, w, x = select.select([local_fd, client_fd], [], [])
-                if local_fd in r:
-                    data = local_connection.recv(4096)
-                    if not data:
-                        break
-                    client.sendall(data)
-                elif client_fd in r:
-                    data = client.recv(4096)
-                    if not data:
-                        break
-                    local_connection.sendall(data)
+        try:
+            with self.connector(src_addr) as local_connection:
+                local_fd = local_connection.fileno()
+                client_fd = client.fileno()
+                while True:
+                    r, w, x = select.select([local_fd, client_fd], [], [])
+                    if local_fd in r:
+                        data = local_connection.recv(4096)
+                        if not data:
+                            break
+                        client.sendall(data)
+                    elif client_fd in r:
+                        data = client.recv(4096)
+                        if not data:
+                            break
+                        local_connection.sendall(data)
+        finally:
             client.close()
 
 
