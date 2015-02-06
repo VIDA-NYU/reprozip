@@ -127,7 +127,12 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
         args.append('%s@%s' % (ssh_info['username'],
                                ssh_info['hostname']))
         args.append(cmd)
-        return subprocess.call(args)
+        try:
+            pass  # set signal
+            return subprocess.call(args)
+        finally:
+            pass  # unset signal
+
     else:
         record_usage(vagrant_ssh='interactive' if interactive else 'simple')
         # Connects to the machine

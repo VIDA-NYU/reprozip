@@ -337,10 +337,12 @@ def docker_run(args):
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
+    # set signal
     retcode = subprocess.call(['docker', 'run', b'--name=' + container,
                                '-h', hostname,
                                '-i', '-t', image,
                                '/bin/busybox', 'sh', '-c', cmds])
+    # unset signal
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)

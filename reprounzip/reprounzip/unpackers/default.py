@@ -295,7 +295,9 @@ def directory_run(args):
     cmds = ' && '.join(cmds)
 
     signals.pre_run(target=target)
+    # set signal
     retcode = subprocess.call(cmds, shell=True)
+    # unset signal
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 
@@ -567,7 +569,9 @@ def chroot_run(args):
         forwarders.append(fwd)
 
     signals.pre_run(target=target)
+    # set signal
     retcode = subprocess.call(cmds, shell=True)
+    # unset signal
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 

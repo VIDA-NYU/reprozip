@@ -43,6 +43,7 @@ def interactive_shell(chan, raw=True):
 
 
 def posix_shell(chan, raw):
+    # set signal somehow
     import select
 
     oldtty = termios.tcgetattr(sys.stdin)
@@ -82,6 +83,7 @@ def posix_shell(chan, raw):
 
 # thanks to Mike Looijmans for this code
 def windows_shell(chan):
+    # set signal somehow
     import threading
 
     sys.stdout.write("*** Emulating terminal on Windows; press F6 or Ctrl+Z "
