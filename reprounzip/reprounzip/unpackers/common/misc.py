@@ -12,7 +12,9 @@ import logging
 import os
 import random
 from rpaths import PosixPath, Path
+import signal
 import string
+import subprocess
 import sys
 import tarfile
 
@@ -350,3 +352,23 @@ def get_runs(runs, selected_run, cmdline):
         selected_run = (int(selected_run),)
 
     return selected_run
+
+
+def interruptible_call(*args, **kwargs):
+    assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
+    proc = [None]
+
+    def _sigint_handler(signum, frame):
+        if proc[0] is not None:
+            try:
+                proc[0].send_signal(signum)
+            except OSError:
+                pass
+
+    signal.signal(signal.SIGINT, _sigint_handler)
+
+    try:
+        proc[0] = subprocess.Popen(*args, **kwargs)
+        return proc[0].wait()
+    finally:
+        signal.signal(signal.SIGINT, signal.default_int_handler)
