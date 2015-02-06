@@ -425,6 +425,7 @@ def chroot_create(args):
                         "\nWill copy files from HOST SYSTEM",
                         ''.join('\n    %s' % pkg
                                 for pkg in packages_not_packed))
+        missing_files = False
         for pkg in packages_not_packed:
             for f in pkg.files:
                 f = Path(f.path)
@@ -433,6 +434,7 @@ def chroot_create(args):
                             "Missing file %s (from package %s) on host, "
                             "experiment will probably miss it",
                             f, pkg.name)
+                    missing_files = True
                     continue
                 dest = join_root(root, f)
                 dest.parent.mkdir(parents=True)
@@ -443,6 +445,8 @@ def chroot_create(args):
                 if restore_owner:
                     stat = f.stat()
                     dest.chown(stat.st_uid, stat.st_gid)
+        if missing_files:
+            record_usage(chroot_mising_files=True)
 
     # Unpacks files
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
