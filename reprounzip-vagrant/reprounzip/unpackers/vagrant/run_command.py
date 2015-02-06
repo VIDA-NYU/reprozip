@@ -11,11 +11,11 @@ import logging
 import os
 import paramiko
 from paramiko.client import MissingHostKeyPolicy
-import subprocess
 import sys
 import threading
 
 from reprounzip.common import record_usage
+from reprounzip.unpackers.common import interruptible_call
 from reprounzip.unpackers.common.x11 import BaseForwarder, LocalForwarder
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import irange
@@ -127,11 +127,7 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
         args.append('%s@%s' % (ssh_info['username'],
                                ssh_info['hostname']))
         args.append(cmd)
-        try:
-            pass  # set signal
-            return subprocess.call(args)
-        finally:
-            pass  # unset signal
+        return interruptible_call(args)
 
     else:
         record_usage(vagrant_ssh='interactive' if interactive else 'simple')

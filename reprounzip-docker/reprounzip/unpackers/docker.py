@@ -28,7 +28,7 @@ from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, make_unique_name, \
     shell_escape, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs
+    FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, download_file
 
@@ -337,12 +337,10 @@ def docker_run(args):
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
-    # set signal
-    retcode = subprocess.call(['docker', 'run', b'--name=' + container,
-                               '-h', hostname,
-                               '-i', '-t', image,
-                               '/bin/busybox', 'sh', '-c', cmds])
-    # unset signal
+    retcode = interruptible_call(['docker', 'run', b'--name=' + container,
+                                  '-h', hostname,
+                                  '-i', '-t', image,
+                                  '/bin/busybox', 'sh', '-c', cmds])
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)

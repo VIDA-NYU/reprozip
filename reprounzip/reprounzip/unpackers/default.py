@@ -32,7 +32,7 @@ from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, shell_escape, \
     load_config, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs
+    FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     make_dir_writable, rmtree_fixed, download_file
@@ -295,9 +295,7 @@ def directory_run(args):
     cmds = ' && '.join(cmds)
 
     signals.pre_run(target=target)
-    # set signal
-    retcode = subprocess.call(cmds, shell=True)
-    # unset signal
+    retcode = interruptible_call(cmds, shell=True)
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 
@@ -569,9 +567,7 @@ def chroot_run(args):
         forwarders.append(fwd)
 
     signals.pre_run(target=target)
-    # set signal
-    retcode = subprocess.call(cmds, shell=True)
-    # unset signal
+    retcode = interruptible_call(cmds, shell=True)
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 
