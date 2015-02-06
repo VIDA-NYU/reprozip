@@ -433,6 +433,7 @@ def chroot_create(args):
                             "Missing file %s (from package %s) on host, "
                             "experiment will probably miss it",
                             f, pkg.name)
+                    continue
                 dest = join_root(root, f)
                 dest.parent.mkdir(parents=True)
                 if f.is_link():
