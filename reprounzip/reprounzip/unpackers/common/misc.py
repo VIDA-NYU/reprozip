@@ -334,6 +334,10 @@ def get_runs(runs, selected_run, cmdline):
         except ValueError:
             logging.critical("Error: Run is not a number")
             raise UsageError
+        if selected_run < 0 or selected_run >= len(runs):
+            logging.critical("Error: Expected 0 <= run <= %d, got %d",
+                             len(runs) - 1, selected_run)
+            sys.exit(1)
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
