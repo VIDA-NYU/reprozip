@@ -96,6 +96,9 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         logging.warning("Installing on %s but pack was generated on %s",
                         target_distribution.capitalize(),
                         orig_distribution.capitalize())
+    elif target_distribution is None:
+        logging.error("Can't use package installer, target distribution is "
+                      "unknown")
     elif orig_distribution != target_distribution:
         logging.error("Installing on %s but pack was generated on %s",
                       target_distribution.capitalize(),
