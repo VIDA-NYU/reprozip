@@ -119,9 +119,7 @@ ReproZip is meant to trace a whole experiment in one go. Therefore, if an experi
 Packing GUI and Interactive Tools
 +++++++++++++++++++++++++++++++++
 
-Currently, ReproZip cannot ensure that GUI interfaces will be correctly reproduced, so we recommend packing tools in a non-GUI mode for a successful reproduction.
-
-Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail in that case when reproduced on a different machine.
+ReproZip is able to pack GUI tools. Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail when reproduced on a different machine.
 
 Capturing Connections to Servers
 ++++++++++++++++++++++++++++++++
