@@ -174,6 +174,8 @@ When running ``reprounzip vagrant setup``, if you get an error similar to this::
 
 there is probably a firewall blocking the Vagrant VM to have Internet connection; the VM needs Internet connection to download required software for setting up the experiment for you. Please make sure that your anti-virus/firewall is not causing this issue.
 
+.. _nosuchfile:
+
 Why does ``reprounzip run`` fail with ``no such file or directory`` or similar?
 ===============================================================================
 

@@ -136,6 +136,8 @@ To install the required dependencies, the following command should be used::
 
 Users may use flag *y* or *assume-yes* to automatically confirm all the questions from the package manager; flag *missing* to install only the software packages that were not originally included in the experiment package (i.e.: software packages excluded in the configuration file); and flag *summary* to simply provide a summary of which software packages are installed or not in the current environment **without installing any dependency**.
 
+..  warning:: Note that the package manager may not install the same software version as required for running the experiment, and if the versions are incompatible, the reproduction may fail.
+
 ..  note:: This unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
 
 ..  note:: ``reprounzip installpkgs`` is automatically distributed with `reprounzip`.
