@@ -204,6 +204,12 @@ which will execute the entire experiment inside the experiment directory. Users 
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
+If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
+
+    $ reprounzip vagrant run <path> --enable-x11
+
+which will forward the X connection from the experiment to the X server running on your machine. In this case, make sure you have a running X server.
+
 Removing the Experiment Directory
 +++++++++++++++++++++++++++++++++
 
