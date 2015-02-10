@@ -136,6 +136,8 @@ To install the required dependencies, the following command should be used::
 
 Users may use flag *y* or *assume-yes* to automatically confirm all the questions from the package manager; flag *missing* to install only the software packages that were not originally included in the experiment package (i.e.: software packages excluded in the configuration file); and flag *summary* to simply provide a summary of which software packages are installed or not in the current environment **without installing any dependency**.
 
+..  warning:: Note that the package manager may not install the same software version as required for running the experiment, and if the versions are incompatible, the reproduction may fail.
+
 ..  note:: This unpacker is only used to install software packages. Users still need to use either ``reprounzip directory`` or ``reprounzip chroot`` to extract the experiment and execute it.
 
 ..  note:: ``reprounzip installpkgs`` is automatically distributed with `reprounzip`.
@@ -201,6 +203,12 @@ which will execute the entire experiment inside the experiment directory. Users 
     $ reprounzip vagrant run <path> --cmdline <new-command-line>
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
+
+If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
+
+    $ reprounzip vagrant run <path> --enable-x11
+
+which will forward the X connection from the experiment to the X server running on your machine. In this case, make sure you have a running X server.
 
 Removing the Experiment Directory
 +++++++++++++++++++++++++++++++++

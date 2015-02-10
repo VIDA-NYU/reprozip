@@ -77,6 +77,12 @@ The next section in the configuration file shows the files to be packed. If the 
 
 The attribute ``packfiles`` can be used to control which software packages will be packed: its default value is `true`, but users may change it to `false` to inform *reprozip* that the corresponding software package should not be included. To remove a file that was not identified as part of a package, users can simply remove it from the list under ``other_files``.
 
+..  warning::
+
+    Note that if a software package is requested not to be included, the `reprounzip` component will try to install it from a package manager when unpacking the experiment. If the software version from the package manager is different from (and incompatible with) the one used by the experiment, the experiment may not be reproduced correctly.
+
+..  seealso:: :ref:`nosuchfile`
+
 Last, users may add file patterns under ``additional_patterns`` to include other files that they think it will be useful for a future reproduction. As an example, the following would add everything under ``/etc/apache2/`` and all the Python files of all users from LXC containers (contrived example)::
 
     additional_patterns:
@@ -113,9 +119,7 @@ ReproZip is meant to trace a whole experiment in one go. Therefore, if an experi
 Packing GUI and Interactive Tools
 +++++++++++++++++++++++++++++++++
 
-Currently, ReproZip cannot ensure that GUI interfaces will be correctly reproduced, so we recommend packing tools in a non-GUI mode for a successful reproduction.
-
-Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail in that case when reproduced on a different machine.
+ReproZip is able to pack GUI tools. Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail when reproduced on a different machine.
 
 Capturing Connections to Servers
 ++++++++++++++++++++++++++++++++
