@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.5.2 (???)
------------
+0.6 (2015-02-11)
+----------------
 
 Bugfixes:
 * Fixes `debug` log messages not being printed
