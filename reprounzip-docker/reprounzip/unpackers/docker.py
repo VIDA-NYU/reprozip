@@ -14,6 +14,7 @@ from __future__ import unicode_literals
 
 import argparse
 from itertools import chain
+import json
 import logging
 import os
 import pickle
@@ -341,6 +342,18 @@ def docker_run(args):
                                   '-h', hostname,
                                   '-i', '-t', image,
                                   '/bin/busybox', 'sh', '-c', cmds])
+    if retcode != 0:
+        logging.critical("docker run failed with code %d", retcode)
+        sys.exit(1)
+
+    # Get exit status from "docker inspect"
+    out = subprocess.check_output(['docker', 'inspect', container])
+    outjson = json.loads(out)
+    if (outjson[0]["State"]["Running"] is not False or
+            outjson[0]["State"]["Paused"] is not False):
+        logging.error("Invalid container state after execution:\n%s",
+                      json.dumps(outjson[0]["State"]))
+    retcode = outjson[0]["State"]["ExitCode"]
     sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)

@@ -9,6 +9,7 @@ Bugfixes:
 * Pressing Ctrl+C wouldn't stop package identification with KeyboardInterrupt
 * Fixes an error message while destroying a docker experiment
 * Fixes docker not installing packages if they were packed
+* Fixes docker always reporting exit status 0
 
 Features:
 * Adds `--install-pkgs` options to `docker setup`, to prefer installing
