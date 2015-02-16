@@ -4,6 +4,8 @@ set -e
 
 # This script automatically builds Conda packages
 
+DEST_DIR="$(pwd)/$1"
+
 cd "$(dirname "$0")/../.."
 TOPLEVEL="$(pwd)"
 
@@ -22,8 +24,6 @@ if [ -z "$2" ]; then
 else
     VERSION="$2"
 fi
-
-DEST_DIR="$1"
 
 sedi(){
     TEMPFILE=$(mktemp /tmp/rpz_conda_XXXXXXXX)
