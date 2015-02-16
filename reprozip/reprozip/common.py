@@ -132,8 +132,8 @@ def load_config(filename, canonical, File=File, Package=Package):
     keys_ = set(config)
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
-    # Accepts versions from 0.2 to 0.5 inclusive
-    elif not LooseVersion('0.2') <= ver < LooseVersion('0.6'):
+    # Accepts versions from 0.2 to 0.6 inclusive
+    elif not LooseVersion('0.2') <= ver < LooseVersion('0.7'):
         pkgname = (__package__ or __name__).split('.', 1)[0]
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "
