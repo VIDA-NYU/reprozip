@@ -991,7 +991,7 @@ int syscall_handle(struct Process *process)
         }
         else
 #endif
-        if(entry == NULL && (syscall >= 0 || (size_t)syscall < tbl->length) )
+        if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
         {
