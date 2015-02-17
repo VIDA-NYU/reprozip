@@ -4,8 +4,11 @@ set -e
 
 # This script automatically builds Conda packages
 
-DEST_DIR="$(pwd)/$1"
+ORIG_CWD="$(pwd)"
+cd "$1"
+DEST_DIR="$(pwd)"
 
+cd "$ORIG_CWD"
 cd "$(dirname "$0")/../.."
 TOPLEVEL="$(pwd)"
 
