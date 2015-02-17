@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.6.1 (2015-02-17)
+------------------
+
+Bugfixes:
+* Fixes an overflow in _pytracer for some syscalls.
+
 0.6 (2015-02-11)
 ----------------
 
