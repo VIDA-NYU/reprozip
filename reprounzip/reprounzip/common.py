@@ -111,6 +111,7 @@ def read_packages(packages, File=File, Package=Package):
 #     config: adds input_files, output_files, lists parent directories
 # 0.4.1: no change
 # 0.5: no change
+# 0.6: no change
 
 
 def load_config(filename, canonical, File=File, Package=Package):
