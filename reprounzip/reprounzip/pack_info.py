@@ -118,8 +118,12 @@ def print_info(args):
         print("Distribution: %s (current: %s)" % (
               meta_distribution, current_distribution or "(not Linux)"))
         print("Executions (%d):" % len(runs))
-        for r in runs:
-            print("    %s" % ' '.join(shell_escape(a) for a in r['argv']))
+        for i, r in enumerate(runs):
+            cmdline = ' '.join(shell_escape(a) for a in r['argv'])
+            if len(runs) > 1:
+                print("    %d: %s" % (i, cmdline))
+            else:
+                print("    %s" % cmdline)
             if args.verbosity >= 2:
                 print("        input files: %s" %
                       ", ".join(r['input_files']))
