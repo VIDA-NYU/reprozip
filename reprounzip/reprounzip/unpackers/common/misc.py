@@ -324,8 +324,13 @@ def get_runs(runs, selected_run, cmdline):
     Will return an iterable of run numbers. Might also fail loudly or exit
     after printing the original command-line.
     """
-    if selected_run is None and len(runs) == 1:
-        selected_run = 0
+    if selected_run is None:
+        if len(runs) == 1:
+            selected_run = 0
+        else:
+            logging.critical("There are several runs in this pack -- you have "
+                             "to choose which one to use")
+            sys.exit(1)
     elif selected_run is not None:
         try:
             selected_run = int(selected_run)
