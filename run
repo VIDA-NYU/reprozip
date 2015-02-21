@@ -12,4 +12,4 @@ echo "$@" > .command
     init=$(pwd)/linux-init \
     WORKDIR=$(pwd) HOME=$HOME
 
-exit $(cat .exit_code)
+return $(cat .exit_code)
