@@ -1,10 +1,19 @@
 import os
+import platform
 from setuptools import setup, Extension
 import sys
 
 
 # pip workaround
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
+
+# This won't build on Linux -- don't even try
+if platform.system().lower() != 'linux':
+    sys.stderr.write("reprozip uses ptrace and thus only works on Linux\n"
+                     "You can however install reprounzip and plugins on other "
+                     "platforms\n")
+    sys.exit(1)
 
 
 # List the source files
