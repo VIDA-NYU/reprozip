@@ -1,3 +1,4 @@
+import io
 import os
 from setuptools import setup, Extension
 import sys
@@ -23,7 +24,8 @@ pytracer = Extension('reprozip._pytracer',
                      sources=sources,
                      libraries=libraries)
 
-with open('README.rst') as fp:
+# Need to specify encoding for PY3, which has the worse unicode handling ever
+with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
     'PyYAML',

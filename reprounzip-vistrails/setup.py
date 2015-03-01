@@ -1,3 +1,4 @@
+import io
 import os
 from setuptools import setup
 import sys
@@ -7,7 +8,8 @@ import sys
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-with open('README.rst') as fp:
+# Need to specify encoding for PY3, which has the worse unicode handling ever
+with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
     'reprounzip>=0.5',
