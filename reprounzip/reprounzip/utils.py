@@ -20,6 +20,7 @@ import contextlib
 import email.utils
 import locale
 import logging
+import operator
 import os
 from rpaths import Path
 import stat
@@ -81,8 +82,10 @@ else:
 
 
 if PY3:
+    int_types = int,
     unicode_ = str
 else:
+    int_types = int, long
     unicode_ = unicode
 
 
@@ -103,6 +106,68 @@ class CommonEqualityMixin(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+def optional_return_type(req_args, other_args):
+    """Sort of namedtuple but with name-only fields.
+
+    When deconstructing a namedtuple, you have to get all the fields:
+
+    >>> o = namedtuple('T', ['a', 'b', 'c'])(1, 2, 3)
+    >>> a, b = o
+    ValueError: too many values to unpack
+
+    You thus cannot easily add new return values. This class allows it:
+
+    >>> o2 = optional_return_type(['a', 'b'], ['c'])(1, 2, 3)
+    >>> a, b = o2
+    >>> c = o2.c
+    """
+    if len(set(req_args) | set(other_args)) != len(req_args) + len(other_args):
+        raise ValueError
+
+    # Maps argument name to position in each list
+    req_args_pos = dict((n, i) for i, n in enumerate(req_args))
+    other_args_pos = dict((n, i) for i, n in enumerate(other_args))
+
+    def cstr(cls, *args, **kwargs):
+        if len(args) > len(req_args) + len(other_args):
+            raise TypeError(
+                    "Too many arguments (expected at least %d and no more "
+                    "than %d)" % (len(req_args),
+                                  len(req_args) + len(other_args)))
+
+        args1, args2 = args[:len(req_args)], args[len(req_args):]
+        req = dict((i, v) for i, v in enumerate(args1))
+        other = dict(izip(other_args, args2))
+
+        for k, v in iteritems(kwargs):
+            if k in req_args_pos:
+                pos = req_args_pos[k]
+                if pos in req:
+                    raise TypeError("Multiple values for field %s" % k)
+                req[pos] = v
+            elif k in other_args_pos:
+                if k in other:
+                    raise TypeError("Multiple values for field %s" % k)
+                other[k] = v
+            else:
+                raise TypeError("Unknown field name %s" % k)
+
+        args = []
+        for i, k in enumerate(req_args):
+            if i not in req:
+                raise TypeError("Missing value for field %s" % k)
+            args.append(req[i])
+
+        inst = tuple.__new__(cls, args)
+        inst.__dict__.update(other)
+        return inst
+
+    dct = {'__new__': cstr}
+    for i, n in enumerate(req_args):
+        dct[n] = property(operator.itemgetter(i))
+    return type(str('OptionalReturnType'), (tuple,), dct)
 
 
 def hsize(nbytes):
