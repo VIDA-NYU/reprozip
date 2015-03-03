@@ -171,6 +171,7 @@ def load_config(filename, canonical, File=File, Package=Package):
         run['output_files'] = output_files
 
     record_usage_package(runs, packages, other_files,
+                         input_files, output_files,
                          pack_id=config.get('pack_id'))
 
     kwargs = {'input_files': input_files,
@@ -404,7 +405,9 @@ def record_usage(**kwargs):
         _usage_report.note(kwargs)
 
 
-def record_usage_package(runs, packages, other_files, pack_id=None):
+def record_usage_package(runs, packages, other_files,
+                         input_files, output_files,
+                         pack_id=None):
     """Records the info on some pack file into the current usage report.
     """
     for run in runs:
@@ -415,7 +418,9 @@ def record_usage_package(runs, packages, other_files, pack_id=None):
                                       for pkg in packages),
                  packed_packages=sum(1 for pkg in packages
                                      if pkg.packfiles),
-                 nb_other_files=len(other_files))
+                 nb_other_files=len(other_files),
+                 nb_input_files=len(input_files),
+                 nb_output_files=len(output_files))
 
 
 def submit_usage_report(**kwargs):

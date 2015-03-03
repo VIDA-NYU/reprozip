@@ -206,4 +206,6 @@ def pack(target, directory, sort_packages):
     tar.close()
 
     # Record some info to the usage report
-    record_usage_package(runs, packages, other_files, pack_id)
+    record_usage_package(runs, packages, other_files,
+                         input_files, output_files,
+                         pack_id)
