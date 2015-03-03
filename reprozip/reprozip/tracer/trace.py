@@ -457,7 +457,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
 
     conn.close()
 
-    save_config(config, runs, packages, files, reprozip_version)
+    save_config(config, runs, packages, files, reprozip_version,
+                input_files, output_files)
 
     print("Configuration file written in {0!s}".format(config))
     print("Edit that file then run the packer -- "

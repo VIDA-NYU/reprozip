@@ -216,6 +216,7 @@ def write_package(fp, pkg, indent=0):
 
 
 def save_config(filename, runs, packages, other_files, reprozip_version,
+                input_files=None, output_files=None,
                 canonical=False, pack_id=None):
     """Saves the configuration to a YAML file.
 
@@ -249,7 +250,19 @@ version: "{format!s}"
             fp.write(dump([run]).decode('utf-8'))
             fp.write("\n")
 
+        if input_files:
+            input_files = dump({'input_files': input_files}).decode('utf-8')
+        else:
+            input_files = 'input_files:\n'
+        if output_files:
+            output_files = dump({'output_files': output_files}).decode('utf-8')
+        else:
+            output_files = 'output_files:\n'
         fp.write("""\
+# Input and output files
+{}{}""".format(input_files, output_files))
+        fp.write("""\
+
 # Files to pack
 # All the files below were used by the program; they will be included in the
 # generated package

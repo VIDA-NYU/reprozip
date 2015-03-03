@@ -134,6 +134,8 @@ def pack(target, directory, sort_packages):
             configfile,
             canonical=False)
     additional_patterns = config.additional_patterns
+    input_files = config.input_files
+    output_files = config.output_files
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     runs, packages, other_files = canonicalize_config(
@@ -193,7 +195,8 @@ def pack(target, directory, sort_packages):
     os.close(fd)
     try:
         save_config(can_configfile, runs, packages, other_files,
-                    reprozip_version, canonical=True,
+                    reprozip_version,
+                    input_files, output_files, canonical=True,
                     pack_id=pack_id)
 
         tar.add(can_configfile, Path('METADATA/config.yml'))
