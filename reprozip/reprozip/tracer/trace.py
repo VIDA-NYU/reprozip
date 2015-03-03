@@ -380,7 +380,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
                                      for in_file in input_files
                                      if in_file in command_line_files)
         output_files_on_cmdline = sum(1
-                                      for out_file in input_files
+                                      for out_file in output_files
                                       if out_file in command_line_files)
 
         # Labels input files
