@@ -153,11 +153,11 @@ def load_config(filename, canonical, File=File, Package=Package):
         logging.warning("Unrecognized sections in configuration: %s",
                         ', '.join(unknown_keys))
 
-    runs = config.get('runs', [])
-    packages = read_packages(config.get('packages', []), File, Package)
-    other_files = read_files(config.get('other_files', []), File)
-    input_files = config.get('input_files', {})
-    output_files = config.get('output_files', {})
+    runs = config.get('runs') or []
+    packages = read_packages(config.get('packages'), File, Package)
+    other_files = read_files(config.get('other_files'), File)
+    input_files = config.get('input_files') or {}
+    output_files = config.get('output_files') or {}
 
     # reprozip < 0.7 compatibility: read input_files and output_files from runs
     if not ('input_files' in config or 'output_files' in config):
