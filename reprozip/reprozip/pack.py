@@ -54,7 +54,7 @@ def expand_patterns(patterns):
     return [File(p) for p in itertools.chain(dirs - non_empty_dirs, files)]
 
 
-def canonicalize_config(runs, packages, other_files, additional_patterns,
+def canonicalize_config(packages, other_files, additional_patterns,
                         sort_packages):
     """Expands ``additional_patterns`` from the configuration file.
     """
@@ -65,7 +65,7 @@ def canonicalize_config(runs, packages, other_files, additional_patterns,
         add_packages = []
     other_files, packages = merge_files(add_files, add_packages,
                                         other_files, packages)
-    return runs, packages, other_files
+    return packages, other_files
 
 
 def data_path(filename, prefix=Path('DATA')):
@@ -138,8 +138,8 @@ def pack(target, directory, sort_packages):
     output_files = config.output_files
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
-    runs, packages, other_files = canonicalize_config(
-            runs, packages, other_files, additional_patterns, sort_packages)
+    packages, other_files = canonicalize_config(
+            packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
     tar = PackBuilder(target)
