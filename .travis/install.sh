@@ -4,6 +4,10 @@ run_lines(){
     while read line; do echo "$line"; sh -c "$line" || exit $?; done
 }
 
+# Use a plain-ASCII locale, to make sure to catch stupid PY3 behaviors
+export LANG=C
+export LC_ALL=C
+
 case "$TEST_MODE"
 in
     run_program|coverage_c)
