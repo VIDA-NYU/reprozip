@@ -16,9 +16,11 @@ if [ "$arg" = install ]; then
 elif [ "$arg" = develop ]; then
     # -e doesn't work with local paths before 6.0
     pip install -U setuptools pip
+    CMD=""
     for prog in $PROGRAMS; do
-        pip install -U -e $prog
+        CMD="$CMD -e $prog"
     done
+    pip install -U $CMD
 else
     echo "Usage: $(basename "$0") <install|develop>" >&2
     exit 1
