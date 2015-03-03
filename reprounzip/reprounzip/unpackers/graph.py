@@ -80,8 +80,7 @@ def generate(target, directory, all_forks=False):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")
         sys.exit(1)
-    runs, packages, other_files, patterns = load_config(configfile,
-                                                        canonical=False)
+    runs, packages, other_files = load_config(configfile, canonical=False)
     packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
     if PY3:

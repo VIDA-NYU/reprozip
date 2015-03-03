@@ -345,10 +345,9 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ''')
     else:
         # Loads in previous config
-        runs, oldpkgs, oldfiles, patterns = load_config(config,
-                                                        canonical=False,
-                                                        File=TracedFile)
-        # Here, additional patterns are discarded
+        runs, oldpkgs, oldfiles = load_config(config,
+                                              canonical=False,
+                                              File=TracedFile)
 
         # Same query as previous block but only gets last process
         executions = cur.execute(

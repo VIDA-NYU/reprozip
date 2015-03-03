@@ -130,9 +130,10 @@ def pack(target, directory, sort_packages):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")
         sys.exit(1)
-    runs, packages, other_files, additional_patterns = load_config(
+    runs, packages, other_files = config = load_config(
             configfile,
             canonical=False)
+    additional_patterns = config.additional_patterns
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     runs, packages, other_files = canonicalize_config(
