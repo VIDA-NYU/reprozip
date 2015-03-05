@@ -24,6 +24,7 @@ from reprozip.common import File, load_config, save_config, \
     record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.tracer.trace import merge_files
+from reprozip.utils import iteritems
 
 
 def expand_patterns(patterns):
@@ -186,6 +187,12 @@ def pack(target, directory, sort_packages):
         tar.add(manifest, Path('METADATA/version'))
     finally:
         manifest.remove()
+
+    # Checks that input files are packed
+    for name, path in iteritems(input_files):
+        if not Path(path).exists():
+            logging.warning("File is designated as input (name %s) but is not "
+                            "to be packed: %s" % (name, path))
 
     # Generates a unique identifier for the pack (for usage reports purposes)
     pack_id = str(uuid.uuid4())
