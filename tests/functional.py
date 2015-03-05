@@ -195,11 +195,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
     # Check input and output files
-    input_files = conf['runs'][0]['input_files']
+    input_files = conf['input_files']
     assert (dict((k, Path(f).name)
                  for k, f in iteritems(input_files)) ==
             {'arg': b'simple_input.txt'})
-    output_files = conf['runs'][0]['output_files']
+    output_files = conf['output_files']
     print(dict((k, Path(f).name) for k, f in iteritems(output_files)))
     # Here we don't test for dict equality, since we might have C coverage
     # files in the mix
