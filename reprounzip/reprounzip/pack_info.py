@@ -34,6 +34,8 @@ def print_info(args):
 
     # Loads config
     runs, packages, other_files = config = load_config(pack)
+    input_files = config.input_files
+    output_files = config.output_files
 
     pack_total_size = 0
     pack_total_paths = 0
@@ -125,15 +127,28 @@ def print_info(args):
             else:
                 print("    %s" % cmdline)
             if args.verbosity >= 2:
-                print("        input files: %s" %
-                      ", ".join(run['input_files']))  # bad
-                print("        output files: %s" %
-                      ", ".join(run['output_files']))  # bad
                 print("        wd: %s" % run['workingdir'])
                 if 'signal' in run:
                     print("        signal: %d" % run['signal'])
                 else:
                     print("        exitcode: %d" % run['exitcode'])
+
+    if input_files:
+        if args.verbosity < 2:
+            print("Input files (%d): %s" % (
+                  len(input_files), ", ".join(input_files)))
+        else:
+            print("Input files (%d):" % len(input_files))
+            for name, path in iteritems(input_files):
+                print("    %s: %s" % (name, path))
+    if output_files:
+        if args.verbosity < 2:
+            print("Output files (%d): %s" % (
+                  len(output_files), ", ".join(output_files)))
+        else:
+            print("Output files (%d):" % len(output_files))
+            for name, path in iteritems(output_files):
+                print("    %s: %s" % (name, path))
 
     # Unpacker compatibility
     print("\n----- Unpackers -----")
@@ -178,50 +193,38 @@ def showfiles(args):
 
     if pack.is_dir():
         # Reads info from an unpacked directory
-        runs, packages, other_files = load_config_file(pack / 'config.yml',
-                                                       canonical=True)
+        config = load_config_file(pack / 'config.yml',
+                                  canonical=True)
         # The '.reprounzip' file is a pickled dictionary, it contains the name
         # of the files that replaced each input file (if upload was used)
         with pack.open('rb', '.reprounzip') as fp:
             unpacked_info = pickle.load(fp)
-        input_files = unpacked_info.get('input_files', {})
+        assigned_input_files = unpacked_info.get('input_files', {})
 
         print("Input files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for input_name, path in iteritems(run['input_files']):  # bad
-                print("    %s (%s)" % (input_name, path))
-                if input_files.get(input_name) is not None:
-                    assigned = input_files[input_name]
-                else:
-                    assigned = "(original)"
-                print("      %s" % assigned)
+        for input_name, path in iteritems(config.input_files):
+            print("    %s (%s)" % (input_name, path))
+            if assigned_input_files.get(input_name) is not None:
+                assigned = assigned_input_files[input_name]
+            else:
+                assigned = "(original)"
+            print("      %s" % assigned)
 
         print("Output files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for output_name, path in iteritems(run['output_files']):  # bad
-                print("    %s (%s)" % (output_name, path))
+        for output_name, path in iteritems(config.output_files):
+            print("    %s (%s)" % (output_name, path))
 
     else:  # pack.is_file()
         # Reads info from a pack file
-        runs, packages, other_files = load_config(pack)
+        config = load_config(pack)
 
         print("Input files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for input_name, path in iteritems(run['input_files']):  # bad
-                print("    %s (%s)" % (input_name, path))
+        for input_name, path in iteritems(config.input_files):
+            print("    %s (%s)" % (input_name, path))
 
         print("Output files:")
-        for i, run in enumerate(runs):
-            if len(runs) > 1:
-                print("  Run %d:" % i)
-            for output_name, path in iteritems(run['output_files']):  # bad
-                print("    %s (%s)" % (output_name, path))
+        for output_name, path in iteritems(config.output_files):
+            print("    %s (%s)" % (output_name, path))
 
 
 def setup_info(parser, **kwargs):
