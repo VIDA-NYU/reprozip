@@ -118,22 +118,22 @@ def print_info(args):
         print("Distribution: %s (current: %s)" % (
               meta_distribution, current_distribution or "(not Linux)"))
         print("Executions (%d):" % len(runs))
-        for i, r in enumerate(runs):
-            cmdline = ' '.join(shell_escape(a) for a in r['argv'])
+        for i, run in enumerate(runs):
+            cmdline = ' '.join(shell_escape(a) for a in run['argv'])
             if len(runs) > 1:
                 print("    %d: %s" % (i, cmdline))
             else:
                 print("    %s" % cmdline)
             if args.verbosity >= 2:
                 print("        input files: %s" %
-                      ", ".join(r['input_files']))
+                      ", ".join(run['input_files']))
                 print("        output files: %s" %
-                      ", ".join(r['output_files']))
-                print("        wd: %s" % r['workingdir'])
-                if 'signal' in r:
-                    print("        signal: %d" % r['signal'])
+                      ", ".join(run['output_files']))
+                print("        wd: %s" % run['workingdir'])
+                if 'signal' in run:
+                    print("        signal: %d" % run['signal'])
                 else:
-                    print("        exitcode: %d" % r['exitcode'])
+                    print("        exitcode: %d" % run['exitcode'])
 
     # Unpacker compatibility
     print("\n----- Unpackers -----")
