@@ -126,9 +126,9 @@ def print_info(args):
                 print("    %s" % cmdline)
             if args.verbosity >= 2:
                 print("        input files: %s" %
-                      ", ".join(run['input_files']))
+                      ", ".join(run['input_files']))  # bad
                 print("        output files: %s" %
-                      ", ".join(run['output_files']))
+                      ", ".join(run['output_files']))  # bad
                 print("        wd: %s" % run['workingdir'])
                 if 'signal' in run:
                     print("        signal: %d" % run['signal'])
@@ -190,7 +190,7 @@ def showfiles(args):
         for i, run in enumerate(runs):
             if len(runs) > 1:
                 print("  Run %d:" % i)
-            for input_name, path in iteritems(run['input_files']):
+            for input_name, path in iteritems(run['input_files']):  # bad
                 print("    %s (%s)" % (input_name, path))
                 if input_files.get(input_name) is not None:
                     assigned = input_files[input_name]
@@ -202,7 +202,7 @@ def showfiles(args):
         for i, run in enumerate(runs):
             if len(runs) > 1:
                 print("  Run %d:" % i)
-            for output_name, path in iteritems(run['output_files']):
+            for output_name, path in iteritems(run['output_files']):  # bad
                 print("    %s (%s)" % (output_name, path))
 
     else:  # pack.is_file()
@@ -213,14 +213,14 @@ def showfiles(args):
         for i, run in enumerate(runs):
             if len(runs) > 1:
                 print("  Run %d:" % i)
-            for input_name, path in iteritems(run['input_files']):
+            for input_name, path in iteritems(run['input_files']):  # bad
                 print("    %s (%s)" % (input_name, path))
 
         print("Output files:")
         for i, run in enumerate(runs):
             if len(runs) > 1:
                 print("  Run %d:" % i)
-            for output_name, path in iteritems(run['output_files']):
+            for output_name, path in iteritems(run['output_files']):  # bad
                 print("    %s (%s)" % (output_name, path))
 
 

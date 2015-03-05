@@ -65,9 +65,9 @@ def hash_experiment_run(run):
     This is used to name the CLTools modules.
     """
     h = SHA1()
-    for input_name in sorted(run['input_files']):
+    for input_name in sorted(run['input_files']):  # bad
         h.update('input %s\n' % input_name)
-    for output_name in sorted(run['output_files']):
+    for output_name in sorted(run['output_files']):  # bad
         h.update('output %s\n' % output_name)
     return base64.b64encode(h.digest(), b'@$')
 
@@ -117,8 +117,8 @@ def do_vistrails(target):
 
 
 def write_cltools_module(run, dot_vistrails):
-    input_files = run['input_files']
-    output_files = run['output_files']
+    input_files = run['input_files']  # bad
+    output_files = run['output_files']  # bad
 
     module_name = 'reprounzip_%s' % hash_experiment_run(run)[:7]
 
@@ -271,7 +271,7 @@ def run_from_vistrails():
         seen_input_names.add(input_name)
 
     # Resets the input files that were not given
-    for input_name in run['input_files']:
+    for input_name in run['input_files']:  # bad
         if input_name not in seen_input_names:
             upload_command.append(':%s' % input_name)
 

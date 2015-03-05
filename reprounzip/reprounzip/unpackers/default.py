@@ -193,11 +193,11 @@ def directory_create(args):
         p.wait()
 
     # Original input files, so upload can restore them
-    if any(run['input_files'] for run in runs):
+    if any(run['input_files'] for run in runs):  # bad
         logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
-            for ifile in itervalues(run['input_files']):
+            for ifile in itervalues(run['input_files']):  # bad
                 inputtar.add(str(join_root(root, ifile)),
                              str(ifile))
         inputtar.close()
@@ -486,11 +486,11 @@ def chroot_create(args):
                 env_path.symlink('/bin/busybox')
 
     # Original input files, so upload can restore them
-    if any(run['input_files'] for run in runs):
+    if any(run['input_files'] for run in runs):  # bad
         logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
-            for ifile in itervalues(run['input_files']):
+            for ifile in itervalues(run['input_files']):  # bad
                 inputtar.add(str(join_root(root, ifile)),
                              str(ifile))
         inputtar.close()
