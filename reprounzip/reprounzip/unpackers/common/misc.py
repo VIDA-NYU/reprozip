@@ -154,28 +154,20 @@ class FileUploader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(upload_files=len(files))
-        runs = self.get_runs_from_config()
+        input_files = self.get_config().input_files
 
         # No argument: list all the input files and exit
         if not files:
             print("Input files:")
-            for i, run in enumerate(runs):
-                if len(runs) > 1:
-                    print("  Run %d:" % i)
-                for input_name in run['input_files']:  # bad
-                    if self.input_files.get(input_name) is not None:
-                        assigned = self.input_files[input_name]
-                    else:
-                        assigned = "(original)"
-                    print("    %s: %s" % (input_name, assigned))
+            for input_name in input_files:
+                if self.input_files.get(input_name) is not None:
+                    assigned = self.input_files[input_name]
+                else:
+                    assigned = "(original)"
+                print("    %s: %s" % (input_name, assigned))
             return
 
         self.prepare_upload(files)
-
-        # Get the path of each input file
-        all_input_files = {}
-        for run in runs:
-            all_input_files.update(run['input_files'])  # bad
 
         try:
             # Upload files
@@ -188,7 +180,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 try:
-                    input_path = all_input_files[input_name]
+                    input_path = input_files[input_name]
                 except KeyError:
                     logging.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
@@ -222,12 +214,10 @@ class FileUploader(object):
         finally:
             self.finalize()
 
-    def get_runs_from_config(self):
-        # Loads config
-        runs, packages, other_files = reprounzip.common.load_config(
+    def get_config(self):
+        return reprounzip.common.load_config(
                 self.target / 'config.yml',
                 canonical=True)
-        return runs
 
     def prepare_upload(self, files):
         pass
@@ -256,24 +246,16 @@ class FileDownloader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(download_files=len(files))
-        runs = self.get_runs_from_config()
+        output_files = self.get_config().output_files
 
         # No argument: list all the output files and exit
         if not files:
             print("Output files:")
-            for i, run in enumerate(runs):
-                if len(runs) > 1:
-                    print("  Run %d:" % i)
-                for output_name in run['output_files']:  # bad
-                    print("    %s" % output_name)
+            for output_name in output_files:
+                print("    %s" % output_name)
             return
 
         self.prepare_download(files)
-
-        # Get the path of each output file
-        all_output_files = {}
-        for run in runs:
-            all_output_files.update(run['output_files'])  # bad
 
         try:
             # Download files
@@ -286,7 +268,7 @@ class FileDownloader(object):
                 output_name, local_path = filespec_split
 
                 try:
-                    remote_path = all_output_files[output_name]
+                    remote_path = output_files[output_name]
                 except KeyError:
                     logging.critical("Invalid output file: %r", output_name)
                     sys.exit(1)
@@ -299,12 +281,10 @@ class FileDownloader(object):
         finally:
             self.finalize()
 
-    def get_runs_from_config(self):
-        # Loads config
-        runs, packages, other_files = reprounzip.common.load_config(
+    def get_config(self):
+        return reprounzip.common.load_config(
                 self.target / 'config.yml',
                 canonical=True)
-        return runs
 
     def prepare_download(self, files):
         pass
