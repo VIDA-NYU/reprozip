@@ -14,8 +14,9 @@ sudo apt-get install -y slirp lxc aufs-tools cgroup-lite
 # sudo sh -c "wget -qO- https://get.docker.io/gpg | apt-key add -"
 # sudo sh -c "echo deb http://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
 sudo mkdir -p /var/lib/docker
-wget http://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.4.1/lxc-docker-1.4.1_1.4.1_amd64.deb
-sudo dpkg -i lxc-docker-1.4.1_1.4.1_amd64.deb
+wget https://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.4.1/lxc-docker-1.4.1_1.4.1_amd64.deb && \
+  sudo dpkg -i lxc-docker-1.4.1_1.4.1_amd64.deb && \
+  rm -f lxc-docker-1.4.1_1.4.1_amd64.deb
 
 # Install fig
 sudo curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` -o /usr/local/bin/fig
