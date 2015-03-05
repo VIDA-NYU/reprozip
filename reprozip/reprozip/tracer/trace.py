@@ -444,7 +444,7 @@ def label_files(runs, files_list, kind):
                     runs_with_file[p] = run_nb, arg_nb
                 elif runs_with_file[p] is not None:
                     runs_with_file[p] = None
-            nb_file_args.append(nb_files)
+        nb_file_args.append(nb_files)
 
     file_names = {}
 
@@ -463,7 +463,8 @@ def label_files(runs, files_list, kind):
                 # Argument number, if there are more than one file arguments
                 if nb_file_args[run_nb] > 1:
                     parts.append(arg_nb)
-                file_names[fi] = make_unique('arg%s' % '_'.join(parts))
+                file_names[fi] = make_unique(
+                        'arg%s' % '_'.join('%s' % s for s in parts))
             else:
                 file_names[fi] = make_unique('arg_%s' % fi.unicodename)
         else:

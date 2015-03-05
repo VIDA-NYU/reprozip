@@ -9,6 +9,7 @@ from rpaths import Path
 import sys
 import unittest
 
+from reprozip.tracer.trace import UniqueNames, label_files
 from reprozip.utils import make_dir_writable
 
 
@@ -100,3 +101,27 @@ class TestReprozip(unittest.TestCase):
         finally:
             sys.argv = old_argv
             reprozip.main.testrun, reprozip.main.setup_logging = old_funcs
+
+
+class TestNames(unittest.TestCase):
+    def test_uniquenames(self):
+        """Tests UniqueNames."""
+        u = UniqueNames()
+        self.assertEqual(u('test'), 'test')
+        self.assertEqual(u('test'), 'test_2')
+        self.assertEqual(u('test'), 'test_3')
+        self.assertEqual(u('test_2'), 'test_2_2')
+        self.assertEqual(u('test_'), 'test_')
+        self.assertEqual(u('test_'), 'test__2')
+
+    def test_label_files(self):
+        """Tests input/output file labelling."""
+        wd = Path('/fakeworkingdir')
+        self.assertEqual(
+                label_files(
+                    [{'argv': ['aa', 'bb.txt'], 'workingdir': wd}],
+                    [[wd / 'aa', Path('/other/cc.bin'), wd / 'bb.txt']],
+                    'input'),
+                {'arg0': wd / 'aa',
+                 'cc.bin': Path('/other/cc.bin'),
+                 'arg1': wd / 'bb.txt'})
