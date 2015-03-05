@@ -27,8 +27,8 @@ import tarfile
 from reprounzip.common import Package, load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
-    CantFindInstaller, composite_action, target_must_exist, make_unique_name, \
-    shell_escape, select_installer, busybox_url, join_root, \
+    UsageError, CantFindInstaller, composite_action, target_must_exist, \
+    make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, download_file
@@ -93,7 +93,7 @@ def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if dct['unpacker'] != 'docker':
-        raise ValueError("Wrong unpacker used: %s != docker" % dct['unpacker'])
+        raise UsageError("Wrong unpacker used: %s != docker" % dct['unpacker'])
     return dct
 
 

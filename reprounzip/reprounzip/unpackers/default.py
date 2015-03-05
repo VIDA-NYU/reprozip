@@ -30,8 +30,8 @@ import tarfile
 from reprounzip.common import load_config as load_config_file, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
-    COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, shell_escape, \
-    load_config, select_installer, busybox_url, join_root, \
+    COMPAT_OK, COMPAT_NO, UsageError, CantFindInstaller, target_must_exist, \
+    shell_escape, load_config, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
@@ -98,7 +98,7 @@ def read_dict(filename, type_):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
-        raise ValueError("Wrong unpacker used: %s != %s" % (dct['unpacker'],
+        raise UsageError("Wrong unpacker used: %s != %s" % (dct['unpacker'],
                                                             type_))
     return dct
 
