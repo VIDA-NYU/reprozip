@@ -164,7 +164,7 @@ class FileUploader(object):
                     print("  Run %d:" % i)
                 for input_name in run['input_files']:
                     if self.input_files.get(input_name) is not None:
-                        assigned = PosixPath(self.input_files[input_name])
+                        assigned = self.input_files[input_name]
                     else:
                         assigned = "(original)"
                     print("    %s: %s" % (input_name, assigned))
@@ -188,7 +188,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 try:
-                    input_path = PosixPath(all_input_files[input_name])
+                    input_path = all_input_files[input_name]
                 except KeyError:
                     logging.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
@@ -286,7 +286,7 @@ class FileDownloader(object):
                 output_name, local_path = filespec_split
 
                 try:
-                    remote_path = PosixPath(all_output_files[output_name])
+                    remote_path = all_output_files[output_name]
                 except KeyError:
                     logging.critical("Invalid output file: %r", output_name)
                     sys.exit(1)

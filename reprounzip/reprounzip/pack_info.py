@@ -16,7 +16,7 @@ from __future__ import absolute_import, unicode_literals
 import logging
 import pickle
 import platform
-from rpaths import PosixPath, Path
+from rpaths import Path
 import sys
 import tarfile
 
@@ -193,7 +193,7 @@ def showfiles(args):
             for input_name, path in iteritems(run['input_files']):
                 print("    %s (%s)" % (input_name, path))
                 if input_files.get(input_name) is not None:
-                    assigned = PosixPath(input_files[input_name])
+                    assigned = input_files[input_name]
                 else:
                     assigned = "(original)"
                 print("      %s" % assigned)

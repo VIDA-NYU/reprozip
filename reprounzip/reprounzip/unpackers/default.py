@@ -198,8 +198,8 @@ def directory_create(args):
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
-                inputtar.add(str(join_root(root, PosixPath(ifile))),
-                             str(PosixPath(ifile)))
+                inputtar.add(str(join_root(root, ifile)),
+                             str(ifile))
         inputtar.close()
 
     # Meta-data for reprounzip
@@ -491,8 +491,8 @@ def chroot_create(args):
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
         for run in runs:
             for ifile in itervalues(run['input_files']):
-                inputtar.add(str(join_root(root, PosixPath(ifile))),
-                             str(PosixPath(ifile)))
+                inputtar.add(str(join_root(root, ifile)),
+                             str(ifile))
         inputtar.close()
 
     # Meta-data for reprounzip

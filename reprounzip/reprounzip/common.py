@@ -30,8 +30,8 @@ from rpaths import PosixPath, Path
 import usagestats
 import yaml
 
-from .utils import stderr, CommonEqualityMixin, escape, hsize, unicode_, \
-    optional_return_type
+from .utils import iteritems, unicode_, stderr, escape, CommonEqualityMixin, \
+    hsize, optional_return_type
 
 
 FILE_READ = 0x01
@@ -165,6 +165,9 @@ def load_config(filename, canonical, File=File, Package=Package):
             input_files.update(run.get('input_files', ()))
             output_files.update(run.get('output_files', ()))
 
+    input_files = dict((n, PosixPath(p)) for n, p in iteritems(input_files))
+    output_files = dict((n, PosixPath(p)) for n, p in iteritems(output_files))
+
     # Adds 'input_files' and 'output_files' keys to runs
     for run in runs:
         run['input_files'] = input_files
@@ -244,18 +247,26 @@ version: "{format!s}"
                  "edit it" if canonical
                  else "# You might want to edit this file before running the "
                  "packer\n# See 'reprozip pack -h' for help")))
+        runs_no_files = [dict((k, v)
+                              for k, v in iteritems(run)
+                              if k not in ('input_files', 'output_files'))
+                         for run in runs]
 
         fp.write("runs:\n")
-        for i, run in enumerate(runs):
+        for i, run in enumerate(runs_no_files):
             fp.write("# Run %d\n" % i)
             fp.write(dump([run]).decode('utf-8'))
             fp.write("\n")
 
         if input_files:
+            input_files = dict((n, unicode_(p))
+                               for n, p in iteritems(input_files))
             input_files = dump({'input_files': input_files}).decode('utf-8')
         else:
             input_files = 'input_files:\n'
         if output_files:
+            output_files = dict((n, unicode_(p))
+                                for n, p in iteritems(output_files))
             output_files = dump({'output_files': output_files}).decode('utf-8')
         else:
             output_files = 'output_files:\n'

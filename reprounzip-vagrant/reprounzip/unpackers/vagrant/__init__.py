@@ -466,7 +466,7 @@ class SSHUploader(FileUploader):
     def upload_file(self, local_path, input_path):
         if self.use_chroot:
             remote_path = join_root(PosixPath('/experimentroot'),
-                                    PosixPath(input_path))
+                                    input_path)
         else:
             remote_path = input_path
 

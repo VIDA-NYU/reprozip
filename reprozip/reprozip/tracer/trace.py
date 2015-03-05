@@ -414,7 +414,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
             while uniquelabel in input_files_dict:
                 i += 1
                 uniquelabel = '%s_%d' % (label, i)
-            input_files_dict[uniquelabel] = str(in_file)
+            input_files_dict[uniquelabel] = in_file
         # TODO : Note that right now, we keep as input files the ones that
         # don't appear on the command-line
 
@@ -436,7 +436,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
             while uniquelabel in output_files_dict:
                 i += 1
                 uniquelabel = '%s_%d' % (label, i)
-            output_files_dict[uniquelabel] = str(out_file)
+            output_files_dict[uniquelabel] = out_file
         # TODO : Note that right now, we keep as output files the ones that
         # don't appear on the command-line
 
