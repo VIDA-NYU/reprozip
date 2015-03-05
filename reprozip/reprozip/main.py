@@ -326,6 +326,7 @@ def main():
         args.func(args)
     except Exception as e:
         submit_usage_report(result=type(e).__name__)
+        raise
     else:
         submit_usage_report(result='success')
     sys.exit(0)
