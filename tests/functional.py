@@ -229,43 +229,45 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Delete chroot
     check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
 
-    if not Path('/vagrant').exists():
-        check_call(['sudo', 'sh', '-c', 'mkdir /vagrant; chmod 777 /vagrant'])
+    if not (tests / 'vagrant').exists():
+        check_call(['sudo', 'sh', '-c',
+                    'mkdir %(d)s; chmod 777 %(d)s' % {'d': tests / 'vagrant'}])
 
     # Unpack Vagrant-chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot', 'simple.rpz',
-                       '/vagrant/simplevagrantchroot'])
+                       (tests / 'vagrant/simplevagrantchroot').path])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
         if run_vagrant:
             check_call(rpuz + ['vagrant', 'run', '--no-stdin',
-                               '/vagrant/simplevagrantchroot'])
+                               (tests / 'vagrant/simplevagrantchroot').path])
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
-                               '/vagrant/simplevagrantchroot'])
+                               (tests / 'vagrant/simplevagrantchroot').path])
         elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        if Path('/vagrant/simplevagrantchroot').exists():
-            Path('/vagrant/simplevagrantchroot').rmtree()
+        if (tests / 'vagrant/simplevagrantchroot').exists():
+            (tests / 'vagrant/simplevagrantchroot').rmtree()
     # Unpack Vagrant without chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
-                       '/vagrant/simplevagrant'])
+                       (tests / 'vagrant/simplevagrant').path])
     print("\nVagrant project set up in simplevagrant")
     try:
         if run_vagrant:
             check_call(rpuz + ['vagrant', 'run', '--no-stdin',
-                               '/vagrant/simplevagrant'])
+                               (tests / 'vagrant/simplevagrant').path])
             # Destroy
-            check_call(rpuz + ['vagrant', 'destroy', '/vagrant/simplevagrant'])
+            check_call(rpuz + ['vagrant', 'destroy',
+                               (tests / 'vagrant/simplevagrant').path])
         elif interactive:
             print("Test and press enter")
             sys.stdin.readline()
     finally:
-        if Path('/vagrant/simplevagrant').exists():
-            Path('/vagrant/simplevagrant').rmtree()
+        if (tests / 'vagrant/simplevagrant').exists():
+            (tests / 'vagrant/simplevagrant').rmtree()
 
     # Unpack Docker
     check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
