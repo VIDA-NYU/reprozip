@@ -162,16 +162,11 @@ def load_config(filename, canonical, File=File, Package=Package):
     # reprozip < 0.7 compatibility: read input_files and output_files from runs
     if not ('input_files' in config or 'output_files' in config):
         for run in runs:
-            input_files.update(run.get('input_files', ()))
-            output_files.update(run.get('output_files', ()))
+            input_files.update(run.pop('input_files', ()))
+            output_files.update(run.pop('output_files', ()))
 
     input_files = dict((n, PosixPath(p)) for n, p in iteritems(input_files))
     output_files = dict((n, PosixPath(p)) for n, p in iteritems(output_files))
-
-    # Adds 'input_files' and 'output_files' keys to runs
-    for run in runs:
-        run['input_files'] = input_files
-        run['output_files'] = output_files
 
     record_usage_package(runs, packages, other_files,
                          input_files, output_files,
@@ -247,13 +242,9 @@ version: "{format!s}"
                  "edit it" if canonical
                  else "# You might want to edit this file before running the "
                  "packer\n# See 'reprozip pack -h' for help")))
-        runs_no_files = [dict((k, v)
-                              for k, v in iteritems(run)
-                              if k not in ('input_files', 'output_files'))
-                         for run in runs]
 
         fp.write("runs:\n")
-        for i, run in enumerate(runs_no_files):
+        for i, run in enumerate(runs):
             fp.write("# Run %d\n" % i)
             fp.write(dump([run]).decode('utf-8'))
             fp.write("\n")
