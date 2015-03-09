@@ -72,7 +72,7 @@ def hash_experiment_run(run):
     return base64.b64encode(h.digest(), b'@$')
 
 
-def do_vistrails(target):
+def do_vistrails(target, pack=None, **kwargs):
     """Create a VisTrails workflow that runs the experiment.
 
     This is called from signals after an experiment has been setup by any
