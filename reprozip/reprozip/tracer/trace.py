@@ -224,7 +224,7 @@ def list_directories(conn):
             WHERE mode = ? OR mode = ?
             ''',
             (FILE_WDIR, FILE_WRITE))
-    executed_files = ((Path(n), m) for n, m in executed_files)
+    executed_files = ((Path(n).resolve(), m) for n, m in executed_files)
     # If WDIR, the name is a folder that was used as working directory
     # If WRITE, the name is a file that was written to; its directory must
     # exist
