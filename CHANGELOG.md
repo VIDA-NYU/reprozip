@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.6.2 (???)
+-----------
+
+Bugfixes:
+* Fixes installation on Python 3 with 7-bit locale
+* Fixes reprozip not showing traceback on exception
+* Fixes bug with multiple runs (`trace --continue`)
+
 0.6.1 (2015-02-17)
 ------------------
 
