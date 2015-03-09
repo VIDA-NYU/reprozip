@@ -89,6 +89,7 @@ int db_init(const char *filename)
             "    timestamp INTEGER NOT NULL,"
             "    exitcode INTEGER"
             "    );",
+            "CREATE INDEX proc_parent_idx ON processes(parent);",
             "CREATE TABLE opened_files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    name TEXT NOT NULL,"
@@ -97,6 +98,7 @@ int db_init(const char *filename)
             "    is_directory BOOLEAN NOT NULL,"
             "    process INTEGER NOT NULL"
             "    );",
+            "CREATE INDEX open_proc_idx ON opened_files(process);",
             "CREATE TABLE executed_files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    name TEXT NOT NULL,"
@@ -106,6 +108,7 @@ int db_init(const char *filename)
             "    envp TEXT NOT NULL,"
             "    workingdir TEXT NOT NULL"
             "    );",
+            "CREATE INDEX exec_proc_idx ON executed_files(process);",
         };
         size_t i;
         for(i = 0; i < count(sql); ++i)
