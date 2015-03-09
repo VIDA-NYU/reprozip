@@ -1,0 +1,82 @@
+aptitude install libsqlite3-dev python2.7-dev python-virtualenv
+
+
+https://dev.mysql.com/doc/employee/en/index.html
+
+
++---------------------+
+| Tables_in_employees |
++---------------------+
+| departments         |
+| dept_emp            |
+| dept_manager        |
+| employees           |
+| salaries            |
+| titles              |
++---------------------+
+
+
+(departments.sql)
+
+SELECT departments.dept_name, COUNT(employees.emp_no)
+FROM departments
+LEFT OUTER JOIN dept_emp ON dept_emp.dept_no = departments.dept_no
+INNER JOIN employees ON employees.emp_no = dept_emp.EMP_NO
+GROUP BY departments.dept_no;
+
+
+(entered interactively)
+
+SELECT last_name, COUNT(emp_no) FROM employees
+GROUP BY last_name
+ORDER BY COUNT(emp_no) DESC LIMIT 20;
+
+
+reprozip trace /bin/sh -c "mysql -t --user=rpz --password=tagada employees < departments.sql"
+
+
+[REPROZIP] 20:01:37.985 WARNING: [17100] process connected to <unknown destination, sa_family=1>
+
+
+#!/bin/sh
+
+/usr/bin/mysqld_safe &
+for i in $(seq 1 30); do
+    sleep 1
+    if mysqladmin ping >/dev/null 2>&1; then exit 0; fi
+done
+exit 1
+
+
+#!/bin/sh
+
+mysqladmin -u root --password=tagada shutdown
+
+
+sudo venv27/bin/reprozip trace /bin/sh -c "sh start_mysql.sh; mysql -t --user=rpz --password=tagada employees < departments.sql; sh stop_mysql.sh"
+sudo venv27/bin/reprozip trace --continue /bin/sh -c "sh start_mysql.sh; mysql -t --user=rpz --password=tagada employees; sh stop_mysql.sh"
+
+
+set input files: first execution has 'departments.sql', name it query; remove others
+
+add additional_pattern:
+  - /var/lib/mysql/**
+
+
+reprozip pack
+
+
+reprounzip info
+
+
+reprounzip setup...
+
+notice that data is missing
+
+
+add additional_pattern:
+  - /var/lib/mysql/**
+
+reprozip pack
+
+TODO: replace query input
