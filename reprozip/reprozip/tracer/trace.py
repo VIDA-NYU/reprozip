@@ -224,7 +224,7 @@ def list_directories(conn):
             WHERE mode = ? OR mode = ?
             ''',
             (FILE_WDIR, FILE_WRITE))
-    executed_files = ((Path(n), m) for n, m in executed_files)
+    executed_files = ((Path(n).resolve(), m) for n, m in executed_files)
     # If WDIR, the name is a folder that was used as working directory
     # If WRITE, the name is a file that was written to; its directory must
     # exist
@@ -326,37 +326,51 @@ def write_configuration(directory, sort_packages, overwrite=False):
     distribution = platform.linux_distribution()[0:2]
     oldconfig = not overwrite and config.exists()
     cur = conn.cursor()
-    if oldconfig:
+    if not oldconfig:
+        runs = []
+        # This gets all the top-level processes (p.parent ISNULL) and the first
+        # executed file for that process (sorting by ids, which are
+        # chronological)
+        executions = cur.execute(
+                '''
+                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+                FROM processes p
+                JOIN executed_files e ON e.id=(
+                    SELECT id FROM executed_files e2
+                    WHERE e2.process=p.id
+                    ORDER BY e2.id
+                    LIMIT 1
+                )
+                WHERE p.parent ISNULL;
+                ''')
+    else:
         # Loads in previous config
         runs, oldpkgs, oldfiles, patterns = load_config(config,
                                                         canonical=False,
                                                         File=TracedFile)
         # Here, additional patterns are discarded
 
+        # Same query as previous block but only gets last process
         executions = cur.execute(
                 '''
                 SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
-                FROM executed_files e
-                INNER JOIN processes p on p.id=e.id
+                FROM processes p
+                JOIN executed_files e ON e.id=(
+                    SELECT id FROM executed_files e2
+                    WHERE e2.process=p.id
+                    ORDER BY e2.id
+                    LIMIT 1
+                )
                 WHERE p.parent ISNULL
                 ORDER BY p.id DESC
                 LIMIT 1;
                 ''')
         inputs = inputs[-1:]
+        outputs = outputs[-1:]
 
         files, packages = merge_files(files, packages,
                                       oldfiles,
                                       oldpkgs)
-    else:
-        runs = []
-        executions = cur.execute(
-                '''
-                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
-                FROM executed_files e
-                INNER JOIN processes p on p.id=e.id
-                WHERE p.parent ISNULL
-                ORDER BY p.id;
-                ''')
     for ((r_name, r_argv, r_envp, r_workingdir, r_exitcode),
             input_files, output_files) in izip(executions, inputs, outputs):
         # Decodes command-line
