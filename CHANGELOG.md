@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.6.2 (???)
------------
+0.6.2 (2015-03-16)
+------------------
 
 Bugfixes:
 * Fixes installation on Python 3 with 7-bit locale
