@@ -22,6 +22,10 @@ wget https://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.4.1/lxc-docker-1.4.1_
 sudo curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` -o /usr/local/bin/fig
 sudo chmod +x /usr/local/bin/fig
 
+# Install docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.1.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
 # Download binary
 curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
 curl -sLo linux-init https://github.com/moul/travis-docker/raw/master/linux-init

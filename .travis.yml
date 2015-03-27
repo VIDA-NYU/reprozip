@@ -5,4 +5,6 @@ script:
 - ./run docker run ubuntu /bin/echo hello world
 - ./run fig build test
 - ./run "fig up test && echo Yeah"
+- ./run docker-compose build test
+- ./run "docker-compose up test && echo Yeah"
 #- ./run fig run test /bin/echo hello world
