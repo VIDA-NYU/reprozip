@@ -3,6 +3,8 @@ travis-docker [![Build Status](https://travis-ci.org/moul/travis-docker.svg?bran
 
 Running Docker in a Travis CI build
 
+Inspired by https://github.com/lukecyca/travis-docker-example
+
 **.travis.yml** examples
 ------------------------
 
@@ -11,25 +13,14 @@ Run any command inside the pseudo-linux
     install:
     - curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
     script:
-    - ./run /bin/bash -c 'fig up -d blog; docker ps; date'
+    - ./run docker run busybox ls -la
+    - ./run docker run busybox ls -la /non-existing-dir
 
----
+Chain commands
 
-Run docker
-
-    install:
-    - curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
+    ...
     script:
-    - PATH="${TRAVIS_BUILD_DIR}:${PATH}" docker run ubuntu /bin/echo Hello World
-
----
-
-Run fig
-
-    install:
-    - curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
-    script:
-    - PATH="${TRAVIS_BUILD_DIR}:${PATH}" fig run hello /bin/bash -c 'echo OK'
+    - ./run /bin/bash -c 'docker-compose up -d blog && docker ps && date'
 
 License
 =======
