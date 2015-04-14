@@ -88,6 +88,7 @@ def generate(target, directory, all_forks=False):
         conn = sqlite3.connect(str(database))
     else:
         conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
 
     # This is a bit weird. We need to iterate on all types of events at the
     # same time, ordering by timestamp, so we decorate-sort-undecorate
