@@ -1,5 +1,4 @@
-travis-docker [![Build Status](https://travis-ci.org/moul/travis-docker.svg?branch=master)](https://travis-ci.org/moul/travis-docker)
-=============
+# travis-docker [![Build Status](https://travis-ci.org/moul/travis-docker.svg?branch=master)](https://travis-ci.org/moul/travis-docker)
 
 Running Docker in a Travis CI build.
 
@@ -7,10 +6,8 @@ Running Docker in a Travis CI build.
 
 Inspired by [lukecyca/travis-docker-example](https://github.com/lukecyca/travis-docker-example)
 
-**.travis.yml** examples
-------------------------
 
-Run any command inside the pseudo-linux
+## *.travis.yml* examples
 
     install:
     - curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
@@ -19,8 +16,14 @@ Run any command inside the pseudo-linux
     - ./run docker run busybox ls -la /non-existing-dir
     - ./run 'docker-compose up -d blog && docker ps && date'
     - ./run 'apt-get install git && git clone && docker -f ...'
+    - ./run 'docker build -t test . && docker run test'
 
-License
-=======
+
+## Limitations
+
+1. `/var/lib/docker` is not persistent across `./run` calls, but you can chain command calls in a unique `./run` or use `docker-compose`
+
+
+## License
 
 MIT
