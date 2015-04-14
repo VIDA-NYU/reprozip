@@ -11,13 +11,14 @@ rm -f ${WORKDIR}/.exit_code
 
 save_and_shutdown() {
     # Default exit code
-    test -f ${WORKDIR}/.exit_code
     if [ ! -f ${WORKDIR}/.exit_code ]; then
 	echo 42 > ${WORKDIR}/.exit_code
     fi
 
     # save built for host result
     # force clean shutdown
+    echo KILLING
+    kill -9 $(jobs -p)
     halt -f
 }
 
@@ -75,5 +76,6 @@ sleep 5
 
 # Call command
 command=$(cat ${WORKDIR}/.command)
+set +e
 /bin/bash -ce "${command}"
 echo $? > ${WORKDIR}/.exit_code
