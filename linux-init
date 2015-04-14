@@ -3,14 +3,22 @@
 # Exit on first error
 set -e
 
-# Print env
-env
-cat /proc/cmdline
+# Debug
+# echo "Env: $(env)"
+# echo "Cmdline: $(cat /proc/cmdline)"
+
+rm -f ${WORKDIR}/.exit_code
 
 save_and_shutdown() {
-  # save built for host result
-  # force clean shutdown
-  halt -f
+    # Default exit code
+    test -f ${WORKDIR}/.exit_code
+    if [ ! -f ${WORKDIR}/.exit_code ]; then
+	echo 42 > ${WORKDIR}/.exit_code
+    fi
+
+    # save built for host result
+    # force clean shutdown
+    halt -f
 }
 
 # make sure we shut down cleanly
@@ -67,5 +75,5 @@ sleep 5
 
 # Call command
 command=$(cat ${WORKDIR}/.command)
-/bin/bash -c "${command}"
-echo $? > .exit_code
+/bin/bash -ce "${command}"
+echo $? > ${WORKDIR}/.exit_code
