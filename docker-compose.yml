@@ -1,3 +1,0 @@
-test:
-  image: busybox
-  command: /bin/sh -c 'sleep 2; echo "Hello World."'
