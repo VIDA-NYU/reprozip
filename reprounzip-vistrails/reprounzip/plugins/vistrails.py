@@ -53,6 +53,12 @@ class SHA1(object):
         return self._hash.hexdigest()
 
 
+def escape_xml(s):
+    """Escapes for XML.
+    """
+    return s.replace('&', '&amp;').replace('"', '&quot;')
+
+
 def hash_experiment_run(run):
     """Generates a unique id from a single run of an experiment.
 
@@ -94,8 +100,8 @@ def do_vistrails(target):
                 vistrail = vistrail.format(
                         date='2014-11-12 15:31:18',
                         unpacker=unpacker,
-                        directory=escape(str(target.absolute())),
-                        cmdline=escape(cmdline),
+                        directory=escape_xml(str(target.absolute())),
+                        cmdline=escape_xml(cmdline),
                         module_name=module_name,
                         run=i)
                 fp.write(vistrail)
