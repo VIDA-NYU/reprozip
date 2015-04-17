@@ -76,7 +76,7 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
 # Start docker daemon
 docker -d &
-sleep 5
+while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 
 
 # Print docker version
