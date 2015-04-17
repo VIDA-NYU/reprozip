@@ -59,6 +59,7 @@ mount -t tmpfs none /var/lib/docker
 # enable ipv4 forwarding for docker
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
+
 # configure networking
 ip addr add 127.0.0.1 dev lo
 ip link set lo up
@@ -66,14 +67,22 @@ ip addr add 10.1.1.1/24 dev eth0
 ip link set eth0 up
 ip route add default via 10.1.1.254
 
+
 # configure dns (google public)
 mkdir -p /run/resolvconf
 echo 'nameserver 8.8.8.8' > /run/resolvconf/resolv.conf
 mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
+
 # Start docker daemon
 docker -d &
-sleep 5
+while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
+
+
+# Print docker version
+docker info
+docker version
+
 
 # Call command
 command=$(cat ${WORKDIR}/.command)
