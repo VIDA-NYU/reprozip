@@ -348,7 +348,7 @@ def docker_run(args):
 
     # Get exit status from "docker inspect"
     out = subprocess.check_output(['docker', 'inspect', container])
-    outjson = json.loads(out)
+    outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
         logging.error("Invalid container state after execution:\n%s",
