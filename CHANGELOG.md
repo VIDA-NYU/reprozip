@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.6.3 (???)
+-----------
+
+Bugfixes:
+* Fixes reprounzip-vistrails failing because of reporting
+* Fixes invalid escaping in VisTrails XML workflow
+
 0.6.2 (2015-03-16)
 ------------------
 
