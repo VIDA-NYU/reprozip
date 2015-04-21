@@ -75,6 +75,83 @@ def hash_experiment_run(run):
     return base64.b64encode(h.digest(), b'@$')
 
 
+def identify_input_output_files(config, database):
+    """Returns input/output files that are used by each run.
+
+    The input/output file lines are stored in the configuration without
+    association to a specific run. To decide the ports we want to show on the
+    modules, we go over the trace database to build the set of actually used
+    input/output files of each run.
+
+    :param config: Experiment's configuration, from which the runs are read
+    :param database: Path to the extracted trace database
+    :returns: ``inputs, outputs``, each a list of sets of file paths used by
+    the run with the same index
+    """
+    # On PY3, connect() only accepts unicode
+    if PY3:
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+
+    query_files = (set(itervalues(config.input_files)) |
+                   set(itervalues(config.output_files)))
+
+    # Apologies for this
+    files_placeholders = ', '.join(['?'] * len(query_files))
+    query = '''
+            SELECT id AS p_id, NULL AS name, NULL as mode, timestamp
+            FROM processes
+            WHERE parent IS NULL
+            UNION ALL
+            SELECT NULL AS p_id, name, mode, timestamp
+            FROM (
+                SELECT name, mode, timestamp
+                FROM opened_files
+                UNION ALL
+                SELECT name, {read} AS mode, timestamp
+                FROM executed_files
+            )
+            WHERE name in ({set})
+            ORDER BY timestamp
+            '''.format(read=FILE_READ,
+                       set=files_placeholders)
+    cur = conn.cursor()
+    rows = cur.execute(query, [str(f) for f in query_files])
+
+    inputs, outputs = [], []
+    cur_inputs, cur_outputs = set(), set()
+    row = next(rows)
+    assert row[0] is not None
+    for r_p_id, r_file, r_mode, r_timestamp in rows:
+        # New process
+        if r_p_id is not None:
+            inputs.append(cur_inputs)
+            outputs.append(cur_outputs)
+        # File for current process
+        else:
+            if r_mode == FILE_READ:
+                cur_inputs.add(r_file)
+            elif r_mode == FILE_WRITE:
+                cur_outputs.add(r_file)
+    inputs.append(cur_inputs)
+    outputs.append(cur_outputs)
+    conn.close()
+
+    if len(inputs) != len(config.runs):
+        logging.error("Found %d runs in trace database, and %d runs in "
+                      "configuration file. What is going on?",
+                      len(inputs), len(config.runs))
+        if len(inputs) < len(config.runs):
+            n = len(config.runs) - len(inputs)
+            fill = [set()] * n
+            inputs += fill
+            outputs += fill
+
+    return inputs, outputs
+
+
 def do_vistrails(target, pack=None, **kwargs):
     """Create a VisTrails workflow that runs the experiment.
 
@@ -95,66 +172,7 @@ def do_vistrails(target, pack=None, **kwargs):
     try:
         tar.extract(member, str(tmp))
         database = tmp / 'trace.sqlite3'
-        # On PY3, connect() only accepts unicode
-        if PY3:
-            conn = sqlite3.connect(str(database))
-        else:
-            conn = sqlite3.connect(database.path)
-        conn.row_factory = sqlite3.Row
-
-        query_files = (set(itervalues(config.input_files)) |
-                       set(itervalues(config.output_files)))
-
-        # Apologies for this
-        files_placeholders = ', '.join(['?'] * len(query_files))
-        query = '''
-                SELECT id AS p_id, NULL AS name, NULL as mode, timestamp
-                FROM processes
-                WHERE parent IS NULL
-                UNION ALL
-                SELECT NULL AS p_id, name, mode, timestamp
-                FROM (
-                    SELECT name, mode, timestamp
-                    FROM opened_files
-                    UNION ALL
-                    SELECT name, {read} AS mode, timestamp
-                    FROM executed_files
-                )
-                WHERE name in ({set})
-                ORDER BY timestamp
-                '''.format(read=FILE_READ,
-                           set=files_placeholders)
-        cur = conn.cursor()
-        rows = cur.execute(query, [str(f) for f in query_files])
-
-        inputs, outputs = [], []
-        cur_inputs, cur_outputs = set(), set()
-        row = next(rows)
-        assert row[0] is not None
-        for r_p_id, r_file, r_mode, r_timestamp in rows:
-            # New process
-            if r_p_id is not None:
-                inputs.append(cur_inputs)
-                outputs.append(cur_outputs)
-            # File for current process
-            else:
-                if r_mode == FILE_READ:
-                    cur_inputs.add(r_file)
-                elif r_mode == FILE_WRITE:
-                    cur_outputs.add(r_file)
-        inputs.append(cur_inputs)
-        outputs.append(cur_outputs)
-        conn.close()
-
-        if len(inputs) != len(config.runs):
-            logging.error("Found %d runs in trace database, and %d runs in "
-                          "configuration file. What is going on?",
-                          len(inputs), len(config.runs))
-            if len(inputs) < len(config.runs):
-                n = len(config.runs) - len(inputs)
-                fill = [set()] * n
-                inputs += fill
-                outputs += fill
+        inputs, outputs = identify_input_output_files(config, database)
     finally:
         tmp.rmtree()
 
