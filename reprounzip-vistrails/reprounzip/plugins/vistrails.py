@@ -62,16 +62,16 @@ def escape_xml(s):
     return s.replace('&', '&amp;').replace('"', '&quot;')
 
 
-def hash_experiment_run(run):
+def hash_experiment_run(inputs, used_inputs, outputs, used_outputs):
     """Generates a unique id from a single run of an experiment.
 
     This is used to name the CLTools modules.
     """
     h = SHA1()
-    for input_name in sorted(run['input_files']):  # bad
-        h.update('input %s\n' % input_name)
-    for output_name in sorted(run['output_files']):  # bad
-        h.update('output %s\n' % output_name)
+    for prefix, names in [('input', inputs), ('req_input', used_inputs),
+                          ('output', outputs), ('req_output', used_outputs)]:
+        for name in names:
+            h.update('%s %s\n' % (prefix, name))
     return base64.b64encode(h.digest(), b'@$')
 
 
@@ -212,7 +212,9 @@ def do_vistrails(target, pack=None, **kwargs):
 
 def write_cltools_module(run, config, dot_vistrails,
                          used_inputs, used_outputs):
-    module_name = 'reprounzip_%s' % hash_experiment_run(run)[:7]
+    module_name = 'reprounzip_%s' % hash_experiment_run(
+            config.input_files, used_inputs,
+            config.output_files, used_outputs)[:7]
 
     # Writes CLTools JSON definition
     (dot_vistrails / 'CLTools').mkdir(parents=True)
@@ -335,10 +337,7 @@ def run_from_vistrails():
 
     args = parser.parse_args()
 
-    runs, packages, other_files = load_config(
-            Path(args.directory) / 'config.yml',
-            canonical=True)
-    run = runs[int(args.run)]
+    config = load_config(Path(args.directory) / 'config.yml', canonical=True)
 
     python = sys.executable
     rpuz = [python, '-m', 'reprounzip.main', args.unpacker]
@@ -369,7 +368,7 @@ def run_from_vistrails():
         seen_input_names.add(input_name)
 
     # Resets the input files that were not given
-    for input_name in run['input_files']:  # bad
+    for input_name in config.input_files:
         if input_name not in seen_input_names:
             upload_command.append(':%s' % input_name)
 
