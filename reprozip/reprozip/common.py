@@ -365,7 +365,8 @@ def enable_usage_report(enable):
 def record_usage(**kwargs):
     """Records some info in the current usage report.
     """
-    _usage_report.note(kwargs)
+    if _usage_report is not None:
+        _usage_report.note(kwargs)
 
 
 def record_usage_package(runs, packages, other_files, pack_id=None):

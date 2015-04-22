@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.6.3 (???)
+-----------
+
+Bugfixes:
+* Fixes reprounzip-vistrails failing because of reporting
+* Fixes invalid escaping in VisTrails XML workflow
+* Fixes docker run failing to read Docker's JSON output on Python 3
+
 0.6.2 (2015-03-16)
 ------------------
 
