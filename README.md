@@ -11,7 +11,7 @@ Inspired by [lukecyca/travis-docker-example](https://github.com/lukecyca/travis-
 
 ```yaml
 install:
-- curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
+- curl -sLo - http://j.mp/install-travis-docker | sh -xe
 
 script:
 - ./run docker run busybox ls -la
