@@ -9,15 +9,17 @@ Inspired by [lukecyca/travis-docker-example](https://github.com/lukecyca/travis-
 
 ## *.travis.yml* examples
 
-    install:
-    - curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
-    script:
-    - ./run docker run busybox ls -la
-    - ./run docker run busybox ls -la /non-existing-dir
-    - ./run 'docker-compose up -d blog && docker ps && date'
-    - ./run 'apt-get install git && git clone && docker -f ...'
-    - ./run 'docker build -t test . && docker run test'
+```yaml
+install:
+- curl -sLo - https://github.com/moul/travis-docker/raw/master/install.sh | sh -xe
 
+script:
+- ./run docker run busybox ls -la
+- ./run docker run busybox ls -la /non-existing-dir
+- ./run 'docker-compose up -d blog && docker ps && date'
+- ./run 'apt-get install git && git clone && docker -f ...'
+- ./run 'docker build -t test . && docker run test'
+```
 
 ## Limitations
 
