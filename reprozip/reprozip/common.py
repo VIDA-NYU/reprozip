@@ -225,9 +225,14 @@ version: "{format!s}"
                  "edit it" if canonical
                  else "# You might want to edit this file before running the "
                  "packer\n# See 'reprozip pack -h' for help")))
-        fp.write(dump({'runs': runs}).decode('utf-8'))
-        fp.write("""\
 
+        fp.write("runs:\n")
+        for i, run in enumerate(runs):
+            fp.write("# Run %d\n" % i)
+            fp.write(dump([run]).decode('utf-8'))
+            fp.write("\n")
+
+        fp.write("""\
 # Files to pack
 # All the files below were used by the program; they will be included in the
 # generated package
