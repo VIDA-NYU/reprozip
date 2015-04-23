@@ -1,8 +1,6 @@
 #!/bin/sh
 
-run_lines(){
-    while read line; do echo "$line"; sh -c "$line" || exit $?; done
-}
+set -eux
 
 export REPROZIP_USAGE_STATS=off
 
@@ -15,14 +13,10 @@ in
         python tests
         ;;
     check_style)
-        run_lines<<'EOF'
         flake8 --ignore=E126,E731 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip
-EOF
         ;;
     check_shared)
-        run_lines<<'EOF'
         diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
-EOF
         ;;
 esac
