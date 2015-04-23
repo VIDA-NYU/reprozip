@@ -10,7 +10,7 @@ export LC_ALL=C
 
 case "$TEST_MODE"
 in
-    run_program|coverage_c)
+    run_program|coverage_c|coverage_py)
         if [ "$TEST_MODE" = "coverage_c" ]; then
             export CFLAGS="-fprofile-arcs -ftest-coverage"
         fi
@@ -29,16 +29,7 @@ EOF
         pip install 'git+https://github.com/remram44/usagestats.git#egg=usagestats'
         if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then pip install unittest2; fi
         if [ $TEST_MODE = "coverage_c" ]; then pip install cpp-coveralls; fi
-        pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails
-EOF
-        ;;
-    coverage_py)
-        run_lines<<'EOF'
-        sudo apt-get update -qq
-        sudo apt-get install -qq libc6-dev-i386 gcc-multilib
-        pip install 'git+https://github.com/remram44/rpaths.git#egg=rpaths'
-        pip install 'git+https://github.com/remram44/usagestats.git#egg=usagestats'
-        pip install coveralls
+        if [ $TEST_MODE = "coverage_py" ]; then pip install coveralls; fi
         pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails
 EOF
         ;;
