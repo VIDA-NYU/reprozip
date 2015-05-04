@@ -8,6 +8,11 @@ Bugfixes:
 * Fixes reprounzip-vistrails failing because of reporting
 * Fixes invalid escaping in VisTrails XML workflow
 * Fixes docker run failing to read Docker's JSON output on Python 3
+* Fixes mounting too many filesystems in chroot
+
+Features:
+* Adds Debian 8 'Jessie' to Vagrant boxes & Docker images
+* Adds Ubuntu 15.04 'Vivid' to Vagrant boxes & Docker images
 
 0.6.2 (2015-03-16)
 ------------------
