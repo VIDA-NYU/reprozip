@@ -506,11 +506,11 @@ def chroot_mount(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip', 'chroot')
 
-    for m in ('/dev', '/proc'):
+    for m in ('/dev', '/dev/pts', '/proc'):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
         logging.info("Mounting %s on %s...", m, d)
-        subprocess.check_call(['mount', '-o', 'rbind', m, str(d)])
+        subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
     write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
 

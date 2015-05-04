@@ -203,31 +203,33 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Unpack chroot
     check_call(sudo + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
                               'simple.rpz', 'simplechroot'])
-    # Run chroot
-    check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
-    output_in_chroot = join_root(Path('simplechroot/root'),
-                                 orig_output_location)
-    with output_in_chroot.open(encoding='utf-8') as fp:
-        assert fp.read().strip() == '42'
-    # Get output file
-    check_call(sudo + rpuz + ['chroot', 'download', 'simplechroot',
-                              'arg:output1.txt'])
-    with Path('output1.txt').open(encoding='utf-8') as fp:
-        assert fp.read().strip() == '42'
-    # Replace input file
-    check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
-                              '%s:arg' % (tests / 'simple_input2.txt')])
-    check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
-    # Run again
-    check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
-    output_in_chroot = join_root(Path('simplechroot/root'),
-                                 orig_output_location)
-    with output_in_chroot.open(encoding='utf-8') as fp:
-        assert fp.read().strip() == '36'
-    # Delete with wrong command (should fail)
-    assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
-    # Delete chroot
-    check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
+    try:
+        # Run chroot
+        check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
+        output_in_chroot = join_root(Path('simplechroot/root'),
+                                     orig_output_location)
+        with output_in_chroot.open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '42'
+        # Get output file
+        check_call(sudo + rpuz + ['chroot', 'download', 'simplechroot',
+                                  'arg:output1.txt'])
+        with Path('output1.txt').open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '42'
+        # Replace input file
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
+                                  '%s:arg' % (tests / 'simple_input2.txt')])
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
+        # Run again
+        check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
+        output_in_chroot = join_root(Path('simplechroot/root'),
+                                     orig_output_location)
+        with output_in_chroot.open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '36'
+        # Delete with wrong command (should fail)
+        assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
+    finally:
+        # Delete chroot
+        check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
 
     if not (tests / 'vagrant').exists():
         check_call(['sudo', 'sh', '-c',

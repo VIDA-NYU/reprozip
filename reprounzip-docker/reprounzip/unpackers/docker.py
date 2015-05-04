@@ -57,29 +57,33 @@ def select_image(runs):
             return 'ubuntu', 'ubuntu:12.04'
         elif version == '14.04':
             return 'ubuntu', 'ubuntu:14.04'
-        else:
-            if version != '14.10':
-                logging.warning("using Ubuntu 14.10 'Utopic' instead of '%s'",
-                                version)
+        elif version == '14.10':
             return 'ubuntu', 'ubuntu:14.10'
+        else:
+            if version != '15.04':
+                logging.warning("using Ubuntu 15.04 'Vivid' instead of '%s'",
+                                version)
+            return 'ubuntu', 'ubuntu:15.04'
 
     # Debian
     else:
         if distribution != 'debian':
             logging.warning("unsupported distribution %s, using Debian",
                             distribution)
-            version = '7'
+            version = '8'
 
-        if version == '6' or version.startswith('squeeze'):
+        if (version == '6' or version.startswith('6.') or
+                version.startswith('squeeze')):
             return 'debian', 'debian:squeeze'
-        elif version == '8' or version.startswith('jessie'):
-            return 'debian', 'debian:jessie'
-        else:
-            if (version != '7' and not version.startswith('7.') and
-                    not version.startswith('wheezy')):
-                logging.warning("using Debian 7 'Wheezy' instead of '%s'",
-                                version)
+        elif (version == '7' or version.startswith('7.') or
+                version.startswith('wheezy')):
             return 'debian', 'debian:wheezy'
+        else:
+            if (version != '8' and not version.startswith('8.') and
+                    not version.startswith('jessie')):
+                logging.warning("using Debian 8 'Jessie' instead of '%s'",
+                                version)
+            return 'debian', 'debian:jessie'
 
 
 def write_dict(filename, dct):

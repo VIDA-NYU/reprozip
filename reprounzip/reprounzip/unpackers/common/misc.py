@@ -78,12 +78,18 @@ def make_unique_name(prefix):
     return prefix + next(unique_names)
 
 
+safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                       "abcdefghijklmnopqrstuvwxyz"
+                       "0123456789"
+                       "-+=/:.,%_")
+
+
 def shell_escape(s):
     """Given bl"a, returns "bl\\"a".
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
-    if any(c in s for c in string.whitespace + '*$\\"\''):
+    if any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
