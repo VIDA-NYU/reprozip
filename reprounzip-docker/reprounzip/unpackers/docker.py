@@ -68,18 +68,20 @@ def select_image(runs):
         if distribution != 'debian':
             logging.warning("unsupported distribution %s, using Debian",
                             distribution)
-            version = '7'
+            version = '8'
 
-        if version == '6' or version.startswith('squeeze'):
+        if (version == '6' or version.startswith('6.') or
+                version.startswith('squeeze')):
             return 'debian', 'debian:squeeze'
-        elif version == '8' or version.startswith('jessie'):
-            return 'debian', 'debian:jessie'
-        else:
-            if (version != '7' and not version.startswith('7.') and
-                    not version.startswith('wheezy')):
-                logging.warning("using Debian 7 'Wheezy' instead of '%s'",
-                                version)
+        elif (version == '7' or version.startswith('7.') or
+                version.startswith('wheezy')):
             return 'debian', 'debian:wheezy'
+        else:
+            if (version != '8' and not version.startswith('8.') and
+                    not version.startswith('jessie')):
+                logging.warning("using Debian 8 'Jessie' instead of '%s'",
+                                version)
+            return 'debian', 'debian:jessie'
 
 
 def write_dict(filename, dct):
