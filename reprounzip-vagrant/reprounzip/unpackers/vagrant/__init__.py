@@ -77,16 +77,22 @@ def select_box(runs):
         if distribution != 'debian':
             logging.warning("unsupported distribution %s, using Debian",
                             distribution)
-            version = '7'
+            version = '8'
 
-        if (version != '7' and not version.startswith('7.') and
-                not version.startswith('wheezy')):
-            logging.warning("using Debian 7 'Wheezy' instead of '%s'", version)
+        if (version == '7' or version.startswith('7.') or
+                version.startswith('wheezy')):
+            if architecture == 'i686':
+                return 'debian', 'remram/debian-7-i386'
+            else:  # architecture == 'x86_64'
+                return 'debian', 'remram/debian-7-amd64'
+        if (version != '8' and not version.startswith('8.') and
+                not version.startswith('jessie')):
+            logging.warning("using Debian 8 'Jessie' instead of '%s'", version)
 
         if architecture == 'i686':
-            return 'debian', 'remram/debian-7-i386'
+            return 'debian', 'remram/debian-8-i386'
         else:  # architecture == 'x86_64':
-            return 'debian', 'remram/debian-7-amd64'
+            return 'debian', 'remram/debian-8-amd64'
 
 
 def write_dict(filename, dct):
