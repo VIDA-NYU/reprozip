@@ -252,7 +252,7 @@ class X11Handler(object):
                     continue
                 if (family, sockaddr[0]) in local_addresses:
                     local_possible = True
-                possible.append(family, sockaddr[0])
+                possible.append((family, sockaddr[0]))
             if local_possible:
                 possible = [(Xauth.FAMILY_LOCAL,
                              '/tmp/.X11-unix/X%d' % local_display)] + possible

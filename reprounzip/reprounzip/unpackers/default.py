@@ -838,7 +838,7 @@ def setup_directory(parser, **kwargs):
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
-                            help=("Enable X11 support (needs an X server)"))
+                            help="Enable X11 support (needs an X server)")
     parser_run.set_defaults(func=directory_run)
 
     # download
