@@ -31,7 +31,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+----------------------------------------------+
 | *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,       |
 |                              | a working C compiler [#pycrypton]_,          |
-|                              | `Vagrant <https://www.vagrantup.com/>`__,    |
+|                              | `Vagrant <https://www.vagrantup.com/>`__ at  |
+|                              | least version 1.1,                           |
 |                              | `VirtualBox <https://www.virtualbox.org/>`__ |
 +------------------------------+----------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__         |
