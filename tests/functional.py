@@ -197,7 +197,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
     # Delete with wrong command (should fail)
-    assert call(rpuz + ['chroot', 'destroy', 'simpledir']) != 0
+    p = subprocess.Popen(rpuz + ['chroot', 'destroy', 'simpledir'],
+                         stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    assert p.poll() != 0
+    stderr = stderr.splitlines()
+    assert b"Wrong unpacker used" in stderr[0]
+    assert stderr[1].startswith(b"usage: ")
     # Delete directory
     check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
@@ -226,7 +232,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         with output_in_chroot.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '36'
         # Delete with wrong command (should fail)
-        assert call(rpuz + ['directory', 'destroy', 'simplechroot']) != 0
+        p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
+                             stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        assert p.poll() != 0
+        stderr = stderr.splitlines()
+        assert b"Wrong unpacker used" in stderr[0]
+        assert stderr[1].startswith(b"usage:")
     finally:
         # Delete chroot
         check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
