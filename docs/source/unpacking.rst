@@ -52,7 +52,7 @@ Last, the section `Unpackers` shows which of the installed *reprounzip* unpacker
 
 `Compatible` lists the unpackers that can be used in the current environment, while `Incompatible` lists the unpackers that are not supported in the current environment. An additional `Unknown` list shows the installed unpackers that might not work.
 
-As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the :ref:`reprounzip-vagrant <unpack-vagrant>` plugin) is compatible, but :ref:`installpkgs <unpack-installpkgs>` is not; `vagrant` may also be listed under `Unknown` if the `vagrant` command is not found in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`_ is not installed).
+As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the :ref:`reprounzip-vagrant <unpack-vagrant>` plugin) is compatible, but :ref:`installpkgs <unpack-installpkgs>` is not; `vagrant` may also be listed under `Unknown` if the `vagrant` command is not found in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`__ is not installed).
 
 ..  _showfiles:
 
@@ -82,9 +82,9 @@ ReproZip also allows users to generate a *provenance graph* related to the exper
     $ reprounzip graph package.rpz graph-file.dot
     $ dot -Tpng graph-file.dot -o image.png
 
-where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`_ language.
+where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language.
 
-..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`_ related to sqlite3.
+..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 
 Unpackers
 =========
@@ -128,7 +128,7 @@ The `installpkgs` Unpacker: Installing Software Packages
 
 By default, ReproZip identifies if the current environment already has the required software packages for the experiment, then using the installed ones for reproduction. For the non-installed software packages, it uses the dependencies packed in the original environment and extracted under the experiment directory.
 
-Users may also let ReproZip try and install all the dependencies of the experiment on their machine by using the *installpkgs* unpacker (``reprounzip installpkgs``). This unpacker currently works for Debian and Debian-based operating systems only (e.g.: Ubuntu), and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`_ package manager to automatically install all the required software packages directly on the current machine, thus **interfering with your environment**.
+Users may also let ReproZip try and install all the dependencies of the experiment on their machine by using the *installpkgs* unpacker (``reprounzip installpkgs``). This unpacker currently works for Debian and Debian-based operating systems only (e.g.: Ubuntu), and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`__ package manager to automatically install all the required software packages directly on the current machine, thus **interfering with your environment**.
 
 To install the required dependencies, the following command should be used::
 
@@ -149,23 +149,23 @@ Users may use flag *y* or *assume-yes* to automatically confirm all the question
 The `vagrant` Unpacker: Building a Virtual Machine
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The *vagrant* unpacker (``reprounzip vagrant``) allows an experiment to be unpacked and reproduced using a virtual machine created through `Vagrant <https://www.vagrantup.com/>`_. Therefore, the experiment can be reproduced in any environment supported by this tool, i.e., Linux, Mac OS X, and Windows. Note that the plugin assumes that Vagrant is installed in the current environment.
+The *vagrant* unpacker (``reprounzip vagrant``) allows an experiment to be unpacked and reproduced using a virtual machine created through `Vagrant <https://www.vagrantup.com/>`__. Therefore, the experiment can be reproduced in any environment supported by this tool, i.e., Linux, Mac OS X, and Windows. Note that the plugin assumes that Vagrant is installed in the current environment.
 
 In addition to the commands listed in :ref:`unpacker-commands`, you can use ``suspend`` to save the virtual machine state to disk, and ``setup/start`` to restart a previously-created machine::
 
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
     
-..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`_).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`__).
 
 ..  _docker-plugin:
 
 The `docker` Unpacker: Building a Docker Container
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`_ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
+ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`__ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
 
-..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`_).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`__).
 
 ..  _unpacker-commands:
 
