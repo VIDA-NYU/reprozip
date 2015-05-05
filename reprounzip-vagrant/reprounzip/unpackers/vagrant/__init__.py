@@ -14,6 +14,7 @@ See http://www.vagrantup.com/
 from __future__ import unicode_literals
 
 import argparse
+from distutils.version import LooseVersion
 import logging
 import os
 import paramiko
@@ -26,7 +27,7 @@ import tarfile
 
 from reprounzip.common import load_config, record_usage
 from reprounzip import signals
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs
@@ -342,6 +343,8 @@ def vagrant_setup_start(args):
     target = Path(args.target[0])
     read_dict(target / '.reprounzip')
 
+    check_vagrant_version()
+
     logging.info("Calling 'vagrant up'...")
     try:
         retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
@@ -361,6 +364,8 @@ def vagrant_run(args):
     target = Path(args.target[0])
     use_chroot = read_dict(target / '.reprounzip').get('use_chroot', True)
     cmdline = args.cmdline
+
+    check_vagrant_version()
 
     # Loads config
     runs, packages, other_files = load_config(target / 'config.yml', True)
@@ -572,17 +577,55 @@ def vagrant_destroy_dir(args):
     signals.post_destroy(target=target)
 
 
-def test_has_vagrant(pack, **kwargs):
-    """Compatibility test: has vagrant (ok) or not (maybe).
-    """
+def _executable_in_path(executable):
     pathlist = os.environ['PATH'].split(os.pathsep) + ['.']
     pathexts = os.environ.get('PATHEXT', '').split(os.pathsep)
     for path in pathlist:
         for ext in pathexts:
-            fullpath = os.path.join(path, 'vagrant') + ext
+            fullpath = os.path.join(path, executable) + ext
             if os.path.isfile(fullpath):
-                return COMPAT_OK
-    return COMPAT_MAYBE, "vagrant not found in PATH"
+                return True
+    else:
+        return False
+
+
+def check_vagrant_version():
+    try:
+        stdout = subprocess.check_output(['vagrant', '--version'])
+    except subprocess.CalledProcessError:
+        logging.error("Couldn't run vagrant")
+        sys.exit(1)
+    stdout = stdout.decode('ascii').strip().lower().split()
+    if stdout[0] == 'vagrant':
+        if LooseVersion(stdout[1]) < LooseVersion('1.1'):
+            logging.error("Vagrant >=1.1 is required; detected version: %s",
+                          stdout[1])
+            sys.exit(1)
+    else:
+        logging.error("Vagrant >=1.1 is required")
+        sys.exit(1)
+
+
+def test_has_vagrant(pack, **kwargs):
+    """Compatibility test: has vagrant (ok) or not (maybe).
+    """
+    if not _executable_in_path('vagrant'):
+        return COMPAT_MAYBE, "vagrant not found in PATH"
+
+    try:
+        stdout = subprocess.check_output(['vagrant', '--version'])
+    except subprocess.CalledProcessError:
+        return COMPAT_NO, ("vagrant was found in PATH but doesn't seem to "
+                           "work properly")
+    stdout = stdout.decode('ascii').strip().lower().split()
+    if stdout[0] == 'vagrant':
+        if LooseVersion(stdout[1]) >= LooseVersion('1.1'):
+            return COMPAT_OK
+        else:
+            return COMPAT_NO, ("Vagrant >=1.1 is required; detected version: "
+                               "%s" % stdout[1])
+    else:
+        return COMPAT_NO, "Vagrant >=1.1 is required"
 
 
 def setup(parser, **kwargs):
