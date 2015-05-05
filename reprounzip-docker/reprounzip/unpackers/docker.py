@@ -97,7 +97,8 @@ def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if dct['unpacker'] != 'docker':
-        raise UsageError("Wrong unpacker used: %s != docker" % dct['unpacker'])
+        logging.critical("Wrong unpacker used: %s != docker" % dct['unpacker'])
+        raise UsageError
     return dct
 
 

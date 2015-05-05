@@ -111,8 +111,9 @@ def read_dict(filename):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if dct['unpacker'] != 'vagrant':
-        raise UsageError("Wrong unpacker used: %s != vagrant" %
+        logging.critical("Wrong unpacker used: %s != vagrant" %
                          dct['unpacker'])
+        raise UsageError
     return dct
 
 
