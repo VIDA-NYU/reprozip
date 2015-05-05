@@ -106,9 +106,9 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
                                 "--distribution")
     elif orig_distribution != target_distribution:
         raise CantFindInstaller(
-                "Installing on %s but pack was generated on %s",
-                target_distribution.capitalize(),
-                orig_distribution.capitalize())
+                "Installing on %s but pack was generated on %s" % (
+                    target_distribution.capitalize(),
+                    orig_distribution.capitalize()))
 
     # Selects installation method
     if target_distribution == 'ubuntu':
@@ -118,7 +118,7 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
         installer = AptInstaller('apt-get')
     else:
         raise CantFindInstaller(
-                "This distribution, \"%s\", is not supported",
+                "This distribution, \"%s\", is not supported" %
                 target_distribution.capitalize())
 
     return installer
