@@ -288,7 +288,7 @@ def vagrant_setup_create(args):
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
             # TAR bug: --no-overwrite-dir removes --keep-old-files
-            fp.write('tar zpxf /vagrant/experiment.rpz --keep-old-files '
+            fp.write('tar zpxf /vagrant/experiment.rpz --skip-old-files '
                      '--numeric-owner --strip=1 %s\n' %
                      ' '.join(shell_escape(p) for p in reversed(pathlist)))
 
