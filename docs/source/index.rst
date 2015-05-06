@@ -29,4 +29,4 @@ Links
 -----
 
 * `Project website <http://vida-nyu.github.io/reprozip/>`_
-* `Github repository <https://github.com/ViDA-NYU/reprozip>`_
+* `GitHub repository <https://github.com/ViDA-NYU/reprozip>`_

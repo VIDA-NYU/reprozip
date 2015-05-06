@@ -6,7 +6,7 @@ Developer's Guide
 General Development Information
 -------------------------------
 
-Development happens on `Github <https://github.com/ViDA-NYU/reprozip>`_; bug reports or feature requests are welcome. If you are interested in giving a hand, please do not hesitate to submit a pull request there.
+Development happens on `GitHub <https://github.com/ViDA-NYU/reprozip>`_; bug reports or feature requests are welcome. If you are interested in giving a hand, please do not hesitate to submit a pull request there.
 
 Continuous testing is provided by `Travis CI <https://travis-ci.org/ViDA-NYU/reprozip>`_. Note that ReproZip supports both Python 2 and 3. Test coverage is not very high due to a lot of operations that are difficult to cover on Travis (Vagrant VMs and Docker containers cannot be used over there).
 
