@@ -20,22 +20,22 @@ Python 2.7.3 or greater is recommended to run ReproZip. Older versions should al
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+----------------------------------------------+
-| Component / Plugin           | Required Software Packages                   |
-+==============================+==============================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_,|
-|                              | Python headers [#deb3]_,                     |
-|                              | a working C compiler                         |
-+------------------------------+----------------------------------------------+
-| *reprounzip*                 | None                                         |
-+------------------------------+----------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,       |
-|                              | a working C compiler [#pycrypton]_,          |
-|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__|
-|                              | `VirtualBox <https://www.virtualbox.org/>`__ |
-+------------------------------+----------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__         |
-+------------------------------+----------------------------------------------+
++------------------------------+-----------------------------------------------+
+| Component / Plugin           | Required Software Packages                    |
++==============================+===============================================+
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_, |
+|                              | Python headers [#deb3]_,                      |
+|                              | a working C compiler                          |
++------------------------------+-----------------------------------------------+
+| *reprounzip*                 | None                                          |
++------------------------------+-----------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,        |
+|                              | a working C compiler [#pycrypton]_,           |
+|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,|
+|                              | `VirtualBox <https://www.virtualbox.org/>`__  |
++------------------------------+-----------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
++------------------------------+-----------------------------------------------+
 
 ..  [#bug] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
