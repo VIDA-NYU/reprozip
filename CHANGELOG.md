@@ -9,6 +9,7 @@ Bugfixes:
 * Fixes invalid escaping in VisTrails XML workflow
 * Fixes docker run failing to read Docker's JSON output on Python 3
 * Fixes mounting too many filesystems in chroot
+* Fixes typo stopping reprounzip from running on unsupported distribs
 
 Features:
 * Adds Debian 8 'Jessie' to Vagrant boxes & Docker images
