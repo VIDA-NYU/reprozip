@@ -13,7 +13,6 @@ import os
 import random
 from rpaths import PosixPath, Path
 import signal
-import string
 import subprocess
 import sys
 import tarfile
