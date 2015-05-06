@@ -1,16 +1,18 @@
 ..  _trace-schema:
 
-Trace database schema
-**************************
+Trace Database Schema
+*********************
+
+The database contains three tables: ``processes``, ``opened_files``, and ``executed_files``.
 
 ``processes``
 '''''''''''''
 
-This table contains information about the processes. A process is identified by Linux as a tid. It is either a thread or a full-fledged process.
+This table contains information about all the processes. A process is identified by Linux as a *pid* (process id), and is either a thread or a full-fledged process.
 
-Note that processes are different from programs, and there is no 1/1 relationship with executions. A process is created by `clone(2) <http://linux.die.net/man/2/clone>`__ or `fork(2) <http://linux.die.net/man/2/fork>`__ and not necessarily followed by `execve(2) <http://linux.die.net/man/2/execve>`__. By contrast, a program can change its image by calling execve(2) without creating new processes (without changing pid).
+Note that processes are different from programs, and there is no one-to-one relationship with executions. A process is created by `clone(2) <http://linux.die.net/man/2/clone>`__ or `fork(2) <http://linux.die.net/man/2/fork>`__ and not necessarily followed by `execve(2) <http://linux.die.net/man/2/execve>`__. By contrast, a program can change its image by calling execve(2) without creating new processes (i.e., without changing *pid*).
 
-Each entry in the ``processes`` table has the id of its parent, i.e. the process that created it by calling clone(2) or fork(2), except the original process that reprozip created, for which parent is NULL. There is thus exactly one process with a NULL parent per run stored in the pack.
+Each entry in the ``processes`` table has the id of its parent, i.e. the process that created it by calling clone(2) or fork(2), except the original process that *reprozip* created, for which parent is NULL. There is thus exactly one process with a NULL parent per run stored in the pack.
 
 ::
 
@@ -24,9 +26,9 @@ Each entry in the ``processes`` table has the id of its parent, i.e. the process
 ``opened_files``
 ''''''''''''''''
 
-This table contains the files accessed by the processes. Note that a failed access (trying to read a non-existing file, permission denied, ...) is not logged. A single path might appear several time, even if accessed by the same process.
+This table contains information regarding the files accessed by the processes. Note that a failed access (e.g.: trying to read a non-existing file, permission denied, etc.) is not logged. A single path might appear several times, even if accessed by the same process.
 
-Each file has a numerical id, the canonical path name, the process that accessed it (from which you can get the executable by cross-referencing ``processes``, using also the timestamp), and the mode.
+Each file has a numerical id, the canonical path name, the process that accessed it (from which you can get the executable by cross-referencing ``processes``, also using the timestamp), and the mode.
 
 ::
 
@@ -39,7 +41,7 @@ Each file has a numerical id, the canonical path name, the process that accessed
         process INTEGER NOT NULL
         );
 
-``mode`` is a binary OR of the following values (accessible from ``reprounzip.common``)::
+The *mode* attribute is a binary OR of the following values (accessible from ``reprounzip.common``)::
 
     FILE_READ   = 0x01
     FILE_WRITE  = 0x02
@@ -49,7 +51,7 @@ Each file has a numerical id, the canonical path name, the process that accessed
 ``executed_files``
 ''''''''''''''''''
 
-This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however workingdir, argv (command-line arguments) and envp (environment variables) are added. argv is a list of arguments separated by null bytes (``0x00``) [#nullbytes]_, envp is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes [#nullbytes]_. Note that again, failed executions (execve returns) are not logged.
+This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however, *workingdir*, *argv* (command-line arguments) and *envp* (environment variables) are added. *argv* is a list of arguments separated by null bytes (``0x00``) [#nullbytes]_, and *envp* is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes [#nullbytes]_. Note that, again, failed executions (execve returns) are not logged.
 
 ::
 
@@ -63,4 +65,4 @@ This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http
         workingdir TEXT NOT NULL
         );
 
-..  [#nullbytes] Note that Python's sqlite3 lib is affected by `bug 13676 <http://bugs.python.org/issue13676>`__ until Python 2.7.3, which prevents from reading text or blob fields with embedded null bytes.
+..  [#nullbytes] Note that Python's sqlite3 lib is affected by `bug 13676 <http://bugs.python.org/issue13676>`__ up to Python 2.7.3, which prevents it from reading text or blob fields with embedded null bytes.

@@ -16,7 +16,7 @@ For Linux distributions, both *reprozip* and *reprounzip* components are availab
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`__ [#deb]_; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__ [#deb]_; you should prefer a 2.x release to a 3.x one. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -31,17 +31,16 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+----------------------------------------------+
 | *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,       |
 |                              | a working C compiler [#pycrypton]_,          |
-|                              | `Vagrant <https://www.vagrantup.com/>`__ at  |
-|                              | least version 1.1,                           |
+|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__|
 |                              | `VirtualBox <https://www.virtualbox.org/>`__ |
 +------------------------------+----------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__         |
 +------------------------------+----------------------------------------------+
 
 ..  [#bug] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
-..  [#deb] On Debian and Debian-based, this is provided by *python*: ``sudo apt-get install python``.
-..  [#deb2] On Debian and Debian-based, this is provided by *libsqlite3-dev*: ``sudo apt-get install libsqlite3-dev``.
-..  [#deb3] On Debian and Debian-based, this is provided by *python-dev*: ``sudo apt-get install python-dev``.
+..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
+..  [#deb2] On Debian and Debian-based, you can use ``sudo apt-get install libsqlite3-dev``.
+..  [#deb3] On Debian and Debian-based, you can use ``sudo apt-get install python-dev``.
 ..  [#pycrypton] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
 
 Installing *reprozip*
@@ -84,27 +83,27 @@ For Mac OS X, only the *reprounzip* component is available.
 Binaries
 --------
 
-An installer containing Python 2.7, *reprounzip* and all the plugins can be `downloaded from GitHub <https://github.com/ViDA-NYU/reprozip/releases/download/0.6/reprounzip-0.6.pkg>`__.
+An installer containing Python 2.7, *reprounzip*, and all the plugins can be `downloaded from GitHub <https://github.com/ViDA-NYU/reprozip/releases/download/0.6/reprounzip-0.6.pkg>`__.
 
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug2]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`__; you should prefer a 2.x releases to 3.x. You will also need the pip installer (see `their installation instructions here <https://pip.pypa.io/en/latest/installing.html>`__).
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug2]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__; you should prefer a 2.x release to a 3.x one. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+----------------------------------------------+
-| Component / Plugin           | Required Software Packages                   |
-+==============================+==============================================+
-| *reprounzip*                 | None                                         |
-+------------------------------+----------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#macn]_ [#pycrypton2]_,      |
-|                              | a working C compiler [#macn]_ [#pycrypton2]_,|
-|                              | `Vagrant <https://www.vagrantup.com/>`__,    |
-|                              | `VirtualBox <https://www.virtualbox.org/>`__ |
-+------------------------------+----------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__         |
-+------------------------------+----------------------------------------------+
++------------------------------+-----------------------------------------------+
+| Component / Plugin           | Required Software Packages                    |
++==============================+===============================================+
+| *reprounzip*                 | None                                          |
++------------------------------+-----------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#macn]_ [#pycrypton2]_,       |
+|                              | a working C compiler [#macn]_ [#pycrypton2]_, |
+|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,|
+|                              | `VirtualBox <https://www.virtualbox.org/>`__  |
++------------------------------+-----------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
++------------------------------+-----------------------------------------------+
 
 ..  [#bug2] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
@@ -150,7 +149,7 @@ A 32-bit installer containing Python 2.7, *reprounzip*, and all the plugins can 
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug3]_. If you don't have it yet on your machine, you can get Python from `python.org <https://www.python.org/>`__; you should prefer a 2.x releases to 3.x. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
+Python 2.7.3 or greater is recommended to run ReproZip. Older versions should allow *reprounzip* to work, but some features will not be available [#bug3]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__; you should prefer a 2.x release to a 3.x one. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
@@ -160,7 +159,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip*                 | None                                                                   |
 +------------------------------+------------------------------------------------------------------------+
 | *reprounzip-vagrant*         | `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__ [#pycrypton3]_,|
-|                              | `Vagrant <https://www.vagrantup.com/>`__,                              |
+|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,                         |
 |                              | `VirtualBox <https://www.virtualbox.org/>`__                           |
 +------------------------------+------------------------------------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__                                   |
