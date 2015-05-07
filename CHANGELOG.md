@@ -1,14 +1,14 @@
 Changelog
 =========
 
-0.6.3 (???)
------------
+0.6.3 (2015-05-06)
+------------------
 
 Bugfixes:
 * Fixes reprounzip-vistrails failing because of reporting
-* Fixes invalid escaping in VisTrails XML workflow
+* Fixes reprounzip-vistrails not escaping correctly in XML in some conditions
 * Fixes docker run failing to read Docker's JSON output on Python 3
-* Fixes mounting too many filesystems in chroot
+* Fixes reprounzip chroot mounting too many filesystems
 * Fixes typo stopping reprounzip from running on unsupported distribs
 
 Features:

@@ -1,4 +1,4 @@
-Copyright (c) 2014, New York University
+Copyright (c) 2014-2015, New York University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
