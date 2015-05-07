@@ -1,10 +1,11 @@
 ; This needs:
 ;   Default installation of Python 2.7 in C:\Python2.7
+;   python27.dll in C:\Python2.7 (might be in Windows\system[32])
 ;   PyCrypto installed in Python installation
 
 [Setup]
 AppName=ReproUnzip
-AppVerName=ReproUnzip 0.6
+AppVerName=ReproUnzip 0.6.3
 OutputBaseFilename=reprounzip-setup
 DefaultGroupName=ReproZip
 DefaultDirName={pf}\ReproUnzip
