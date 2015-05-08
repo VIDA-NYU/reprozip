@@ -922,25 +922,26 @@ int syscall_handle(struct Process *process)
     pid_t tid = process->tid;
     const int syscall = process->current_syscall & ~__X32_SYSCALL_BIT;
     size_t syscall_type;
+    const char *inout = process->in_syscall?"out":"in";
     if(process->mode == MODE_I386)
     {
         syscall_type = SYSCALL_I386;
         if(verbosity >= 4)
-            log_debug(process->tid, "syscall %d (i386)", syscall);
+            log_debug(process->tid, "syscall %d (i386) (%s)", syscall, inout);
     }
     else if(process->current_syscall & __X32_SYSCALL_BIT)
     {
         /* LCOV_EXCL_START : x32 is not supported right now */
         syscall_type = SYSCALL_X86_64_x32;
         if(verbosity >= 4)
-            log_debug(process->tid, "syscall %d (x32)", syscall);
+            log_debug(process->tid, "syscall %d (x32) (%s)", syscall, inout);
         /* LCOV_EXCL_END */
     }
     else
     {
         syscall_type = SYSCALL_X86_64;
         if(verbosity >= 4)
-            log_debug(process->tid, "syscall %d (x64)", syscall);
+            log_debug(process->tid, "syscall %d (x64) (%s)", syscall, inout);
     }
 
     {
