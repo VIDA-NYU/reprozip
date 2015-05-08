@@ -19,7 +19,7 @@ sudo apt-get install -y slirp lxc aufs-tools cgroup-lite
 # Install docker
 curl -s https://get.docker.com/ | sh
 sudo usermod -aG docker $USER
-sudo chown -R travis /etc/docker
+sudo chown -R $USER /etc/docker
 
 
 # Install fig
