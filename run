@@ -5,6 +5,7 @@ WORKDIR="$(pwd)"
 cd "$(dirname "$0")"
 UMLDIR="$(pwd)"
 echo "$@" > "${UMLDIR}/.command"
+export -p > "${UMLDIR}/.envp"
 rm -f "${UMLDIR}/.exit_code"
 
 (

@@ -83,6 +83,8 @@ while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 docker info
 docker version
 
+# reset environment
+. "${UMLDIR}/.envp"
 
 # Call command
 command=$(cat "${UMLDIR}/.command")
