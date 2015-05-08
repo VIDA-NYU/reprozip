@@ -1,11 +1,8 @@
 sudo: true
 
 install:
-- sh -xe .travis/uml-docker/install.sh
+- UML_DOCKERCOMPOSE=0 UML_FIG=0 sh -xe .travis/uml-docker/install.sh
 
 script:
 - .travis/uml-docker/run "docker version && docker info"
 - .travis/uml-docker/run docker run ubuntu /bin/echo hello world
-- wget https://gist.githubusercontent.com/moul/0f53ae391ae7d7116e24/raw/23307093546b6ae2f94208c188f5ce4fca2be996/docker-compose.yml
-- .travis/uml-docker/run docker-compose build test
-- .travis/uml-docker/run "docker-compose up test && echo Yeah"
