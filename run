@@ -10,7 +10,7 @@ rm -f "${UMLDIR}/.exit_code"
 
 (
     set -x
-    "${UMLDIR}/linux" \
+    sudo "${UMLDIR}/linux" \
 	quiet \
 	mem=2G \
 	rootfstype=hostfs rw \
