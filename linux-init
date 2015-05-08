@@ -7,12 +7,12 @@ set -e
 # echo "Env: $(env)"
 # echo "Cmdline: $(cat /proc/cmdline)"
 
-rm -f ${WORKDIR}/.exit_code
+rm -f "${UMLDIR}/.exit_code"
 
 save_and_shutdown() {
     # Default exit code
-    if [ ! -f ${WORKDIR}/.exit_code ]; then
-	echo 42 > ${WORKDIR}/.exit_code
+    if [ ! -f "${UMLDIR}/.exit_code" ]; then
+        echo 42 > "${UMLDIR}/.exit_code"
     fi
 
     # save built for host result
@@ -27,7 +27,7 @@ save_and_shutdown() {
 trap save_and_shutdown EXIT SIGINT SIGTERM
 
 # go back to where we were invoked
-cd $WORKDIR
+cd "${WORKDIR}"
 
 # configure path to include /usr/local
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -85,7 +85,7 @@ docker version
 
 
 # Call command
-command=$(cat ${WORKDIR}/.command)
+command=$(cat "${UMLDIR}/.command")
 set +e
 /bin/bash -ce "${command}"
-echo $? > ${WORKDIR}/.exit_code
+echo $? > "${UMLDIR}/.exit_code"

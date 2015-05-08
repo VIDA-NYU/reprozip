@@ -6,6 +6,8 @@ set -xe
 COMPOSE_VERSION=1.2.0
 
 
+cd "$(dirname "$0")"
+
 # Disable post-install autorun
 echo exit 101 | sudo tee /usr/sbin/policy-rc.d
 sudo chmod +x /usr/sbin/policy-rc.d
