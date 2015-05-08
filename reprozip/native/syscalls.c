@@ -962,7 +962,7 @@ int syscall_handle(struct Process *process)
                  && processes[i]->current_syscall == 59
                  && processes[i]->syscall_info != NULL)
                 {
-                    if(verbosity >= 3)
+                    if(syscall_type == SYSCALL_I386 && verbosity >= 3)
                         log_debug(process->tid,
                                   "transition x64 -> i386, syscall 59 is still "
                                   "execve");
@@ -982,7 +982,7 @@ int syscall_handle(struct Process *process)
                  && processes[i]->current_syscall == 11
                  && processes[i]->syscall_info != NULL)
                 {
-                    if(verbosity >= 3)
+                    if(syscall_type == SYSCALL_X86_64 && verbosity >= 3)
                         log_debug(process->tid,
                                   "transition i386 -> x64, syscall 11 is still "
                                   "execve");
