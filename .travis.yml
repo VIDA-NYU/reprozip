@@ -1,3 +1,5 @@
+sudo: true
+
 install:
 - sh -xe install.sh
 
