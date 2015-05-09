@@ -594,7 +594,7 @@ def _executable_in_path(executable):
 
 def check_vagrant_version():
     try:
-        stdout = subprocess.check_output(['vagrant', '--version'])
+        stdout = check_output(['vagrant', '--version'])
     except subprocess.CalledProcessError:
         logging.error("Couldn't run vagrant")
         sys.exit(1)
@@ -616,7 +616,7 @@ def test_has_vagrant(pack, **kwargs):
         return COMPAT_MAYBE, "vagrant not found in PATH"
 
     try:
-        stdout = subprocess.check_output(['vagrant', '--version'])
+        stdout = check_output(['vagrant', '--version'])
     except subprocess.CalledProcessError:
         return COMPAT_NO, ("vagrant was found in PATH but doesn't seem to "
                            "work properly")
