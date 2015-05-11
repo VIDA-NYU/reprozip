@@ -24,9 +24,8 @@ matrix:
       env: TEST_MODE=check_shared
     - python: "2.7"
       env: TEST_MODE=coverage_py
-# doesn't work right now
-#    - python: "2.7"
-#      env: TEST_MODE=coverage_c
+    - python: "2.7"
+      env: TEST_MODE=coverage_c
   exclude:
     # This is already covered by coverage_py and coverage_c
     - python: "2.7"

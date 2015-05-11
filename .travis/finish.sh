@@ -10,6 +10,7 @@ in
         codecov
         ;;
     coverage_c)
-        python -c "import cpp_coveralls; cpp_coveralls.run()" --verbose --build-root "$PWD/reprozip"
+        gcov reprozip/native/*.c
+        curl -s -o - https://codecov.io/bash | bash -
         ;;
 esac
