@@ -25,7 +25,7 @@ in
         if [ $TRAVIS_PYTHON_VERSION = "2.6" ]; then pip install unittest2; fi
         if [ $TEST_MODE = "coverage_c" ]; then pip install cpp-coveralls; fi
         if [ $TEST_MODE = "coverage_py" ]; then
-            pip install coverage coveralls
+            pip install coverage codecov
             pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails
         else
             pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails
