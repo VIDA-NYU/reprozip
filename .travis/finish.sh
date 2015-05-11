@@ -10,7 +10,9 @@ in
         codecov
         ;;
     coverage_c)
-        gcov reprozip/native/*.c
+        # Find the coverage file (in distutils's build directory)
+        OBJDIR=$(dirname "$(find . -name pytracer.gcno | head -n 1)")
+        (cd reprozip/native && gcov -o ../../$OBJDIR *.c)
         curl -s -o - https://codecov.io/bash | bash -
         ;;
 esac
