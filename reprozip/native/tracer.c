@@ -97,6 +97,15 @@ int trace_verbosity = 0;
 #define verbosity trace_verbosity
 
 
+void free_execve_info(struct ExecveInfo *execi)
+{
+    free_strarray(execi->argv);
+    free_strarray(execi->envp);
+    free(execi->binary);
+    free(execi);
+}
+
+
 struct Process **processes = NULL;
 size_t processes_size;
 
@@ -313,6 +322,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 if(db_add_exit(process->identifier, exitcode) != 0)
                     return -1;
                 free(process->wd);
+                if(process->execve_info != NULL)
+                    free_execve_info(process->execve_info);
                 process->status = PROCESS_FREE;
             }
             trace_count_processes(&nprocs, &unknown);
@@ -579,7 +590,7 @@ static void trace_init(void)
             processes[i]->status = PROCESS_FREE;
             processes[i]->in_syscall = 0;
             processes[i]->current_syscall = -1;
-            processes[i]->syscall_info = NULL;
+            processes[i]->execve_info = NULL;
             processes[i]->wd = NULL;
         }
     }

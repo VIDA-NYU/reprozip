@@ -41,12 +41,6 @@
 
 #define verbosity trace_verbosity
 
-struct ExecveInfo {
-    char *binary;
-    char **argv;
-    char **envp;
-};
-
 
 struct syscall_table_entry {
     const char *name;
@@ -353,7 +347,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
             log_debug(process->tid, "  envp: (%u entries)", (unsigned int)nb);
         }
     }
-    process->syscall_info = execi;
+    process->execve_info = execi;
     return 0;
 }
 
@@ -361,7 +355,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
                               unsigned int execve_syscall)
 {
     struct Process *exec_process = process;
-    struct ExecveInfo *execi = exec_process->syscall_info;
+    struct ExecveInfo *execi = exec_process->execve_info;
     if(execi == NULL)
     {
         /* On Linux, execve changes tid to the thread leader's tid, no
@@ -378,7 +372,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
              && processes[i]->tgid == process->tgid
              && processes[i]->in_syscall
              && processes[i]->current_syscall == (int)execve_syscall
-             && processes[i]->syscall_info != NULL)
+             && processes[i]->execve_info != NULL)
             {
                 exec_process = processes[i];
                 break;
@@ -392,7 +386,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
             return -1;
             /* LCOV_EXCL_END */
         }
-        execi = exec_process->syscall_info;
+        execi = exec_process->execve_info;
 
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
@@ -422,11 +416,8 @@ static int syscall_execve_out(const char *name, struct Process *process,
             return -1;
     }
 
-    free_strarray(execi->argv);
-    free_strarray(execi->envp);
-    free(execi->binary);
-    free(execi);
-    exec_process->syscall_info = NULL;
+    free_execve_info(execi);
+    exec_process->execve_info = NULL;
     return 0;
 }
 
@@ -960,7 +951,7 @@ int syscall_handle(struct Process *process)
                  && processes[i]->tgid == process->tgid
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 59
-                 && processes[i]->syscall_info != NULL)
+                 && processes[i]->execve_info != NULL)
                 {
                     if(syscall_type == SYSCALL_I386 && verbosity >= 3)
                         log_debug(process->tid,
@@ -980,7 +971,7 @@ int syscall_handle(struct Process *process)
                  && processes[i]->tgid == process->tgid
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 11
-                 && processes[i]->syscall_info != NULL)
+                 && processes[i]->execve_info != NULL)
                 {
                     if(syscall_type == SYSCALL_X86_64 && verbosity >= 3)
                         log_debug(process->tid,
@@ -1012,8 +1003,12 @@ int syscall_handle(struct Process *process)
     if(process->in_syscall)
     {
         process->in_syscall = 0;
+        if(process->execve_info != NULL)
+        {
+            log_error(process->tid, "out of syscall with execve_info != NULL");
+            return -1;
+        }
         process->current_syscall = -1;
-        process->syscall_info = NULL;
     }
     else
         process->in_syscall = 1;
