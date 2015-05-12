@@ -150,6 +150,7 @@ def docker_setup_create(args):
         fp.write('COPY busybox /bin/busybox\n')
 
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
+        fp.write('COPY rpz-files.list /rpz-files.list\n')
         fp.write('RUN \\\n'
                  '    chmod +x /bin/busybox && \\\n')
 
@@ -164,10 +165,7 @@ def docker_setup_create(args):
         # necessarily in the base image)
         if packages:
             record_usage(docker_install_pkgs=True)
-        else:
-            record_usage(docker_install_pkgs="sudo")
-        packages += [Package('sudo', None, packfiles=False)]
-        if packages:
+            packages += [Package('sudo', None, packfiles=False)]
             try:
                 installer = select_installer(pack, runs, target_distribution)
             except CantFindInstaller as e:
@@ -175,6 +173,12 @@ def docker_setup_create(args):
                               "select a package installer: %s",
                               len(packages), e)
                 sys.exit(1)
+        else:
+            record_usage(docker_install_pkgs="sudo")
+            packages = [Package('sudo', None, packfiles=False)]
+            installer = select_installer(pack, runs, target_distribution,
+                                         check_distrib_compat=False)
+        if packages:
             # Updates package sources
             fp.write('    %s && \\\n' % installer.update_script())
             # Installs necessary packages
@@ -203,14 +207,18 @@ def docker_setup_create(args):
                 except KeyError:
                     logging.info("Missing file %s", datapath)
                 else:
-                    pathlist.append(unicode_(datapath))
+                    pathlist.append(datapath)
         tar.close()
         # FIXME : for some reason we need reversed() here, I'm not sure why.
         # Need to read more of tar's docs.
         # TAR bug: --no-overwrite-dir removes --keep-old-files
+        with (target / 'rpz-files.list').open('wb') as lfp:
+            for p in reversed(pathlist):
+                lfp.write(p.path)
+                lfp.write(b'\0')
         fp.write('    cd / && tar zpxf /reprozip_experiment.rpz '
-                 '--numeric-owner --strip=1 %s\n' %
-                 ' '.join(shell_escape(p) for p in reversed(pathlist)))
+                 '--numeric-owner --strip=1 '
+                 '--null -T /rpz-files.list\n')
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})

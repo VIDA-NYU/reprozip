@@ -285,7 +285,7 @@ def vagrant_setup_create(args):
                     except KeyError:
                         logging.info("Missing file %s", datapath)
                     else:
-                        pathlist.append(unicode_(datapath))
+                        pathlist.append(datapath)
             tar.close()
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
@@ -293,9 +293,13 @@ def vagrant_setup_create(args):
             # TAR bug: there is no way to make --keep-old-files not report an
             # error if an existing file is encountered. --skip-old-files was
             # introduced too recently. Instead, we just ignore the exit status
+            with (target / 'rpz-files.list').open('wb') as lfp:
+                for p in reversed(pathlist):
+                    lfp.write(p.path)
+                    lfp.write(b'\0')
             fp.write('tar zpxf /vagrant/experiment.rpz --keep-old-files '
-                     '--numeric-owner --strip=1 %s || /bin/true\n' %
-                     ' '.join(shell_escape(p) for p in reversed(pathlist)))
+                     '--numeric-owner --strip=1 '
+                     '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
         # Copies /bin/sh + dependencies
         if use_chroot:
