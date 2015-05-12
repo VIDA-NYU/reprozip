@@ -42,6 +42,7 @@ struct Process {
     struct ThreadGroup *threadgroup;
     pid_t tid;
     int status;
+    unsigned int flags;
     int in_syscall;
     int current_syscall;
     register_type retvalue;

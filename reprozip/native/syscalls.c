@@ -482,6 +482,7 @@ static int syscall_forking(const char *name, struct Process *process,
             /* Process hasn't been seen before (syscall returned first) */
             new_process = trace_get_empty_process();
             new_process->status = PROCSTAT_ALLOCATED;
+            new_process->flags = 0;
             /* New process gets a SIGSTOP, but we resume on attach */
             new_process->tid = new_tid;
             new_process->in_syscall = 0;

@@ -388,6 +388,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 log_debug(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCSTAT_UNKNOWN;
+            process->flags = 0;
             process->tid = tid;
             process->threadgroup = NULL;
             process->in_syscall = 0;
@@ -623,8 +624,6 @@ static void trace_init(void)
             processes[i] = pool++;
             processes[i]->status = PROCSTAT_FREE;
             processes[i]->threadgroup = NULL;
-            processes[i]->in_syscall = 0;
-            processes[i]->current_syscall = -1;
             processes[i]->execve_info = NULL;
         }
     }
@@ -684,6 +683,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         struct Process *process = trace_get_empty_process();
         process->status = PROCSTAT_ALLOCATED; /* Not yet attached... */
+        process->flags = 0;
         /* We sent a SIGSTOP, but we resume on attach */
         process->tid = child;
         process->threadgroup = trace_new_threadgroup(child, get_wd());
