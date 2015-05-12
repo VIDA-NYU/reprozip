@@ -41,12 +41,6 @@
 
 #define verbosity trace_verbosity
 
-struct ExecveInfo {
-    char *binary;
-    char **argv;
-    char **envp;
-};
-
 
 struct syscall_table_entry {
     const char *name;
@@ -422,10 +416,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
             return -1;
     }
 
-    free_strarray(execi->argv);
-    free_strarray(execi->envp);
-    free(execi->binary);
-    free(execi);
+    free_execve_info(execi);
     exec_process->execve_info = NULL;
     return 0;
 }
@@ -1012,8 +1003,12 @@ int syscall_handle(struct Process *process)
     if(process->in_syscall)
     {
         process->in_syscall = 0;
+        if(process->execve_info != NULL)
+        {
+            log_error(process->tid, "out of syscall with execve_info != NULL");
+            return -1;
+        }
         process->current_syscall = -1;
-        process->execve_info = NULL;
     }
     else
         process->in_syscall = 1;

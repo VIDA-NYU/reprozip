@@ -22,6 +22,14 @@ typedef struct S_register_type {
 
 #define PROCESS_ARGS 6
 
+struct ExecveInfo {
+    char *binary;
+    char **argv;
+    char **envp;
+};
+
+void free_execve_info(struct ExecveInfo *execi);
+
 struct Process {
     unsigned int identifier;
     unsigned int mode;
@@ -33,7 +41,7 @@ struct Process {
     char *wd;
     register_type retvalue;
     register_type params[PROCESS_ARGS];
-    void *execve_info;
+    struct ExecveInfo *execve_info;
 };
 
 #define PROCESS_FREE        0   /* unallocated entry in table */
