@@ -310,6 +310,9 @@ static int syscall_chdir(const char *name, struct Process *process,
 
 /* ********************
  * execve()
+ *
+ * See also special handling in syscall_handle() and PTRACE_EVENT_EXEC case
+ * in trace().
  */
 
 static int syscall_execve_in(const char *name, struct Process *process,
@@ -349,8 +352,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
     return 0;
 }
 
-static int syscall_execve_out(const char *name, struct Process *process,
-                              unsigned int execve_syscall)
+int syscall_execve_event(struct Process *process)
 {
     struct Process *exec_process = process;
     struct ExecveInfo *execi = exec_process->execve_info;
@@ -361,15 +363,14 @@ static int syscall_execve_out(const char *name, struct Process *process,
          * that just returned from execve might not be the one which
          * called.
          * So we start by finding the one which called execve.
-         * Possible confusion here if two threads call execve at the same
-         * time, but that would be very bad code. */
+         * No possible confusion here since all other threads will have been
+         * terminated by the kernel. */
         size_t i;
         for(i = 0; i < processes_size; ++i)
         {
             if(processes[i]->status == PROCSTAT_ATTACHED
              && processes[i]->threadgroup == process->threadgroup
              && processes[i]->in_syscall
-             && processes[i]->current_syscall == (int)execve_syscall
              && processes[i]->execve_info != NULL)
             {
                 exec_process = processes[i];
@@ -389,34 +390,52 @@ static int syscall_execve_out(const char *name, struct Process *process,
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
             return -1;
+        if(verbosity >= 3)
+            log_debug(exec_process->tid,
+                      "original exec'ing thread removed, tgid: %d",
+                      process->tid);
         exec_process->execve_info = NULL;
         trace_free_process(exec_process);
     }
     else
         exec_process->execve_info = NULL;
-    if(process->retvalue.i >= 0)
-    {
-        /* Note: execi->argv needs a cast to suppress a bogus warning
-         * While conversion from char** to const char** is invalid,
-         * conversion from char** to const char*const* is, in fact, safe.
-         * G++ accepts it, GCC issues a warning. */
-        if(db_add_exec(process->identifier, execi->binary,
-                       (const char *const*)execi->argv,
-                       (const char *const*)execi->envp,
-                       process->threadgroup->wd) != 0)
-            return -1;
-        /* Note that here, the database records that the thread leader
-         * called execve, instead of thread exec_process->tid. */
-        if(verbosity >= 2)
-            log_info(process->tid, "successfully exec'd %s",
-                     execi->binary);
-        /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
-        if(trace_add_files_from_proc(process->identifier, process->tid,
-                                     execi->binary) != 0)
-            return -1;
-    }
+
+    process->flags = PROCFLAG_EXECD;
+
+    /* Note: execi->argv needs a cast to suppress a bogus warning
+     * While conversion from char** to const char** is invalid, conversion from
+     * char** to const char*const* is, in fact, safe.
+     * G++ accepts it, GCC issues a warning. */
+    if(db_add_exec(process->identifier, execi->binary,
+                   (const char *const*)execi->argv,
+                   (const char *const*)execi->envp,
+                   process->threadgroup->wd) != 0)
+        return -1;
+    /* Note that here, the database records that the thread leader called
+     * execve, instead of thread exec_process->tid. */
+    if(verbosity >= 2)
+        log_info(process->tid, "successfully exec'd %s",
+                 execi->binary);
+    if(trace_add_files_from_proc(process->identifier, process->tid,
+                                 execi->binary) != 0)
+        return -1;
 
     free_execve_info(execi);
+    return 0;
+}
+
+static int syscall_execve_out(const char *name, struct Process *process,
+                              unsigned int execve_syscall)
+{
+    if(process->retvalue.i >= 0)
+        log_debug(process->tid, "execve() successful");
+    else
+        log_debug(process->tid, "execve() failed");
+    if(process->execve_info != NULL)
+    {
+        free_execve_info(process->execve_info);
+        process->execve_info = NULL;
+    }
     return 0;
 }
 
@@ -942,6 +961,21 @@ int syscall_handle(struct Process *process)
             log_debug(process->tid, "syscall %d (x64) (%s)", syscall, inout);
     }
 
+    if(process->flags & PROCFLAG_EXECD)
+    {
+        if(verbosity >= 4)
+            log_debug(process->tid,
+                      "ignoring, EXEC'D is set -- just post-exec syscall-"
+                      "return stop");
+        process->flags = 0;
+        if(process->execve_info != NULL)
+        {
+            free_execve_info(process->execve_info);
+            process->execve_info = NULL;
+        }
+        process->in_syscall = 1; /* set to 0 before function returns */
+    }
+    else
     {
         struct syscall_table_entry *entry = NULL;
         struct syscall_table *tbl = &syscall_tables[syscall_type];

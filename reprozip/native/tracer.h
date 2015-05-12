@@ -60,6 +60,8 @@ struct Process {
 #define MODE_X86_64         2   /* In x86_64 mode, syscalls might be native x64
                                  * or x32 */
 
+#define PROCFLAG_EXECD      1   /* Process is coming out of execve */
+
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;
 extern size_t processes_size;

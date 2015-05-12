@@ -16,6 +16,7 @@
 #include "config.h"
 #include "database.h"
 #include "log.h"
+#include "ptrace_utils.h"
 #include "syscalls.h"
 #include "tracer.h"
 #include "utils.h"
@@ -514,7 +515,18 @@ static int trace(pid_t first_proc, int *first_exit_code)
 
             /* Synthetic signal for ptrace event: resume */
             if(signum == SIGTRAP && status & 0xFF0000)
+            {
+                int event = status >> 16;
+                if(event == PTRACE_EVENT_EXEC)
+                {
+                    log_debug(tid,
+                             "got EVENT_EXEC, an execve() was successful and "
+                             "will return soon");
+                    if(syscall_execve_event(process) != 0)
+                        return -1;
+                }
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
+            }
             else if(signum == SIGTRAP)
             {
                 /* LCOV_EXCL_START : Processes shouldn't be getting SIGTRAPs */
