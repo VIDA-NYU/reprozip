@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, iteritems, download_file
+from reprounzip.utils import unicode_, iteritems, check_output, download_file
 
 
 def select_image(runs):
@@ -359,7 +359,7 @@ def docker_run(args):
         sys.exit(1)
 
     # Get exit status from "docker inspect"
-    out = subprocess.check_output(['docker', 'inspect', container])
+    out = check_output(['docker', 'inspect', container])
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
