@@ -297,7 +297,7 @@ def vagrant_setup_create(args):
                     lfp.write(b'\0')
             fp.write('tar zpxf /vagrant/experiment.rpz --keep-old-files '
                      '--numeric-owner --strip=1 '
-                     '--null -T /rpz-files.list || /bin/true\n')
+                     '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
         # Copies /bin/sh + dependencies
         if use_chroot:

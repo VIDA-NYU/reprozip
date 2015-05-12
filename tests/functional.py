@@ -152,6 +152,22 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # 'simple' program: trace, pack, info, unpack
     #
 
+    def check_simple(args, stream, infile=1):
+        if stream == 'out':
+            output = check_output(args)
+        elif stream == 'err':
+            output = check_errout(args)
+        else:
+            raise ValueError
+        output = output.splitlines()
+        first = output.index(b"Read 6 bytes")
+        if infile == 1:
+            assert output[first + 1] == b"a = 29, b = 13"
+            assert output[first + 2] == b"result = 42"
+        else:  # infile == 2
+            assert output[first + 1] == b"a = 25, b = 11"
+            assert output[first + 2] == b"result = 36"
+
     # Build
     build('simple', ['simple.c'])
     # Trace
@@ -192,7 +208,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Unpack directory
     check_call(rpuz + ['directory', 'setup', 'simple.rpz', 'simpledir'])
     # Run directory
-    check_call(rpuz + ['directory', 'run', 'simpledir'])
+    check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
     output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
     with output_in_dir.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
@@ -205,7 +221,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                               'simple.rpz', 'simplechroot'])
     try:
         # Run chroot
-        check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
         output_in_chroot = join_root(Path('simplechroot/root'),
                                      orig_output_location)
         with output_in_chroot.open(encoding='utf-8') as fp:
@@ -220,7 +236,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                   '%s:arg' % (tests / 'simple_input2.txt')])
         check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
         # Run again
-        check_call(sudo + rpuz + ['chroot', 'run', 'simplechroot'])
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err', 2)
         output_in_chroot = join_root(Path('simplechroot/root'),
                                      orig_output_location)
         with output_in_chroot.open(encoding='utf-8') as fp:
@@ -240,8 +256,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     print("\nVagrant project set up in simplevagrantchroot")
     try:
         if run_vagrant:
-            check_call(rpuz + ['vagrant', 'run', '--no-stdin',
-                               '/vagrant/simplevagrantchroot'])
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 '/vagrant/simplevagrantchroot'], 'out')
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                '/vagrant/simplevagrantchroot'])
@@ -258,8 +274,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     print("\nVagrant project set up in simplevagrant")
     try:
         if run_vagrant:
-            check_call(rpuz + ['vagrant', 'run', '--no-stdin',
-                               '/vagrant/simplevagrant'])
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 '/vagrant/simplevagrant'], 'out')
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy', '/vagrant/simplevagrant'])
         elif interactive:
@@ -275,7 +291,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     try:
         if run_docker:
             check_call(rpuz + ['docker', 'setup/build', 'simpledocker'])
-            check_call(rpuz + ['docker', 'run', 'simpledocker'])
+            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out')
             # Get output file
             check_call(rpuz + ['docker', 'download', 'simpledocker',
                                'arg:doutput1.txt'])
@@ -287,7 +303,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_call(rpuz + ['docker', 'upload', 'simpledocker'])
             check_call(rpuz + ['showfiles', 'simpledocker'])
             # Run again
-            check_call(rpuz + ['docker', 'run', 'simpledocker'])
+            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
             # Get output file
             check_call(rpuz + ['docker', 'download', 'simpledocker',
                                'arg:doutput2.txt'])
