@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=master)]
 (https://travis-ci.org/ViDA-NYU/reprozip)
 [![Coverage Status]
-(https://coveralls.io/repos/ViDA-NYU/reprozip/badge.png?branch=master)]
-(https://coveralls.io/r/ViDA-NYU/reprozip?branch=master)
+(http://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=master)]
+(http://codecov.io/github/ViDA-NYU/reprozip?branch=master)
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/)]
 (http://reprozip.readthedocs.org/en/latest/)
