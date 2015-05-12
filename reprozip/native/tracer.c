@@ -114,7 +114,7 @@ struct Process *trace_find_process(pid_t tid)
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i]->status != PROCESS_FREE && processes[i]->tid == tid)
+        if(processes[i]->status != PROCSTAT_FREE && processes[i]->tid == tid)
             return processes[i];
     }
     return NULL;
@@ -125,7 +125,7 @@ struct Process *trace_get_empty_process(void)
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i]->status == PROCESS_FREE)
+        if(processes[i]->status == PROCSTAT_FREE)
             return processes[i];
     }
 
@@ -134,7 +134,7 @@ struct Process *trace_get_empty_process(void)
     {
         size_t unknown = 0;
         for(i = 0; i < processes_size; ++i)
-            if(processes[i]->status == PROCESS_UNKNOWN)
+            if(processes[i]->status == PROCSTAT_UNKNOWN)
                 ++unknown;
         log_debug(0, "there are %u/%u UNKNOWN processes",
                   (unsigned int)unknown, (unsigned int)processes_size);
@@ -153,7 +153,7 @@ struct Process *trace_get_empty_process(void)
         for(; i < processes_size; ++i)
         {
             processes[i] = pool++;
-            processes[i]->status = PROCESS_FREE;
+            processes[i]->status = PROCSTAT_FREE;
             processes[i]->threadgroup = NULL;
             processes[i]->execve_info = NULL;
         }
@@ -174,7 +174,7 @@ struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd)
 
 void trace_free_process(struct Process *process)
 {
-    process->status = PROCESS_FREE;
+    process->status = PROCSTAT_FREE;
     if(process->threadgroup != NULL)
     {
         process->threadgroup->refs--;
@@ -210,14 +210,14 @@ void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
     {
         switch(processes[i]->status)
         {
-        case PROCESS_FREE:
+        case PROCSTAT_FREE:
             break;
-        case PROCESS_UNKNOWN:
+        case PROCSTAT_UNKNOWN:
             /* Exists but no corresponding syscall has returned yet */
             ++unknown;
-        case PROCESS_ALLOCATED:
+        case PROCSTAT_ALLOCATED:
             /* Not yet attached but it will show up eventually */
-        case PROCESS_ATTACHED:
+        case PROCSTAT_ATTACHED:
             /* Running */
             ++nproc;
             break;
@@ -387,7 +387,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             if(verbosity >= 3)
                 log_debug(tid, "process appeared");
             process = trace_get_empty_process();
-            process->status = PROCESS_UNKNOWN;
+            process->status = PROCSTAT_UNKNOWN;
             process->tid = tid;
             process->threadgroup = NULL;
             process->in_syscall = 0;
@@ -396,9 +396,9 @@ static int trace(pid_t first_proc, int *first_exit_code)
              * returns */
             continue;
         }
-        else if(process->status == PROCESS_ALLOCATED)
+        else if(process->status == PROCSTAT_ALLOCATED)
         {
-            process->status = PROCESS_ATTACHED;
+            process->status = PROCSTAT_ATTACHED;
 
             if(verbosity >= 3)
                 log_debug(tid, "process attached");
@@ -570,7 +570,7 @@ static void cleanup(void)
     {
         size_t nb = 0;
         for(i = 0; i < processes_size; ++i)
-            if(processes[i]->status != PROCESS_FREE)
+            if(processes[i]->status != PROCSTAT_FREE)
                 ++nb;
         /* size_t size is implementation dependent; %u for size_t can trigger
          * a warning */
@@ -578,7 +578,7 @@ static void cleanup(void)
     }
     for(i = 0; i < processes_size; ++i)
     {
-        if(processes[i]->status != PROCESS_FREE)
+        if(processes[i]->status != PROCSTAT_FREE)
         {
             kill(processes[i]->tid, SIGKILL);
             trace_free_process(processes[i]);
@@ -621,7 +621,7 @@ static void trace_init(void)
         for(i = 0; i < processes_size; ++i)
         {
             processes[i] = pool++;
-            processes[i]->status = PROCESS_FREE;
+            processes[i]->status = PROCSTAT_FREE;
             processes[i]->threadgroup = NULL;
             processes[i]->in_syscall = 0;
             processes[i]->current_syscall = -1;
@@ -683,7 +683,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     /* Creates entry for first process */
     {
         struct Process *process = trace_get_empty_process();
-        process->status = PROCESS_ALLOCATED; /* Not yet attached... */
+        process->status = PROCSTAT_ALLOCATED; /* Not yet attached... */
         /* We sent a SIGSTOP, but we resume on attach */
         process->tid = child;
         process->threadgroup = trace_new_threadgroup(child, get_wd());

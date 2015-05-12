@@ -49,10 +49,10 @@ struct Process {
     struct ExecveInfo *execve_info;
 };
 
-#define PROCESS_FREE        0   /* unallocated entry in table */
-#define PROCESS_ALLOCATED   1   /* fork() done but not yet attached */
-#define PROCESS_ATTACHED    2   /* running process */
-#define PROCESS_UNKNOWN     3   /* attached but no corresponding fork() call
+#define PROCSTAT_FREE       0   /* unallocated entry in table */
+#define PROCSTAT_ALLOCATED  1   /* fork() done but not yet attached */
+#define PROCSTAT_ATTACHED   2   /* running process */
+#define PROCSTAT_UNKNOWN    3   /* attached but no corresponding fork() call
                                  * has finished yet */
 
 #define MODE_I386           1

@@ -366,7 +366,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         size_t i;
         for(i = 0; i < processes_size; ++i)
         {
-            if(processes[i]->status == PROCESS_ATTACHED
+            if(processes[i]->status == PROCSTAT_ATTACHED
              && processes[i]->threadgroup == process->threadgroup
              && processes[i]->in_syscall
              && processes[i]->current_syscall == (int)execve_syscall
@@ -458,7 +458,7 @@ static int syscall_forking(const char *name, struct Process *process,
         if(new_process != NULL)
         {
             /* Process has been seen before and options were set */
-            if(new_process->status != PROCESS_UNKNOWN)
+            if(new_process->status != PROCSTAT_UNKNOWN)
             {
                 /* LCOV_EXCL_START : internal error */
                 log_critical(new_tid,
@@ -467,7 +467,7 @@ static int syscall_forking(const char *name, struct Process *process,
                 return -1;
                 /* LCOV_EXCL_END */
             }
-            new_process->status = PROCESS_ATTACHED;
+            new_process->status = PROCSTAT_ATTACHED;
             ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
             if(verbosity >= 2)
             {
@@ -481,7 +481,7 @@ static int syscall_forking(const char *name, struct Process *process,
         {
             /* Process hasn't been seen before (syscall returned first) */
             new_process = trace_get_empty_process();
-            new_process->status = PROCESS_ALLOCATED;
+            new_process->status = PROCSTAT_ALLOCATED;
             /* New process gets a SIGSTOP, but we resume on attach */
             new_process->tid = new_tid;
             new_process->in_syscall = 0;
@@ -953,7 +953,7 @@ int syscall_handle(struct Process *process)
             size_t i;
             for(i = 0; i < processes_size; ++i)
             {
-                if(processes[i]->status == PROCESS_ATTACHED
+                if(processes[i]->status == PROCSTAT_ATTACHED
                  && processes[i]->threadgroup == process->threadgroup
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 59
@@ -973,7 +973,7 @@ int syscall_handle(struct Process *process)
             size_t i;
             for(i = 0; i < processes_size; ++i)
             {
-                if(processes[i]->status == PROCESS_ATTACHED
+                if(processes[i]->status == PROCSTAT_ATTACHED
                  && processes[i]->threadgroup == process->threadgroup
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 11
