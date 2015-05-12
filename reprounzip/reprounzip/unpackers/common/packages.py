@@ -89,13 +89,16 @@ class AptInstaller(object):
                                      ' '.join(pkg.name for pkg in packages))
 
 
-def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION):
+def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
+                     check_distrib_compat=True):
     """Selects the right package installer for a Linux distribution.
     """
     orig_distribution = runs[0]['distribution'][0].lower()
 
     # Checks that the distributions match
-    if (set([orig_distribution, target_distribution]) ==
+    if not check_distrib_compat:
+        pass
+    elif (set([orig_distribution, target_distribution]) ==
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
         logging.warning("Installing on %s but pack was generated on %s",

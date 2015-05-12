@@ -164,10 +164,7 @@ def docker_setup_create(args):
         # necessarily in the base image)
         if packages:
             record_usage(docker_install_pkgs=True)
-        else:
-            record_usage(docker_install_pkgs="sudo")
-        packages += [Package('sudo', None, packfiles=False)]
-        if packages:
+            packages += [Package('sudo', None, packfiles=False)]
             try:
                 installer = select_installer(pack, runs, target_distribution)
             except CantFindInstaller as e:
@@ -175,6 +172,12 @@ def docker_setup_create(args):
                               "select a package installer: %s",
                               len(packages), e)
                 sys.exit(1)
+        else:
+            record_usage(docker_install_pkgs="sudo")
+            packages = [Package('sudo', None, packfiles=False)]
+            installer = select_installer(pack, runs, target_distribution,
+                                         check_distrib_compat=False)
+        if packages:
             # Updates package sources
             fp.write('    %s && \\\n' % installer.update_script())
             # Installs necessary packages
