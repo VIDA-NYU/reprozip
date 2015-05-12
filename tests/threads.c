@@ -13,20 +13,20 @@ void *func1(void *param)
 {
     static retvalue = 42;
     chdir("/bin");
-    usleep(100000);
+    usleep(300000);
     return &retvalue;
 }
 
 void *func23(void *param)
 {
-    usleep(500000);
+    usleep(1000000);
     return NULL;
 }
 
 void *func4(void *param)
 {
     char *argv[3] = {"echo", "42", NULL};
-    usleep(200000);
+    usleep(600000);
     execvp("./echo", argv);
     perror("execvp");
     return NULL;
