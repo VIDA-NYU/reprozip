@@ -149,6 +149,7 @@ def docker_setup_create(args):
         fp.write('COPY busybox /bin/busybox\n')
 
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
+        fp.write('COPY rpz-files.list /rpz-files.list\n')
         fp.write('RUN \\\n'
                  '    chmod +x /bin/busybox && \\\n')
 
@@ -202,14 +203,18 @@ def docker_setup_create(args):
                 except KeyError:
                     logging.info("Missing file %s", datapath)
                 else:
-                    pathlist.append(unicode_(datapath))
+                    pathlist.append(datapath)
         tar.close()
         # FIXME : for some reason we need reversed() here, I'm not sure why.
         # Need to read more of tar's docs.
         # TAR bug: --no-overwrite-dir removes --keep-old-files
+        with (target / 'rpz-files.list').open('wb') as lfp:
+            for p in reversed(pathlist):
+                lfp.write(p.path)
+                lfp.write(b'\0')
         fp.write('    cd / && tar zpxf /reprozip_experiment.rpz '
-                 '--numeric-owner --strip=1 %s\n' %
-                 ' '.join(shell_escape(p) for p in reversed(pathlist)))
+                 '--numeric-owner --strip=1 '
+                 '--null -T /rpz-files.list\n')
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
