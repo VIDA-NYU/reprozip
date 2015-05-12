@@ -579,7 +579,7 @@ static void trace_init(void)
             processes[i]->status = PROCESS_FREE;
             processes[i]->in_syscall = 0;
             processes[i]->current_syscall = -1;
-            processes[i]->syscall_info = NULL;
+            processes[i]->execve_info = NULL;
             processes[i]->wd = NULL;
         }
     }

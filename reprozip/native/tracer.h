@@ -33,7 +33,7 @@ struct Process {
     char *wd;
     register_type retvalue;
     register_type params[PROCESS_ARGS];
-    void *syscall_info;
+    void *execve_info;
 };
 
 #define PROCESS_FREE        0   /* unallocated entry in table */
