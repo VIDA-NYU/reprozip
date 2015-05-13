@@ -215,9 +215,11 @@ def docker_setup_create(args):
             for p in reversed(pathlist):
                 lfp.write(p.path)
                 lfp.write(b'\0')
-        fp.write('    cd / && tar zpxf /reprozip_experiment.rpz '
-                 '--numeric-owner --strip=1 '
-                 '--null -T /rpz-files.list\n')
+        fp.write('    cd / && '
+                 '(tar zpxf /reprozip_experiment.rpz '
+                 '--numeric-owner --strip=1 --null -T /rpz-files.list || '
+                 '/bin/echo "TAR reports errors, this might or might not '
+                 'prevent the execution to run")\n')
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
