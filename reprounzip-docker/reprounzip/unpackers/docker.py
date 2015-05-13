@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, iteritems, download_file
+from reprounzip.utils import unicode_, iteritems, check_output, download_file
 
 
 def select_image(runs):
@@ -216,9 +216,11 @@ def docker_setup_create(args):
             for p in reversed(pathlist):
                 lfp.write(p.path)
                 lfp.write(b'\0')
-        fp.write('    cd / && tar zpxf /reprozip_experiment.rpz '
-                 '--numeric-owner --strip=1 '
-                 '--null -T /rpz-files.list\n')
+        fp.write('    cd / && '
+                 '(tar zpxf /reprozip_experiment.rpz '
+                 '--numeric-owner --strip=1 --null -T /rpz-files.list || '
+                 '/bin/echo "TAR reports errors, this might or might not '
+                 'prevent the execution to run")\n')
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
@@ -357,10 +359,11 @@ def docker_run(args):
                                   '/bin/busybox', 'sh', '-c', cmds])
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
+        subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
 
     # Get exit status from "docker inspect"
-    out = subprocess.check_output(['docker', 'inspect', container])
+    out = check_output(['docker', 'inspect', container])
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
