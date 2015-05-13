@@ -358,6 +358,7 @@ def docker_run(args):
                                   '/bin/busybox', 'sh', '-c', cmds])
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
+        subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
 
     # Get exit status from "docker inspect"
