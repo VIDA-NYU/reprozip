@@ -217,7 +217,7 @@ def docker_setup_create(args):
                 lfp.write(p.path)
                 lfp.write(b'\0')
         fp.write('    cd / && '
-                 '(tar zpxf /reprozip_experiment.rpz '
+                 '(tar zpxf /reprozip_experiment.rpz -U --recursive-unlink '
                  '--numeric-owner --strip=1 --null -T /rpz-files.list || '
                  '/bin/echo "TAR reports errors, this might or might not '
                  'prevent the execution to run")\n')
