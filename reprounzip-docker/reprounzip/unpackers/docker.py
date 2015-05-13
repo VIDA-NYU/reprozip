@@ -147,12 +147,12 @@ def docker_setup_create(args):
         download_file(busybox_url(runs[0]['architecture']),
                       target / 'busybox',
                       'busybox-%s' % runs[0]['architecture'])
-        fp.write('COPY busybox /bin/busybox\n')
+        fp.write('COPY busybox /busybox\n')
 
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
         fp.write('COPY rpz-files.list /rpz-files.list\n')
         fp.write('RUN \\\n'
-                 '    chmod +x /bin/busybox && \\\n')
+                 '    chmod +x /busybox && \\\n')
 
         if args.install_pkgs:
             # Install every package through package manager
@@ -219,8 +219,8 @@ def docker_setup_create(args):
         fp.write('    cd / && '
                  '(tar zpxf /reprozip_experiment.rpz -U --recursive-unlink '
                  '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                 '/bin/echo "TAR reports errors, this might or might not '
-                 'prevent the execution to run")\n')
+                 '/busybox echo "TAR reports errors, this might or might '
+                 'not prevent the execution to run")\n')
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {})
@@ -325,7 +325,7 @@ def docker_run(args):
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-        cmd += '/bin/busybox env -i '
+        cmd += '/busybox env -i '
         environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
@@ -337,8 +337,7 @@ def docker_run(args):
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
         uid = run.get('uid', 1000)
-        cmd = 'sudo -u \'#%d\' /bin/busybox sh -c %s\n' % (uid,
-                                                           shell_escape(cmd))
+        cmd = 'sudo -u \'#%d\' /busybox sh -c %s\n' % (uid, shell_escape(cmd))
         cmds.append(cmd)
     cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
@@ -356,7 +355,7 @@ def docker_run(args):
     retcode = interruptible_call(['docker', 'run', b'--name=' + container,
                                   '-h', hostname,
                                   '-i', '-t', image,
-                                  '/bin/busybox', 'sh', '-c', cmds])
+                                  '/busybox', 'sh', '-c', cmds])
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
