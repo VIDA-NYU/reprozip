@@ -978,49 +978,6 @@ int syscall_handle(struct Process *process)
         struct syscall_table *tbl = &syscall_tables[syscall_type];
         if(syscall < 0 || syscall >= 2000)
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
-#ifdef X86_64
-        /* Workaround for execve() transition x64 -> i386 */
-        if(syscall == 59 && process->in_syscall)
-        {
-            size_t i;
-            for(i = 0; i < processes_size; ++i)
-            {
-                if(processes[i]->status == PROCSTAT_ATTACHED
-                 && processes[i]->threadgroup == process->threadgroup
-                 && processes[i]->in_syscall
-                 && processes[i]->current_syscall == 59
-                 && processes[i]->execve_info != NULL)
-                {
-                    if(syscall_type == SYSCALL_I386 && verbosity >= 3)
-                        log_debug(process->tid,
-                                  "transition x64 -> i386, syscall 59 is still "
-                                  "execve");
-                    entry = &syscall_tables[SYSCALL_X86_64].entries[59];
-                }
-            }
-        }
-        /* Workaround for execve() transition i386 -> x64 */
-        else if(syscall == 11 && process->in_syscall)
-        {
-            size_t i;
-            for(i = 0; i < processes_size; ++i)
-            {
-                if(processes[i]->status == PROCSTAT_ATTACHED
-                 && processes[i]->threadgroup == process->threadgroup
-                 && processes[i]->in_syscall
-                 && processes[i]->current_syscall == 11
-                 && processes[i]->execve_info != NULL)
-                {
-                    if(syscall_type == SYSCALL_X86_64 && verbosity >= 3)
-                        log_debug(process->tid,
-                                  "transition i386 -> x64, syscall 11 is still "
-                                  "execve");
-                    entry = &syscall_tables[SYSCALL_I386].entries[11];
-                }
-            }
-        }
-        else
-#endif
         if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
