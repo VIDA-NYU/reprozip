@@ -4,6 +4,7 @@ set -xe
 
 # version numbers
 COMPOSE_VERSION=1.2.0
+BRANCH=${BRANCH:-master}
 
 
 # Disable post-install autorun
@@ -34,6 +35,6 @@ sudo chmod +x /usr/local/bin/docker-compose
 
 # Download binary
 curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
-curl -sLo linux-init https://github.com/moul/travis-docker/raw/master/linux-init
-curl -sLo run https://github.com/moul/travis-docker/raw/master/run
+curl -sLo linux-init https://github.com/moul/travis-docker/raw/${BRANCH}/linux-init
+curl -sLo run https://github.com/moul/travis-docker/raw/${BRANCH}/run
 chmod +x linux linux-init run
