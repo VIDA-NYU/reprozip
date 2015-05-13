@@ -427,10 +427,7 @@ int syscall_execve_event(struct Process *process)
 static int syscall_execve_out(const char *name, struct Process *process,
                               unsigned int execve_syscall)
 {
-    if(process->retvalue.i >= 0)
-        log_debug(process->tid, "execve() successful");
-    else
-        log_debug(process->tid, "execve() failed");
+    log_debug(process->tid, "execve() failed");
     if(process->execve_info != NULL)
     {
         free_execve_info(process->execve_info);
