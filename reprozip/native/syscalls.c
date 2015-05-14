@@ -69,7 +69,7 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
     if(pathname[0] != '/')
     {
         char *oldpath = pathname;
-        pathname = abspath(process->wd, oldpath);
+        pathname = abspath(process->threadgroup->wd, oldpath);
         free(oldpath);
     }
     return pathname;
@@ -116,7 +116,7 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
         if(pathname[0] != '/')
         {
             char *oldpath = pathname;
-            pathname = abspath(process->wd, oldpath);
+            pathname = abspath(process->threadgroup->wd, oldpath);
             free(oldpath);
         }
         log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
@@ -302,8 +302,8 @@ static int syscall_chdir(const char *name, struct Process *process,
     char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
-        free(process->wd);
-        process->wd = pathname;
+        free(process->threadgroup->wd);
+        process->threadgroup->wd = pathname;
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_WDIR,
@@ -375,7 +375,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         for(i = 0; i < processes_size; ++i)
         {
             if(processes[i]->status == PROCESS_ATTACHED
-             && processes[i]->tgid == process->tgid
+             && processes[i]->threadgroup == process->threadgroup
              && processes[i]->in_syscall
              && processes[i]->current_syscall == (int)execve_syscall
              && processes[i]->syscall_info != NULL)
@@ -409,7 +409,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         if(db_add_exec(process->identifier, execi->binary,
                        (const char *const*)execi->argv,
                        (const char *const*)execi->envp,
-                       process->wd) != 0)
+                       process->threadgroup->wd) != 0)
             return -1;
         /* Note that here, the database records that the thread leader
          * called execve, instead of thread exec_process->tid. */
@@ -459,7 +459,7 @@ static int syscall_forking(const char *name, struct Process *process,
                      (syscall == SYSCALL_FORK_VFORK)?"vfork()":
                      "clone()",
                      is_thread?"yes":"no",
-                     process->wd);
+                     process->threadgroup->wd);
 
         /* At this point, the process might have been seen by waitpid in
          * trace() or not. */
@@ -496,16 +496,23 @@ static int syscall_forking(const char *name, struct Process *process,
             new_process->in_syscall = 0;
         }
         if(is_thread)
-            new_process->tgid = process->tgid;
+        {
+            new_process->threadgroup = process->threadgroup;
+            process->threadgroup->refs++;
+            if(verbosity >= 3)
+                log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
+                          process->threadgroup->refs);
+        }
         else
-            new_process->tgid = new_process->tid;
-        new_process->wd = strdup(process->wd);
+            new_process->threadgroup = trace_new_threadgroup(
+                    new_process->tid,
+                    strdup(process->threadgroup->wd));
 
         /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
 
         if(db_add_process(&new_process->identifier,
                           process->identifier,
-                          process->wd) != 0)
+                          process->threadgroup->wd) != 0)
             return -1;
     }
     return 0;
@@ -955,7 +962,7 @@ int syscall_handle(struct Process *process)
             for(i = 0; i < processes_size; ++i)
             {
                 if(processes[i]->status == PROCESS_ATTACHED
-                 && processes[i]->tgid == process->tgid
+                 && processes[i]->threadgroup == process->threadgroup
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 59
                  && processes[i]->syscall_info != NULL)
@@ -975,7 +982,7 @@ int syscall_handle(struct Process *process)
             for(i = 0; i < processes_size; ++i)
             {
                 if(processes[i]->status == PROCESS_ATTACHED
-                 && processes[i]->tgid == process->tgid
+                 && processes[i]->threadgroup == process->threadgroup
                  && processes[i]->in_syscall
                  && processes[i]->current_syscall == 11
                  && processes[i]->syscall_info != NULL)
