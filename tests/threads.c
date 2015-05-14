@@ -12,6 +12,7 @@
 void *func1(void *param)
 {
     static retvalue = 42;
+    chdir("/bin");
     usleep(100000);
     return &retvalue;
 }
@@ -26,7 +27,7 @@ void *func4(void *param)
 {
     char *argv[3] = {"echo", "42", NULL};
     usleep(200000);
-    execvp("/bin/echo", argv);
+    execvp("./echo", argv);
     perror("execvp");
     return NULL;
 }
@@ -51,5 +52,5 @@ int main(void)
 
     pthread_join(th4, NULL);
     /* Won't be reached */
-    return 0;
+    return 2;
 }
