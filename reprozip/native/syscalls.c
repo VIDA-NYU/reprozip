@@ -400,6 +400,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         free(exec_process->wd);
         exec_process->status = PROCESS_FREE;
     }
+    exec_process->syscall_info = NULL;
     if(process->retvalue.i >= 0)
     {
         /* Note: execi->argv needs a cast to suppress a bogus warning
@@ -414,7 +415,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         /* Note that here, the database records that the thread leader
          * called execve, instead of thread exec_process->tid. */
         if(verbosity >= 2)
-            log_info(exec_process->tid, "successfully exec'd %s",
+            log_info(process->tid, "successfully exec'd %s",
                      execi->binary);
         /* Process will get SIGTRAP with PTRACE_EVENT_EXEC */
         if(trace_add_files_from_proc(process->identifier, process->tid,
@@ -426,7 +427,6 @@ static int syscall_execve_out(const char *name, struct Process *process,
     free_strarray(execi->envp);
     free(execi->binary);
     free(execi);
-    exec_process->syscall_info = NULL;
     return 0;
 }
 
