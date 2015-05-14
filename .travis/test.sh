@@ -25,8 +25,8 @@ in
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
 EOF
         find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | while read i; do
-            T=$(file -i "$i")
-            if ! ( echo "$T" | grep -q 'charset=us-ascii$' || echo "$T" | grep -q 'inode/x-empty' ) ; then
+            T=$(file -bi "$i")
+            if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
                 echo "$i is not ASCII"
                 exit 1
             fi
