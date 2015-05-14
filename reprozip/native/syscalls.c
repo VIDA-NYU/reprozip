@@ -397,8 +397,7 @@ static int syscall_execve_out(const char *name, struct Process *process,
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
             return -1;
-        free(exec_process->wd);
-        exec_process->status = PROCESS_FREE;
+        trace_free_process(exec_process);
     }
     exec_process->syscall_info = NULL;
     if(process->retvalue.i >= 0)

@@ -156,6 +156,16 @@ struct Process *trace_get_empty_process(void)
     }
 }
 
+void trace_free_process(struct Process *process)
+{
+    process->status = PROCESS_FREE;
+    if(process->wd != NULL)
+    {
+        free(process->wd);
+        process->wd = NULL;
+    }
+}
+
 void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
 {
     unsigned int nproc = 0, unknown = 0;
@@ -312,8 +322,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             {
                 if(db_add_exit(process->identifier, exitcode) != 0)
                     return -1;
-                free(process->wd);
-                process->status = PROCESS_FREE;
+                trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
@@ -536,7 +545,7 @@ static void cleanup(void)
         if(processes[i]->status != PROCESS_FREE)
         {
             kill(processes[i]->tid, SIGKILL);
-            free(processes[i]->wd);
+            trace_free_process(processes[i]);
         }
     }
 }

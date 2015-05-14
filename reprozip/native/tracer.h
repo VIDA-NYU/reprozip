@@ -55,6 +55,8 @@ struct Process *trace_find_process(pid_t tid);
 
 struct Process *trace_get_empty_process(void);
 
+void trace_free_process(struct Process *process);
+
 void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown);
 
 int trace_add_files_from_proc(unsigned int process, pid_t tid,
