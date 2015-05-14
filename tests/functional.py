@@ -325,7 +325,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('threads', ['threads.c'], ['-lpthread'])
     # Trace
-    output = check_errout(rpz + ['testrun', './threads'])
+    # FIXME: '+verbose' here is a workaround for an argparse bug (#89)
+    output = check_errout(rpz + ['testrun'] + verbose + ['./threads'])
     assert any(b'successfully exec\'d /bin/./echo' in l
                for l in output.splitlines())
 
