@@ -89,12 +89,12 @@ def main():
     # Parses command-line
 
     # General options
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('--version', action='version',
-                         version="reprounzip version %s" % __version__)
-    options.add_argument('-v', '--verbose', action='count', default=1,
-                         dest='verbosity',
-                         help="augments verbosity level")
+    def add_options(opts):
+        opts.add_argument('--version', action='version',
+                          version="reprounzip version %s" % __version__)
+        opts.add_argument('-v', '--verbose', action='count', default=1,
+                          dest='verbosity',
+                          help="augments verbosity level")
 
     # Loads plugins
     for name, func, descr, descr_1 in get_plugins('reprounzip.plugins'):
@@ -104,14 +104,15 @@ def main():
             description="reprounzip is the ReproZip component responsible for "
                         "unpacking and reproducing an experiment previously "
                         "packed with reprozip",
-            epilog="Please report issues to reprozip-users@vgc.poly.edu",
-            parents=[options])
+            epilog="Please report issues to reprozip-users@vgc.poly.edu")
+    add_options(parser)
     subparsers = parser.add_subparsers(title="subcommands", metavar='')
 
     # usage_report subcommand
     parser_stats = subparsers.add_parser(
-            'usage_report', parents=[options],
+            'usage_report',
             help="Enables or disables anonymous usage reports")
+    add_options(parser_stats)
     parser_stats.add_argument('--enable', action='store_true')
     parser_stats.add_argument('--disable', action='store_true')
     parser_stats.set_defaults(func=usage_report)
@@ -119,9 +120,9 @@ def main():
     # Loads unpackers
     for name, func, descr, descr_1 in get_plugins('reprounzip.unpackers'):
         plugin_parser = subparsers.add_parser(
-                name, parents=[options],
-                help=descr_1, description=descr,
+                name, help=descr_1, description=descr,
                 formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_options(plugin_parser)
         info = func(plugin_parser)
         plugin_parser.set_defaults(selected_unpacker=name)
         if info is None:

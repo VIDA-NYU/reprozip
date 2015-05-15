@@ -245,41 +245,43 @@ def main():
     # Parses command-line
 
     # General options
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('--version', action='version',
+    def add_options(opt):
+        opt.add_argument('--version', action='version',
                          version="reprozip version %s" % reprozip_version)
-    options.add_argument('-v', '--verbose', action='count', default=1,
+        opt.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
-    options.add_argument('-d', '--dir', default='.reprozip-trace',
+        opt.add_argument('-d', '--dir', default='.reprozip-trace',
                          help="where to store database and configuration file "
                          "(default: ./.reprozip-trace)")
-    options.add_argument(
-            '--dont-identify-packages', action='store_false', default=True,
-            dest='identify_packages',
-            help="do not try identify which package each file comes from")
+        opt.add_argument(
+                '--dont-identify-packages', action='store_false', default=True,
+                dest='identify_packages',
+                help="do not try identify which package each file comes from")
 
     parser = argparse.ArgumentParser(
             description="reprozip is the ReproZip component responsible for "
                         "tracing and packing the execution of an experiment",
-            epilog="Please report issues to reprozip-users@vgc.poly.edu",
-            parents=[options])
+            epilog="Please report issues to reprozip-users@vgc.poly.edu")
+    add_options(parser)
     subparsers = parser.add_subparsers(title="commands", metavar='',
                                        dest='selected_command')
 
     # usage_report subcommand
     parser_stats = subparsers.add_parser(
-            'usage_report', parents=[options],
+            'usage_report',
             help="Enables or disables anonymous usage reports")
+    add_options(parser_stats)
     parser_stats.add_argument('--enable', action='store_true')
     parser_stats.add_argument('--disable', action='store_true')
     parser_stats.set_defaults(func=usage_report)
 
     # trace command
     parser_trace = subparsers.add_parser(
-            'trace', parents=[options],
+            'trace',
             help="Runs the program and writes out database and configuration "
             "file")
+    add_options(parser_trace)
     parser_trace.add_argument(
             '-a',
             dest='arg0',
@@ -293,8 +295,9 @@ def main():
 
     # testrun command
     parser_testrun = subparsers.add_parser(
-            'testrun', parents=[options],
+            'testrun',
             help="Runs the program and writes out the database contents")
+    add_options(parser_testrun)
     parser_testrun.add_argument(
             '-a',
             dest='arg0',
@@ -304,14 +307,16 @@ def main():
 
     # reset command
     parser_reset = subparsers.add_parser(
-            'reset', parents=[options],
+            'reset',
             help="Resets the configuration file")
+    add_options(parser_reset)
     parser_reset.set_defaults(func=reset)
 
     # pack command
     parser_pack = subparsers.add_parser(
-            'pack', parents=[options],
+            'pack',
             help="Packs the experiment according to the current configuration")
+    add_options(parser_pack)
     parser_pack.add_argument('target', nargs='?', default='experiment.rpz',
                              help="Destination file")
     parser_pack.set_defaults(func=pack)
