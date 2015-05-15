@@ -671,55 +671,62 @@ def setup(parser, **kwargs):
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Experiment directory")
+
+    def add_opt_general(opts):
+        opts.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
-    opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
-    opt_setup.add_argument(
-            '--use-chroot', action='store_true',
-            default=True,
-            help=argparse.SUPPRESS)
-    opt_setup.add_argument(
-            '--dont-use-chroot', action='store_false', dest='use_chroot',
-            default=True,
-            help=("Don't prefer original files nor use chroot in the virtual "
-                  "machine"))
-    opt_setup.add_argument(
-            '--no-use-chroot', action='store_false', dest='use_chroot',
-            default=True, help=argparse.SUPPRESS)
-    opt_setup.add_argument(
-            '--dont-bind-magic-dirs', action='store_false', default=True,
-            dest='bind_magic_dirs',
-            help="Don't mount /dev and /proc inside the chroot (no effect if "
-            "--dont-use-chroot is set)")
-    opt_setup.add_argument('--base-image', nargs=1, help="Vagrant box to use")
-    opt_setup.add_argument('--distribution', nargs=1,
-                           help=("Distribution used in the Vagrant box (for "
-                                 "package installer selection)"))
-    parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[opt_setup, options])
+    def add_opt_setup(opts):
+        opts.add_argument('pack', nargs=1, help="Pack to extract")
+        opts.add_argument(
+                '--use-chroot', action='store_true',
+                default=True,
+                help=argparse.SUPPRESS)
+        opts.add_argument(
+                '--dont-use-chroot', action='store_false', dest='use_chroot',
+                default=True,
+                help=("Don't prefer original files nor use chroot in the "
+                      "virtual machine"))
+        opts.add_argument(
+                '--no-use-chroot', action='store_false', dest='use_chroot',
+                default=True, help=argparse.SUPPRESS)
+        opts.add_argument(
+                '--dont-bind-magic-dirs', action='store_false', default=True,
+                dest='bind_magic_dirs',
+                help="Don't mount /dev and /proc inside the chroot (no effect "
+                "if --dont-use-chroot is set)")
+        opts.add_argument('--base-image', nargs=1, help="Vagrant box to use")
+        opts.add_argument('--distribution', nargs=1,
+                          help=("Distribution used in the Vagrant box (for "
+                                "package installer selection)"))
+
+    parser_setup_create = subparsers.add_parser('setup/create')
+    add_opt_setup(parser_setup_create)
+    add_opt_general(parser_setup_create)
     parser_setup_create.set_defaults(func=vagrant_setup_create)
 
     # setup/start
-    parser_setup_start = subparsers.add_parser('setup/start',
-                                               parents=[options])
+    parser_setup_start = subparsers.add_parser('setup/start')
+    add_opt_general(parser_setup_start)
     parser_setup_start.set_defaults(func=vagrant_setup_start)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
+    parser_setup = subparsers.add_parser('setup')
+    add_opt_setup(parser_setup)
+    add_opt_general(parser_setup)
     parser_setup.set_defaults(func=composite_action(vagrant_setup_create,
                                                     vagrant_setup_start))
 
     # upload
-    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload = subparsers.add_parser('upload')
+    add_opt_general(parser_upload)
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                help="<path>:<input_file_name")
     parser_upload.set_defaults(func=vagrant_upload)
 
     # run
-    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run = subparsers.add_parser('run')
+    add_opt_general(parser_run)
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--no-stdin', action='store_true', default=False,
                             help=("Don't connect program's input stream to "
@@ -739,23 +746,25 @@ def setup(parser, **kwargs):
     parser_run.set_defaults(func=vagrant_run)
 
     # download
-    parser_download = subparsers.add_parser('download', parents=[options])
+    parser_download = subparsers.add_parser('download')
+    add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
     parser_download.set_defaults(func=vagrant_download)
 
     # destroy/vm
-    parser_destroy_vm = subparsers.add_parser('destroy/vm',
-                                              parents=[options])
+    parser_destroy_vm = subparsers.add_parser('destroy/vm')
+    add_opt_general(parser_destroy_vm)
     parser_destroy_vm.set_defaults(func=vagrant_destroy_vm)
 
     # destroy/dir
-    parser_destroy_dir = subparsers.add_parser('destroy/dir',
-                                               parents=[options])
+    parser_destroy_dir = subparsers.add_parser('destroy/dir')
+    add_opt_general(parser_destroy_dir)
     parser_destroy_dir.set_defaults(func=vagrant_destroy_dir)
 
     # destroy
-    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy = subparsers.add_parser('destroy')
+    add_opt_general(parser_destroy)
     parser_destroy.set_defaults(func=composite_action(vagrant_destroy_vm,
                                                       vagrant_destroy_dir))
 

@@ -593,46 +593,53 @@ def setup(parser, **kwargs):
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Experiment directory")
+
+    def add_opt_general(opts):
+        opts.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
-    opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
-    opt_setup.add_argument('--base-image', nargs=1, help="Base image to use")
-    opt_setup.add_argument('--distribution', nargs=1,
-                           help=("Distribution used in the base image (for "
-                                 "package installer selection)"))
-    opt_setup.add_argument('--install-pkgs', action='store_true',
-                           default=False,
-                           help=("Install packages rather than extracting "
-                                 "them from RPZ file"))
-    opt_setup.add_argument('--unpack-pkgs', action='store_false',
-                           default=False,
-                           help=("Extract packed packages rather than "
-                                 "installing them"))
-    parser_setup_create = subparsers.add_parser('setup/create',
-                                                parents=[opt_setup, options])
+    def add_opt_setup(opts):
+        opts.add_argument('pack', nargs=1, help="Pack to extract")
+        opts.add_argument('--base-image', nargs=1, help="Base image to use")
+        opts.add_argument('--distribution', nargs=1,
+                          help=("Distribution used in the base image (for "
+                                "package installer selection)"))
+        opts.add_argument('--install-pkgs', action='store_true',
+                          default=False,
+                          help=("Install packages rather than extracting "
+                                "them from RPZ file"))
+        opts.add_argument('--unpack-pkgs', action='store_false',
+                          default=False,
+                          help=("Extract packed packages rather than "
+                                "installing them"))
+
+    parser_setup_create = subparsers.add_parser('setup/create')
+    add_opt_setup(parser_setup_create)
+    add_opt_general(parser_setup_create)
     parser_setup_create.set_defaults(func=docker_setup_create)
 
     # setup/build
-    parser_setup_build = subparsers.add_parser('setup/build',
-                                               parents=[options])
+    parser_setup_build = subparsers.add_parser('setup/build')
+    add_opt_general(parser_setup_build)
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
-    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
+    parser_setup = subparsers.add_parser('setup')
+    add_opt_setup(parser_setup)
+    add_opt_general(parser_setup)
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
 
     # upload
-    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload = subparsers.add_parser('upload')
+    add_opt_general(parser_upload)
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                help="<path>:<input_file_name")
     parser_upload.set_defaults(func=docker_upload)
 
     # run
-    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run = subparsers.add_parser('run')
+    add_opt_general(parser_run)
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
@@ -647,23 +654,25 @@ def setup(parser, **kwargs):
     parser_run.set_defaults(func=docker_run)
 
     # download
-    parser_download = subparsers.add_parser('download', parents=[options])
+    parser_download = subparsers.add_parser('download')
+    add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
     parser_download.set_defaults(func=docker_download)
 
     # destroy/docker
-    parser_destroy_docker = subparsers.add_parser('destroy/docker',
-                                                  parents=[options])
+    parser_destroy_docker = subparsers.add_parser('destroy/docker')
+    add_opt_general(parser_destroy_docker)
     parser_destroy_docker.set_defaults(func=docker_destroy_docker)
 
     # destroy/dir
-    parser_destroy_dir = subparsers.add_parser('destroy/dir',
-                                               parents=[options])
+    parser_destroy_dir = subparsers.add_parser('destroy/dir')
+    add_opt_general(parser_destroy_dir)
     parser_destroy_dir.set_defaults(func=docker_destroy_dir)
 
     # destroy
-    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy = subparsers.add_parser('destroy')
+    add_opt_general(parser_destroy)
     parser_destroy.set_defaults(func=composite_action(docker_destroy_docker,
                                                       docker_destroy_dir))
 
