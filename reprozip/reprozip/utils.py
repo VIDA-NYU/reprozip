@@ -266,20 +266,21 @@ def download_file(url, dest, cachename=None):
     except URLError as e:
         if cache.exists():
             if isinstance(e, HTTPError) and e.code == 304:
-                logging.info("Cached file %s is up to date", cachename)
+                logging.info("Download %s: cache is up to date", cachename)
             else:
-                logging.warning("Couldn't download %s: %s", url, e)
+                logging.warning("Download %s: error downloading %s: %s",
+                                cachename, url, e)
             cache.copy(dest)
             return
         else:
             raise
 
     if response is None:
-        logging.info("Cached file %s is up to date", cachename)
+        logging.info("Download %s: cache is up to date", cachename)
         cache.copy(dest)
         return
 
-    logging.info("Downloading %s", url)
+    logging.info("Download %s: downloading %s", cachename, url)
     try:
         CHUNK_SIZE = 4096
         with cache.open('wb') as f:
@@ -295,5 +296,6 @@ def download_file(url, dest, cachename=None):
         except OSError:
             pass
         raise e
+    logging.info("Downloaded %s successfully", cachename)
 
     cache.copy(dest)
