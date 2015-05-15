@@ -75,7 +75,7 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
 
 # Start docker daemon
-docker -d &
+docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
 while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 
 
