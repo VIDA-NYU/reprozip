@@ -1,4 +1,4 @@
-# travis-docker [![Build Status](https://travis-ci.org/moul/travis-docker.svg?branch=master)](https://travis-ci.org/moul/travis-docker)
+# travis-docker [![Build Status](https://img.shields.io/travis/moul/travis-docker.svg)](https://travis-ci.org/moul/travis-docker)
 
 Running Docker in a Travis CI build.
 
