@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.7 (???)
+---------
+
+Behavior change:
+* No longer accept passing `-v` after the subcommand; use `reprozip -v testrun ...`, not `reprozip testrun -v`.
+
 0.6.4 (???)
 -----------
 
@@ -59,8 +65,7 @@ from package manager over unpacking the packed files
 ------------------
 
 Bugfixes:
-* Goes back to pack format 0.4: generates `.rpz` files readable by older
-  reprounzip versions
+* Goes back to pack format 0.4: generates `.rpz` files readable by older reprounzip versions
 * Fixes experiment not having a PTY in some conditions
 * Rewrite absolute paths on command-line for directory unpacker
 
@@ -69,10 +74,8 @@ Features:
 * Makes error messages more readable
 * Default trace directory renamed from `.reprozip` to `.reprozip-trace`
 * Adds a log file under $HOME/.reprozip/log
-* reprounzip-vagrant will use 'ssh' executable if it's available; should be
-  more reliable, especially on Windows
-* Automatically collects usage information. Nothing will be sent before you
-  opt-in, and we made sure to only collect general details
+* reprounzip-vagrant will use 'ssh' executable if it's available; should be more reliable, especially on Windows
+* Automatically collects usage information. Nothing will be sent before you opt-in, and we made sure to only collect general details
 
 0.5 (2014-11-24)
 ----------------
@@ -113,8 +116,7 @@ Features:
 * Better error messages when trying to unpack on incompatible system
 * Identifies input files, which can be replaced ('upload' operation)
 * Identifies output files, which can be retrieved ('download' operation)
-* New command-line interface for unpackers, with setup/run/destroy; you can now
-  do everything through reprounzip
+* New command-line interface for unpackers, with setup/run/destroy; you can now do everything through reprounzip
 * Vagrant now defaults to --use-chroot`, added --no-use-chroot
 * Adds --summary and --missing to installpkgs
 * Adds Docker unpacker (no uploading support yet)
