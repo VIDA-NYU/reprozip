@@ -82,7 +82,12 @@ class TestReprozip(unittest.TestCase):
                 sys.argv = a.split()
                 with self.assertRaises(SystemExit) as cm:
                     reprozip.main.main(setup_streams=False)
-                self.assertEqual(cm.exception.code, c)
+                if isinstance(cm.exception, int):
+                    # Python 2.6: cm.exception is an int (what!?)
+                    self.assertEqual(cm.exception, c)
+                else:
+                    # Working Python versions
+                    self.assertEqual(cm.exception.code, c)
                 if c == 0:
                     self.assertEqual(calls, [('l', v), ('t', v)])
                 calls = []
