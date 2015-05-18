@@ -130,20 +130,14 @@ struct Process *trace_get_empty_process(void)
     }
 
     /* Count unknown processes */
+    if(verbosity >= 3)
     {
         size_t unknown = 0;
         for(i = 0; i < processes_size; ++i)
             if(processes[i]->status == PROCESS_UNKNOWN)
                 ++unknown;
-        {
-            int many_unknown = unknown * 2 >= processes_size;
-            if(many_unknown && verbosity >= 1)
-                log_warn(0, "there are %u/%u UNKNOWN processes",
-                         (unsigned int)unknown, (unsigned int)processes_size);
-            else if(verbosity >= 2)
-                log_info(0, "there are %u/%u UNKNOWN processes",
-                         (unsigned int)unknown, (unsigned int)processes_size);
-        }
+        log_debug(0, "there are %u/%u UNKNOWN processes",
+                  (unsigned int)unknown, (unsigned int)processes_size);
     }
 
     /* Allocate more! */
