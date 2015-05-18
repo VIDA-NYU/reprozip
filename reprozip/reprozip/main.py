@@ -248,9 +248,6 @@ def main():
     def add_options(opt):
         opt.add_argument('--version', action='version',
                          version="reprozip version %s" % reprozip_version)
-        opt.add_argument('-v', '--verbose', action='count', default=1,
-                         dest='verbosity',
-                         help="augments verbosity level")
         opt.add_argument('-d', '--dir', default='.reprozip-trace',
                          help="where to store database and configuration file "
                          "(default: ./.reprozip-trace)")
@@ -264,6 +261,9 @@ def main():
                         "tracing and packing the execution of an experiment",
             epilog="Please report issues to reprozip-users@vgc.poly.edu")
     add_options(parser)
+    parser.add_argument('-v', '--verbose', action='count', default=1,
+                        dest='verbosity',
+                        help="augments verbosity level")
     subparsers = parser.add_subparsers(title="commands", metavar='',
                                        dest='selected_command')
 

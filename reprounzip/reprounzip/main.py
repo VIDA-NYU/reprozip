@@ -92,9 +92,6 @@ def main():
     def add_options(opts):
         opts.add_argument('--version', action='version',
                           version="reprounzip version %s" % __version__)
-        opts.add_argument('-v', '--verbose', action='count', default=1,
-                          dest='verbosity',
-                          help="augments verbosity level")
 
     # Loads plugins
     for name, func, descr, descr_1 in get_plugins('reprounzip.plugins'):
@@ -106,6 +103,9 @@ def main():
                         "packed with reprozip",
             epilog="Please report issues to reprozip-users@vgc.poly.edu")
     add_options(parser)
+    parser.add_argument('-v', '--verbose', action='count', default=1,
+                        dest='verbosity',
+                        help="augments verbosity level")
     subparsers = parser.add_subparsers(title="subcommands", metavar='')
 
     # usage_report subcommand
