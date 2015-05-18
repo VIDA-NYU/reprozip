@@ -389,9 +389,11 @@ static int syscall_execve_out(const char *name, struct Process *process,
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
             return -1;
+        exec_process->execve_info = NULL;
         trace_free_process(exec_process);
     }
-    exec_process->execve_info = NULL;
+    else
+        exec_process->execve_info = NULL;
     if(process->retvalue.i >= 0)
     {
         /* Note: execi->argv needs a cast to suppress a bogus warning
