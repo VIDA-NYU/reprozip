@@ -1,3 +1,4 @@
+import sys
 import unittest
 import warnings
 
@@ -58,3 +59,44 @@ class TestSignals(unittest.TestCase):
         callsig('succ', a=1, b=2, c=3)
         callsig('fail', a=1)
         callsig('warn', a=1, b=2, d=3)
+
+
+class TestArgs(unittest.TestCase):
+    def test_argparse(self):
+        """Tests argument parsing"""
+        calls = []
+
+        def chroot_run(args):
+            calls.append(('c', args.verbosity))
+
+        def setup_logging(tag, verbosity):
+            calls.append(('l', verbosity))
+
+        import reprounzip.main
+        import reprounzip.unpackers.default
+
+        old_funcs = (reprounzip.unpackers.default.chroot_run,
+                     reprounzip.main.setup_logging)
+        reprounzip.unpackers.default.chroot_run = chroot_run
+        reprounzip.main.setup_logging = setup_logging
+        old_argv = sys.argv
+        try:
+            for a, c, v in [('reprounzip', 2, -1),
+                            ('reprounzip -v', 2, -1),
+                            ('reprounzip chroot run a', 0, 1),
+                            ('reprounzip chroot -v run a', 2, -1),
+                            ('reprounzip -v chroot run a', 0, 2),
+                            ('reprounzip -v -v chroot run a', 0, 3),
+                            ('reprounzip chroot run -v a', 2, -1)]:
+                sys.argv = a.split()
+                print(sys.argv)
+                with self.assertRaises(SystemExit) as cm:
+                    reprounzip.main.main(setup_streams=False)
+                self.assertEqual(cm.exception.code, c)
+                if c == 0:
+                    self.assertEqual(calls, [('l', v), ('c', v)])
+                calls = []
+        finally:
+            sys.argv = old_argv
+        (reprounzip.unpackers.default.chroot_run,
+         reprounzip.main.setup_logging) = old_funcs

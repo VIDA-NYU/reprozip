@@ -1,5 +1,6 @@
 import os
 from rpaths import Path
+import sys
 import unittest
 
 from reprozip.utils import make_dir_writable
@@ -52,3 +53,39 @@ class TestReprozip(unittest.TestCase):
             (tmp / 'some' / 'complete').chmod(0o755)
             (tmp / 'some' / 'complete' / 'path').chmod(0o755)
             tmp.rmtree()
+
+    @unittest.skipIf(sys.version_info < (2, 7, 3),
+                     "Python version not supported by reprozip")
+    def test_argparse(self):
+        """Tests argument parsing"""
+        calls = []
+
+        def testrun(args):
+            calls.append(('t', args.verbosity))
+
+        def setup_logging(tag, verbosity):
+            calls.append(('l', verbosity))
+
+        import reprozip.main
+
+        old_funcs = reprozip.main.testrun, reprozip.main.setup_logging
+        reprozip.main.testrun = testrun
+        reprozip.main.setup_logging = setup_logging
+        old_argv = sys.argv
+        try:
+            for a, c, v in [('reprozip', 2, -1),
+                            ('reprozip -v', 2, -1),
+                            ('reprozip testrun true', 0, 1),
+                            ('reprozip testrun -v true', 2, -1),
+                            ('reprozip -v testrun true', 0, 2),
+                            ('reprozip -v -v testrun true', 0, 3)]:
+                sys.argv = a.split()
+                with self.assertRaises(SystemExit) as cm:
+                    reprozip.main.main(setup_streams=False)
+                self.assertEqual(cm.exception.code, c)
+                if c == 0:
+                    self.assertEqual(calls, [('l', v), ('t', v)])
+                calls = []
+        finally:
+            sys.argv = old_argv
+            reprozip.main.testrun, reprozip.main.setup_logging = old_funcs
