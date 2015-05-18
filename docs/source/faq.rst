@@ -127,6 +127,19 @@ Or use the following command in case you want all the available plugins::
 
     $ pip install -I reprounzip[all]
 
+I'm seeing warnings from requests/urllib3
+=========================================
+
+The warning might go something like this::
+
+    /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/util/ssl_.py:79:
+    InsecurePlatformWarning: A true SSLContext object is not available. This
+    prevents urllib3 from configuring SSL appropriately and may cause certain SSL
+    connections to fail. For more information, see
+    https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
+
+Most Python versions are insecure, because they don't validate SSL certificates. Python 2.7.9 and later shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]`` which should bring in the missing components.
+
 Why does the experiment fail with ``Error: Can't open display: :0``?
 ====================================================================
 
