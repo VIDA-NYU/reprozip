@@ -9,6 +9,7 @@ export LC_ALL=C
 case "$TEST_MODE"
 in
     run_program|coverage_c|coverage_py)
+        UML_DOCKERCOMPOSE=0 UML_FIG=0 sh -xe .travis/uml-docker/install.sh
         if [ "$TEST_MODE" = "coverage_c" ]; then
             export CFLAGS="-fprofile-arcs -ftest-coverage"
         fi
