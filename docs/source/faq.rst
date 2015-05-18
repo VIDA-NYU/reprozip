@@ -3,7 +3,7 @@
 Frequently Asked Questions
 **************************
 
-.. _file_id:
+..  _file_id:
 
 Why `reprozip` does not identify my input/output file?
 ======================================================
@@ -127,21 +127,12 @@ Or use the following command in case you want all the available plugins::
 
     $ pip install -I reprounzip[all]
 
-..  _scp-py3:
-
-Why I am having issues with `reprounzip-vagrant` on Python 3?
-=============================================================
-
-The `reprounzip-vagrant` plugin is compatible with Python 3; however, the **scp.py** library used to transfer files to and from the virtual machine has a number of issues. Until the maintainer accepts our patch, you can install our fixed version from GitHub using::
-
-    pip install 'git+https://github.com/remram44/scp.py.git#egg=scp'
-
 Why does the experiment fail with ``Error: Can't open display: :0``?
 ====================================================================
 
 The experiment probably involves running a GUI tool. The `reprounzip` component supports GUI tools, but it is not enabled by default; add the flag ``--enable-x11`` to the ``run`` command to enable it. See :ref:`gui-tools` for more information.
 
-.. _directory_error:
+..  _directory_error:
 
 Why does `reprounzip directory` fail with ``IOError``?
 ======================================================
@@ -174,7 +165,7 @@ When running ``reprounzip vagrant setup``, if you get an error similar to this::
 
 there is probably a firewall blocking the Vagrant VM to have Internet connection; the VM needs Internet connection to download required software for setting up the experiment for you. Please make sure that your anti-virus/firewall is not causing this issue.
 
-.. _nosuchfile:
+..  _nosuchfile:
 
 Why does ``reprounzip run`` fail with ``no such file or directory`` or similar?
 ===============================================================================
