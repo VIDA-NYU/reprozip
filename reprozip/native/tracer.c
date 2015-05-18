@@ -152,6 +152,7 @@ struct Process *trace_get_empty_process(void)
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
             processes[i]->threadgroup = NULL;
+            processes[i]->syscall_info = NULL;
         }
         return processes[prev_size];
     }
@@ -184,12 +185,10 @@ void trace_free_process(struct Process *process)
                 log_debug(process->threadgroup->tgid,
                           "deallocating threadgroup");
             if(process->threadgroup->wd != NULL)
-            {
                 free(process->threadgroup->wd);
-                process->threadgroup->wd = NULL;
-            }
             free(process->threadgroup);
         }
+        process->threadgroup = NULL;
     }
     else if(verbosity >= 3)
         log_debug(process->tid, "threadgroup==NULL");
