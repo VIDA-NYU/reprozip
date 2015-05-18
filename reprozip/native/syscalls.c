@@ -299,9 +299,9 @@ static int syscall_symlink(const char *name, struct Process *process,
 static int syscall_chdir(const char *name, struct Process *process,
                          unsigned int udata)
 {
-    char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
+        char *pathname = abs_path_arg(process, 0);
         free(process->threadgroup->wd);
         process->threadgroup->wd = pathname;
         if(db_add_file_open(process->identifier,
@@ -310,8 +310,6 @@ static int syscall_chdir(const char *name, struct Process *process,
                             1) != 0)
             return -1;
     }
-    else
-        free(pathname);
     return 0;
 }
 
