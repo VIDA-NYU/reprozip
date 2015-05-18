@@ -17,7 +17,7 @@ Before unpacking an experiment, it is often useful to have further information w
 
     $ reprounzip info <package>
 
-where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can use ``-v`` for `verbose` to get more detailed information on the package.
+where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can use ``-v`` for `verbose` before the command to get more detailed information on the package, e.g. ``reprounzip -v info experiment.rpz``.
 
 The output of this command has three sections. The first section, `Pack Information`, contains general information about the experiment package, including size and total number of files::
 
@@ -70,7 +70,16 @@ The ``reprounzip showfiles`` command can be used to list the input and output fi
         rendered_image
         logfile
 
-Using the flag ``-v`` shows the complete path of each of these files in the experiment environment.
+Using the flag ``-v`` shows the complete path of each of these files in the experiment environment::
+
+    $ reprounzip -v showfiles package.rpz
+    Input files:
+        program_config (/home/user/.progrc)
+        ipython_config (/home/user/.ipython/profile_default/ipython_config.py)
+        input_data (/home/user/experiment/input.bin)
+    Output files:
+        rendered_image (/home/user/experiment/output.png)
+        logfile (/home/user/experiment/log.txt)
 
 This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
