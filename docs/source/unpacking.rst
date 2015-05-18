@@ -88,7 +88,7 @@ Creating a Provenance Graph
 
 ReproZip also allows users to generate a *provenance graph* related to the experiment execution. This graph shows the relationships between files, library dependencies, and binaries during the execution. To generate such a graph, the ``reprounzip graph`` command should be used::
 
-    $ reprounzip graph package.rpz graph-file.dot
+    $ reprounzip graph graph-file.dot package.rpz
     $ dot -Tpng graph-file.dot -o image.png
 
 where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language.
