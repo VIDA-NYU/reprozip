@@ -69,22 +69,23 @@ def usage_report(args):
     sys.exit(0)
 
 
-def main():
+def main(setup_streams=True):
     """Entry point when called on the command-line.
     """
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 
     # Encoding for output streams
-    if str == bytes:  # PY2
-        writer = codecs.getwriter(locale.getpreferredencoding())
-        o_stdout, o_stderr = sys.stdout, sys.stderr
-        sys.stdout = writer(sys.stdout)
-        sys.stdout.buffer = o_stdout
-        sys.stderr = writer(sys.stderr)
-        sys.stderr.buffer = o_stderr
-    else:
-        sys.stdin = sys.stdin.buffer
+    if setup_streams:
+        if str == bytes:  # PY2
+            writer = codecs.getwriter(locale.getpreferredencoding())
+            o_stdout, o_stderr = sys.stdout, sys.stderr
+            sys.stdout = writer(sys.stdout)
+            sys.stdout.buffer = o_stdout
+            sys.stderr = writer(sys.stderr)
+            sys.stderr.buffer = o_stderr
+        else:
+            sys.stdin = sys.stdin.buffer
 
     # Parses command-line
 
