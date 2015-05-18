@@ -442,7 +442,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         # don't appear on the command-line
 
         runs.append({'binary': r_name, 'argv': argv,
-                     'workingdir': Path(r_workingdir).path,
+                     'workingdir': unicode_(Path(r_workingdir)),
                      'architecture': platform.machine().lower(),
                      'distribution': distribution,
                      'hostname': platform.node(),
