@@ -160,8 +160,51 @@ struct Process *trace_get_empty_process(void)
         {
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
+            processes[i]->threadgroup = NULL;
+            processes[i]->execve_info = NULL;
         }
         return processes[prev_size];
+    }
+}
+
+struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd)
+{
+    struct ThreadGroup *threadgroup = malloc(sizeof(struct ThreadGroup));
+    threadgroup->tgid = tgid;
+    threadgroup->wd = wd;
+    threadgroup->refs = 1;
+    if(verbosity >= 3)
+        log_debug(tgid, "threadgroup (= process) created");
+    return threadgroup;
+}
+
+void trace_free_process(struct Process *process)
+{
+    process->status = PROCESS_FREE;
+    if(process->threadgroup != NULL)
+    {
+        process->threadgroup->refs--;
+        if(verbosity >= 3)
+            log_debug(process->tid,
+                      "process died, threadgroup tgid=%d refs=%d",
+                      process->threadgroup->tgid, process->threadgroup->refs);
+        if(process->threadgroup->refs == 0)
+        {
+            if(verbosity >= 3)
+                log_debug(process->threadgroup->tgid,
+                          "deallocating threadgroup");
+            if(process->threadgroup->wd != NULL)
+                free(process->threadgroup->wd);
+            free(process->threadgroup);
+        }
+        process->threadgroup = NULL;
+    }
+    else if(verbosity >= 3)
+        log_debug(process->tid, "threadgroup==NULL");
+    if(process->execve_info != NULL)
+    {
+        free_execve_info(process->execve_info);
+        process->execve_info = NULL;
     }
 }
 
@@ -321,10 +364,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             {
                 if(db_add_exit(process->identifier, exitcode) != 0)
                     return -1;
-                free(process->wd);
-                if(process->execve_info != NULL)
-                    free_execve_info(process->execve_info);
-                process->status = PROCESS_FREE;
+                trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
@@ -355,8 +395,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process = trace_get_empty_process();
             process->status = PROCESS_UNKNOWN;
             process->tid = tid;
+            process->threadgroup = NULL;
             process->in_syscall = 0;
-            process->wd = NULL;
             trace_set_options(tid);
             /* Don't resume, it will be set to ATTACHED and resumed when fork()
              * returns */
@@ -547,7 +587,7 @@ static void cleanup(void)
         if(processes[i]->status != PROCESS_FREE)
         {
             kill(processes[i]->tid, SIGKILL);
-            free(processes[i]->wd);
+            trace_free_process(processes[i]);
         }
     }
 }
@@ -588,10 +628,10 @@ static void trace_init(void)
         {
             processes[i] = pool++;
             processes[i]->status = PROCESS_FREE;
+            processes[i]->threadgroup = NULL;
             processes[i]->in_syscall = 0;
             processes[i]->current_syscall = -1;
             processes[i]->execve_info = NULL;
-            processes[i]->wd = NULL;
         }
     }
 
@@ -652,13 +692,13 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->status = PROCESS_ALLOCATED; /* Not yet attached... */
         /* We sent a SIGSTOP, but we resume on attach */
         process->tid = child;
-        process->tgid = child;
+        process->threadgroup = trace_new_threadgroup(child, get_wd());
         process->in_syscall = 0;
-        process->wd = get_wd();
 
         if(verbosity >= 2)
             log_info(0, "process %d created by initial fork()", child);
-        if(db_add_first_process(&process->identifier, process->wd) != 0)
+        if(db_add_first_process(&process->identifier,
+                                process->threadgroup->wd) != 0)
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             cleanup();

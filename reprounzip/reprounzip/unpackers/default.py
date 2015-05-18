@@ -475,7 +475,8 @@ def chroot_create(args):
         busybox_path.parent.mkdir(parents=True)
         with make_dir_writable(join_root(root, Path('/bin'))):
             download_file(busybox_url(runs[0]['architecture']),
-                          busybox_path)
+                          busybox_path,
+                          'busybox-%s' % runs[0]['architecture'])
             busybox_path.chmod(0o755)
             if not sh_path.lexists():
                 sh_path.parent.mkdir(parents=True)

@@ -19,9 +19,7 @@ notifications:
 matrix:
   include:
     - python: "2.7"
-      env: TEST_MODE=check_style
-    - python: "2.7"
-      env: TEST_MODE=check_shared
+      env: TEST_MODE=checks
     - python: "2.7"
       env: TEST_MODE=coverage_py
     - python: "2.7"

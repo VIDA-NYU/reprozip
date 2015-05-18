@@ -13,7 +13,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import iteritems, check_output as _check_output
+from reprounzip.utils import iteritems
 
 
 tests = Path(__file__).parent.absolute()
@@ -35,12 +35,12 @@ def print_arg_list(f):
     """Decorator printing the sole argument (list of strings) first.
     """
     @functools.wraps(f)
-    def wrapper(args):
-        print("reprozip-tests$ " +
+    def wrapper(arglist, *args, **kwargs):
+        print("\nreprozip-tests$ " +
               " ".join(a if isinstance(a, unicode)
                        else a.decode('utf-8', 'replace')
-                       for a in args))
-        return f(args)
+                       for a in arglist))
+        return f(arglist, *args, **kwargs)
     return wrapper
 
 
@@ -57,21 +57,29 @@ def check_call(args):
 
 
 @print_arg_list
-def check_output(args):
-    output = _check_output(args)
-    sys.stdout.buffer.write(output)
-    return output
-
-
-@print_arg_list
-def check_errout(args):
-    p = subprocess.Popen(args, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    sys.stderr.buffer.write(stderr)
-    retcode = p.poll()
-    if retcode:
+def check_output(args, stream='out'):
+    if stream == 'out':
+        kw = {'stdout': subprocess.PIPE}
+    elif stream == 'err':
+        kw = {'stderr': subprocess.PIPE}
+    else:
+        raise ValueError
+    p = subprocess.Popen(args, **kw)
+    if stream == 'out':
+        fp = p.stdout
+    else:
+        fp = p.stderr
+    output = []
+    while True:
+        line = fp.readline()
+        if not line:
+            break
+        sys.stderr.buffer.write(line)
+        output.append(line)
+    retcode = p.wait()
+    if retcode != 0:
         raise subprocess.CalledProcessError(retcode, args)
-    return stderr
+    return b''.join(output)
 
 
 def build(target, sources, args=[]):
@@ -153,13 +161,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     #
 
     def check_simple(args, stream, infile=1):
-        if stream == 'out':
-            output = check_output(args)
-        elif stream == 'err':
-            output = check_errout(args)
-        else:
-            raise ValueError
-        output = output.splitlines()
+        output = check_output(args, stream).splitlines()
         first = output.index(b"Read 6 bytes")
         if infile == 1:
             assert output[first + 1] == b"a = 29, b = 13"
@@ -341,7 +343,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('threads', ['threads.c'], ['-lpthread'])
     # Trace
-    check_call(rpz + ['testrun', './threads'])
+    output = check_output(rpz + ['testrun', './threads'], 'err')
+    assert any(b'successfully exec\'d /bin/./echo' in l
+               for l in output.splitlines())
 
     # ########################################
     # 'segv' program: testrun
@@ -410,7 +414,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('connect', ['connect.c'])
     # Trace
-    stderr = check_errout(rpz + ['testrun', './connect'])
+    stderr = check_output(rpz + ['testrun', './connect'], 'err')
     stderr = stderr.split(b'\n')
     assert not any(b'program exited with non-zero code' in l for l in stderr)
     assert any(re.search(br'process connected to [0-9.]+:80', l)

@@ -146,7 +146,8 @@ def docker_setup_create(args):
 
         # Installs busybox
         download_file(busybox_url(runs[0]['architecture']),
-                      target / 'busybox')
+                      target / 'busybox',
+                      'busybox-%s' % runs[0]['architecture'])
         fp.write('COPY busybox /bin/busybox\n')
 
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')

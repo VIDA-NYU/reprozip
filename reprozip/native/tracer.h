@@ -30,15 +30,20 @@ struct ExecveInfo {
 
 void free_execve_info(struct ExecveInfo *execi);
 
+struct ThreadGroup {
+    pid_t tgid;
+    char *wd;
+    unsigned int refs;
+};
+
 struct Process {
     unsigned int identifier;
     unsigned int mode;
+    struct ThreadGroup *threadgroup;
     pid_t tid;
-    pid_t tgid;
     int status;
     int in_syscall;
     int current_syscall;
-    char *wd;
     register_type retvalue;
     register_type params[PROCESS_ARGS];
     struct ExecveInfo *execve_info;
@@ -62,6 +67,10 @@ extern size_t processes_size;
 struct Process *trace_find_process(pid_t tid);
 
 struct Process *trace_get_empty_process(void);
+
+struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd);
+
+void trace_free_process(struct Process *process);
 
 void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown);
 

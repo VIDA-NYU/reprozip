@@ -30,7 +30,7 @@ in
             pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails
         fi
         ;;
-    check_style)
+    checks)
         pip install flake8
         ;;
 esac
