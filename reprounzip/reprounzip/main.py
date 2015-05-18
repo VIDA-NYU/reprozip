@@ -131,10 +131,10 @@ def main():
     signals.pre_parse_args(parser=parser, subparsers=subparsers)
     args = parser.parse_args()
     signals.post_parse_args(args=args)
-    try:
-        signals.unpacker = args.selected_unpacker
-    except AttributeError:
-        signals.unpacker = None
+    if getattr(args, 'func', None) is None:
+        parser.print_help(sys.stderr)
+        sys.exit(2)
+    signals.unpacker = getattr(args, 'selected_unpacker', None)
     setup_logging('REPROUNZIP', args.verbosity)
 
     setup_usage_report('reprounzip', __version__)

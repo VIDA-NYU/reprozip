@@ -318,6 +318,9 @@ def main():
 
     args = parser.parse_args()
     setup_logging('REPROZIP', args.verbosity)
+    if getattr(args, 'func', None) is None:
+        parser.print_help(sys.stderr)
+        sys.exit(2)
     setup_usage_report('reprozip', reprozip_version)
     if 'cmdline' in args and not args.cmdline:
         parser.error("missing command-line")
