@@ -816,24 +816,27 @@ def setup_directory(parser, **kwargs):
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Experiment directory")
+
+    def add_opt_general(opts):
+        opts.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup
-    # Note: opt_setup is a separate parser so that 'pack' is before 'target'
-    opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
-    parser_setup = subparsers.add_parser('setup', parents=[opt_setup, options])
+    parser_setup = subparsers.add_parser('setup')
+    parser_setup.add_argument('pack', nargs=1, help="Pack to extract")
+    # Note: add_opt_general is called later so that 'pack' is before 'target'
+    add_opt_general(parser_setup)
     parser_setup.set_defaults(func=directory_create)
 
     # upload
-    parser_upload = subparsers.add_parser('upload', parents=[options])
+    parser_upload = subparsers.add_parser('upload')
+    add_opt_general(parser_upload)
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                help="<path>:<input_file_name>")
     parser_upload.set_defaults(func=upload, type='directory')
 
     # run
-    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run = subparsers.add_parser('run')
+    add_opt_general(parser_run)
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
@@ -843,14 +846,15 @@ def setup_directory(parser, **kwargs):
     parser_run.set_defaults(func=directory_run)
 
     # download
-    parser_download = subparsers.add_parser('download',
-                                            parents=[options])
+    parser_download = subparsers.add_parser('download')
+    add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
     parser_download.set_defaults(func=download, type='directory')
 
     # destroy
-    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy = subparsers.add_parser('destroy')
+    add_opt_general(parser_destroy)
     parser_destroy.set_defaults(func=directory_destroy)
 
     return {'test_compatibility': test_linux_same_arch}
@@ -890,34 +894,39 @@ def setup_chroot(parser, **kwargs):
     """
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
-    options = argparse.ArgumentParser(add_help=False)
-    options.add_argument('target', nargs=1, help="Experiment directory")
+
+    def add_opt_general(opts):
+        opts.add_argument('target', nargs=1, help="Experiment directory")
 
     # setup/create
-    opt_setup = argparse.ArgumentParser(add_help=False)
-    opt_setup.add_argument('pack', nargs=1, help="Pack to extract")
-    opt_owner = argparse.ArgumentParser(add_help=False)
-    opt_owner.add_argument('--preserve-owner', action='store_true',
-                           dest='restore_owner', default=None,
-                           help="Restore files' owner/group when extracting")
-    opt_owner.add_argument('--dont-preserve-owner', action='store_false',
-                           dest='restore_owner', default=None,
-                           help=("Don't restore files' owner/group when "
-                                 "extracting, use current users"))
-    parser_setup_create = subparsers.add_parser(
-            'setup/create',
-            parents=[opt_setup, options, opt_owner])
+    def add_opt_setup(opts):
+        opts.add_argument('pack', nargs=1, help="Pack to extract")
+
+    def add_opt_owner(opts):
+        opts.add_argument('--preserve-owner', action='store_true',
+                          dest='restore_owner', default=None,
+                          help="Restore files' owner/group when extracting")
+        opts.add_argument('--dont-preserve-owner', action='store_false',
+                          dest='restore_owner', default=None,
+                          help=("Don't restore files' owner/group when "
+                                "extracting, use current users"))
+
+    parser_setup_create = subparsers.add_parser('setup/create')
+    add_opt_setup(parser_setup_create)
+    add_opt_general(parser_setup_create)
+    add_opt_owner(parser_setup_create)
     parser_setup_create.set_defaults(func=chroot_create)
 
     # setup/mount
-    parser_setup_mount = subparsers.add_parser('setup/mount',
-                                               parents=[options])
+    parser_setup_mount = subparsers.add_parser('setup/mount')
+    add_opt_general(parser_setup_mount)
     parser_setup_mount.set_defaults(func=chroot_mount)
 
     # setup
-    parser_setup = subparsers.add_parser(
-            'setup',
-            parents=[opt_setup, options, opt_owner])
+    parser_setup = subparsers.add_parser('setup')
+    add_opt_setup(parser_setup)
+    add_opt_general(parser_setup)
+    add_opt_owner(parser_setup)
     parser_setup.add_argument(
             '--bind-magic-dirs', action='store_true',
             dest='bind_magic_dirs', default=None,
@@ -929,14 +938,16 @@ def setup_chroot(parser, **kwargs):
     parser_setup.set_defaults(func=chroot_setup)
 
     # upload
-    parser_upload = subparsers.add_parser('upload',
-                                          parents=[options, opt_owner])
+    parser_upload = subparsers.add_parser('upload')
+    add_opt_general(parser_upload)
+    add_opt_owner(parser_upload)
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                help="<path>:<input_file_name>")
     parser_upload.set_defaults(func=upload, type='chroot')
 
     # run
-    parser_run = subparsers.add_parser('run', parents=[options])
+    parser_run = subparsers.add_parser('run')
+    add_opt_general(parser_run)
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
@@ -951,24 +962,25 @@ def setup_chroot(parser, **kwargs):
     parser_run.set_defaults(func=chroot_run)
 
     # download
-    parser_download = subparsers.add_parser('download',
-                                            parents=[options])
+    parser_download = subparsers.add_parser('download')
+    add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>:<path>")
     parser_download.set_defaults(func=download, type='chroot')
 
     # destroy/unmount
-    parser_destroy_unmount = subparsers.add_parser('destroy/unmount',
-                                                   parents=[options])
+    parser_destroy_unmount = subparsers.add_parser('destroy/unmount')
+    add_opt_general(parser_destroy_unmount)
     parser_destroy_unmount.set_defaults(func=chroot_destroy_unmount)
 
     # destroy/dir
-    parser_destroy_dir = subparsers.add_parser('destroy/dir',
-                                               parents=[options])
+    parser_destroy_dir = subparsers.add_parser('destroy/dir')
+    add_opt_general(parser_destroy_dir)
     parser_destroy_dir.set_defaults(func=chroot_destroy_dir)
 
     # destroy
-    parser_destroy = subparsers.add_parser('destroy', parents=[options])
+    parser_destroy = subparsers.add_parser('destroy')
+    add_opt_general(parser_destroy)
     parser_destroy.set_defaults(func=chroot_destroy)
 
     return {'test_compatibility': test_linux_same_arch}
