@@ -156,7 +156,7 @@ def main():
             signals.application_finishing(reason=None)
     except UsageError:
         parser.print_help(sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
     submit_usage_report(result='success')
     sys.exit(0)
 
