@@ -42,6 +42,7 @@ struct Process {
     struct ThreadGroup *threadgroup;
     pid_t tid;
     int status;
+    unsigned int flags;
     int in_syscall;
     int current_syscall;
     register_type retvalue;
@@ -49,15 +50,17 @@ struct Process {
     struct ExecveInfo *execve_info;
 };
 
-#define PROCESS_FREE        0   /* unallocated entry in table */
-#define PROCESS_ALLOCATED   1   /* fork() done but not yet attached */
-#define PROCESS_ATTACHED    2   /* running process */
-#define PROCESS_UNKNOWN     3   /* attached but no corresponding fork() call
+#define PROCSTAT_FREE       0   /* unallocated entry in table */
+#define PROCSTAT_ALLOCATED  1   /* fork() done but not yet attached */
+#define PROCSTAT_ATTACHED   2   /* running process */
+#define PROCSTAT_UNKNOWN    3   /* attached but no corresponding fork() call
                                  * has finished yet */
 
 #define MODE_I386           1
 #define MODE_X86_64         2   /* In x86_64 mode, syscalls might be native x64
                                  * or x32 */
+
+#define PROCFLAG_EXECD      1   /* Process is coming out of execve */
 
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;

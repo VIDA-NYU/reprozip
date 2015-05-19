@@ -348,6 +348,17 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                for l in output.splitlines())
 
     # ########################################
+    # 'threads2' program: testrun
+    #
+
+    # Build
+    build('threads2', ['threads2.c'], ['-lpthread'])
+    # Trace
+    output = check_output(rpz + ['testrun', './threads2'], 'err')
+    assert any(b'successfully exec\'d /bin/echo' in l
+               for l in output.splitlines())
+
+    # ########################################
     # 'segv' program: testrun
     #
 
