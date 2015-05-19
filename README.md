@@ -10,6 +10,8 @@ Inspired by [lukecyca/travis-docker-example](https://github.com/lukecyca/travis-
 ## *.travis.yml* examples
 
 ```yaml
+sudo: true
+
 install:
 - curl -sLo - http://j.mp/install-travis-docker | sh -xe
 

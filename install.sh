@@ -7,6 +7,8 @@ COMPOSE_VERSION=1.2.0
 BRANCH=${BRANCH:-master}
 
 
+cd "$(dirname "$0")"
+
 # Disable post-install autorun
 echo exit 101 | sudo tee /usr/sbin/policy-rc.d
 sudo chmod +x /usr/sbin/policy-rc.d
@@ -20,17 +22,21 @@ sudo apt-get install -y slirp lxc aufs-tools cgroup-lite
 # Install docker
 curl -s https://get.docker.com/ | sh
 sudo usermod -aG docker $USER
-sudo chown -R travis /etc/docker
+sudo chown -R $USER /etc/docker
 
 
 # Install fig
-sudo curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` -o /usr/local/bin/fig
-sudo chmod +x /usr/local/bin/fig
+if [ "x$UML_FIG" != x0 ]; then
+    sudo curl -L https://github.com/docker/fig/releases/download/1.0.1/fig-`uname -s`-`uname -m` -o /usr/local/bin/fig
+    sudo chmod +x /usr/local/bin/fig
+fi
 
 
 # Install docker-compose
-sudo curl -L https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+if [ "x$UML_DOCKERCOMPOSE" != x0 ] ; then
+    sudo curl -L https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+fi
 
 
 # Download binary
