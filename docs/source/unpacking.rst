@@ -91,7 +91,7 @@ ReproZip also allows users to generate a *provenance graph* related to the exper
     $ reprounzip graph graph-file.dot package.rpz
     $ dot -Tpng graph-file.dot -o image.png
 
-where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language.
+where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph.
 
 ..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 
