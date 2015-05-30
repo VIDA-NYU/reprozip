@@ -32,12 +32,6 @@ script:
 - `QUIET=1`, be less verbose 
 
 
-
-## Limitations
-
-1. `/var/lib/docker` is not persistent across `./run` calls, but you can chain command calls in a unique `./run` or use `docker-compose`
-
-
 ## Projects using [travis-docker](https://github.com/moul/travis-docker)
 
 - https://github.com/andrewsomething/fabric-package-management
