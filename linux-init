@@ -56,7 +56,6 @@ cgroups-mount
 # enable ipv4 forwarding for docker
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
-
 # configure networking
 ip addr add 127.0.0.1 dev lo
 ip link set lo up
@@ -72,12 +71,14 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
 
 # Start docker daemon
-docker -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
+docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
 while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 
 
 # Print docker version
+echo '$ docker info'
 docker info
+echo '$ docker version'
 docker version
 
 # reset environment

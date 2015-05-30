@@ -16,7 +16,7 @@ rm -f "${UMLDIR}/.exit_code"
 	rootfstype=hostfs rw \
 	eth0=slirp,,/usr/bin/slirp-fullbolt \
 	"init=${UMLDIR}/linux-init" \
-	"WORKDIR=${WORKDIR}" "UMLDIR=${UMLDIR}"
+	"WORKDIR=${WORKDIR}" "UMLDIR=${UMLDIR}" "DOCKER_STORAGE_DRIVER=${DOCKER_STORAGE_DRIVER:-devicemapper}"
 )
 
 exit_code=$(cat "${UMLDIR}/.exit_code")

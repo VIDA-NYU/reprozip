@@ -23,6 +23,15 @@ script:
 - ./run 'docker build -t test . && docker run test'
 ```
 
+
+## Environment variables
+
+- `DOCKER_STORAGE_DRIVER=devicemapper`, can be `aufs`, `btrfs`, `vfs`
+- `UML_DOCKERCOMPOSE=0`, do not install `docker-compose`
+- `UML_FIG=0`, do not install `fig`
+
+
+
 ## Limitations
 
 1. `/var/lib/docker` is not persistent across `./run` calls, but you can chain command calls in a unique `./run` or use `docker-compose`
