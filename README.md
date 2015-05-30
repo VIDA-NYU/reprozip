@@ -26,9 +26,10 @@ script:
 
 ## Environment variables
 
-- `DOCKER_STORAGE_DRIVER=devicemapper`, can be `aufs`, `btrfs`, `vfs`
+- `DOCKER_STORAGE_DRIVER=aufs`, default is `devicemapper`, available values are `aufs`, `btrfs`, `devicemapper`, `vfs`
 - `UML_DOCKERCOMPOSE=0`, do not install `docker-compose`
 - `UML_FIG=0`, do not install `fig`
+- `QUIET=1`, be less verbose 
 
 
 

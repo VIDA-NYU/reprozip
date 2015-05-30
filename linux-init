@@ -71,15 +71,24 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
 
 # Start docker daemon
-docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
+if [ "${QUIET}" -eq 0 ]; then
+    docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
+else
+    docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &>/dev/null &
+fi
+
+# Waiting for docker socket
 while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 
 
-# Print docker version
-echo '$ docker info'
-docker info
-echo '$ docker version'
-docker version
+# Print docker information
+if [ "${QUIET}" -eq 0 ]; then
+    echo '+ docker info'
+    docker info
+    echo '+ docker version'
+    docker version
+fi
+
 
 # reset environment
 . "${UMLDIR}/.envp"
@@ -87,5 +96,5 @@ docker version
 # Call command
 command=$(cat "${UMLDIR}/.command")
 set +e
-/bin/bash -ce "${command}"
+/bin/bash -xec "${command}"
 echo $? > "${UMLDIR}/.exit_code"
