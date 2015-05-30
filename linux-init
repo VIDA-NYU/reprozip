@@ -18,9 +18,8 @@ save_and_shutdown() {
     # save built for host result
     # force clean shutdown
     set +e
-    echo KILLING
-    kill -9 $(jobs -p)
-    halt -f
+    kill -9 $(jobs -p) &>/dev/null
+    halt -f &>/dev/null
 }
 
 # make sure we shut down cleanly
