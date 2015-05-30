@@ -1,6 +1,6 @@
 KERNEL_VERSION ?=	4.0.2
 DOCKER_IMAGE ?=		moul/kernel-builder:stable
-TARGET ?=		./dist/linux
+TARGET ?=		../linux
 
 CONCURRENCY_LEVEL ?=	$(shell grep -m1 cpu\ cores /proc/cpuinfo 2>/dev/null | sed 's/[^0-9]//g' | grep '[0-9]' || sysctl hw.ncpu | sed 's/[^0-9]//g' | grep '[0-9]')
 ARCH ?=			um
@@ -68,6 +68,8 @@ $(TARGET): .config
 			strip linux && \
 			cp linux build/ \
 		'
+	cp dist/linux $(TARGET)
+	# touch $(TARGET)
 
 
 .PHONY: dist
@@ -79,9 +81,8 @@ dist:: $(TARGET)
 dist_do:
 	git branch -D dist || true
 	git checkout --orphan dist
-	cp $(TARGET) ../linux
-	git add -f ../linux
-	git commit ../linux -m "Dist"
+	git add -f $(TARGET)
+	git commit $(TARGET) -m "Dist"
 	git push -u origin dist -f
 	$(MAKE) dist_teardown
 
