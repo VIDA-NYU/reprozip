@@ -7,7 +7,9 @@ ARCH ?=			um
 ENTER_COMMAND ?=	(git show-ref --tags | egrep -q "refs/tags/v$(KERNEL_VERSION)$$" || git fetch --tags) && git checkout v$(KERNEL_VERSION) && git log HEAD^..HEAD
 DOCKER_VOLUMES ?=	-v $(PWD)/.config:/tmp/.config \
 			-v $(PWD)/ccache:/ccache/ \
-			-v $(PWD)/dist:/usr/src/linux/build/
+			-v $(PWD)/dist:/usr/src/linux/build/ \
+			-v $(PWD)/patch.sh:/usr/src/linux/patch.sh:ro \
+			-v $(PWD)/patches:/usr/src/linux/patches
 DOCKER_ENV ?=		-e CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) \
 			-e LOCALVERSION_AUTO=no \
 			-e ARCH=$(ARCH)
@@ -24,6 +26,7 @@ shell::
 		/bin/bash -xec ' \
 			$(ENTER_COMMAND) && \
 			cp /tmp/.config .config && \
+			/bin/bash -xe patch.sh && \
 			bash ; \
 			cp .config /tmp/.config \
 		'
@@ -45,6 +48,7 @@ defconfig oldconfig olddefconfig menuconfig::
 		/bin/bash -xec ' \
 			$(ENTER_COMMAND) && \
 			cp /tmp/.config .config && \
+			/bin/bash -xe patch.sh && \
 			make $@ && \
 			cp .config /tmp/.config \
 		'
@@ -59,6 +63,7 @@ $(TARGET): .config
 		/bin/bash -xec ' \
 			$(ENTER_COMMAND) && \
 			cp /tmp/.config .config && \
+			/bin/bash -xe patch.sh && \
 			make -j $(CONCURRENCY_LEVEL) linux && \
 			strip linux && \
 			cp linux build/ \
