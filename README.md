@@ -30,13 +30,19 @@ script:
 
 ## Projects using [travis-docker](https://github.com/moul/travis-docker)
 
+- https://github.com/andrewsomething/fabric-package-management
 - https://github.com/CloudSlang/cloud-slang-content
+- https://github.com/eliotjordan/rails-docker-test
+- https://github.com/HanXHX/ansible-debian-dotdeb
 - https://github.com/ir4y/fabric-scripts
 - https://github.com/moul/docker-icecast
 - https://github.com/pathwar/core
 - https://github.com/pathwar/level-helloworld
+- https://github.com/rporrini/abstat-akp-inference
 - https://github.com/scaleway/kernel-tools
 - https://github.com/stevenalexander/docker-nginx-dropwizard
+- https://github.com/theodi/british_values
+- https://github.com/Webtrends/wookie
 - https://github.com/William-Yeh/ansible-nginx
 - https://github.com/William-Yeh/ansible-nodejs
 - https://github.com/William-Yeh/docker-ansible
