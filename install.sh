@@ -41,7 +41,7 @@ fi
 
 
 # Download binary
-curl -sLo linux https://github.com/moul/travis-docker/raw/dist/linux
+curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
 curl -sLo linux-init https://github.com/moul/travis-docker/raw/${BRANCH}/linux-init
 curl -sLo run https://github.com/moul/travis-docker/raw/${BRANCH}/run
 chmod +x linux linux-init run

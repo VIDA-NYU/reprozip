@@ -32,7 +32,7 @@ fi
 	"WORKDIR=${WORKDIR}" \
 	"UMLDIR=${UMLDIR}" \
 	"QUIET=${QUIET}" \
-	"DOCKER_STORAGE_DRIVER=${DOCKER_STORAGE_DRIVER:-devicemapper}"
+	"DOCKER_STORAGE_DRIVER=${DOCKER_STORAGE_DRIVER:-aufs}"
 )
 
 exit_code=$(cat "${UMLDIR}/.exit_code")
