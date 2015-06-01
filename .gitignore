@@ -6,3 +6,5 @@ linux
 .exit_code
 .envp
 slirp-fullbolt-silent
+slirp-wrapper
+slirp_stats
