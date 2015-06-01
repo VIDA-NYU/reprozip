@@ -22,6 +22,11 @@ save_and_shutdown() {
     halt -f &>/dev/null
 }
 
+
+# Create /lib/modules to prevent repeated warnings
+sudo mkdir -p /lib/modules/$(uname -r) && sudo depmod -a 2>/dev/null || true
+
+
 # make sure we shut down cleanly
 trap save_and_shutdown EXIT SIGINT SIGTERM
 

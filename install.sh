@@ -10,10 +10,6 @@ BRANCH=${BRANCH:-master}
 cd "$(dirname "$0")"
 
 
-# Create /lib/modules
-sudo mkdir -p /lib/modules/$(uname -r) && sudo depmod -a 2>/dev/null
-
-
 # Disable post-install autorun
 echo exit 101 | sudo tee /usr/sbin/policy-rc.d
 sudo chmod +x /usr/sbin/policy-rc.d
