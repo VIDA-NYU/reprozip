@@ -2,7 +2,7 @@
 
 # Exit on first error
 set -e
-
+set -x
 # Debug
 # echo "Env: $(env)"
 # echo "Cmdline: $(cat /proc/cmdline)"
@@ -56,6 +56,19 @@ mount -t tmpfs none /var/run
 
 # takes the pain out of cgroups
 cgroups-mount
+
+# mount backen[5~d
+case ${DOCKER_BACKEND_FS} in
+    tmpfs)
+	    mount -t tmpfs none /var/lib/docker
+	    ;;
+    host)
+	    echo "Using host filesystem as backend"
+	    ;;
+    *)
+	    echo "Unsupported backend filesystem"
+	    exit 1
+esac
 
 # enable ipv4 forwarding for docker
 echo 1 > /proc/sys/net/ipv4/ip_forward
