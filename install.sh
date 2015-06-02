@@ -10,6 +10,7 @@ BRANCH=${BRANCH:-stable}
 # if you want to avoid this curl, you can set SKIP_BRANCH_CHECKING
 if [ -z "$SKIP_BRANCH_CHECKING" ]; then
     exec curl -sLo - https://github.com/moul/travis-docker/raw/${BRANCH}/install.sh | SKIP_BRANCH_CHECKING=1 sh -xe
+    exit $?
 fi
 
 
