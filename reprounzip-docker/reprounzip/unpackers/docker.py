@@ -325,7 +325,7 @@ def docker_run(args):
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-        cmd += '/usr/bin/env -i '
+        cmd += '/bin/busybox env -i '
         environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
