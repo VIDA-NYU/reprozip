@@ -6,6 +6,12 @@ set -eux
 export LANG=C
 export LC_ALL=C
 
+if [ -z "${XDG_CACHE_HOME-}" ]; then
+    mkdir -p ~/.cache/reprozip
+else
+    mkdir -p "$XDG_CACHE_HOME/reprozip"
+fi
+
 case "$TEST_MODE"
 in
     run_program|coverage_c|coverage_py)
