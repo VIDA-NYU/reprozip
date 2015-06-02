@@ -7,7 +7,7 @@ Running Docker in a Travis CI build.
 `docker-compose` and pass back the exit code.
 
 
-## *.travis.yml* examples
+## *.travis.yml* example
 
 ```yaml
 env:
@@ -27,6 +27,8 @@ script:
   - ./run 'apt-get install git && git clone && docker -f ...'
   - ./run 'docker build -t test . && docker run test'
 ```
+
+You can find more examples on [travis-docker-example](https://github.com/moul/travis-docker-example).
 
 
 ## Environment variables
@@ -89,6 +91,7 @@ Proof of concept
 - https://github.com/HanXHX/ansible-debian-dotdeb
 - https://github.com/ir4y/fabric-scripts
 - https://github.com/moul/docker-icecast
+- https://github.com/moul/travis-docker-example
 - https://github.com/pathwar/core
 - https://github.com/pathwar/level-helloworld
 - https://github.com/rporrini/abstat-akp-inference
