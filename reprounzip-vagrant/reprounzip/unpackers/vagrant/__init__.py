@@ -308,6 +308,9 @@ def vagrant_setup_create(args):
             fp.write(r'''
 cp /vagrant/busybox /experimentroot/busybox
 chmod +x /experimentroot/busybox
+mkdir -p /experimentroot/bin
+[ -e /experimentroot/bin/sh ] || \
+    ln -s /busybox /experimentroot/bin/sh
 ''')
 
     # Copies pack
