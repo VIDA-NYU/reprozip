@@ -24,11 +24,11 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import Package, load_config, record_usage
+from reprounzip.common import load_config, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, make_unique_name, \
-    shell_escape, select_installer, busybox_url, join_root, \
+    shell_escape, select_installer, busybox_url, sudo_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, check_output, download_file
@@ -137,6 +137,8 @@ def docker_setup_create(args):
     target.mkdir(parents=True)
     pack.copyfile(target / 'experiment.rpz')
 
+    arch = runs[0]['architecture']
+
     # Writes Dockerfile
     logging.info("Writing %s...", target / 'Dockerfile')
     with (target / 'Dockerfile').open('w',
@@ -144,15 +146,21 @@ def docker_setup_create(args):
         fp.write('FROM %s\n\n' % base_image)
 
         # Installs busybox
-        download_file(busybox_url(runs[0]['architecture']),
+        download_file(busybox_url(arch),
                       target / 'busybox',
-                      'busybox-%s' % runs[0]['architecture'])
+                      'busybox-%s' % arch)
         fp.write('COPY busybox /busybox\n')
+
+        # Installs rpzsudo
+        download_file(sudo_url(arch),
+                      target / 'rpzsudo',
+                      'rpzsudo-%s' % arch)
+        fp.write('COPY rpzsudo /rpzsudo\n\n')
 
         fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
         fp.write('COPY rpz-files.list /rpz-files.list\n')
         fp.write('RUN \\\n'
-                 '    chmod +x /busybox && \\\n')
+                 '    chmod +x /busybox /rpzsudo && \\\n')
 
         if args.install_pkgs:
             # Install every package through package manager
@@ -161,11 +169,8 @@ def docker_setup_create(args):
             # Only install packages that were not packed
             missing_packages = [pkg for pkg in packages if pkg.packfiles]
             packages = [pkg for pkg in packages if not pkg.packfiles]
-        # FIXME : Right now, we need 'sudo' to be available (and it's not
-        # necessarily in the base image)
         if packages:
             record_usage(docker_install_pkgs=True)
-            packages += [Package('sudo', None, packfiles=False)]
             try:
                 installer = select_installer(pack, runs, target_distribution)
             except CantFindInstaller as e:
@@ -173,18 +178,14 @@ def docker_setup_create(args):
                               "select a package installer: %s",
                               len(packages), e)
                 sys.exit(1)
-        else:
-            record_usage(docker_install_pkgs="sudo")
-            packages = [Package('sudo', None, packfiles=False)]
-            installer = select_installer(pack, runs, target_distribution,
-                                         check_distrib_compat=False)
-        if packages:
             # Updates package sources
             fp.write('    %s && \\\n' % installer.update_script())
             # Installs necessary packages
             fp.write('    %s && \\\n' % installer.install_script(packages))
-        logging.info("Dockerfile will install the %d software packages that "
-                     "were not packed", len(packages))
+            logging.info("Dockerfile will install the %d software packages "
+                         "that were not packed", len(packages))
+        else:
+            record_usage(docker_install_pkgs=False)
 
         # Untar
         paths = set()
@@ -337,7 +338,10 @@ def docker_run(args):
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
         uid = run.get('uid', 1000)
-        cmd = 'sudo -u \'#%d\' /busybox sh -c %s\n' % (uid, shell_escape(cmd))
+        gid = run.get('gid', 1000)
+        cmd = '/rpzsudo \'#%d\' \'#%d\' /busybox sh -c %s\n' % (
+                uid, gid,
+                shell_escape(cmd))
         cmds.append(cmd)
     cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
