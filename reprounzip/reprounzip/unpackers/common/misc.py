@@ -129,6 +129,13 @@ def busybox_url(arch):
     return 'http://www.busybox.net/downloads/binaries/latest/busybox-%s' % arch
 
 
+def sudo_url(arch):
+    """Gets the correct URL for the rpzsudo binary given the architecture.
+    """
+    return ('https://github.com/remram44/static-sudo'
+            '/releases/download/current/rpzsudo-%s' % arch)
+
+
 def join_root(root, path):
     """Prepends `root` to the absolute path `path`.
     """

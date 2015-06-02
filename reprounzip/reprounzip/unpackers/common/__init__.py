@@ -13,8 +13,8 @@ from __future__ import unicode_literals
 from reprounzip.unpackers.common.misc import UsageError, \
     COMPAT_OK, COMPAT_NO, COMPAT_MAYBE, \
     composite_action, target_must_exist, unique_names, \
-    make_unique_name, shell_escape, load_config, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs, interruptible_call
+    make_unique_name, shell_escape, load_config, busybox_url, sudo_url, \
+    join_root, FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.packages import THIS_DISTRIBUTION, \
     PKG_NOT_INSTALLED, CantFindInstaller, select_installer
 
@@ -24,5 +24,6 @@ __all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
            'UsageError', 'CantFindInstaller',
            'composite_action', 'target_must_exist', 'unique_names',
            'make_unique_name', 'shell_escape', 'load_config', 'busybox_url',
+           'sudo_url',
            'join_root', 'FileUploader', 'FileDownloader', 'get_runs',
            'interruptible_call']
