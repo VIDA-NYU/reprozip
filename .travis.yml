@@ -1,3 +1,4 @@
+sudo: true
 language: python
 env:
   - TEST_MODE=run_program

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+WORKDIR="$(pwd)"
+cd "$(dirname "$0")"
+UMLDIR="$(pwd)"
+echo "$@" > "${UMLDIR}/.command"
+export -p > "${UMLDIR}/.envp"
+rm -f "${UMLDIR}/.exit_code"
+
+(
+    set -x
+    sudo "${UMLDIR}/linux" \
+	quiet \
+	mem=2G \
+	rootfstype=hostfs rw \
+	eth0=slirp,,/usr/bin/slirp-fullbolt \
+	"init=${UMLDIR}/linux-init" \
+	"WORKDIR=${WORKDIR}" "UMLDIR=${UMLDIR}"
+)
+
+exit_code=$(cat "${UMLDIR}/.exit_code")
+eval exit ${exit_code}
