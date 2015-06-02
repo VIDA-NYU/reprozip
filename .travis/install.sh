@@ -4,6 +4,12 @@ run_lines(){
     while read line; do echo "$line"; sh -c "$line" || exit $?; done
 }
 
+if [ -z "${XDG_CACHE_HOME-}" ]; then
+    mkdir -p ~/.cache/reprozip
+else
+    mkdir -p "$XDG_CACHE_HOME/reprozip"
+fi
+
 case "$TEST_MODE"
 in
     run_program|coverage_c)
