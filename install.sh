@@ -9,7 +9,7 @@ BRANCH=${BRANCH:-stable}
 # this script will download itself again to ensure we can easily switch from a branch to another
 # if you want to avoid this curl, you can set SKIP_BRANCH_CHECKING
 if [ -z "$SKIP_BRANCH_CHECKING" ]; then
-    exec curl -sLo run https://github.com/moul/travis-docker/raw/${BRANCH}/install.sh | SKIP_BRANCH_CHECKING=1 sh -xe
+    exec curl -sLo - https://github.com/moul/travis-docker/raw/${BRANCH}/install.sh | SKIP_BRANCH_CHECKING=1 sh -xe
 fi
 
 
