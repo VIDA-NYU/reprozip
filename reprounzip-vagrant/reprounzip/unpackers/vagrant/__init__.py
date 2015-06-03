@@ -34,7 +34,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
-from reprounzip.utils import unicode_, iteritems, check_output
+from reprounzip.utils import unicode_, iteritems, check_output, download_file
 
 
 def rb_escape(s):
@@ -301,21 +301,19 @@ def vagrant_setup_create(args):
                      '--numeric-owner --strip=1 '
                      '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
-        # Copies /bin/sh + dependencies
+        # Copies busybox
         if use_chroot:
-            url = busybox_url(runs[0]['architecture'])
+            arch = runs[0]['architecture']
+            download_file(busybox_url(arch),
+                          target / 'busybox',
+                          'busybox-%s' % arch)
             fp.write(r'''
+cp /vagrant/busybox /experimentroot/busybox
+chmod +x /experimentroot/busybox
 mkdir -p /experimentroot/bin
-mkdir -p /experimentroot/usr/bin
-if [ ! -e /experimentroot/bin/sh -o ! -e /experimentroot/usr/bin/env ]; then
-    wget --quiet -O /experimentroot/bin/busybox {url}
-    chmod +x /experimentroot/bin/busybox
-fi
 [ -e /experimentroot/bin/sh ] || \
-    ln -s /bin/busybox /experimentroot/bin/sh
-[ -e /experimentroot/usr/bin/env ] || \
-    ln -s /bin/busybox /experimentroot/usr/bin/env
-'''.format(url=url))
+    ln -s /busybox /experimentroot/bin/sh
+''')
 
     # Copies pack
     logging.info("Copying pack file...")
@@ -388,7 +386,10 @@ def vagrant_run(args):
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-        cmd += '/usr/bin/env -i '
+        if use_chroot:
+            cmd += '/busybox env -i '
+        else:
+            cmd += '/usr/bin/env -i '
         environ = x11.fix_env(run['environ'])
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
