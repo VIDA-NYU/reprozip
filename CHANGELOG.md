@@ -8,6 +8,9 @@ Behavior change:
 * No longer accept passing `-v` after the subcommand; use `reprozip -v testrun ...`, not `reprozip testrun -v`.
 * Rely on `PTHREAD_EVENT_EXEC` to handle `execve()`. Makes tracing more reliable, and enable it to behave correctly on weird kernels (like UML).
 
+Features:
+* Makes VMs (Vagrant or Docker)  more resilient to massive breakage of system libraries (obliterating /lib or /usr, when using very different operating systems) by putting busybox in / and using [rpzsudo](https://github.com/remram44/static-sudo).
+
 0.6.4 (???)
 -----------
 
