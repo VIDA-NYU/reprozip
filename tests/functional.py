@@ -164,7 +164,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     def check_simple(args, stream, infile=1):
         output = check_output(args, stream).splitlines()
-        first = output.index(b"Read 6 bytes")
+        try:
+            first = output.index(b"Read 6 bytes")
+        except ValueError:
+            sys.stderr.write("output = %r\n" % output)
+            raise
         if infile == 1:
             assert output[first + 1] == b"a = 29, b = 13"
             assert output[first + 2] == b"result = 42"
