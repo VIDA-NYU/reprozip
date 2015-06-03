@@ -7,6 +7,8 @@
 This contains `run_interactive()`, used to run a command via SSH.
 """
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import paramiko
