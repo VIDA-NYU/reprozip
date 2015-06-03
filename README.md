@@ -9,11 +9,25 @@ Running Docker in a Travis CI build.
 
 ## *.travis.yml* example
 
+Simple
+
+```yaml
+install:
+  - curl -sLo - http://j.mp/install-travis-docker | sh -xe
+
+script:
+  - ./run 'docker build -t test . && docker run test'
+```
+
+Advanced
+
 ```yaml
 env:
   global:
     - BRANCH=stable
     - QUIET=1
+    - UML_FIG=0
+    - UML_DOCKERCOMPOSE=1
 
 sudo: true
 
