@@ -731,6 +731,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         return 1;
     }
 
+    log_close_file();
     restore_signals();
     return 0;
 }
