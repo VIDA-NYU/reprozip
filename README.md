@@ -38,8 +38,9 @@ script:
   - ./run docker run busybox ls -la
   - ./run docker run busybox ls -la /non-existing-dir
   - ./run 'docker-compose up -d blog && docker ps && date'
-  - ./run 'apt-get install git && git clone && docker -f ...'
+  - ./run 'apt-get install git && git clone myrepo && cd myrepo && docker build -t myimage .'
   - ./run 'docker build -t test . && docker run test'
+  - ./run 'ruby my_app_that_communicates_with_docker_socket.rb'
 ```
 
 You can find more examples on [travis-docker-example](https://github.com/moul/travis-docker-example).
