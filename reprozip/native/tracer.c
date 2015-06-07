@@ -307,6 +307,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
             }
         }
     }
+    fclose(fp);
     return 0;
 }
 
