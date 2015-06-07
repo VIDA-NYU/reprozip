@@ -11,8 +11,8 @@ Behavior change:
 Features:
 * Makes VMs (Vagrant or Docker)  more resilient to massive breakage of system libraries (obliterating /lib or /usr, when using very different operating systems) by putting busybox in / and using [rpzsudo](https://github.com/remram44/static-sudo).
 
-0.6.4 (???)
------------
+0.6.4 (2015-06-07)
+------------------
 
 Bugfixes:
 * Tracer: correctly handle `chdir()` in multi-threaded processes

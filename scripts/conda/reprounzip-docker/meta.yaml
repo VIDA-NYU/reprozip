@@ -27,7 +27,7 @@ requirements:
 
   run:
     - python
-    - reprounzip >=0.6
+    - reprounzip >=0.6.4
     - rpaths >=0.8
 
 test:
