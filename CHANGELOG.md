@@ -6,6 +6,7 @@ Changelog
 
 Bugfixes:
 * Tracer: correctly handle `chdir()` in multi-threaded processes
+* Fix leaked file descriptors, eventually making SQLite3 fail
 * No longer exceed cmdline length in Dockerfile in big .RPZ pack
 * Fixes `check_output` call when running Docker (not available in Python 2.6)
 * Fixes installation of `sudo` failing if original machine wasn't Debian
