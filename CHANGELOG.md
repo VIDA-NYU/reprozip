@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.6.4 (???)
------------
+0.6.4 (2015-06-07)
+------------------
 
 Bugfixes:
 * Tracer: correctly handle `chdir()` in multi-threaded processes
