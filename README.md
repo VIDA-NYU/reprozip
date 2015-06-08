@@ -3,6 +3,8 @@
 
 Running Docker in a Travis CI build.
 
+![](https://github.com/moul/travis-docker/raw/master/assets/logo.png)
+
 `./run` script will run commands in a user-land linux with `docker` and
 `docker-compose` and pass back the exit code.
 
