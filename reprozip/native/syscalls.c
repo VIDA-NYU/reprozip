@@ -964,7 +964,7 @@ int syscall_handle(struct Process *process)
             log_debug(process->tid,
                       "ignoring, EXEC'D is set -- just post-exec syscall-"
                       "return stop");
-        process->flags = 0;
+        process->flags &= ~PROCFLAG_EXECD;
         if(process->execve_info != NULL)
         {
             free_execve_info(process->execve_info);
