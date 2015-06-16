@@ -490,41 +490,13 @@ int syscall_fork_event(struct Process *process, unsigned int event)
                  is_thread?"yes":"no",
                  process->threadgroup->wd);
 
-    /* At this point, the process might have been seen by waitpid in trace() or
-     * not */
-    new_process = trace_find_process(new_tid);
-    if(new_process != NULL)
-    {
-        /* Process has been seen before and options were set */
-        if(new_process->status != PROCSTAT_UNKNOWN)
-        {
-            /* LCOV_EXCL_START: : internal error */
-            log_critical(new_tid,
-                         "just created process that is already running "
-                         "(status=%d)", new_process->status);
-            return -1;
-            /* LCOV_EXCL_END */
-        }
-        new_process->status = PROCSTAT_ATTACHED;
-        ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
-        if(verbosity >= 2)
-        {
-            unsigned int nproc, unknown;
-            trace_count_processes(&nproc, &unknown);
-            log_info(0, "%d processes (inc. %d unattached)",
-                     nproc, unknown);
-        }
-    }
-    else
-    {
-        /* Process hasn't been seen before (event happened first) */
-        new_process = trace_get_empty_process();
-        new_process->status = PROCSTAT_ALLOCATED;
-        new_process->flags = 0;
-        /* New process gets a SIGSTOP, but we resume on attach */
-        new_process->tid = new_tid;
-        new_process->in_syscall = 0;
-    }
+    /* Create new process */
+    new_process = trace_get_empty_process();
+    new_process->status = PROCSTAT_ALLOCATED;
+    new_process->flags = 0;
+    /* New process gets a SIGSTOP, but we resume on attach */
+    new_process->tid = new_tid;
+    new_process->in_syscall = 0;
 
     if(is_thread)
     {

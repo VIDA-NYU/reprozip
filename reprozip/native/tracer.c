@@ -130,17 +130,6 @@ struct Process *trace_get_empty_process(void)
             return processes[i];
     }
 
-    /* Count unknown processes */
-    if(verbosity >= 3)
-    {
-        size_t unknown = 0;
-        for(i = 0; i < processes_size; ++i)
-            if(processes[i]->status == PROCSTAT_UNKNOWN)
-                ++unknown;
-        log_debug(0, "there are %u/%u UNKNOWN processes",
-                  (unsigned int)unknown, (unsigned int)processes_size);
-    }
-
     /* Allocate more! */
     if(verbosity >= 3)
         log_debug(0, "process table full (%d), reallocating",
@@ -203,9 +192,9 @@ void trace_free_process(struct Process *process)
     }
 }
 
-void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
+unsigned int trace_count_processes()
 {
-    unsigned int nproc = 0, unknown = 0;
+    unsigned int nproc = 0;
     size_t i;
     for(i = 0; i < processes_size; ++i)
     {
@@ -213,9 +202,6 @@ void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
         {
         case PROCSTAT_FREE:
             break;
-        case PROCSTAT_UNKNOWN:
-            /* Exists but no corresponding syscall has returned yet */
-            ++unknown;
         case PROCSTAT_ALLOCATED:
             /* Not yet attached but it will show up eventually */
         case PROCSTAT_ATTACHED:
@@ -224,10 +210,7 @@ void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
             break;
         }
     }
-    if(p_nproc != NULL)
-        *p_nproc = nproc;
-    if(p_unknown != NULL)
-        *p_unknown = unknown;
+    return nproc;
 }
 
 int trace_add_files_from_proc(unsigned int process, pid_t tid,
@@ -345,7 +328,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         }
         if(WIFEXITED(status) || WIFSIGNALED(status))
         {
-            unsigned int nprocs, unknown;
+            unsigned int nprocs;
             int exitcode;
             if(WIFSIGNALED(status))
                 /* exit codes are 8 bits */
@@ -362,42 +345,24 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     return -1;
                 trace_free_process(process);
             }
-            trace_count_processes(&nprocs, &unknown);
+            nprocs = trace_count_processes();
             if(verbosity >= 2)
                 log_info(tid, "process exited (%s %d), %d processes remain",
                          (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
                          (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
-            if(unknown >= nprocs)
-            {
-                /* LCOV_EXCL_START : This can't happen because UNKNOWN
-                 * processes are the forked processes whose creator has not
-                 * returned yet. Therefore, if there is an UNKNOWN process, its
-                 * creator has to exist as well (and it is not UNKNOWN). */
-                log_critical(0, "only UNKNOWN processes remaining (%d)",
-                             (unsigned int)nprocs);
-                return -1;
-                /* LCOV_EXCL_END */
-            }
             continue;
         }
 
         process = trace_find_process(tid);
         if(process == NULL)
         {
-            if(verbosity >= 3)
-                log_debug(tid, "process appeared");
-            process = trace_get_empty_process();
-            process->status = PROCSTAT_UNKNOWN;
-            process->flags = 0;
-            process->tid = tid;
-            process->threadgroup = NULL;
-            process->in_syscall = 0;
-            trace_set_options(tid);
-            /* Don't resume, it will be set to ATTACHED and resumed when fork()
-             * returns */
-            continue;
+            /* LCOV_EXCL_START : This can't happen because we get a
+             * PTRACE_EVENT_{FORK,VFORK,CLONE} beforehand */
+            log_critical(0, "Found unknown process %d", tid);
+            return -1;
+            /* LCOV_EXCL_END */
         }
         else if(process->status == PROCSTAT_ALLOCATED)
         {
@@ -408,12 +373,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(verbosity >= 2)
-            {
-                unsigned int nproc, unknown;
-                trace_count_processes(&nproc, &unknown);
-                log_info(0, "%d processes (inc. %d unattached)",
-                         nproc, unknown);
-            }
+                log_info(0, "%d processes", trace_count_processes());
             continue;
         }
 

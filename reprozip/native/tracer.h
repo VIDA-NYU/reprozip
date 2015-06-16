@@ -53,8 +53,6 @@ struct Process {
 #define PROCSTAT_FREE       0   /* unallocated entry in table */
 #define PROCSTAT_ALLOCATED  1   /* fork() done but not yet attached */
 #define PROCSTAT_ATTACHED   2   /* running process */
-#define PROCSTAT_UNKNOWN    3   /* attached but no corresponding fork() call
-                                 * has finished yet */
 
 #define MODE_I386           1
 #define MODE_X86_64         2   /* In x86_64 mode, syscalls might be native x64
@@ -77,7 +75,7 @@ struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd);
 
 void trace_free_process(struct Process *process);
 
-void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown);
+unsigned int trace_count_processes(void);
 
 int trace_add_files_from_proc(unsigned int process, pid_t tid,
                               const char *binary);
