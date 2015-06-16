@@ -526,6 +526,13 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     if(syscall_execve_event(process) != 0)
                         return -1;
                 }
+                else if( (event == PTRACE_EVENT_FORK)
+                      || (event == PTRACE_EVENT_VFORK)
+                      || (event == PTRACE_EVENT_CLONE))
+                {
+                    if(syscall_fork_event(process, event) != 0)
+                        return -1;
+                }
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             }
             else if(signum == SIGTRAP)
