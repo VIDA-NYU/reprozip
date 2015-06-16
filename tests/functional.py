@@ -438,6 +438,17 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                for l in stderr)
 
     # ########################################
+    # 'vfork' program: testrun
+    #
+
+    # Build
+    build('vfork', ['vfork.c'])
+    # Trace
+    stderr = check_output(rpz + ['testrun', './vfork'], 'err')
+    stderr = stderr.split(b'\n')
+    assert not any(b'program exited with non-zero code' in l for l in stderr)
+
+    # ########################################
     # Copies back coverage report
     #
 
