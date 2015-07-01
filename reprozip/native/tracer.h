@@ -61,6 +61,8 @@ struct Process {
                                  * or x32 */
 
 #define PROCFLAG_EXECD      1   /* Process is coming out of execve */
+#define PROCFLAG_FORKING    2   /* Process is spawning another with
+                                 * fork/vfork/clone */
 
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;

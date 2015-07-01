@@ -441,88 +441,111 @@ static int syscall_execve_out(const char *name, struct Process *process,
  * fork(), clone(), ...
  */
 
-#define SYSCALL_FORK_FORK   1
-#define SYSCALL_FORK_VFORK  2
-#define SYSCALL_FORK_CLONE  3
+static int syscall_fork_in(const char *name, struct Process *process,
+                           unsigned int udata)
+{
+    process->flags |= PROCFLAG_FORKING;
+    return 0;
+}
 
-static int syscall_forking(const char *name, struct Process *process,
-                           unsigned int syscall)
+static int syscall_fork_out(const char *name, struct Process *process,
+                            unsigned int udata)
+{
+    process->flags &= ~PROCFLAG_FORKING;
+    return 0;
+}
+
+int syscall_fork_event(struct Process *process, unsigned int event)
 {
 #ifndef CLONE_THREAD
 #define CLONE_THREAD 0x00010000
 #endif
-    if(process->retvalue.i > 0)
+
+    int is_thread = 0;
+    struct Process *new_process;
+    unsigned long new_tid;
+
+    ptrace(PTRACE_GETEVENTMSG, process->tid, NULL, &new_tid);
+
+    if(process->flags & PROCFLAG_FORKING == 0)
     {
-        int is_thread = 0;
-        pid_t new_tid = process->retvalue.i;
-        struct Process *new_process;
-        if(syscall == SYSCALL_FORK_CLONE)
-            is_thread = process->params[0].u & CLONE_THREAD;
-        if(verbosity >= 2)
-            log_info(new_tid, "process created by %d via %s\n"
-                     "    (thread: %s) (working directory: %s)",
-                     process->tid,
-                     (syscall == SYSCALL_FORK_FORK)?"fork()":
-                     (syscall == SYSCALL_FORK_VFORK)?"vfork()":
-                     "clone()",
-                     is_thread?"yes":"no",
-                     process->threadgroup->wd);
-
-        /* At this point, the process might have been seen by waitpid in
-         * trace() or not. */
-        new_process = trace_find_process(new_tid);
-        if(new_process != NULL)
-        {
-            /* Process has been seen before and options were set */
-            if(new_process->status != PROCSTAT_UNKNOWN)
-            {
-                /* LCOV_EXCL_START : internal error */
-                log_critical(new_tid,
-                             "just created process that is already running "
-                             "(status=%d)", new_process->status);
-                return -1;
-                /* LCOV_EXCL_END */
-            }
-            new_process->status = PROCSTAT_ATTACHED;
-            ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
-            if(verbosity >= 2)
-            {
-                unsigned int nproc, unknown;
-                trace_count_processes(&nproc, &unknown);
-                log_info(0, "%d processes (inc. %d unattached)",
-                         nproc, unknown);
-            }
-        }
-        else
-        {
-            /* Process hasn't been seen before (syscall returned first) */
-            new_process = trace_get_empty_process();
-            new_process->status = PROCSTAT_ALLOCATED;
-            new_process->flags = 0;
-            /* New process gets a SIGSTOP, but we resume on attach */
-            new_process->tid = new_tid;
-            new_process->in_syscall = 0;
-        }
-        if(is_thread)
-        {
-            new_process->threadgroup = process->threadgroup;
-            process->threadgroup->refs++;
-            if(verbosity >= 3)
-                log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
-                          process->threadgroup->refs);
-        }
-        else
-            new_process->threadgroup = trace_new_threadgroup(
-                    new_process->tid,
-                    strdup(process->threadgroup->wd));
-
-        /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
-
-        if(db_add_process(&new_process->identifier,
-                          process->identifier,
-                          process->threadgroup->wd) != 0)
-            return -1;
+        /* LCOV_EXCL_START : internal error */
+        log_critical(process->tid,
+                     "process created new process %d but we didn't see syscall "
+                     "entry", new_tid);
+        return -1;
+        /* LCOV_EXCL_END */
     }
+    else if(event == PTRACE_EVENT_CLONE)
+        is_thread = process->params[0].u & CLONE_THREAD;
+    process->flags &= ~PROCFLAG_FORKING;
+
+    if(verbosity >= 2)
+        log_info(new_tid, "process created by %d via %s\n"
+                 "    (thread: %s) (working directory: %s)",
+                 process->tid,
+                 (event == PTRACE_EVENT_FORK)?"fork()":
+                 (event == PTRACE_EVENT_VFORK)?"vfork()":
+                 "clone()",
+                 is_thread?"yes":"no",
+                 process->threadgroup->wd);
+
+    /* At this point, the process might have been seen by waitpid in trace() or
+     * not */
+    new_process = trace_find_process(new_tid);
+    if(new_process != NULL)
+    {
+        /* Process has been seen before and options were set */
+        if(new_process->status != PROCSTAT_UNKNOWN)
+        {
+            /* LCOV_EXCL_START: : internal error */
+            log_critical(new_tid,
+                         "just created process that is already running "
+                         "(status=%d)", new_process->status);
+            return -1;
+            /* LCOV_EXCL_END */
+        }
+        new_process->status = PROCSTAT_ATTACHED;
+        ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
+        if(verbosity >= 2)
+        {
+            unsigned int nproc, unknown;
+            trace_count_processes(&nproc, &unknown);
+            log_info(0, "%d processes (inc. %d unattached)",
+                     nproc, unknown);
+        }
+    }
+    else
+    {
+        /* Process hasn't been seen before (event happened first) */
+        new_process = trace_get_empty_process();
+        new_process->status = PROCSTAT_ALLOCATED;
+        new_process->flags = 0;
+        /* New process gets a SIGSTOP, but we resume on attach */
+        new_process->tid = new_tid;
+        new_process->in_syscall = 0;
+    }
+
+    if(is_thread)
+    {
+        new_process->threadgroup = process->threadgroup;
+        process->threadgroup->refs++;
+        if(verbosity >= 3)
+            log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
+                      process->threadgroup->refs);
+    }
+    else
+        new_process->threadgroup = trace_new_threadgroup(
+                new_process->tid,
+                strdup(process->threadgroup->wd));
+
+    /* Parent will also get a SIGTRAP with PTRACE_EVENT_FORK */
+
+    if(db_add_process(&new_process->identifier,
+                      process->identifier,
+                      process->threadgroup->wd) != 0)
+        return -1;
+
     return 0;
 }
 
@@ -737,9 +760,9 @@ void syscall_build_table(void)
 
             { 11, "execve", syscall_execve_in, syscall_execve_out, 11},
 
-            {  2, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
-            {190, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
-            {120, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+            {  2, "fork", syscall_fork_in, syscall_fork_out, 0},
+            {190, "vfork", syscall_fork_in, syscall_fork_out, 0},
+            {120, "clone", syscall_fork_in, syscall_fork_out, 0},
 
             {102, "socketcall", NULL, syscall_socketcall, 0},
 
@@ -807,9 +830,9 @@ void syscall_build_table(void)
 
             { 59, "execve", syscall_execve_in, syscall_execve_out, 59},
 
-            { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
-            { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
-            { 56, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+            { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
+            { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
+            { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
@@ -876,9 +899,9 @@ void syscall_build_table(void)
             {520, "execve", syscall_execve_in, syscall_execve_out,
                      __X32_SYSCALL_BIT + 520},
 
-            { 57, "fork", NULL, syscall_forking, SYSCALL_FORK_FORK},
-            { 58, "vfork", NULL, syscall_forking, SYSCALL_FORK_VFORK},
-            { 56, "clone", NULL, syscall_forking, SYSCALL_FORK_CLONE},
+            { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
+            { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
+            { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
@@ -964,7 +987,7 @@ int syscall_handle(struct Process *process)
             log_debug(process->tid,
                       "ignoring, EXEC'D is set -- just post-exec syscall-"
                       "return stop");
-        process->flags = 0;
+        process->flags &= ~PROCFLAG_EXECD;
         if(process->execve_info != NULL)
         {
             free_execve_info(process->execve_info);
