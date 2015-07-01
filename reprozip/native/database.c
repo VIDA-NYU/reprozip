@@ -44,6 +44,8 @@ int db_init(const char *filename)
 
     check(sqlite3_open(filename, &db));
 
+    check(sqlite3_exec(db, "BEGIN IMMEDIATE;", NULL, NULL, NULL))
+
     {
         int ret;
         const char *sql = ""
@@ -160,6 +162,7 @@ sqlerror:
 
 int db_close(void)
 {
+    check(sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL));
     check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_set_exitcode));
