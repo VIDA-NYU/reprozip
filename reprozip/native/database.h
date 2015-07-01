@@ -7,7 +7,7 @@
 #define FILE_STAT   0x08
 
 int db_init(const char *filename);
-int db_close(void);
+int db_close(int rollback);
 int db_add_process(unsigned int *id, unsigned int parent_id,
                    const char *working_dir);
 int db_add_exit(unsigned int id, int exitcode);

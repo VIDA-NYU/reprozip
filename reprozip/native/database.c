@@ -43,6 +43,7 @@ int db_init(const char *filename)
     int tables_exist;
 
     check(sqlite3_open(filename, &db));
+    log_debug(0, "database file opened: %s", filename);
 
     check(sqlite3_exec(db, "BEGIN IMMEDIATE;", NULL, NULL, NULL))
 
@@ -160,9 +161,17 @@ sqlerror:
     return -1;
 }
 
-int db_close(void)
+int db_close(int rollback)
 {
-    check(sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL));
+    if(rollback)
+    {
+        check(sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL));
+    }
+    else
+    {
+        check(sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL));
+    }
+    log_debug(0, "database file closed%s", rollback?" (rolled back)":"");
     check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_set_exitcode));

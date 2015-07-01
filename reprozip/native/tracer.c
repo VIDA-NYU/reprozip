@@ -715,6 +715,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
                                 process->threadgroup->wd) != 0)
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
+            db_close(1);
             cleanup();
             log_close_file();
             restore_signals();
@@ -726,13 +727,13 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     if(trace(child, exit_status) != 0)
     {
         cleanup();
-        db_close();
+        db_close(1);
         log_close_file();
         restore_signals();
         return 1;
     }
 
-    if(db_close() != 0)
+    if(db_close(0) != 0)
     {
         log_close_file();
         restore_signals();
