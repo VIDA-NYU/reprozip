@@ -543,7 +543,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
 
     if(db_add_process(&new_process->identifier,
                       process->identifier,
-                      process->threadgroup->wd) != 0)
+                      process->threadgroup->wd, is_thread) != 0)
         return -1;
 
     return 0;

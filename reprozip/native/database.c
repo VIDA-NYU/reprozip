@@ -90,6 +90,7 @@ int db_init(const char *filename)
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    parent INTEGER,"
             "    timestamp INTEGER NOT NULL,"
+            "    is_thread BOOLEAN NOT NULL,"
             "    exitcode INTEGER"
             "    );",
             "CREATE INDEX proc_parent_idx ON processes(parent);",
@@ -126,8 +127,8 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO processes(parent, timestamp)"
-                "VALUES(?, ?)";
+                "INSERT INTO processes(parent, timestamp, is_thread)"
+                "VALUES(?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
     }
 
@@ -188,7 +189,7 @@ sqlerror:
 #define DB_NO_PARENT ((unsigned int)-2)
 
 int db_add_process(unsigned int *id, unsigned int parent_id,
-                   const char *working_dir)
+                   const char *working_dir, int is_thread)
 {
     if(parent_id == DB_NO_PARENT)
     {
@@ -200,6 +201,7 @@ int db_add_process(unsigned int *id, unsigned int parent_id,
     }
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
     check(sqlite3_bind_int64(stmt_insert_process, 2, gettime()));
+    check(sqlite3_bind_int(stmt_insert_process, 3, is_thread?1:0));
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
         goto sqlerror;
@@ -224,7 +226,7 @@ sqlerror:
 
 int db_add_first_process(unsigned int *id, const char *working_dir)
 {
-    return db_add_process(id, DB_NO_PARENT, working_dir);
+    return db_add_process(id, DB_NO_PARENT, working_dir, 0);
 }
 
 int db_add_exit(unsigned int id, int exitcode)
