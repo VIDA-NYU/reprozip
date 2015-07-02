@@ -38,6 +38,8 @@ static sqlite3_stmt *stmt_set_exitcode;
 static sqlite3_stmt *stmt_insert_file;
 static sqlite3_stmt *stmt_insert_exec;
 
+static int run_id = -1;
+
 int db_init(const char *filename)
 {
     int tables_exist;
@@ -88,6 +90,7 @@ int db_init(const char *filename)
         const char *sql[] = {
             "CREATE TABLE processes("
             "    id INTEGER NOT NULL PRIMARY KEY,"
+            "    run_id INTEGER NOT NULL,"
             "    parent INTEGER,"
             "    timestamp INTEGER NOT NULL,"
             "    is_thread BOOLEAN NOT NULL,"
@@ -96,6 +99,7 @@ int db_init(const char *filename)
             "CREATE INDEX proc_parent_idx ON processes(parent);",
             "CREATE TABLE opened_files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
+            "    run_id INTEGER NOT NULL,"
             "    name TEXT NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    mode INTEGER NOT NULL,"
@@ -106,6 +110,7 @@ int db_init(const char *filename)
             "CREATE TABLE executed_files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    name TEXT NOT NULL,"
+            "    run_id INTEGER NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
             "    argv TEXT NOT NULL,"
@@ -119,6 +124,26 @@ int db_init(const char *filename)
             check(sqlite3_exec(db, sql[i], NULL, NULL, NULL));
     }
 
+    /* Get the first unused run_id */
+    {
+        sqlite3_stmt *stmt_get_run_id;
+        const char *sql = "SELECT max(run_id) + 1 FROM processes;";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_get_run_id, NULL));
+        if(sqlite3_step(stmt_get_run_id) != SQLITE_ROW)
+        {
+            sqlite3_finalize(stmt_get_run_id);
+            goto sqlerror;
+        }
+        run_id = sqlite3_column_int(stmt_get_run_id, 0);
+        if(sqlite3_step(stmt_get_run_id) != SQLITE_DONE)
+        {
+            sqlite3_finalize(stmt_get_run_id);
+            goto sqlerror;
+        }
+        sqlite3_finalize(stmt_get_run_id);
+    }
+    log_debug(0, "This is run %d", run_id);
+
     {
         const char *sql = ""
                 "SELECT last_insert_rowid()";
@@ -127,8 +152,8 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO processes(parent, timestamp, is_thread)"
-                "VALUES(?, ?, ?)";
+                "INSERT INTO processes(run_id, parent, timestamp, is_thread)"
+                "VALUES(?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
     }
 
@@ -141,17 +166,17 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO opened_files(name, timestamp, "
+                "INSERT INTO opened_files(run_id, name, timestamp, "
                 "        mode, is_directory, process)"
-                "VALUES(?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
 
     {
         const char *sql = ""
-                "INSERT INTO executed_files(name, timestamp, process, "
+                "INSERT INTO executed_files(run_id, name, timestamp, process, "
                 "        argv, envp, workingdir)"
-                "VALUES(?, ?, ?, ?, ?, ?)";
+                "VALUES(?, ?, ?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
     }
 
@@ -179,6 +204,7 @@ int db_close(int rollback)
     check(sqlite3_finalize(stmt_insert_file));
     check(sqlite3_finalize(stmt_insert_exec));
     check(sqlite3_close(db));
+    run_id = -1;
     return 0;
 
 sqlerror:
@@ -191,17 +217,18 @@ sqlerror:
 int db_add_process(unsigned int *id, unsigned int parent_id,
                    const char *working_dir, int is_thread)
 {
+    check(sqlite3_bind_int(stmt_insert_process, 1, run_id));
     if(parent_id == DB_NO_PARENT)
     {
-        check(sqlite3_bind_null(stmt_insert_process, 1));
+        check(sqlite3_bind_null(stmt_insert_process, 2));
     }
     else
     {
-        check(sqlite3_bind_int(stmt_insert_process, 1, parent_id));
+        check(sqlite3_bind_int(stmt_insert_process, 2, parent_id));
     }
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
-    check(sqlite3_bind_int64(stmt_insert_process, 2, gettime()));
-    check(sqlite3_bind_int(stmt_insert_process, 3, is_thread?1:0));
+    check(sqlite3_bind_int64(stmt_insert_process, 3, gettime()));
+    check(sqlite3_bind_int(stmt_insert_process, 4, is_thread?1:0));
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
         goto sqlerror;
@@ -250,12 +277,13 @@ sqlerror:
 int db_add_file_open(unsigned int process, const char *name,
                      unsigned int mode, int is_dir)
 {
-    check(sqlite3_bind_text(stmt_insert_file, 1, name, -1, SQLITE_TRANSIENT));
+    check(sqlite3_bind_int(stmt_insert_file, 1, run_id));
+    check(sqlite3_bind_text(stmt_insert_file, 2, name, -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
-    check(sqlite3_bind_int64(stmt_insert_file, 2, gettime()));
-    check(sqlite3_bind_int(stmt_insert_file, 3, mode));
-    check(sqlite3_bind_int(stmt_insert_file, 4, is_dir));
-    check(sqlite3_bind_int(stmt_insert_file, 5, process));
+    check(sqlite3_bind_int64(stmt_insert_file, 3, gettime()));
+    check(sqlite3_bind_int(stmt_insert_file, 4, mode));
+    check(sqlite3_bind_int(stmt_insert_file, 5, is_dir));
+    check(sqlite3_bind_int(stmt_insert_file, 6, process));
 
     if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
         goto sqlerror;
@@ -302,26 +330,27 @@ int db_add_exec(unsigned int process, const char *binary,
                 const char *const *argv, const char *const *envp,
                 const char *workingdir)
 {
-    check(sqlite3_bind_text(stmt_insert_exec, 1, binary,
+    check(sqlite3_bind_int(stmt_insert_exec, 1, run_id));
+    check(sqlite3_bind_text(stmt_insert_exec, 2, binary,
                             -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
-    check(sqlite3_bind_int64(stmt_insert_exec, 2, gettime()));
-    check(sqlite3_bind_int(stmt_insert_exec, 3, process));
+    check(sqlite3_bind_int64(stmt_insert_exec, 3, gettime()));
+    check(sqlite3_bind_int(stmt_insert_exec, 4, process));
     {
         size_t len;
         char *arglist = strarray2nulsep(argv, &len);
-        check(sqlite3_bind_text(stmt_insert_exec, 4, arglist, len,
+        check(sqlite3_bind_text(stmt_insert_exec, 5, arglist, len,
                                 SQLITE_TRANSIENT));
         free(arglist);
     }
     {
         size_t len;
         char *envlist = strarray2nulsep(envp, &len);
-        check(sqlite3_bind_text(stmt_insert_exec, 5, envlist, len,
+        check(sqlite3_bind_text(stmt_insert_exec, 6, envlist, len,
                                 SQLITE_TRANSIENT));
         free(envlist);
     }
-    check(sqlite3_bind_text(stmt_insert_exec, 6, workingdir,
+    check(sqlite3_bind_text(stmt_insert_exec, 7, workingdir,
                             -1, SQLITE_TRANSIENT));
 
     if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)
