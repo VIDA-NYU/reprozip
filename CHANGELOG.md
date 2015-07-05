@@ -12,6 +12,12 @@ Behavior change:
 Features:
 * Makes VMs (Vagrant or Docker)  more resilient to massive breakage of system libraries (obliterating /lib or /usr, when using very different operating systems) by putting busybox in / and using [rpzsudo](https://github.com/remram44/static-sudo).
 
+0.6.5 (???)
+-----------
+
+Bugfixes:
+* Fix insertion speed in SQLite3 database
+
 0.6.4 (2015-06-07)
 ------------------
 
@@ -22,7 +28,6 @@ Bugfixes:
 * Fixes `check_output` call when running Docker (not available in Python 2.6)
 * Fixes installation of `sudo` failing if original machine wasn't Debian
 * Don't make TAR error status fatal in Dockerfile (might not run; this is needed because Docker mount some files in the container that can't be overwritten)
-* Fix insertion speed in SQLite3 database
 
 0.6.3 (2015-05-06)
 ------------------
