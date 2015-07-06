@@ -35,7 +35,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
-    make_dir_writable, rmtree_fixed, download_file
+    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, download_file
 
 
 def installpkgs(args):
@@ -297,7 +297,7 @@ def directory_run(args):
 
     signals.pre_run(target=target)
     retcode = interruptible_call(cmds, shell=True)
-    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 
 
@@ -575,7 +575,7 @@ def chroot_run(args):
 
     signals.pre_run(target=target)
     retcode = interruptible_call(cmds, shell=True)
-    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
 
 
@@ -715,11 +715,11 @@ class LocalDownloader(FileDownloader):
         with remote_path.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
-                sys.stdout.buffer.write(chunk)
+                stdout_bytes.write(chunk)
             while len(chunk) == 1024:
                 chunk = fp.read(1024)
                 if chunk:
-                    sys.stdout.buffer.write(chunk)
+                    stdout_bytes.write(chunk)
 
     def download(self, remote_path, local_path):
         remote_path = join_root(self.root, remote_path)

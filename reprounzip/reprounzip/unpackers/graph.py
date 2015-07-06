@@ -27,7 +27,7 @@ import tarfile
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
-from reprounzip.utils import PY3, unicode_, iteritems, escape, \
+from reprounzip.utils import PY3, unicode_, iteritems, stderr, escape, \
     CommonEqualityMixin
 
 
@@ -289,10 +289,10 @@ def graph(args):
 
 
 def disabled_bug13676(args):
-    sys.stderr.write("Error: your version of Python, %s, is not "
-                     "supported\nVersions before 2.7.3 are affected by bug "
-                     "13676 and will not work be able to\nread the trace "
-                     "database\n" % sys.version.split(' ', 1)[0])
+    stderr.write("Error: your version of Python, %s, is not supported\n"
+                 "Versions before 2.7.3 are affected by bug 13676 and will "
+                 "not work be able to\nread the trace "
+                 "database\n" % sys.version.split(' ', 1)[0])
     sys.exit(1)
 
 

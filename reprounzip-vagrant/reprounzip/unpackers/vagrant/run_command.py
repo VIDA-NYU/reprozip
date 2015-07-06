@@ -20,7 +20,7 @@ from reprounzip.common import record_usage
 from reprounzip.unpackers.common import interruptible_call
 from reprounzip.unpackers.common.x11 import BaseForwarder, LocalForwarder
 from reprounzip.unpackers.vagrant.interaction import interactive_shell
-from reprounzip.utils import irange
+from reprounzip.utils import irange, stdout_bytes
 
 
 class IgnoreMissingKey(MissingHostKeyPolicy):
@@ -161,8 +161,8 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
                 data = chan.recv(1024)
                 if len(data) == 0:
                     break
-                sys.stdout.buffer.write(data)
-                sys.stdout.flush()
+                stdout_bytes.write(data)
+                stdout_bytes.flush()
         retcode = chan.recv_exit_status()
         ssh.close()
         return retcode

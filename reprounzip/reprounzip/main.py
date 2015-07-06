@@ -14,7 +14,6 @@ It dispatchs to plugins registered through pkg_resources as entry point
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import codecs
 import locale
 import logging
 from pkg_resources import iter_entry_points
@@ -74,18 +73,6 @@ def main(setup_streams=True):
     """
     # Locale
     locale.setlocale(locale.LC_ALL, '')
-
-    # Encoding for output streams
-    if setup_streams:
-        if str == bytes:  # PY2
-            writer = codecs.getwriter(locale.getpreferredencoding())
-            o_stdout, o_stderr = sys.stdout, sys.stderr
-            sys.stdout = writer(sys.stdout)
-            sys.stdout.buffer = o_stdout
-            sys.stderr = writer(sys.stderr)
-            sys.stderr.buffer = o_stderr
-        else:
-            sys.stdin = sys.stdin.buffer
 
     # Parses command-line
 

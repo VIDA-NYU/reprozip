@@ -27,11 +27,10 @@ import logging
 import logging.handlers
 import os
 from rpaths import PosixPath, Path
-import sys
 import usagestats
 import yaml
 
-from .utils import CommonEqualityMixin, escape, hsize, unicode_
+from .utils import stderr, CommonEqualityMixin, escape, hsize, unicode_
 
 
 FILE_READ = 0x01
@@ -360,11 +359,11 @@ def enable_usage_report(enable):
     """
     if enable:
         _usage_report.enable_reporting()
-        sys.stderr.write("Thank you, usage reports will be sent automatically "
-                         "from now on.\n")
+        stderr.write("Thank you, usage reports will be sent automatically "
+                     "from now on.\n")
     else:
         _usage_report.disable_reporting()
-        sys.stderr.write("Usage reports will not be collected nor sent.\n")
+        stderr.write("Usage reports will not be collected nor sent.\n")
 
 
 def record_usage(**kwargs):

@@ -34,7 +34,8 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
-from reprounzip.utils import unicode_, iteritems, check_output, download_file
+from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
+    download_file
 
 
 def rb_escape(s):
@@ -122,19 +123,19 @@ def get_ssh_parameters(target):
     """Reads the SSH parameters from ``vagrant ssh`` command output.
     """
     try:
-        stdout = check_output(['vagrant', 'ssh-config'],
-                              cwd=target.path,
-                              stderr=subprocess.PIPE)
+        out = check_output(['vagrant', 'ssh-config'],
+                           cwd=target.path,
+                           stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
         subprocess.check_call(['vagrant', 'up'],
                               cwd=target.path)
         # Try again
-        stdout = check_output(['vagrant', 'ssh-config'],
-                              cwd=target.path)
+        out = check_output(['vagrant', 'ssh-config'],
+                           cwd=target.path)
 
     info = {}
-    for line in stdout.split(b'\n'):
+    for line in out.split(b'\n'):
         line = line.strip().split(b' ', 1)
         if len(line) != 2:
             continue
@@ -437,8 +438,7 @@ def vagrant_run(args):
                               cmds,
                               not args.no_pty,
                               x11.port_forward)
-    sys.stderr.write("\r\n*** Command finished, status: %d\r\n" %
-                     retcode)
+    stderr.write("\r\n*** Command finished, status: %d\r\n" % retcode)
 
     signals.post_run(target=target, retcode=retcode)
 
@@ -599,15 +599,15 @@ def _executable_in_path(executable):
 
 def check_vagrant_version():
     try:
-        stdout = check_output(['vagrant', '--version'])
+        out = check_output(['vagrant', '--version'])
     except subprocess.CalledProcessError:
         logging.error("Couldn't run vagrant")
         sys.exit(1)
-    stdout = stdout.decode('ascii').strip().lower().split()
-    if stdout[0] == 'vagrant':
-        if LooseVersion(stdout[1]) < LooseVersion('1.1'):
+    out = out.decode('ascii').strip().lower().split()
+    if out[0] == 'vagrant':
+        if LooseVersion(out[1]) < LooseVersion('1.1'):
             logging.error("Vagrant >=1.1 is required; detected version: %s",
-                          stdout[1])
+                          out[1])
             sys.exit(1)
     else:
         logging.error("Vagrant >=1.1 is required")
@@ -621,17 +621,17 @@ def test_has_vagrant(pack, **kwargs):
         return COMPAT_MAYBE, "vagrant not found in PATH"
 
     try:
-        stdout = check_output(['vagrant', '--version'])
+        out = check_output(['vagrant', '--version'])
     except subprocess.CalledProcessError:
         return COMPAT_NO, ("vagrant was found in PATH but doesn't seem to "
                            "work properly")
-    stdout = stdout.decode('ascii').strip().lower().split()
-    if stdout[0] == 'vagrant':
-        if LooseVersion(stdout[1]) >= LooseVersion('1.1'):
+    out = out.decode('ascii').strip().lower().split()
+    if out[0] == 'vagrant':
+        if LooseVersion(out[1]) >= LooseVersion('1.1'):
             return COMPAT_OK
         else:
             return COMPAT_NO, ("Vagrant >=1.1 is required; detected version: "
-                               "%s" % stdout[1])
+                               "%s" % out[1])
     else:
         return COMPAT_NO, "Vagrant >=1.1 is required"
 

@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import locale
 import logging
 import os
@@ -47,15 +46,6 @@ class Program(unittest.TestProgram):
 if __name__ == '__main__':
     # Locale
     locale.setlocale(locale.LC_ALL, '')
-
-    # Encoding for output streams
-    if str == bytes:  # PY2
-        writer = codecs.getwriter(locale.getpreferredencoding())
-        o_stdout, o_stderr = sys.stdout, sys.stderr
-        sys.stdout = writer(sys.stdout)
-        sys.stdout.buffer = o_stdout
-        sys.stderr = writer(sys.stderr)
-        sys.stderr.buffer = o_stderr
 
     # Disables usage reporting
     os.environ['REPROZIP_USAGE_STATS'] = 'off'

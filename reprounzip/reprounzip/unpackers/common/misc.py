@@ -18,7 +18,7 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange
+from reprounzip.utils import irange, stdout_bytes
 
 
 COMPAT_OK = 0
@@ -318,11 +318,11 @@ class FileDownloader(object):
         with temp.open('rb') as fp:
             chunk = fp.read(1024)
             if chunk:
-                sys.stdout.buffer.write(chunk)
+                stdout_bytes.write(chunk)
             while len(chunk) == 1024:
                 chunk = fp.read(1024)
                 if chunk:
-                    sys.stdout.buffer.write(chunk)
+                    stdout_bytes.write(chunk)
         temp.remove()
 
     def download(self, remote_path, local_path):

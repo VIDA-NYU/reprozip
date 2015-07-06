@@ -15,14 +15,39 @@ to this software (more utilities).
 
 from __future__ import unicode_literals
 
+import codecs
 import contextlib
 import email.utils
+import locale
 import logging
 import os
 from rpaths import Path
 import stat
 import subprocess
 import sys
+
+
+class StreamWriter(object):
+    def __init__(self, stream):
+        writer = codecs.getwriter(locale.getpreferredencoding())
+        self._writer = writer(stream, 'replace')
+        self.buffer = stream
+
+    def writelines(self, lines):
+        self.write(str('').join(lines))
+
+    def write(self, obj):
+        if isinstance(obj, bytes):
+            self.buffer.write(obj)
+        else:
+            self._writer.write(obj)
+
+    def __getattr__(self, name,
+                    getattr=getattr):
+
+        """ Inherit all other methods from the underlying stream.
+        """
+        return getattr(self._writer, name)
 
 
 PY3 = sys.version_info[0] == 3
@@ -36,6 +61,10 @@ if PY3:
     iteritems = dict.items
     itervalues = dict.values
     listvalues = lambda d: list(d.values())
+
+    stdout_bytes, stderr_bytes = sys.stdout.buffer, sys.stderr.buffer
+    stdin_bytes = sys.stdin.buffer
+    stdout, stderr = sys.stdout, sys.stderr
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
     import itertools
@@ -44,6 +73,11 @@ else:
     iteritems = dict.iteritems
     itervalues = dict.itervalues
     listvalues = dict.values
+
+    _writer = codecs.getwriter(locale.getpreferredencoding())
+    stdout_bytes, stderr_bytes = sys.stdout, sys.stderr
+    stdin_bytes = sys.stdin
+    stdout, stderr = StreamWriter(sys.stdout), StreamWriter(sys.stderr)
 
 
 if PY3:
@@ -227,14 +261,14 @@ def check_output(*popenargs, **kwargs):
     if 'stdout' in kwargs:
         raise ValueError("stdout argument not allowed")
     process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    stdout, stderr = process.communicate()
+    out, err = process.communicate()
     retcode = process.poll()
     if retcode:
         cmd = kwargs.get('args')
         if cmd is None:
             cmd = [popenargs[0]]
         raise subprocess.CalledProcessError(retcode, cmd)
-    return stdout
+    return out
 
 
 def download_file(url, dest, cachename=None):

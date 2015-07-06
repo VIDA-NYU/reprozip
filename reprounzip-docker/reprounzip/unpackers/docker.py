@@ -31,7 +31,8 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     join_root, FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, iteritems, check_output, download_file
+from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
+    download_file
 
 
 def select_image(runs):
@@ -273,8 +274,8 @@ def get_iface_addr(iface):
     """
     p = subprocess.Popen(['/bin/ip', 'addr', 'show', iface],
                          stdout=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    for line in stdout.splitlines():
+    out, err = p.communicate()
+    for line in out.splitlines():
         m = _addr_re.search(line)
         if m is not None:
             return m.group(1).decode('ascii')
@@ -374,7 +375,7 @@ def docker_run(args):
         logging.error("Invalid container state after execution:\n%s",
                       json.dumps(outjson[0]["State"]))
     retcode = outjson[0]["State"]["ExitCode"]
-    sys.stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Store container name (so we can download output files)
     unpacked_info['ran_container'] = container
@@ -390,8 +391,8 @@ class ContainerUploader(FileUploader):
 
     def prepare_upload(self, files):
         if 'current_image' not in self.unpacked_info:
-            sys.stderr.write("Image doesn't exist yet, have you run "
-                             "setup/build?\n")
+            stderr.write("Image doesn't exist yet, have you run "
+                         "setup/build?\n")
             sys.exit(1)
 
         self.build_directory = Path.tempdir(prefix='reprozip_build_')

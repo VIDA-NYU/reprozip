@@ -15,7 +15,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import iteritems
+from reprounzip.utils import iteritems, stderr_bytes, stderr
 
 
 tests = Path(__file__).parent.absolute()
@@ -76,7 +76,7 @@ def check_output(args, stream='out'):
         line = fp.readline()
         if not line:
             break
-        sys.stderr.buffer.write(line)
+        stderr_bytes.write(line)
         output.append(line)
     retcode = p.wait()
     if retcode != 0:
@@ -167,7 +167,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         try:
             first = output.index(b"Read 6 bytes")
         except ValueError:
-            sys.stderr.write("output = %r\n" % output)
+            stderr.write("output = %r\n" % output)
             raise
         if infile == 1:
             assert output[first + 1] == b"a = 29, b = 13"
@@ -223,11 +223,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Delete with wrong command (should fail)
     p = subprocess.Popen(rpuz + ['chroot', 'destroy', 'simpledir'],
                          stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
+    out, err = p.communicate()
     assert p.poll() != 0
-    stderr = stderr.splitlines()
-    assert b"Wrong unpacker used" in stderr[0]
-    assert stderr[1].startswith(b"usage: ")
+    err = err.splitlines()
+    assert b"Wrong unpacker used" in err[0]
+    assert err[1].startswith(b"usage: ")
     # Delete directory
     check_call(rpuz + ['directory', 'destroy', 'simpledir'])
     # Unpack chroot
@@ -258,11 +258,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Delete with wrong command (should fail)
         p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
                              stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        out, err = p.communicate()
         assert p.poll() != 0
-        stderr = stderr.splitlines()
-        assert b"Wrong unpacker used" in stderr[0]
-        assert stderr[1].startswith(b"usage:")
+        err = err.splitlines()
+        assert b"Wrong unpacker used" in err[0]
+        assert err[1].startswith(b"usage:")
     finally:
         # Delete chroot
         check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
@@ -475,11 +475,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('connect', ['connect.c'])
     # Trace
-    stderr = check_output(rpz + ['testrun', './connect'], 'err')
-    stderr = stderr.split(b'\n')
-    assert not any(b'program exited with non-zero code' in l for l in stderr)
+    err = check_output(rpz + ['testrun', './connect'], 'err')
+    err = err.split(b'\n')
+    assert not any(b'program exited with non-zero code' in l for l in err)
     assert any(re.search(br'process connected to [0-9.]+:80', l)
-               for l in stderr)
+               for l in err)
 
     # ########################################
     # 'vfork' program: testrun
@@ -488,9 +488,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('vfork', ['vfork.c'])
     # Trace
-    stderr = check_output(rpz + ['testrun', './vfork'], 'err')
-    stderr = stderr.split(b'\n')
-    assert not any(b'program exited with non-zero code' in l for l in stderr)
+    err = check_output(rpz + ['testrun', './vfork'], 'err')
+    err = err.split(b'\n')
+    assert not any(b'program exited with non-zero code' in l for l in err)
 
     # ########################################
     # Copies back coverage report

@@ -13,7 +13,6 @@ It dispatchs to other routines, or handles the testrun command.
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import locale
 import logging
 import os
@@ -29,7 +28,7 @@ from reprozip.common import setup_logging, \
     submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
-from reprozip.utils import PY3, unicode_
+from reprozip.utils import PY3, unicode_, stderr
 
 
 def shell_escape(s):
@@ -224,23 +223,13 @@ def main(setup_streams=True):
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 
-    # Encoding for output streams
-    if setup_streams:
-        if str == bytes:  # PY2
-            writer = codecs.getwriter(locale.getpreferredencoding())
-            o_stdout, o_stderr = sys.stdout, sys.stderr
-            sys.stdout = writer(sys.stdout)
-            sys.stdout.buffer = o_stdout
-            sys.stderr = writer(sys.stderr)
-            sys.stderr.buffer = o_stderr
-
     # http://bugs.python.org/issue13676
     # This prevents reprozip from reading argv and envp arrays from trace
     if sys.version_info < (2, 7, 3):
-        sys.stderr.write("Error: your version of Python, %s, is not "
-                         "supported\nVersions before 2.7.3 are affected by "
-                         "bug 13676 and will not work with ReproZip\n" %
-                         sys.version.split(' ', 1)[0])
+        stderr.write("Error: your version of Python, %s, is not supported\n"
+                     "Versions before 2.7.3 are affected by bug 13676 and "
+                     "will not work with ReproZip\n" %
+                     sys.version.split(' ', 1)[0])
         sys.exit(1)
 
     # Parses command-line
