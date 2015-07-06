@@ -12,7 +12,7 @@ generation logic for the config YAML file.
 from __future__ import unicode_literals
 
 import heapq
-from itertools import chain, count
+from itertools import count
 import logging
 import os
 import platform
@@ -21,13 +21,13 @@ import sqlite3
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import File, load_config, save_config, \
+from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_WDIR
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
-    unicode_, hsize, find_all_links
+    unicode_, flatten, UniqueNames, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -171,8 +171,9 @@ def get_files(conn):
                # ONLY_READ,
                fi.what == TracedFile.ONLY_READ and
                # not executable,
-               # FIXME : currently disabled. Maybe only remove executed files?
+               # FIXME : currently disabled; only remove executed files
                # not fi.path.stat().st_mode & 0b111 and
+               fi.path not in executed and
                # not in a system directory
                not any(fi.path.lies_under(m)
                        for m in magic_dirs + system_dirs)]
@@ -370,8 +371,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = merge_files(files, packages,
                                       oldfiles,
                                       oldpkgs)
-    for ((r_name, r_argv, r_envp, r_workingdir, r_exitcode),
-            input_files, output_files) in izip(executions, inputs, outputs):
+    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
         # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
@@ -398,43 +398,37 @@ def write_configuration(directory, sort_packages, overwrite=False):
     cur.close()
     conn.close()
 
-    input_files = label_files(runs, inputs, 'input')
-    output_files = label_files(runs, outputs, 'output')
+    inputs_outputs = compile_inputs_outputs(runs, inputs, outputs)
 
     save_config(config, runs, packages, files, reprozip_version,
-                input_files, output_files)
+                inputs_outputs)
 
     print("Configuration file written in {0!s}".format(config))
     print("Edit that file then run the packer -- "
           "use 'reprozip pack -h' for help")
 
 
-class UniqueNames(object):
-    """Makes names unique amongst the ones it's already seen.
-    """
-    def __init__(self):
-        self.names = set()
-
-    def __call__(self, name):
-        nb = 1
-        attempt = name
-        while attempt in self.names:
-            nb += 1
-            attempt = '%s_%d' % (name, nb)
-        self.names.add(attempt)
-        return attempt
-
-
-def label_files(runs, files_list, kind):
-    """Gives names to input or output files.
+def compile_inputs_outputs(runs, inputs, outputs):
+    """Gives names to input/output files and creates InputOutputFile objects.
     """
     # {path: (run_nb, arg_nb) or None}
     runs_with_file = {}
     # run_nb: number_of_file_arguments
     nb_file_args = []
+    # {path: [runs]}
+    readers = {}
+    writers = {}
 
-    for run_nb, run, files in izip(count(), runs, files_list):
-        files_set = set(files)
+    for run_nb, run, in_files, out_files in izip(count(), runs,
+                                                 inputs, outputs):
+        # List which runs read or write each file
+        for p in in_files:
+            readers.setdefault(p, []).append(run_nb)
+        for p in out_files:
+            writers.setdefault(p, []).append(run_nb)
+
+        # Locate files that appear on a run's command line
+        files_set = set(in_files) | set(out_files)
         nb_files = 0
         for arg_nb, arg in enumerate(run['argv']):
             p = Path(run['workingdir'], arg).resolve()
@@ -447,10 +441,9 @@ def label_files(runs, files_list, kind):
         nb_file_args.append(nb_files)
 
     file_names = {}
-
     make_unique = UniqueNames()
 
-    for fi in chain.from_iterable(files_list):
+    for fi in flatten(2, (inputs, outputs)):
         # If it appears in at least one of the command-lines
         if fi in runs_with_file:
             # If it only appears once in the command-lines
@@ -470,4 +463,5 @@ def label_files(runs, files_list, kind):
         else:
             file_names[fi] = make_unique(fi.unicodename)
 
-    return dict((n, p) for p, n in iteritems(file_names))
+    return dict((n, InputOutputFile(p, readers.get(p, []), writers.get(p, [])))
+                for p, n in iteritems(file_names))

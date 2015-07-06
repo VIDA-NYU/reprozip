@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 import codecs
 import contextlib
 import email.utils
+import itertools
 import locale
 import logging
 import operator
@@ -68,7 +69,6 @@ if PY3:
     stdout, stderr = sys.stdout, sys.stderr
 else:
     from urllib2 import Request, HTTPError, URLError, urlopen
-    import itertools
     izip = itertools.izip
     irange = xrange
     iteritems = dict.iteritems
@@ -87,6 +87,46 @@ if PY3:
 else:
     int_types = int, long
     unicode_ = unicode
+
+
+def flatten(n, l):
+    """Flattens an iterable by repeatedly calling chain.from_iterable() on it.
+
+    >>> a = [[1, 2, 3], [4, 5, 6]]
+    >>> b = [[7, 8], [9, 10, 11, 12, 13, 14, 15, 16]]
+    >>> l = [a, b]
+    >>> list(flatten(0, a))
+    [[1, 2, 3], [4, 5, 6]]
+    >>> list(flatten(1, a))
+    [1, 2, 3, 4, 5, 6]
+    >>> list(flatten(1, l))
+    [[1, 2, 3], [4, 5, 6], [7, 8], [9, 10, 11, 12, 13, 14, 15, 16]]
+    >>> list(flatten(2, l))
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    """
+    for i in irange(n):
+        l = itertools.chain.from_iterable(l)
+    return l
+
+
+class UniqueNames(object):
+    """Makes names unique amongst the ones it's already seen.
+    """
+    def __init__(self):
+        self.names = set()
+
+    def insert(self, name):
+        assert name not in self.names
+        self.names.add(name)
+
+    def __call__(self, name):
+        nb = 1
+        attempt = name
+        while attempt in self.names:
+            nb += 1
+            attempt = '%s_%d' % (name, nb)
+        self.names.add(attempt)
+        return attempt
 
 
 def escape(s):

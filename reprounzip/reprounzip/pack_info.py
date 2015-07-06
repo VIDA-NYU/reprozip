@@ -34,8 +34,7 @@ def print_info(args):
 
     # Loads config
     runs, packages, other_files = config = load_config(pack)
-    input_files = config.input_files
-    output_files = config.output_files
+    inputs_outputs = config.inputs_outputs
 
     pack_total_size = 0
     pack_total_paths = 0
@@ -133,22 +132,19 @@ def print_info(args):
                 else:
                     print("        exitcode: %d" % run['exitcode'])
 
-    if input_files:
+    if inputs_outputs:
         if args.verbosity < 2:
-            print("Input files (%d): %s" % (
-                  len(input_files), ", ".join(input_files)))
+            print("Inputs/outputs files (%d) :%s" % (
+                  len(inputs_outputs), ", ".join(inputs_outputs)))
         else:
-            print("Input files (%d):" % len(input_files))
-            for name, path in iteritems(input_files):
-                print("    %s: %s" % (name, path))
-    if output_files:
-        if args.verbosity < 2:
-            print("Output files (%d): %s" % (
-                  len(output_files), ", ".join(output_files)))
-        else:
-            print("Output files (%d):" % len(output_files))
-            for name, path in iteritems(output_files):
-                print("    %s: %s" % (name, path))
+            print("Inputs/outputs files (%d):" % len(inputs_outputs))
+            for name, f in iteritems(inputs_outputs):
+                t = []
+                if f.read_runs:
+                    t += "in"
+                if f.write_runs:
+                    t += "out"
+                print("    %s (%s): %s" % (name, ' '.join(t), f.path))
 
     # Unpacker compatibility
     print("\n----- Unpackers -----")
@@ -202,8 +198,10 @@ def showfiles(args):
         assigned_input_files = unpacked_info.get('input_files', {})
 
         print("Input files:")
-        for input_name, path in iteritems(config.input_files):
-            print("    %s (%s)" % (input_name, path))
+        for input_name, f in iteritems(config.inputs_outputs):
+            if not f.read_runs:
+                continue
+            print("    %s (%s)" % (input_name, f.path))
             if assigned_input_files.get(input_name) is not None:
                 assigned = assigned_input_files[input_name]
             else:
@@ -211,20 +209,23 @@ def showfiles(args):
             print("      %s" % assigned)
 
         print("Output files:")
-        for output_name, path in iteritems(config.output_files):
-            print("    %s (%s)" % (output_name, path))
+        for output_name, f in iteritems(config.inputs_outputs):
+            if f.write_runs:
+                print("    %s (%s)" % (output_name, f.path))
 
     else:  # pack.is_file()
         # Reads info from a pack file
         config = load_config(pack)
 
         print("Input files:")
-        for input_name, path in iteritems(config.input_files):
-            print("    %s (%s)" % (input_name, path))
+        for input_name, f in iteritems(config.inputs_outputs):
+            if f.read_runs:
+                print("    %s (%s)" % (input_name, f.path))
 
         print("Output files:")
-        for output_name, path in iteritems(config.output_files):
-            print("    %s (%s)" % (output_name, path))
+        for output_name, f in iteritems(config.inputs_outputs):
+            if f.write_runs:
+                print("    %s (%s)" % (output_name, f.path))
 
 
 def setup_info(parser, **kwargs):

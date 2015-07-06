@@ -9,7 +9,8 @@ from rpaths import Path
 import sys
 import unittest
 
-from reprozip.tracer.trace import UniqueNames, label_files
+from reprozip.common import InputOutputFile
+from reprozip.tracer.trace import UniqueNames, compile_inputs_outputs
 from reprozip.utils import make_dir_writable
 
 
@@ -118,10 +119,10 @@ class TestNames(unittest.TestCase):
         """Tests input/output file labelling."""
         wd = Path('/fakeworkingdir')
         self.assertEqual(
-                label_files(
+                compile_inputs_outputs(
                     [{'argv': ['aa', 'bb.txt'], 'workingdir': wd}],
                     [[wd / 'aa', Path('/other/cc.bin'), wd / 'bb.txt']],
-                    'input'),
-                {'arg0': wd / 'aa',
-                 'cc.bin': Path('/other/cc.bin'),
-                 'arg1': wd / 'bb.txt'})
+                    [[]]),
+                {'arg0': InputOutputFile(wd / 'aa', [0], []),
+                 'cc.bin': InputOutputFile(Path('/other/cc.bin'), [0], []),
+                 'arg1': InputOutputFile(wd / 'bb.txt', [0], [])})

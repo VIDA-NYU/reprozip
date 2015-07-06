@@ -18,7 +18,7 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange, stdout_bytes
+from reprounzip.utils import irange, iteritems, stdout_bytes
 
 
 COMPAT_OK = 0
@@ -154,7 +154,10 @@ class FileUploader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(upload_files=len(files))
-        input_files = self.get_config().input_files
+        input_files = dict(
+                (n, f.path)
+                for n, f in iteritems(self.get_config().inputs_outputs)
+                if f.read_runs)
 
         # No argument: list all the input files and exit
         if not files:
@@ -246,7 +249,10 @@ class FileDownloader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(download_files=len(files))
-        output_files = self.get_config().output_files
+        output_files = dict(
+                (n, f.path)
+                for n, f in iteritems(self.get_config().inputs_outputs)
+                if f.write_runs)
 
         # No argument: list all the output files and exit
         if not files:

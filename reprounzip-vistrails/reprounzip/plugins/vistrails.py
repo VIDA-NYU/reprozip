@@ -75,6 +75,7 @@ def hash_experiment_run(inputs, used_inputs, outputs, used_outputs):
     return base64.b64encode(h.digest(), b'@$')
 
 
+# broken and unnecessary
 def identify_input_output_files(config, database):
     """Returns input/output files that are used by each run.
 
@@ -95,8 +96,7 @@ def identify_input_output_files(config, database):
         conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
 
-    query_files = (set(itervalues(config.input_files)) |
-                   set(itervalues(config.output_files)))
+    query_files = set(f.path for f in itervalues(config.inputs_outputs))
 
     # Apologies for this
     files_placeholders = ', '.join(['?'] * len(query_files))
@@ -212,6 +212,7 @@ def do_vistrails(target, pack=None, **kwargs):
 
 def write_cltools_module(run, config, dot_vistrails,
                          used_inputs, used_outputs):
+    # broken
     module_name = 'reprounzip_%s' % hash_experiment_run(
             config.input_files, used_inputs,
             config.output_files, used_outputs)[:7]
@@ -263,6 +264,7 @@ def write_cltools_module(run, config, dot_vistrails,
                  '            {}\n'
                  '        ],\n')
         # Input files
+        # broken
         for i, (name, path) in enumerate(iteritems(config.input_files)):
             fp.write('        [\n'
                      '            "input",\n'
@@ -277,6 +279,7 @@ def write_cltools_module(run, config, dot_vistrails,
                      '            }\n'
                      '        ],\n' % {'name': escape(name)})
         # Output files
+        # broken
         for i, (name, path) in enumerate(iteritems(config.output_files)):
             fp.write('        [\n'
                      '            "output",\n'
@@ -367,19 +370,19 @@ def run_from_vistrails():
         upload_command.append('%s:%s' % (filename, input_name))
         seen_input_names.add(input_name)
 
-    # Resets the input files that were not given
-    for input_name in config.input_files:
-        if input_name not in seen_input_names:
-            upload_command.append(':%s' % input_name)
+    # Resets the input files that are used by this run and were not given
+    for name, f in iteritems(config.inputs_outputs):
+        if name not in seen_input_names and int(args.run) in f.read_runs:
+            upload_command.append(':%s' % name)
 
     # Runs the command
     cmd(['upload', '.'] + upload_command)
 
     # Runs the experiment
     if args.cmdline:
-        cmd(['run', '.', '--cmdline'], add=args.cmdline)
+        cmd(['run', '.', args.run, '--cmdline'], add=args.cmdline)
     else:
-        cmd(['run', '.'])
+        cmd(['run', '.', args.run])
 
     # Gets output files
     for output_file in args.output_file:

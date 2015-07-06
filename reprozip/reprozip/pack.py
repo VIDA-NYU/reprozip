@@ -135,8 +135,7 @@ def pack(target, directory, sort_packages):
             configfile,
             canonical=False)
     additional_patterns = config.additional_patterns
-    input_files = config.input_files
-    output_files = config.output_files
+    inputs_outputs = config.inputs_outputs
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     packages, other_files = canonicalize_config(
@@ -189,10 +188,10 @@ def pack(target, directory, sort_packages):
         manifest.remove()
 
     # Checks that input files are packed
-    for name, path in iteritems(input_files):
-        if not Path(path).exists():
+    for name, f in iteritems(inputs_outputs):
+        if f.read_runs and not Path(f.path).exists():
             logging.warning("File is designated as input (name %s) but is not "
-                            "to be packed: %s" % (name, path))
+                            "to be packed: %s" % (name, f.path))
 
     # Generates a unique identifier for the pack (for usage reports purposes)
     pack_id = str(uuid.uuid4())
@@ -203,7 +202,7 @@ def pack(target, directory, sort_packages):
     try:
         save_config(can_configfile, runs, packages, other_files,
                     reprozip_version,
-                    input_files, output_files, canonical=True,
+                    inputs_outputs, canonical=True,
                     pack_id=pack_id)
 
         tar.add(can_configfile, Path('METADATA/config.yml'))
@@ -214,5 +213,5 @@ def pack(target, directory, sort_packages):
 
     # Record some info to the usage report
     record_usage_package(runs, packages, other_files,
-                         input_files, output_files,
+                         inputs_outputs,
                          pack_id)
