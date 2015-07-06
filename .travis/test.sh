@@ -18,12 +18,12 @@ in
         flake8 --ignore=E126,E731 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip
         diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
-        find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | while read i; do
+        find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
             T=$(file -bi "$i")
             if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
                 echo "$i is not ASCII"
                 exit 1
             fi
-        done
+        done)
         ;;
 esac
