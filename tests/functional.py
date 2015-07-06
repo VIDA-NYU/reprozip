@@ -280,6 +280,28 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
                                  (tests / 'vagrant/simplevagrantchroot').path],
                          'out')
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               'arg:voutput1.txt'])
+            with Path('voutput1.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '42'
+            # Replace input file
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               '%s:arg' % (tests / 'simple_input2.txt')])
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrantchroot').path])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrantchroot').path],
+                         'out', 2)
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               'arg:voutput2.txt'])
+            with Path('voutput2.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '36'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrantchroot').path])
@@ -299,6 +321,28 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
                                  (tests / 'vagrant/simplevagrant').path],
                          'out')
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrant').path,
+                               'arg:woutput1.txt'])
+            with Path('woutput1.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '42'
+            # Replace input file
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrant').path,
+                               '%s:arg' % (tests / 'simple_input2.txt')])
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrant').path])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrant').path],
+                         'out', 2)
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrant').path,
+                               'arg:woutput2.txt'])
+            with Path('woutput2.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '36'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrant').path])
