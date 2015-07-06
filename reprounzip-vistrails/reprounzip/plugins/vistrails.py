@@ -20,18 +20,15 @@ import hashlib
 import logging
 import os
 from rpaths import Path
-import sqlite3
 import subprocess
 import sys
-import tarfile
 import zipfile
 
-from reprounzip.common import load_config, setup_logging, record_usage, \
-    FILE_READ, FILE_WRITE
+from reprounzip.common import load_config, setup_logging, record_usage
 from reprounzip.main import __version__ as version
 from reprounzip import signals
 from reprounzip.unpackers.common import shell_escape
-from reprounzip.utils import PY3, izip, iteritems, itervalues, escape
+from reprounzip.utils import iteritems, escape
 
 
 class SHA1(object):
@@ -62,94 +59,19 @@ def escape_xml(s):
     return s.replace('&', '&amp;').replace('"', '&quot;')
 
 
-def hash_experiment_run(inputs, used_inputs, outputs, used_outputs):
+def hash_experiment_run(run_id, inputs_outputs):
     """Generates a unique id from a single run of an experiment.
 
     This is used to name the CLTools modules.
     """
     h = SHA1()
-    for prefix, names in [('input', inputs), ('req_input', used_inputs),
-                          ('output', outputs), ('req_output', used_outputs)]:
-        for name in names:
-            h.update('%s %s\n' % (prefix, name))
+    for name, f in sorted(iteritems(inputs_outputs)):
+        flags = ((0x01 if f.read_runs else 0) |
+                 (0x02 if run_id in f.read_runs else 0) |
+                 (0x04 if f.write_runs else 0) |
+                 (0x08 if run_id in f.write_runs else 0))
+        h.update('%d %s\n' % (flags, name))
     return base64.b64encode(h.digest(), b'@$')
-
-
-# broken and unnecessary
-def identify_input_output_files(config, database):
-    """Returns input/output files that are used by each run.
-
-    The input/output file lines are stored in the configuration without
-    association to a specific run. To decide the ports we want to show on the
-    modules, we go over the trace database to build the set of actually used
-    input/output files of each run.
-
-    :param config: Experiment's configuration, from which the runs are read
-    :param database: Path to the extracted trace database
-    :returns: ``inputs, outputs``, each a list of sets of file paths used by
-    the run with the same index
-    """
-    # On PY3, connect() only accepts unicode
-    if PY3:
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
-    conn.row_factory = sqlite3.Row
-
-    query_files = set(f.path for f in itervalues(config.inputs_outputs))
-
-    # Apologies for this
-    files_placeholders = ', '.join(['?'] * len(query_files))
-    query = '''
-            SELECT id AS p_id, NULL AS name, NULL as mode, timestamp
-            FROM processes
-            WHERE parent IS NULL
-            UNION ALL
-            SELECT NULL AS p_id, name, mode, timestamp
-            FROM (
-                SELECT name, mode, timestamp
-                FROM opened_files
-                UNION ALL
-                SELECT name, {read} AS mode, timestamp
-                FROM executed_files
-            )
-            WHERE name in ({set})
-            ORDER BY timestamp
-            '''.format(read=FILE_READ,
-                       set=files_placeholders)
-    cur = conn.cursor()
-    rows = cur.execute(query, [str(f) for f in query_files])
-
-    inputs, outputs = [], []
-    cur_inputs, cur_outputs = set(), set()
-    row = next(rows)
-    assert row[0] is not None
-    for r_p_id, r_file, r_mode, r_timestamp in rows:
-        # New process
-        if r_p_id is not None:
-            inputs.append(cur_inputs)
-            outputs.append(cur_outputs)
-        # File for current process
-        else:
-            if r_mode == FILE_READ:
-                cur_inputs.add(r_file)
-            elif r_mode == FILE_WRITE:
-                cur_outputs.add(r_file)
-    inputs.append(cur_inputs)
-    outputs.append(cur_outputs)
-    conn.close()
-
-    if len(inputs) != len(config.runs):
-        logging.error("Found %d runs in trace database, and %d runs in "
-                      "configuration file. What is going on?",
-                      len(inputs), len(config.runs))
-        if len(inputs) < len(config.runs):
-            n = len(config.runs) - len(inputs)
-            fill = [set()] * n
-            inputs += fill
-            outputs += fill
-
-    return inputs, outputs
 
 
 def do_vistrails(target, pack=None, **kwargs):
@@ -164,22 +86,8 @@ def do_vistrails(target, pack=None, **kwargs):
 
     config = load_config(target / 'config.yml', canonical=True)
 
-    # Load configuration file
-    tar = tarfile.open(str(pack), 'r:*')
-    member = tar.getmember('METADATA/trace.sqlite3')
-    member.name = 'trace.sqlite3'
-    tmp = Path.tempdir('.sqlite3', 'rpuz_vt_')
-    try:
-        tar.extract(member, str(tmp))
-        database = tmp / 'trace.sqlite3'
-        inputs, outputs = identify_input_output_files(config, database)
-    finally:
-        tmp.rmtree()
-
-    for i, (run, input_files, output_files) in enumerate(izip(
-            config.runs, inputs, outputs)):
-        module_name = write_cltools_module(run, config, dot_vistrails,
-                                           input_files, output_files)
+    for i, run in enumerate(config.runs):
+        module_name = write_cltools_module(i, config, dot_vistrails)
 
         # Writes VisTrails workflow
         bundle = target / 'vistrails.vt'
@@ -192,7 +100,7 @@ def do_vistrails(target, pack=None, **kwargs):
                 cmdline = ' '.join(shell_escape(arg)
                                    for arg in run['argv'])
                 vistrail = vistrail.format(
-                        date='2014-11-12 15:31:18',
+                        date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         unpacker=unpacker,
                         directory=escape_xml(str(target.absolute())),
                         cmdline=escape_xml(cmdline),
@@ -206,16 +114,16 @@ def do_vistrails(target, pack=None, **kwargs):
                     for path in Path('.').recursedir():
                         z.write(str(path))
                 z.close()
+            break  # TODO: currently only writes out the first run
         finally:
             vtdir.rmtree()
 
 
-def write_cltools_module(run, config, dot_vistrails,
-                         used_inputs, used_outputs):
+def write_cltools_module(run_id, config, dot_vistrails):
     # broken
     module_name = 'reprounzip_%s' % hash_experiment_run(
-            config.input_files, used_inputs,
-            config.output_files, used_outputs)[:7]
+            run_id,
+            config.inputs_outputs)[:7]
 
     # Writes CLTools JSON definition
     (dot_vistrails / 'CLTools').mkdir(parents=True)
@@ -264,8 +172,9 @@ def write_cltools_module(run, config, dot_vistrails,
                  '            {}\n'
                  '        ],\n')
         # Input files
-        # broken
-        for i, (name, path) in enumerate(iteritems(config.input_files)):
+        for i, (name, f) in enumerate(iteritems(config.inputs_outputs)):
+            if not f.read_runs:
+                continue
             fp.write('        [\n'
                      '            "input",\n'
                      '            "input %(name)s",\n'
@@ -273,14 +182,15 @@ def write_cltools_module(run, config, dot_vistrails,
                      '            {\n'
                      '                "flag": "--input-file",\n' % {
                          'name': escape(name)})
-            if path in used_inputs:
+            if run_id in f.read_runs:
                 fp.write('                "required": true,\n')
             fp.write('                "prefix": "%(name)s:"\n'
                      '            }\n'
                      '        ],\n' % {'name': escape(name)})
         # Output files
-        # broken
-        for i, (name, path) in enumerate(iteritems(config.output_files)):
+        for i, (name, f) in enumerate(iteritems(config.inputs_outputs)):
+            if not f.write_runs:
+                continue
             fp.write('        [\n'
                      '            "output",\n'
                      '            "output %(name)s",\n'
@@ -288,7 +198,7 @@ def write_cltools_module(run, config, dot_vistrails,
                      '            {\n'
                      '                "flag": "--output-file",\n' % {
                          'name': escape(name)})
-            if path in used_outputs:
+            if run_id in f.write_runs:
                 fp.write('                "required": true,\n')
             fp.write('                "prefix": "%(name)s:"\n'
                      '            }\n'
