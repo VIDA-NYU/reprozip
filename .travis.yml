@@ -11,12 +11,6 @@ python:
 install: .travis/install.sh
 script: .travis/test.sh
 after_success: .travis/finish.sh
-notifications:
-  email:
-    recipients:
-       - reprozip.gate@gmail.com
-    on_success: change
-    on_failure: always
 matrix:
   include:
     - python: "2.7"
