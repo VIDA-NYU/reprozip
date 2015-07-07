@@ -86,22 +86,44 @@ class PkgManager(object):
 class DpkgManager(PkgManager):
     """Package identifier for deb-based systems (Debian, Ubuntu).
     """
+    def search_for_files(self, files):
+        # Make a set of all the requested files
+        requested = dict((f.path, f) for f in self.filter_files(files))
+
+        # Process /var/lib/dpkg/info/*.list
+        for listfile in Path('/var/lib/dpkg/info').listdir():
+            package = None
+            if not listfile.unicodename.endswith('.list'):
+                continue
+            with listfile.open('rb') as fp:
+                # Read paths from the file
+                l = fp.readline()
+                while l:
+                    if l[-1:] == b'\n':
+                        l = l[:-1]
+                    path = Path(l)
+                    # If it's one of the requested paths, update the package
+                    if path in requested:
+                        if package is None:
+                            pkgname = listfile.unicodename[:-5]
+                            # Removes :arch
+                            pkgname = pkgname.split(':', 1)[0]
+                            if pkgname in self.packages:
+                                package = self.packages[pkgname]
+                            else:
+                                package = self._create_package(pkgname)
+                                self.packages[pkgname] = package
+                        package.add_file(requested.pop(path))
+                    l = fp.readline()
+
+        # Remaining files are not from packages
+        self.unknown_files.update(f for f in files if f.path in requested)
+
     def _get_package_for_file(self, filename):
-        p = subprocess.Popen(['dpkg', '-S', filename.path],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        for l in out.splitlines():
-            pkgname, f = l.split(b': ', 1)
-            f = Path(f.strip())
-            # 8-bit safe encoding, because this might be a localized error
-            # message (that we don't care about)
-            pkgname = (pkgname.decode('iso-8859-1')
-                              .split(':', 1)[0])    # Removes :arch
-            if f == filename:
-                if ' ' not in pkgname:
-                    return pkgname
-        return None
+        # This method is no longer used for dpkg: instead of querying each file
+        # using `dpkg -S`, we read all the list files once ourselves since it
+        # is faster
+        assert False
 
     def _create_package(self, pkgname):
         p = subprocess.Popen(['dpkg-query',
