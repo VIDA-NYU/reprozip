@@ -14,9 +14,11 @@ Currently supported package managers:
 
 from __future__ import unicode_literals
 
+import logging
 import platform
 from rpaths import Path
 import subprocess
+import time
 
 from reprozip.common import Package
 from reprozip.utils import listvalues
@@ -116,7 +118,10 @@ def identify_packages(files):
     else:
         return files, []
 
+    begin = time.time()
     for f in files:
         manager.search_for_file(f)
+    logging.debug("Assigning files to packages took %f seconds",
+                  (time.time() - begin))
 
     return manager.unknown_files, listvalues(manager.packages)
