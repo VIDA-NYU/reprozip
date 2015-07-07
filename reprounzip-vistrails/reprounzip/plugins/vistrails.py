@@ -19,7 +19,6 @@ from datetime import datetime
 import hashlib
 import logging
 import os
-from reprounzip import signals
 from rpaths import Path
 import subprocess
 import sys
@@ -27,8 +26,9 @@ import zipfile
 
 from reprounzip.common import load_config, setup_logging, record_usage
 from reprounzip.main import __version__ as version
+from reprounzip import signals
 from reprounzip.unpackers.common import shell_escape
-from reprounzip.utils import escape
+from reprounzip.utils import iteritems, escape
 
 
 class SHA1(object):
@@ -59,20 +59,22 @@ def escape_xml(s):
     return s.replace('&', '&amp;').replace('"', '&quot;')
 
 
-def hash_experiment_run(run):
+def hash_experiment_run(run_id, inputs_outputs):
     """Generates a unique id from a single run of an experiment.
 
     This is used to name the CLTools modules.
     """
     h = SHA1()
-    for input_name in sorted(run['input_files']):
-        h.update('input %s\n' % input_name)
-    for output_name in sorted(run['output_files']):
-        h.update('output %s\n' % output_name)
+    for name, f in sorted(iteritems(inputs_outputs)):
+        flags = ((0x01 if f.read_runs else 0) |
+                 (0x02 if run_id in f.read_runs else 0) |
+                 (0x04 if f.write_runs else 0) |
+                 (0x08 if run_id in f.write_runs else 0))
+        h.update('%d %s\n' % (flags, name))
     return base64.b64encode(h.digest(), b'@$')
 
 
-def do_vistrails(target):
+def do_vistrails(target, pack=None, **kwargs):
     """Create a VisTrails workflow that runs the experiment.
 
     This is called from signals after an experiment has been setup by any
@@ -82,10 +84,10 @@ def do_vistrails(target):
     unpacker = signals.unpacker
     dot_vistrails = Path('~/.vistrails').expand_user()
 
-    runs, packages, other_files = load_config(target / 'config.yml',
-                                              canonical=True)
-    for i, run in enumerate(runs):
-        module_name = write_cltools_module(run, dot_vistrails)
+    config = load_config(target / 'config.yml', canonical=True)
+
+    for i, run in enumerate(config.runs):
+        module_name = write_cltools_module(i, config, dot_vistrails)
 
         # Writes VisTrails workflow
         bundle = target / 'vistrails.vt'
@@ -98,7 +100,7 @@ def do_vistrails(target):
                 cmdline = ' '.join(shell_escape(arg)
                                    for arg in run['argv'])
                 vistrail = vistrail.format(
-                        date='2014-11-12 15:31:18',
+                        date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         unpacker=unpacker,
                         directory=escape_xml(str(target.absolute())),
                         cmdline=escape_xml(cmdline),
@@ -112,15 +114,16 @@ def do_vistrails(target):
                     for path in Path('.').recursedir():
                         z.write(str(path))
                 z.close()
+            break  # TODO: currently only writes out the first run
         finally:
             vtdir.rmtree()
 
 
-def write_cltools_module(run, dot_vistrails):
-    input_files = run['input_files']
-    output_files = run['output_files']
-
-    module_name = 'reprounzip_%s' % hash_experiment_run(run)[:7]
+def write_cltools_module(run_id, config, dot_vistrails):
+    # broken
+    module_name = 'reprounzip_%s' % hash_experiment_run(
+            run_id,
+            config.inputs_outputs)[:7]
 
     # Writes CLTools JSON definition
     (dot_vistrails / 'CLTools').mkdir(parents=True)
@@ -169,27 +172,37 @@ def write_cltools_module(run, dot_vistrails):
                  '            {}\n'
                  '        ],\n')
         # Input files
-        for i, input_name in enumerate(input_files):
+        for i, (name, f) in enumerate(iteritems(config.inputs_outputs)):
+            if not f.read_runs:
+                continue
             fp.write('        [\n'
                      '            "input",\n'
                      '            "input %(name)s",\n'
                      '            "file",\n'
                      '            {\n'
-                     '                "flag": "--input-file",\n'
-                     '                "prefix": "%(name)s:"\n'
+                     '                "flag": "--input-file",\n' % {
+                         'name': escape(name)})
+            if run_id in f.read_runs:
+                fp.write('                "required": true,\n')
+            fp.write('                "prefix": "%(name)s:"\n'
                      '            }\n'
-                     '        ],\n' % {'name': escape(input_name)})
+                     '        ],\n' % {'name': escape(name)})
         # Output files
-        for i, output_name in enumerate(output_files):
+        for i, (name, f) in enumerate(iteritems(config.inputs_outputs)):
+            if not f.write_runs:
+                continue
             fp.write('        [\n'
                      '            "output",\n'
                      '            "output %(name)s",\n'
                      '            "file",\n'
                      '            {\n'
-                     '                "flag": "--output-file",\n'
-                     '                "prefix": "%(name)s:"\n'
+                     '                "flag": "--output-file",\n' % {
+                         'name': escape(name)})
+            if run_id in f.write_runs:
+                fp.write('                "required": true,\n')
+            fp.write('                "prefix": "%(name)s:"\n'
                      '            }\n'
-                     '        ],\n' % {'name': escape(output_name)})
+                     '        ],\n' % {'name': escape(name)})
         # Command-line
         fp.write('        [\n'
                  '            "input",\n'
@@ -237,10 +250,7 @@ def run_from_vistrails():
 
     args = parser.parse_args()
 
-    runs, packages, other_files = load_config(
-            Path(args.directory) / 'config.yml',
-            canonical=True)
-    run = runs[int(args.run)]
+    config = load_config(Path(args.directory) / 'config.yml', canonical=True)
 
     python = sys.executable
     rpuz = [python, '-m', 'reprounzip.main', args.unpacker]
@@ -270,19 +280,19 @@ def run_from_vistrails():
         upload_command.append('%s:%s' % (filename, input_name))
         seen_input_names.add(input_name)
 
-    # Resets the input files that were not given
-    for input_name in run['input_files']:
-        if input_name not in seen_input_names:
-            upload_command.append(':%s' % input_name)
+    # Resets the input files that are used by this run and were not given
+    for name, f in iteritems(config.inputs_outputs):
+        if name not in seen_input_names and int(args.run) in f.read_runs:
+            upload_command.append(':%s' % name)
 
     # Runs the command
     cmd(['upload', '.'] + upload_command)
 
     # Runs the experiment
     if args.cmdline:
-        cmd(['run', '.', '--cmdline'], add=args.cmdline)
+        cmd(['run', '.', args.run, '--cmdline'], add=args.cmdline)
     else:
-        cmd(['run', '.'])
+        cmd(['run', '.', args.run])
 
     # Gets output files
     for output_file in args.output_file:

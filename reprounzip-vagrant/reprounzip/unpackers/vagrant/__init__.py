@@ -339,7 +339,7 @@ mkdir -p /experimentroot/bin
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
 
-    signals.post_setup(target=target)
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist
@@ -466,7 +466,7 @@ class SSHUploader(FileUploader):
     def upload_file(self, local_path, input_path):
         if self.use_chroot:
             remote_path = join_root(PosixPath('/experimentroot'),
-                                    PosixPath(input_path))
+                                    input_path)
         else:
             remote_path = input_path
 

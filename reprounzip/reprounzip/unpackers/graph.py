@@ -80,8 +80,7 @@ def generate(target, directory, all_forks=False):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")
         sys.exit(1)
-    runs, packages, other_files, patterns = load_config(configfile,
-                                                        canonical=False)
+    runs, packages, other_files = load_config(configfile, canonical=False)
     packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
     if PY3:
@@ -89,6 +88,7 @@ def generate(target, directory, all_forks=False):
         conn = sqlite3.connect(str(database))
     else:
         conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
 
     # This is a bit weird. We need to iterate on all types of events at the
     # same time, ordering by timestamp, so we decorate-sort-undecorate

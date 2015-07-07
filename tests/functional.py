@@ -15,7 +15,7 @@ import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import iteritems, stderr_bytes, stderr
+from reprounzip.utils import stderr_bytes, stderr
 
 
 tests = Path(__file__).parent.absolute()
@@ -195,15 +195,26 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     expected = [Path('simple'), (tests / 'simple_input.txt')]
     assert other_files.issuperset([f.resolve() for f in expected])
     # Check input and output files
-    input_files = conf['runs'][0]['input_files']
-    assert (dict((k, Path(f).name)
-                 for k, f in iteritems(input_files)) ==
-            {'arg': b'simple_input.txt'})
-    output_files = conf['runs'][0]['output_files']
-    print(dict((k, Path(f).name) for k, f in iteritems(output_files)))
-    # Here we don't test for dict equality, since we might have C coverage
-    # files in the mix
-    assert Path(output_files['arg']).name == b'simple_output.txt'
+    inputs_outputs = conf['inputs_outputs']
+    # Exactly one input: "arg1", "...simple_input.txt"
+    # Output: 'arg2', "...simple_output.txt"
+    # There might be more output files: the C coverage files
+    found = 0
+    for fdict in inputs_outputs:
+        if Path(fdict['path']).name == b'simple_input.txt':
+            assert fdict['name'] == 'arg1'
+            assert fdict['read_by_runs'] == [0]
+            assert not fdict.get('written_by_runs')
+            found |= 0x01
+        elif Path(fdict['path']).name == b'simple_output.txt':
+            assert fdict['name'] == 'arg2'
+            assert not fdict.get('read_by_runs')
+            assert fdict['written_by_runs'] == [0]
+            found |= 0x02
+        else:
+            # No other inputs
+            assert not fdict.get('read_by_runs')
+    assert found == 0x03
     # Pack
     check_call(rpz + ['pack', '-d', 'rpz-simple', 'simple.rpz'])
     Path('simple').remove()
@@ -242,12 +253,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             assert fp.read().strip() == '42'
         # Get output file
         check_call(sudo + rpuz + ['chroot', 'download', 'simplechroot',
-                                  'arg:output1.txt'])
+                                  'arg2:output1.txt'])
         with Path('output1.txt').open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
         # Replace input file
         check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
-                                  '%s:arg' % (tests / 'simple_input2.txt')])
+                                  '%s:arg1' % (tests / 'simple_input2.txt')])
         check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
         # Run again
         check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err', 2)
@@ -283,13 +294,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrantchroot').path,
-                               'arg:voutput1.txt'])
+                               'arg2:voutput1.txt'])
             with Path('voutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrantchroot').path,
-                               '%s:arg' % (tests / 'simple_input2.txt')])
+                               '%s:arg1' % (tests / 'simple_input2.txt')])
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrantchroot').path])
             # Run again
@@ -299,7 +310,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrantchroot').path,
-                               'arg:voutput2.txt'])
+                               'arg2:voutput2.txt'])
             with Path('voutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
             # Destroy
@@ -324,13 +335,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrant').path,
-                               'arg:woutput1.txt'])
+                               'arg2:woutput1.txt'])
             with Path('woutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrant').path,
-                               '%s:arg' % (tests / 'simple_input2.txt')])
+                               '%s:arg1' % (tests / 'simple_input2.txt')])
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrant').path])
             # Run again
@@ -340,7 +351,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrant').path,
-                               'arg:woutput2.txt'])
+                               'arg2:woutput2.txt'])
             with Path('woutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
             # Destroy
@@ -362,19 +373,19 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out')
             # Get output file
             check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               'arg:doutput1.txt'])
+                               'arg2:doutput1.txt'])
             with Path('doutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Replace input file
             check_call(rpuz + ['docker', 'upload', 'simpledocker',
-                               '%s:arg' % (tests / 'simple_input2.txt')])
+                               '%s:arg1' % (tests / 'simple_input2.txt')])
             check_call(rpuz + ['docker', 'upload', 'simpledocker'])
             check_call(rpuz + ['showfiles', 'simpledocker'])
             # Run again
             check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
             # Get output file
             check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               'arg:doutput2.txt'])
+                               'arg2:doutput2.txt'])
             with Path('doutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
             # Destroy

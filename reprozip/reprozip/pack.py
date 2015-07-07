@@ -24,6 +24,7 @@ from reprozip.common import File, load_config, save_config, \
     record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.tracer.trace import merge_files
+from reprozip.utils import iteritems
 
 
 def expand_patterns(patterns):
@@ -54,7 +55,7 @@ def expand_patterns(patterns):
     return [File(p) for p in itertools.chain(dirs - non_empty_dirs, files)]
 
 
-def canonicalize_config(runs, packages, other_files, additional_patterns,
+def canonicalize_config(packages, other_files, additional_patterns,
                         sort_packages):
     """Expands ``additional_patterns`` from the configuration file.
     """
@@ -65,7 +66,7 @@ def canonicalize_config(runs, packages, other_files, additional_patterns,
         add_packages = []
     other_files, packages = merge_files(add_files, add_packages,
                                         other_files, packages)
-    return runs, packages, other_files
+    return packages, other_files
 
 
 def data_path(filename, prefix=Path('DATA')):
@@ -130,13 +131,15 @@ def pack(target, directory, sort_packages):
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")
         sys.exit(1)
-    runs, packages, other_files, additional_patterns = load_config(
+    runs, packages, other_files = config = load_config(
             configfile,
             canonical=False)
+    additional_patterns = config.additional_patterns
+    inputs_outputs = config.inputs_outputs
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
-    runs, packages, other_files = canonicalize_config(
-            runs, packages, other_files, additional_patterns, sort_packages)
+    packages, other_files = canonicalize_config(
+            packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
     tar = PackBuilder(target)
@@ -184,6 +187,12 @@ def pack(target, directory, sort_packages):
     finally:
         manifest.remove()
 
+    # Checks that input files are packed
+    for name, f in iteritems(inputs_outputs):
+        if f.read_runs and not Path(f.path).exists():
+            logging.warning("File is designated as input (name %s) but is not "
+                            "to be packed: %s" % (name, f.path))
+
     # Generates a unique identifier for the pack (for usage reports purposes)
     pack_id = str(uuid.uuid4())
 
@@ -192,7 +201,8 @@ def pack(target, directory, sort_packages):
     os.close(fd)
     try:
         save_config(can_configfile, runs, packages, other_files,
-                    reprozip_version, canonical=True,
+                    reprozip_version,
+                    inputs_outputs, canonical=True,
                     pack_id=pack_id)
 
         tar.add(can_configfile, Path('METADATA/config.yml'))
@@ -202,4 +212,6 @@ def pack(target, directory, sort_packages):
     tar.close()
 
     # Record some info to the usage report
-    record_usage_package(runs, packages, other_files, pack_id)
+    record_usage_package(runs, packages, other_files,
+                         inputs_outputs,
+                         pack_id)

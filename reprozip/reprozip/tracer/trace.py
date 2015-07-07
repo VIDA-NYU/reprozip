@@ -12,6 +12,7 @@ generation logic for the config YAML file.
 from __future__ import unicode_literals
 
 import heapq
+from itertools import count
 import logging
 import os
 import platform
@@ -20,13 +21,13 @@ import sqlite3
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import File, load_config, save_config, \
+from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_WDIR
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, itervalues, listvalues, unicode_, \
-    hsize, find_all_links
+from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
+    unicode_, flatten, UniqueNames, hsize, find_all_links
 
 
 class TracedFile(File):
@@ -170,8 +171,9 @@ def get_files(conn):
                # ONLY_READ,
                fi.what == TracedFile.ONLY_READ and
                # not executable,
-               # FIXME : currently disabled. Maybe only remove executed files?
+               # FIXME : currently disabled; only remove executed files
                # not fi.path.stat().st_mode & 0b111 and
+               fi.path not in executed and
                # not in a system directory
                not any(fi.path.lies_under(m)
                        for m in magic_dirs + system_dirs)]
@@ -324,9 +326,8 @@ def write_configuration(directory, sort_packages, overwrite=False):
     # Writes configuration file
     config = directory / 'config.yml'
     distribution = platform.linux_distribution()[0:2]
-    oldconfig = not overwrite and config.exists()
     cur = conn.cursor()
-    if not oldconfig:
+    if overwrite or not config.exists():
         runs = []
         # This gets all the top-level processes (p.parent ISNULL) and the first
         # executed file for that process (sorting by ids, which are
@@ -345,10 +346,9 @@ def write_configuration(directory, sort_packages, overwrite=False):
                 ''')
     else:
         # Loads in previous config
-        runs, oldpkgs, oldfiles, patterns = load_config(config,
-                                                        canonical=False,
-                                                        File=TracedFile)
-        # Here, additional patterns are discarded
+        runs, oldpkgs, oldfiles = load_config(config,
+                                              canonical=False,
+                                              File=TracedFile)
 
         # Same query as previous block but only gets last process
         executions = cur.execute(
@@ -371,8 +371,7 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = merge_files(files, packages,
                                       oldfiles,
                                       oldpkgs)
-    for ((r_name, r_argv, r_envp, r_workingdir, r_exitcode),
-            input_files, output_files) in izip(executions, inputs, outputs):
+    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
         # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
@@ -384,63 +383,6 @@ def write_configuration(directory, sort_packages, overwrite=False):
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        # Gets files from command-line
-        command_line_files = {}
-        for i, arg in enumerate(argv):
-            p = Path(r_workingdir, arg).resolve()
-            if p.is_file():
-                command_line_files[p] = i
-        input_files_on_cmdline = sum(1
-                                     for in_file in input_files
-                                     if in_file in command_line_files)
-        output_files_on_cmdline = sum(1
-                                      for out_file in output_files
-                                      if out_file in command_line_files)
-
-        # Labels input files
-        input_files_dict = {}
-        for in_file in input_files:
-            # If file is on the command-line
-            if in_file in command_line_files:
-                if input_files_on_cmdline > 1:
-                    label = "arg_%d" % command_line_files[in_file]
-                else:
-                    label = "arg"
-            # Else, use file's name
-            else:
-                label = in_file.unicodename
-            # Make labels unique
-            uniquelabel = label
-            i = 1
-            while uniquelabel in input_files_dict:
-                i += 1
-                uniquelabel = '%s_%d' % (label, i)
-            input_files_dict[uniquelabel] = str(in_file)
-        # TODO : Note that right now, we keep as input files the ones that
-        # don't appear on the command-line
-
-        # Labels output files
-        output_files_dict = {}
-        for out_file in output_files:
-            # If file is on the command-line
-            if out_file in command_line_files:
-                if output_files_on_cmdline > 1:
-                    label = "arg_%d" % command_line_files[out_file]
-                else:
-                    label = "arg"
-            # Else, use file's name
-            else:
-                label = out_file.unicodename
-            # Make labels unique
-            uniquelabel = label
-            i = 1
-            while uniquelabel in output_files_dict:
-                i += 1
-                uniquelabel = '%s_%d' % (label, i)
-            output_files_dict[uniquelabel] = str(out_file)
-        # TODO : Note that right now, we keep as output files the ones that
-        # don't appear on the command-line
-
         runs.append({'binary': r_name, 'argv': argv,
                      'workingdir': unicode_(Path(r_workingdir)),
                      'architecture': platform.machine().lower(),
@@ -451,15 +393,75 @@ def write_configuration(directory, sort_packages, overwrite=False):
                      'uid': os.getuid(),
                      'gid': os.getgid(),
                      'signal' if r_exitcode & 0x0100 else 'exitcode':
-                         r_exitcode & 0xFF,
-                     'input_files': input_files_dict,
-                     'output_files': output_files_dict})
-    cur.close()
+                         r_exitcode & 0xFF})
 
+    cur.close()
     conn.close()
 
-    save_config(config, runs, packages, files, reprozip_version)
+    inputs_outputs = compile_inputs_outputs(runs, inputs, outputs)
+
+    save_config(config, runs, packages, files, reprozip_version,
+                inputs_outputs)
 
     print("Configuration file written in {0!s}".format(config))
     print("Edit that file then run the packer -- "
           "use 'reprozip pack -h' for help")
+
+
+def compile_inputs_outputs(runs, inputs, outputs):
+    """Gives names to input/output files and creates InputOutputFile objects.
+    """
+    # {path: (run_nb, arg_nb) or None}
+    runs_with_file = {}
+    # run_nb: number_of_file_arguments
+    nb_file_args = []
+    # {path: [runs]}
+    readers = {}
+    writers = {}
+
+    for run_nb, run, in_files, out_files in izip(count(), runs,
+                                                 inputs, outputs):
+        # List which runs read or write each file
+        for p in in_files:
+            readers.setdefault(p, []).append(run_nb)
+        for p in out_files:
+            writers.setdefault(p, []).append(run_nb)
+
+        # Locate files that appear on a run's command line
+        files_set = set(in_files) | set(out_files)
+        nb_files = 0
+        for arg_nb, arg in enumerate(run['argv']):
+            p = Path(run['workingdir'], arg).resolve()
+            if p in files_set:
+                nb_files += 1
+                if p not in runs_with_file:
+                    runs_with_file[p] = run_nb, arg_nb
+                elif runs_with_file[p] is not None:
+                    runs_with_file[p] = None
+        nb_file_args.append(nb_files)
+
+    file_names = {}
+    make_unique = UniqueNames()
+
+    for fi in flatten(2, (inputs, outputs)):
+        # If it appears in at least one of the command-lines
+        if fi in runs_with_file:
+            # If it only appears once in the command-lines
+            if runs_with_file[fi] is not None:
+                run_nb, arg_nb = runs_with_file[fi]
+                parts = []
+                # Run number, if there are more than one runs
+                if len(runs) > 1:
+                    parts.append(run_nb)
+                # Argument number, if there are more than one file arguments
+                if nb_file_args[run_nb] > 1:
+                    parts.append(arg_nb)
+                file_names[fi] = make_unique(
+                        'arg%s' % '_'.join('%s' % s for s in parts))
+            else:
+                file_names[fi] = make_unique('arg_%s' % fi.unicodename)
+        else:
+            file_names[fi] = make_unique(fi.unicodename)
+
+    return dict((n, InputOutputFile(p, readers.get(p, []), writers.get(p, [])))
+                for p, n in iteritems(file_names))

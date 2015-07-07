@@ -34,7 +34,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     shell_escape, load_config, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
+from reprounzip.utils import unicode_, irange, iteritems, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, download_file
 
 
@@ -136,7 +136,8 @@ def directory_create(args):
     tar.extract(member, str(target))
 
     # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+    config = load_config_file(target / 'config.yml', True)
+    packages = config.packages
 
     target.mkdir()
     root = (target / 'root').absolute()
@@ -148,8 +149,7 @@ def directory_create(args):
         if pkg.packfiles:
             continue
         for f in pkg.files:
-            f = Path(f.path)
-            if not f.exists():
+            if not Path(f.path).exists():
                 logging.error(
                         "Missing file %s (from package %s that wasn't packed) "
                         "on host, experiment will probably miss it.",
@@ -193,19 +193,20 @@ def directory_create(args):
         p.wait()
 
     # Original input files, so upload can restore them
-    if any(run['input_files'] for run in runs):
+    input_files = [f.path for n, f in iteritems(config.inputs_outputs)
+                   if f.read_runs]
+    if input_files:
         logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
-        for run in runs:
-            for ifile in itervalues(run['input_files']):
-                inputtar.add(str(join_root(root, PosixPath(ifile))),
-                             str(PosixPath(ifile)))
+        for ifile in input_files:
+            inputtar.add(str(join_root(root, ifile)),
+                         str(ifile))
         inputtar.close()
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'directory')
 
-    signals.post_setup(target=target)
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist
@@ -411,7 +412,8 @@ def chroot_create(args):
     tar.extract(member, str(target))
 
     # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+    config = load_config_file(target / 'config.yml', True)
+    packages = config.packages
 
     target.mkdir()
     root = (target / 'root').absolute()
@@ -429,22 +431,22 @@ def chroot_create(args):
         missing_files = False
         for pkg in packages_not_packed:
             for f in pkg.files:
-                f = Path(f.path)
-                if not f.exists():
+                path = Path(f.path)
+                if not path.exists():
                     logging.error(
                             "Missing file %s (from package %s) on host, "
                             "experiment will probably miss it",
-                            f, pkg.name)
+                            path, pkg.name)
                     missing_files = True
                     continue
-                dest = join_root(root, f)
+                dest = join_root(root, path)
                 dest.parent.mkdir(parents=True)
-                if f.is_link():
-                    dest.symlink(f.read_link())
+                if path.is_link():
+                    dest.symlink(path.read_link())
                 else:
-                    f.copy(dest)
+                    path.copy(dest)
                 if restore_owner:
-                    stat = f.stat()
+                    stat = path.stat()
                     dest.chown(stat.st_uid, stat.st_gid)
         if missing_files:
             record_usage(chroot_mising_files=True)
@@ -474,9 +476,9 @@ def chroot_create(args):
         busybox_path = join_root(root, Path('/bin/busybox'))
         busybox_path.parent.mkdir(parents=True)
         with make_dir_writable(join_root(root, Path('/bin'))):
-            download_file(busybox_url(runs[0]['architecture']),
+            download_file(busybox_url(config.runs[0]['architecture']),
                           busybox_path,
-                          'busybox-%s' % runs[0]['architecture'])
+                          'busybox-%s' % config.runs[0]['architecture'])
             busybox_path.chmod(0o755)
             if not sh_path.lexists():
                 sh_path.parent.mkdir(parents=True)
@@ -486,19 +488,20 @@ def chroot_create(args):
                 env_path.symlink('/bin/busybox')
 
     # Original input files, so upload can restore them
-    if any(run['input_files'] for run in runs):
+    input_files = [f.path for n, f in iteritems(config.inputs_outputs)
+                   if f.read_runs]
+    if input_files:
         logging.info("Packing up original input files...")
         inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
-        for run in runs:
-            for ifile in itervalues(run['input_files']):
-                inputtar.add(str(join_root(root, PosixPath(ifile))),
-                             str(PosixPath(ifile)))
+        for ifile in input_files:
+            inputtar.add(str(join_root(root, ifile)),
+                         str(ifile))
         inputtar.close()
 
     # Meta-data for reprounzip
     write_dict(target / '.reprounzip', {}, 'chroot')
 
-    signals.post_setup(target=target)
+    signals.post_setup(target=target, pack=pack)
 
 
 @target_must_exist

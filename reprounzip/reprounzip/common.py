@@ -30,7 +30,8 @@ from rpaths import PosixPath, Path
 import usagestats
 import yaml
 
-from .utils import stderr, CommonEqualityMixin, escape, hsize, unicode_
+from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
+    escape, CommonEqualityMixin, hsize, optional_return_type
 
 
 FILE_READ = 0x01
@@ -111,6 +112,88 @@ def read_packages(packages, File=File, Package=Package):
 # 0.4.1: no change
 # 0.5: no change
 # 0.6: no change
+# 0.7: moves input_files and output_files from run to global scope
+
+
+Config = optional_return_type(['runs', 'packages', 'other_files'],
+                              ['inputs_outputs', 'additional_patterns'])
+
+
+class InputOutputFile(object):
+    def __init__(self, path, read_runs, write_runs):
+        self.path = path
+        self.read_runs = read_runs
+        self.write_runs = write_runs
+
+    def __eq__(self, other):
+        print((self.path, self.read_runs, self.write_runs),
+              (other.path, other.read_runs, other.write_runs))
+        return ((self.path, self.read_runs, self.write_runs) ==
+                (other.path, other.read_runs, other.write_runs))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return "<InputOutputFile(path=%r, read_runs=%r, write_runs=%r)>" % (
+                self.path, self.read_runs, self.write_runs)
+
+
+def load_files(config, runs):
+    """Loads the inputs_outputs part of the configuration.
+
+    This tests for duplicates, merge the lists of executions, and optionally
+    loads from the runs for reprozip < 0.7 compatibility.
+    """
+    files_list = config.get('inputs_outputs') or []
+
+    # reprozip < 0.7 compatibility: read input_files and output_files from runs
+    if 'inputs_outputs' not in config:
+        for i, run in enumerate(runs):
+            for rkey, wkey in (('input_files', 'read_by_runs'),
+                               ('output_files', 'written_by_runs')):
+                for k, p in iteritems(run.pop(rkey, {})):
+                    files_list.append({'name': k,
+                                       'path': p,
+                                       wkey: [i]})
+
+    files = {}  # name:str: InputOutputFile
+    paths = {}  # path:PosixPath: name:str
+    required_keys = set(['name', 'path'])
+    optional_keys = set(['read_by_runs', 'written_by_runs'])
+    uniquenames = UniqueNames()
+    for i, f in enumerate(files_list):
+        keys = set(f)
+        if (not keys.issubset(required_keys | optional_keys) or
+                not keys.issuperset(required_keys)):
+            raise InvalidConfig("File #%d has invalid keys")
+        name = f['name']
+        path = PosixPath(f['path'])
+        readers = sorted(f.get('read_by_runs', []))
+        writers = sorted(f.get('written_by_runs', []))
+        if name in files:
+            if files[name].path != path:
+                old_name, name = name, uniquenames(name)
+                logging.warning("File name appears multiple times: %s\n"
+                                "Using name %s instead",
+                                old_name, name)
+        else:
+            uniquenames.insert(name)
+        if path in paths:
+            if paths[path] == name:
+                logging.warning("File appears multiple times: %s", name)
+            else:
+                logging.warning("Two files have the same path (but different "
+                                "names): %s, %s\nUsing name %s",
+                                name, paths[path], paths[path])
+                name = paths[path]
+            files[name].read_runs.update(readers)
+            files[name].write_runs.update(writers)
+        else:
+            paths[path] = name
+            files[name] = InputOutputFile(path, readers, writers)
+
+    return files
 
 
 def load_config(filename, canonical, File=File, Package=Package):
@@ -132,41 +215,52 @@ def load_config(filename, canonical, File=File, Package=Package):
     keys_ = set(config)
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
-    # Accepts versions from 0.2 to 0.6 inclusive
-    elif not LooseVersion('0.2') <= ver < LooseVersion('0.7'):
+    # Accepts versions from 0.2 to 0.7 inclusive
+    elif not LooseVersion('0.2') <= ver < LooseVersion('0.8'):
         pkgname = (__package__ or __name__).split('.', 1)[0]
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "
                             "%s" % (ver, pkgname))
     unknown_keys = keys_ - set(['pack_id', 'version', 'runs',
+                                'inputs_outputs',
                                 'packages', 'other_files',
-                                'additional_patterns'])
+                                'additional_patterns',
+                                # Deprecated
+                                'input_files', 'output_files'])
     if unknown_keys:
         logging.warning("Unrecognized sections in configuration: %s",
                         ', '.join(unknown_keys))
 
-    runs = config.get('runs', [])
-    packages = read_packages(config.get('packages', []), File, Package)
-    other_files = read_files(config.get('other_files', []), File)
+    runs = config.get('runs') or []
+    packages = read_packages(config.get('packages'), File, Package)
+    other_files = read_files(config.get('other_files'), File)
 
-    # Adds 'input_files' and 'output_files' keys to runs
-    for run in runs:
-        if 'input_files' not in run:
-            run['input_files'] = {}
-        if 'output_files' not in run:
-            run['output_files'] = {}
+    inputs_outputs = load_files(config, runs)
+
+    # reprozip < 0.7 compatibility: set inputs/outputs on runs (for plugins)
+    for i, run in enumerate(runs):
+        run['input_files'] = dict((n, f.path)
+                                  for n, f in iteritems(inputs_outputs)
+                                  if i in f.read_runs)
+        run['output_files'] = dict((n, f.path)
+                                   for n, f in iteritems(inputs_outputs)
+                                   if i in f.write_runs)
 
     record_usage_package(runs, packages, other_files,
+                         inputs_outputs,
                          pack_id=config.get('pack_id'))
+
+    kwargs = {'inputs_outputs': inputs_outputs}
 
     if canonical:
         if 'additional_patterns' in config:
             raise InvalidConfig("Canonical configuration file shouldn't have "
                                 "additional_patterns key anymore")
-        return runs, packages, other_files
     else:
-        additional_patterns = config.get('additional_patterns') or []
-        return runs, packages, other_files, additional_patterns
+        kwargs['additional_patterns'] = config.get('additional_patterns') or []
+
+    return Config(runs, packages, other_files,
+                  **kwargs)
 
 
 def write_file(fp, fi, indent=0):
@@ -198,6 +292,7 @@ def write_package(fp, pkg, indent=0):
 
 
 def save_config(filename, runs, packages, other_files, reprozip_version,
+                inputs_outputs=None,
                 canonical=False, pack_id=None):
     """Saves the configuration to a YAML file.
 
@@ -218,7 +313,7 @@ version: "{format!s}"
 """.format(pack_id=(('\npack_id: "%s"' % pack_id) if pack_id is not None
                     else ''),
            version=escape(reprozip_version),
-           format='0.4',
+           format='0.7',
            date=datetime.now().isoformat(),
            what=("# It was generated by the packer and you shouldn't need to "
                  "edit it" if canonical
@@ -227,11 +322,35 @@ version: "{format!s}"
 
         fp.write("runs:\n")
         for i, run in enumerate(runs):
+            # Remove reprozip < 0.7 compatibility fields
+            run = dict((k, v) for k, v in iteritems(run)
+                       if k not in ('input_files', 'output_files'))
             fp.write("# Run %d\n" % i)
             fp.write(dump([run]).decode('utf-8'))
             fp.write("\n")
 
         fp.write("""\
+# Input and output files
+
+# Inputs are files that are only read by a run; reprounzip can replace these
+# files on demand to run the experiment with custom data.
+# Outputs are files that are generated by a run; reprounzip can extract these
+# files from the experiment on demand, for the user to examine.
+# The name field is the identifier the user will use to access these files.
+inputs_outputs:""")
+        for n, f in iteritems(inputs_outputs):
+            fp.write("""\
+
+- name: {name}
+  path: {path}
+  read_by_runs: {readers}
+  written_by_runs: {writers}""".format(name=n, path=unicode_(f.path),
+                                       readers=repr(f.read_runs),
+                                       writers=repr(f.write_runs)))
+
+        fp.write("""\
+
+
 # Files to pack
 # All the files below were used by the program; they will be included in the
 # generated package
@@ -373,7 +492,9 @@ def record_usage(**kwargs):
         _usage_report.note(kwargs)
 
 
-def record_usage_package(runs, packages, other_files, pack_id=None):
+def record_usage_package(runs, packages, other_files,
+                         inputs_outputs,
+                         pack_id=None):
     """Records the info on some pack file into the current usage report.
     """
     for run in runs:
@@ -384,7 +505,12 @@ def record_usage_package(runs, packages, other_files, pack_id=None):
                                       for pkg in packages),
                  packed_packages=sum(1 for pkg in packages
                                      if pkg.packfiles),
-                 nb_other_files=len(other_files))
+                 nb_other_files=len(other_files),
+                 nb_input_outputs_files=len(inputs_outputs),
+                 nb_input_files=sum(1 for f in itervalues(inputs_outputs)
+                                    if f.read_runs),
+                 nb_output_files=sum(1 for f in itervalues(inputs_outputs)
+                                     if f.write_runs))
 
 
 def submit_usage_report(**kwargs):
