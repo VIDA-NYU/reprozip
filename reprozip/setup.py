@@ -43,7 +43,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprozip',
-      version='0.6.4',
+      version='0.7',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [
@@ -60,7 +60,7 @@ setup(name='reprozip',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu'],
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: POSIX :: Linux',

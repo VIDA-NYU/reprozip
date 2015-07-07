@@ -18,7 +18,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip',
-      version='0.6.4',
+      version='0.7',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
       entry_points={
@@ -34,7 +34,7 @@ setup(name='reprounzip',
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
       extras_require={
-          'all': ['reprounzip-vagrant>=0.6', 'reprounzip-docker>=0.6']},
+          'all': ['reprounzip-vagrant>=0.7', 'reprounzip-docker>=0.7']},
       description="Linux tool enabling reproducible experiments (unpacker)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',
@@ -46,7 +46,7 @@ setup(name='reprounzip',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu'],
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',
