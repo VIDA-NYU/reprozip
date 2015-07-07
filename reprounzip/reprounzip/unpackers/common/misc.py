@@ -331,34 +331,25 @@ def get_runs(runs, selected_run, cmdline):
             logging.critical("There are several runs in this pack -- you have "
                              "to choose which one to use")
             sys.exit(1)
-    elif selected_run is not None:
-        try:
-            selected_run = int(selected_run)
-        except ValueError:
-            logging.critical("Error: Run is not a number")
-            raise UsageError
-        if selected_run < 0 or selected_run >= len(runs):
-            logging.critical("Error: Expected 0 <= run <= %d, got %d",
-                             len(runs) - 1, selected_run)
-            sys.exit(1)
+
+    try:
+        selected_run = int(selected_run)
+    except ValueError:
+        logging.critical("Error: Run is not a number")
+        raise UsageError
+    if selected_run < 0 or selected_run >= len(runs):
+        logging.critical("Error: Expected 0 <= run <= %d, got %d",
+                         len(runs) - 1, selected_run)
+        sys.exit(1)
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
-        if selected_run is None:
-            logging.critical("There are several runs in this pack -- you have "
-                             "to choose which one to use with --cmdline")
-            sys.exit(1)
         print("Original command-line:")
         print(' '.join(shell_escape(arg)
                        for arg in runs[selected_run]['argv']))
         sys.exit(0)
 
-    if selected_run is None:
-        selected_run = irange(len(runs))
-    else:
-        selected_run = (int(selected_run),)
-
-    return selected_run
+    return (int(selected_run),)
 
 
 def interruptible_call(*args, **kwargs):
