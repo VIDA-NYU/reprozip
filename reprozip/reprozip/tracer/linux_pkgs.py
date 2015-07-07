@@ -28,41 +28,64 @@ magic_dirs = ('/dev', '/proc', '/sys')
 system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
 
 
-class DpkgManager(object):
-    """Package identifier for deb-based systems (Debian, Ubuntu).
+class PkgManager(object):
+    """Base class for package identifiers.
+
+    Subclasses should provide either `search_for_files` or `search_for_file`
+    which actually identifies the package for a file.
     """
     def __init__(self):
+        # Files that were not part of a package
         self.unknown_files = set()
+        # All the packages identified, with their `files` attribute set
         self.packages = {}
-        self.package_files = {}
 
-    def search_for_file(self, f):
+    def filter_files(self, files):
+        seen_files = set()
+        for f in files:
+            if f.path not in seen_files:
+                if not self._filter(f):
+                    yield f
+                seen_files.add(f.path)
+
+    def search_for_files(self, files):
+        for f in self.filter_files(files):
+            pkgname = self._get_package_for_file(f.path)
+
+            # Stores the file
+            if pkgname is None:
+                self.unknown_files.add(f)
+            else:
+                if pkgname in self.packages:
+                    self.packages[pkgname].add_file(f)
+                else:
+                    pkg = self._create_package(pkgname)
+                    pkg.add_file(f)
+                    self.packages[pkgname] = pkg
+
+    def _filter(self, f):
         # Special files
         if any(f.path.lies_under(c) for c in magic_dirs):
-            return
+            return True
 
         # If it's not in a system directory, no need to look for it
         if (f.path.lies_under('/usr/local') or
                 not any(f.path.lies_under(c) for c in system_dirs)):
             self.unknown_files.add(f)
-            return
+            return True
 
-        # Looks in our cache
-        if f.path in self.package_files:
-            pkgname = self.package_files[f.path]
-        else:
-            pkgname = self._get_package_for_file(f.path)
-            self.package_files[f.path] = pkgname
+        return False
 
-        # Stores the file
-        if pkgname is None:
-            self.unknown_files.add(f)
-        else:
-            if pkgname in self.packages:
-                self.packages[pkgname].add_file(f)
-            else:
-                self._create_package(pkgname, [f])
+    def _get_package_for_file(self, filename):
+        raise NotImplementedError
 
+    def _create_package(self, pkgname):
+        raise NotImplementedError
+
+
+class DpkgManager(PkgManager):
+    """Package identifier for deb-based systems (Debian, Ubuntu).
+    """
     def _get_package_for_file(self, filename):
         p = subprocess.Popen(['dpkg', '-S', filename.path],
                              stdout=subprocess.PIPE,
@@ -75,15 +98,14 @@ class DpkgManager(object):
             # message (that we don't care about)
             pkgname = (pkgname.decode('iso-8859-1')
                               .split(':', 1)[0])    # Removes :arch
-            self.package_files[f] = pkgname
             if f == filename:
                 if ' ' not in pkgname:
                     return pkgname
         return None
 
-    def _create_package(self, pkgname, files):
+    def _create_package(self, pkgname):
         p = subprocess.Popen(['dpkg-query',
-                              '--showformat=${Package;-50}\t'
+                              '--showformat=${Package}\t'
                               '${Version}\t'
                               '${Installed-Size}\n',
                               '-W',
@@ -102,9 +124,7 @@ class DpkgManager(object):
         finally:
             p.wait()
         assert p.returncode == 0
-        pkg = Package(pkgname, version, files, size=size)
-        self.packages[pkgname] = pkg
-        return pkg
+        return Package(pkgname, version, size=size)
 
 
 def identify_packages(files):
@@ -119,8 +139,7 @@ def identify_packages(files):
         return files, []
 
     begin = time.time()
-    for f in files:
-        manager.search_for_file(f)
+    manager.search_for_files(files)
     logging.debug("Assigning files to packages took %f seconds",
                   (time.time() - begin))
 
