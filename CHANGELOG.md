@@ -9,9 +9,11 @@ Behavior change:
 * Rely on `PTHREAD_EVENT_EXEC` to handle `execve()`. Makes tracing more reliable, and enable it to behave correctly on weird kernels (like UML).
 * Rely on `PTRACE_EVENT_FORK` to handle `fork`/`vfork`/`clone`. Fixes vfork() deadlocking under trace.
 * Completely changed the structure of input and output files (old packs will still be loaded, but new packs are not retro-compatible).
+* Using one of the `run` commands without specifying a number will no longer default to running all of them; it will error out if there are multiple runs.
 
 Features:
 * Makes VMs (Vagrant or Docker)  more resilient to massive breakage of system libraries (obliterating /lib or /usr, when using very different operating systems) by putting busybox in / and using [rpzsudo](https://github.com/remram44/static-sudo).
+* No longer use `dpkg -S` to identify packages, do a single pass over internal dpkg database (this is considerably faster).
 
 0.6.5 (???)
 -----------
