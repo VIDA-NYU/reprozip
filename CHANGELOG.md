@@ -11,15 +11,12 @@ Behavior change:
 * Completely changed the structure of input and output files (old packs will still be loaded, but new packs are not retro-compatible).
 * Using one of the `run` commands without specifying a number will no longer default to running all of them; it will error out if there are multiple runs.
 
+Bugfixes:
+* Fix insertion speed in SQLite3 database
+
 Features:
 * Makes VMs (Vagrant or Docker)  more resilient to massive breakage of system libraries (obliterating /lib or /usr, when using very different operating systems) by putting busybox in / and using [rpzsudo](https://github.com/remram44/static-sudo).
 * No longer use `dpkg -S` to identify packages, do a single pass over internal dpkg database (this is considerably faster).
-
-0.6.5 (???)
------------
-
-Bugfixes:
-* Fix insertion speed in SQLite3 database
 
 0.6.4 (2015-06-07)
 ------------------
