@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.7 (???)
----------
+0.7 (2015-07-07)
+----------------
 
 Behavior change:
 * No longer accept passing `-v` after the subcommand; use `reprozip -v testrun ...`, not `reprozip testrun -v`.
