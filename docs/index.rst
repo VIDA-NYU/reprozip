@@ -23,6 +23,7 @@ Contents
     packing
     unpacking
     faq
+    glossary
     developerguide
 
 Links

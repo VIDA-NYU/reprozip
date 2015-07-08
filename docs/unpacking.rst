@@ -95,6 +95,8 @@ where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://e
 
 ..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 
+..  _unpack-unpackers:
+
 Unpackers
 =========
 
