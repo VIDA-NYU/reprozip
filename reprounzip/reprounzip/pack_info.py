@@ -126,7 +126,7 @@ def print_info(args):
                                                   current_architecture))
         print("Distribution: %s (current: %s)" % (
               meta_distribution, current_distribution or "(not Linux)"))
-        print("Executions (%d):" % len(runs))
+        print("Runs (%d):" % len(runs))
         for i, run in enumerate(runs):
             cmdline = ' '.join(shell_escape(a) for a in run['argv'])
             if len(runs) > 1:
