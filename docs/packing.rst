@@ -26,6 +26,8 @@ By default, if the operating system is Debian or Debian-based (e.g.: Ubuntu), *r
 
 The database, together with a *configuration file* (see below), are placed in a directory named ``.reprozip-trace``, created under the path where the ``reprozip trace`` command was issued.
 
+You can trace multiple different executions (ReproZip refers to them as `runs`) and combine them in a single trace by using ``reprozip trace --continue <command-line>``. When packing, you will get a single package that is enough to reproduce any of these executions. The advantage is that the common files needed by multiple runs are only stored once, and that they will all happen in the same environment on the reproducer's machine.
+
 ..  _packing-config:
 
 Editing the Configuration File
@@ -35,7 +37,7 @@ The configuration file, which can be found in ``.reprozip-trace/config.yml``, co
 
 You possibly do not need to edit it, as the automatically-generated file should be sufficient to generate a working package. However, you may want to edit this file prior to the creation of the package in order to add or remove files. This can be particularly useful, for instance, to remove big files that can be obtained elsewhere when reproducing the experiment, so as to keep the size of package small, and also to remove sensitive information that the experiment may use. The configuration file can also be used to edit the main command line, to add or remove environment variables, and to edit information regarding input/output files.
 
-The first part of the configuration file gives general information with respect to the experiment execution, including the command line, environment variables, working directory, and machine information::
+The first part of the configuration file gives general information with respect to the experiment execution (`runs`), including the command line, environment variables, working directory, and machine information::
 
     # Run info
     version: <reprozip-version>
@@ -138,6 +140,8 @@ Packing Multiple Command Lines
 ++++++++++++++++++++++++++++++
 
 ReproZip is meant to trace a whole experiment in one go. Therefore, if an experiment comprises multiple successive commands, users should create a simple **script** that runs all these commands, and pass *that* to ``reprozip trace``.
+
+Packing multiple runs with the ``trace --continue`` feature is meant to be used for different steps; using this for steps that will always have to be run together and in order doesn't really make sense and just makes it more cumbersome for the reproducer.
 
 Packing GUI and Interactive Tools
 +++++++++++++++++++++++++++++++++

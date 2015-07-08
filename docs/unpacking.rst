@@ -207,11 +207,16 @@ After creating the directory, the experiment can be reproduced by issuing the ``
 
     $ reprounzip vagrant run <path>
 
-which will execute the entire experiment inside the experiment directory. Users may also change the command line of the experiment by using ``--cmdline``::
+which will execute the experiment inside the experiment directory. Users may also change the command line of the experiment by using ``--cmdline``::
 
     $ reprounzip vagrant run <path> --cmdline <new-command-line>
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
+
+If the pack contains multiple `runs` (separate commands that were packed together), you need to select the correct one::
+
+    $ reprounzip vagrant run <path> <run-nb>
+    $ reprounzip vagrant run <path> <run-nb> --cmdline <new-command-line>
 
 If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
 
