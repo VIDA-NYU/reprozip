@@ -250,6 +250,7 @@ static int syscall_mkdir(const char *name, struct Process *process,
     char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
+        log_debug(process->tid, "mkdir(\"%s\")", pathname);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_WRITE,
