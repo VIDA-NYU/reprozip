@@ -203,14 +203,14 @@ static int syscall_fileopening(const char *name, struct Process *process,
  */
 
 static int syscall_filestat(const char *name, struct Process *process,
-                        unsigned int udata)
+                            unsigned int no_deref)
 {
     if(process->retvalue.i >= 0)
     {
         char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_STAT,
+                            FILE_STAT | (no_deref?FILE_LINK:0),
                             path_is_dir(pathname)) != 0)
             return -1;
         free(pathname);
@@ -747,11 +747,11 @@ void syscall_build_table(void)
             { 33, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
 
             {106, "stat", NULL, syscall_filestat, 0},
-            {107, "lstat", NULL, syscall_filestat, 0},
+            {107, "lstat", NULL, syscall_filestat, 1},
             {195, "stat64", NULL, syscall_filestat, 0},
             { 18, "oldstat", NULL, syscall_filestat, 0},
-            {196, "lstat64", NULL, syscall_filestat, 0},
-            { 84, "oldlstat", NULL, syscall_filestat, 0},
+            {196, "lstat64", NULL, syscall_filestat, 1},
+            { 84, "oldlstat", NULL, syscall_filestat, 1},
 
             { 85, "readlink", NULL, syscall_readlink, 0},
 
@@ -821,7 +821,7 @@ void syscall_build_table(void)
             { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
 
             {  4, "stat", NULL, syscall_filestat, 0},
-            {  6, "lstat", NULL, syscall_filestat, 0},
+            {  6, "lstat", NULL, syscall_filestat, 1},
 
             { 89, "readlink", NULL, syscall_readlink, 0},
 
@@ -889,7 +889,7 @@ void syscall_build_table(void)
             { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
 
             {  4, "stat", NULL, syscall_filestat, 0},
-            {  6, "lstat", NULL, syscall_filestat, 0},
+            {  6, "lstat", NULL, syscall_filestat, 1},
 
             { 89, "readlink", NULL, syscall_readlink, 0},
 
