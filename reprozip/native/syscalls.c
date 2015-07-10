@@ -205,16 +205,16 @@ static int syscall_fileopening(const char *name, struct Process *process,
 static int syscall_filestat(const char *name, struct Process *process,
                         unsigned int udata)
 {
-    char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
+        char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_STAT,
                             path_is_dir(pathname)) != 0)
             return -1;
+        free(pathname);
     }
-    free(pathname);
     return 0;
 }
 
@@ -226,16 +226,16 @@ static int syscall_filestat(const char *name, struct Process *process,
 static int syscall_readlink(const char *name, struct Process *process,
                             unsigned int udata)
 {
-    char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
+        char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_STAT,
                             0) != 0)
             return -1;
+        free(pathname);
     }
-    free(pathname);
     return 0;
 }
 
@@ -247,15 +247,16 @@ static int syscall_readlink(const char *name, struct Process *process,
 static int syscall_mkdir(const char *name, struct Process *process,
                          unsigned int udata)
 {
-    char *pathname = abs_path_arg(process, 0);
     if(process->retvalue.i >= 0)
     {
+        char *pathname = abs_path_arg(process, 0);
         log_debug(process->tid, "mkdir(\"%s\")", pathname);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_WRITE,
                             1) != 0)
             return -1;
+        free(pathname);
     }
     return 0;
 }
@@ -268,20 +269,21 @@ static int syscall_mkdir(const char *name, struct Process *process,
 static int syscall_symlink(const char *name, struct Process *process,
                            unsigned int is_symlinkat)
 {
-    char *pathname;
-    if(is_symlinkat && process->params[1].i != AT_FDCWD)
-        return syscall_unhandled_other(name, process, 0);
-    else if(is_symlinkat)
-        pathname = abs_path_arg(process, 2);
-    else /* symlink */
-        pathname = abs_path_arg(process, 1);
     if(process->retvalue.i >= 0)
     {
+        char *pathname;
+        if(is_symlinkat && process->params[1].i != AT_FDCWD)
+            return syscall_unhandled_other(name, process, 0);
+        else if(is_symlinkat)
+            pathname = abs_path_arg(process, 2);
+        else /* symlink */
+            pathname = abs_path_arg(process, 1);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_WRITE,
                             1) != 0)
             return -1;
+        free(pathname);
     }
     return 0;
 }
