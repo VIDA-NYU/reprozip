@@ -199,6 +199,72 @@ static int syscall_fileopening(const char *name, struct Process *process,
 
 
 /* ********************
+ * rename(), link(), symlink()
+ */
+
+static int syscall_filecreating(const char *name, struct Process *process,
+                                unsigned int is_symlink)
+{
+    if(process->retvalue.i >= 0)
+    {
+        char *written_path = abs_path_arg(process, 1);
+        int is_dir = path_is_dir(written_path);
+        /* symlink doesn't actually read the source */
+        if(!is_symlink)
+        {
+            char *read_path = abs_path_arg(process, 0);
+            if(db_add_file_open(process->identifier,
+                                read_path,
+                                FILE_READ | FILE_LINK,
+                                is_dir) != 0)
+                return -1;
+            free(read_path);
+        }
+        if(db_add_file_open(process->identifier,
+                            written_path,
+                            FILE_WRITE | FILE_LINK,
+                            is_dir) != 0)
+            return -1;
+        free(written_path);
+    }
+    return 0;
+}
+
+static int syscall_filecreating_at(const char *name, struct Process *process,
+                                   unsigned int is_symlink)
+{
+    if(process->retvalue.i >= 0)
+    {
+        if( (process->params[0].i == AT_FDCWD)
+         && (process->params[2].i == AT_FDCWD) )
+        {
+            char *written_path = abs_path_arg(process, 3);
+            int is_dir = path_is_dir(written_path);
+            /* symlink doesn't actually read the source */
+            if(!is_symlink)
+            {
+                char *read_path = abs_path_arg(process, 1);
+                if(db_add_file_open(process->identifier,
+                                    read_path,
+                                    FILE_READ | FILE_LINK,
+                                    is_dir) != 0)
+                    return -1;
+                free(read_path);
+            }
+            if(db_add_file_open(process->identifier,
+                                written_path,
+                                FILE_WRITE | FILE_LINK,
+                                is_dir) != 0)
+                return -1;
+            free(written_path);
+        }
+        else
+            return syscall_unhandled_other(name, process, 0);
+    }
+}
+
+
+/* ********************
  * stat(), lstat()
  */
 
@@ -251,33 +317,6 @@ static int syscall_mkdir(const char *name, struct Process *process,
     {
         char *pathname = abs_path_arg(process, 0);
         log_debug(process->tid, "mkdir(\"%s\")", pathname);
-        if(db_add_file_open(process->identifier,
-                            pathname,
-                            FILE_WRITE,
-                            1) != 0)
-            return -1;
-        free(pathname);
-    }
-    return 0;
-}
-
-
-/* ********************
- * symlink()
- */
-
-static int syscall_symlink(const char *name, struct Process *process,
-                           unsigned int is_symlinkat)
-{
-    if(process->retvalue.i >= 0)
-    {
-        char *pathname;
-        if(is_symlinkat && process->params[1].i != AT_FDCWD)
-            return syscall_unhandled_other(name, process, 0);
-        else if(is_symlinkat)
-            pathname = abs_path_arg(process, 2);
-        else /* symlink */
-            pathname = abs_path_arg(process, 1);
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_WRITE,
@@ -630,6 +669,8 @@ static int syscall_connect(const char *name, struct Process *process,
 static int syscall_xxx_at(const char *name, struct Process *process,
                           unsigned int real_syscall)
 {
+    /* Argument 0 is a file descriptor, we assume that the rest of them match
+     * the non-at variant of the syscall */
     if(process->params[0].i == AT_FDCWD)
     {
         struct syscall_table_entry *entry = NULL;
@@ -757,8 +798,6 @@ void syscall_build_table(void)
 
             { 39, "mkdir", NULL, syscall_mkdir, 0},
 
-            { 83, "symlink", NULL, syscall_symlink, 0},
-
             { 12, "chdir", NULL, syscall_chdir, 0},
 
             { 11, "execve", syscall_execve_in, syscall_execve_out, 11},
@@ -769,6 +808,17 @@ void syscall_build_table(void)
 
             {102, "socketcall", NULL, syscall_socketcall, 0},
 
+            /* File-creating syscalls: created path is second argument */
+            { 38, "rename", NULL, syscall_filecreating, 0},
+            {  9, "link", NULL, syscall_filecreating, 0},
+            { 83, "symlink", NULL, syscall_filecreating, 1},
+
+            /* File-creating syscalls, at variants: unhandled if first or third
+             * argument is not AT_FDCWD, second is read, fourth is created */
+            {302, "renameat", NULL, syscall_filecreating_at, 0},
+            {303, "linkat", NULL, syscall_filecreating_at, 0},
+            {304, "symlinkat", NULL, syscall_filecreating_at, 1},
+
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {296, "mkdirat", NULL, syscall_xxx_at, 39},
             {295, "openat", NULL, syscall_xxx_at, 5},
@@ -776,12 +826,8 @@ void syscall_build_table(void)
             {305, "readlinkat", NULL, syscall_xxx_at, 85},
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
 
-            {304, "symlinkat", NULL, syscall_symlink, 1},
-
             /* Unhandled with path as first argument */
-            { 38, "rename", NULL, syscall_unhandled_path1, 0},
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
-            {  9, "link", NULL, syscall_unhandled_path1, 0},
             { 92, "truncate", NULL, syscall_unhandled_path1, 0},
             {193, "truncate64", NULL, syscall_unhandled_path1, 0},
             { 10, "unlink", NULL, syscall_unhandled_path1, 0},
@@ -796,8 +842,6 @@ void syscall_build_table(void)
             {278, "mq_unlink", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
-            {303, "linkat", NULL, syscall_unhandled_other, 0},
-            {302, "renameat", NULL, syscall_unhandled_other, 0},
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
             {306, "fchmodat", NULL, syscall_unhandled_other, 0},
             {298, "fchownat", NULL, syscall_unhandled_other, 0},
@@ -827,8 +871,6 @@ void syscall_build_table(void)
 
             { 83, "mkdir", NULL, syscall_mkdir, 0},
 
-            { 88, "symlink", NULL, syscall_symlink, 0},
-
             { 80, "chdir", NULL, syscall_chdir, 0},
 
             { 59, "execve", syscall_execve_in, syscall_execve_out, 59},
@@ -841,6 +883,17 @@ void syscall_build_table(void)
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
 
+            /* File-creating syscalls: created path is second argument */
+            { 82, "rename", NULL, syscall_filecreating, 0},
+            { 86, "link", NULL, syscall_filecreating, 0},
+            { 88, "symlink", NULL, syscall_filecreating, 1},
+
+            /* File-creating syscalls, at variants: unhandled if first or third
+             * argument is not AT_FDCWD, second is read, fourth is created */
+            {264, "renameat", NULL, syscall_filecreating_at, 0},
+            {265, "linkat", NULL, syscall_filecreating_at, 0},
+            {266, "symlinkat", NULL, syscall_filecreating_at, 1},
+
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", NULL, syscall_xxx_at, 2},
@@ -848,12 +901,8 @@ void syscall_build_table(void)
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
 
-            {266, "symlinkat", NULL, syscall_symlink, 1},
-
             /* Unhandled with path as first argument */
-            { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
-            { 86, "link", NULL, syscall_unhandled_path1, 0},
             { 76, "truncate", NULL, syscall_unhandled_path1, 0},
             { 87, "unlink", NULL, syscall_unhandled_path1, 0},
             { 90, "chmod", NULL, syscall_unhandled_path1, 0},
@@ -865,8 +914,6 @@ void syscall_build_table(void)
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
-            {265, "linkat", NULL, syscall_unhandled_other, 0},
-            {264, "renameat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
@@ -895,8 +942,6 @@ void syscall_build_table(void)
 
             { 83, "mkdir", NULL, syscall_mkdir, 0},
 
-            { 88, "symlink", NULL, syscall_symlink, 0},
-
             { 80, "chdir", NULL, syscall_chdir, 0},
 
             {520, "execve", syscall_execve_in, syscall_execve_out,
@@ -910,6 +955,17 @@ void syscall_build_table(void)
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
 
+            /* File-creating syscalls: created path is second argument */
+            { 82, "rename", NULL, syscall_filecreating, 0},
+            { 86, "link", NULL, syscall_filecreating, 0},
+            { 88, "symlink", NULL, syscall_filecreating, 1},
+
+            /* File-creating syscalls, at variants: unhandled if first or third
+             * argument is not AT_FDCWD, second is read, fourth is created */
+            {264, "renameat", NULL, syscall_filecreating_at, 0},
+            {265, "linkat", NULL, syscall_filecreating_at, 0},
+            {266, "symlinkat", NULL, syscall_filecreating_at, 1},
+
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", NULL, syscall_xxx_at, 2},
@@ -917,12 +973,8 @@ void syscall_build_table(void)
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
 
-            {266, "symlinkat", NULL, syscall_symlink, 1},
-
             /* Unhandled with path as first argument */
-            { 82, "rename", NULL, syscall_unhandled_path1, 0},
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
-            { 86, "link", NULL, syscall_unhandled_path1, 0},
             { 76, "truncate", NULL, syscall_unhandled_path1, 0},
             { 87, "unlink", NULL, syscall_unhandled_path1, 0},
             { 90, "chmod", NULL, syscall_unhandled_path1, 0},
@@ -934,8 +986,6 @@ void syscall_build_table(void)
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
-            {265, "linkat", NULL, syscall_unhandled_other, 0},
-            {264, "renameat", NULL, syscall_unhandled_other, 0},
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
