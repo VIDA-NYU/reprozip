@@ -95,7 +95,6 @@ class TestArgs(unittest.TestCase):
                             ('reprounzip -v -v chroot run a', 0, 3),
                             ('reprounzip chroot run -v a', 2, -1)]:
                 sys.argv = a.split()
-                print(sys.argv)
                 with self.assertRaises(SystemExit) as cm:
                     reprounzip.main.main(setup_streams=False)
                 if isinstance(cm.exception, int):
