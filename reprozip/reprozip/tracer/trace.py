@@ -140,7 +140,8 @@ def get_files(conn):
             access_files.append(set())
 
         # Adds symbolic links as read files
-        for filename in find_all_links(r_name.parent if r_mode & FILE_LINK else r_name, False):
+        for filename in find_all_links(r_name.parent if r_mode & FILE_LINK
+                                       else r_name, False):
             if filename not in files:
                 f = TracedFile(filename)
                 f.read()
