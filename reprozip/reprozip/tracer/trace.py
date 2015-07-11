@@ -22,7 +22,7 @@ import sqlite3
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_WDIR
+    FILE_READ, FILE_WRITE, FILE_WDIR, FILE_LINK
 from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
@@ -140,13 +140,15 @@ def get_files(conn):
             access_files.append(set())
 
         # Adds symbolic links as read files
-        for filename in find_all_links(r_name, False):
+        for filename in find_all_links(r_name.parent if r_mode & FILE_LINK
+                                       else r_name, False):
             if filename not in files:
                 f = TracedFile(filename)
                 f.read()
                 files[f.path] = f
-        # Adds final target
-        r_name = r_name.resolve()
+        # Go to final target
+        if not r_mode & FILE_LINK:
+            r_name = r_name.resolve()
         if r_name not in files:
             f = TracedFile(r_name)
             files[f.path] = f

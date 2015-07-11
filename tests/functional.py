@@ -10,12 +10,13 @@ import functools
 import os
 import re
 from rpaths import Path, unicode
+import sqlite3
 import subprocess
 import sys
 import yaml
 
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import stderr_bytes, stderr
+from reprounzip.utils import PY3, stderr_bytes, stderr
 
 
 tests = Path(__file__).parent.absolute()
@@ -502,6 +503,39 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     err = check_output(rpz + ['testrun', './vfork'], 'err')
     err = err.split(b'\n')
     assert not any(b'program exited with non-zero code' in l for l in err)
+
+    # ########################################
+    # 'rename' program: trace
+    #
+
+    # Build
+    build('rename', ['rename.c'])
+    # Trace
+    check_call(rpz + ['trace', '-d', 'rename-trace', './rename'])
+    with Path('rename-trace/config.yml').open(encoding='utf-8') as fp:
+        config = yaml.safe_load(fp)
+    # Check that written files were logged
+    database = Path.cwd() / 'rename-trace/trace.sqlite3'
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+            '''
+            SELECT name FROM opened_files
+            ''')
+    files = set(Path(r[0]) for r in rows)
+    for n in ('dir1/file', 'dir2/file', 'dir2/brokensymlink', 'dir2/symlink'):
+        if (Path.cwd() / n) not in files:
+            raise AssertionError("Missing file: %s" % (Path.cwd() / n))
+    conn.close()
+    # Check that created files won't be packed
+    for f in config.get('other_files'):
+        if 'dir2' in Path(f).parent.components:
+            raise AssertionError("Created file shouldn't be packed: %s" %
+                                 Path(f))
 
     # ########################################
     # Copies back coverage report
