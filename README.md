@@ -14,6 +14,8 @@ Running Docker in a Travis CI build.
 Simple
 
 ```yaml
+sudo: true
+
 install:
   - curl -sLo - http://j.mp/install-travis-docker | sh -xe
 
@@ -56,6 +58,19 @@ You can find more examples on [travis-docker-example](https://github.com/moul/tr
 * `UML_FIG=0`, do not install `fig`
 * `QUIET=1`, be less verbose
 
+## sudo requirement
+
+As you probably noticed, the examples above contained the line `sudo: true`.
+Travis is [moving towards a new infrastructure](http://docs.travis-ci.com/user/migrating-from-legacy/)
+where `sudo` is not supported (yet?).
+That line ensures that your project will state that your project requires `sudo`
+(as travis-docker does) and should therefore not be run on the new infrastructure.
+For existing projects, which have a history of runs on Travis,
+the old infrastructure might get used even without that line.
+So it *might* be unneccessary for your project.
+But since the line also affects people forking your project,
+you probably shouldn't rely on that compatibility,
+but instead make your requirements explicit.
 
 ---
 
