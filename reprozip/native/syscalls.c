@@ -543,8 +543,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
         log_debug(process->tid, "execve called:\n  binary=%s\n  argv:",
                   execi->binary);
         {
-            /* Note: this conversion is correct and shouldn't need a
-             * cast */
+            /* Note: this conversion is correct and shouldn't need a cast */
             const char *const *v = (const char* const*)execi->argv;
             while(*v)
             {
@@ -1249,7 +1248,9 @@ int syscall_handle(struct Process *process)
         struct syscall_table_entry *entry = NULL;
         struct syscall_table *tbl = &syscall_tables[syscall_type];
         if(syscall < 0 || syscall >= 2000)
+            /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
+            /* LCOV_EXCL_END */
         if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
@@ -1272,8 +1273,11 @@ int syscall_handle(struct Process *process)
         process->in_syscall = 0;
         if(process->execve_info != NULL)
         {
+            /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "out of syscall with execve_info != NULL");
             return -1;
+            /* LCOV_EXCL_END */
+
         }
         process->current_syscall = -1;
     }
