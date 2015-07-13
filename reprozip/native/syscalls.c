@@ -509,7 +509,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
 
     ptrace(PTRACE_GETEVENTMSG, process->tid, NULL, &new_tid);
 
-    if(process->flags & PROCFLAG_FORKING == 0)
+    if( (process->flags & PROCFLAG_FORKING) == 0)
     {
         /* LCOV_EXCL_START : internal error */
         log_critical(process->tid,
