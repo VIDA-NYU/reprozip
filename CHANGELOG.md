@@ -6,6 +6,7 @@ Changelog
 
 Bugfixes:
 * Files (or links) created with rename, link or symlink then read will no longer be packed.
+* A buffer overflow could happen in the log module, for instance when the experiment passes a very long argument to execve (over 4kB in a single argument) and running in debug mode (-v -v)
 
 0.7 (2015-07-07)
 ----------------
