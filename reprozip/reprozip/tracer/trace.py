@@ -11,7 +11,6 @@ generation logic for the config YAML file.
 
 from __future__ import unicode_literals
 
-import heapq
 from itertools import count
 import logging
 import os
@@ -102,32 +101,21 @@ def get_files(conn):
                         f.read()
                         files[f.path] = f
 
-    # Adds executed files
-    exec_cursor = conn.cursor()
-    executed_files = exec_cursor.execute(
+    # Loops on executed files, and opened files, at the same time
+    cur = conn.cursor()
+    rows = cur.execute(
             '''
-            SELECT name, timestamp
+            SELECT 'exec' AS event_type, name, NULL AS mode, timestamp
             FROM executed_files
-            ORDER BY timestamp;
-            ''')
-    executed = set()
-    # ... and opened files
-    open_cursor = conn.cursor()
-    opened_files = open_cursor.execute(
-            '''
-            SELECT name, mode, timestamp
+            UNION ALL
+            SELECT 'open' AS event_type, name, mode, timestamp
             FROM opened_files
             ORDER BY timestamp;
             ''')
-    # Loop on both lists at once
-    rows = heapq.merge(((r[1], 'exec', r) for r in executed_files),
-                       ((r[2], 'open', r) for r in opened_files))
-    for ts, event_type, data in rows:
+    executed = set()
+    for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
-            r_name, r_timestamp = data
             r_mode = FILE_READ
-        else:  # event_type == 'open'
-            r_name, r_mode, r_timestamp = data
         r_name = Path(r_name)
 
         if event_type == 'exec':
@@ -161,8 +149,7 @@ def get_files(conn):
         # Identifies input files
         if r_name.is_file() and r_name not in executed:
             access_files[-1].add(f)
-    exec_cursor.close()
-    open_cursor.close()
+    cur.close()
 
     # Further filters input files
     inputs = [[fi.path
