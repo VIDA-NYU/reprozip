@@ -30,6 +30,8 @@ Features:
 0.6.4 (2015-06-07)
 ------------------
 
+(reprounzip-vistrails didn't change)
+
 Bugfixes:
 * Tracer: correctly handle `chdir()` in multi-threaded processes
 * Fix leaked file descriptors, eventually making SQLite3 fail
@@ -40,6 +42,8 @@ Bugfixes:
 
 0.6.3 (2015-05-06)
 ------------------
+
+(reprounzip and plugins only)
 
 Bugfixes:
 * Fixes reprounzip-vistrails failing because of reporting
@@ -55,6 +59,8 @@ Features:
 0.6.2 (2015-03-16)
 ------------------
 
+(reprozip only)
+
 Bugfixes:
 * Fixes installation on Python 3 with 7-bit locale
 * Fixes reprozip not showing traceback on exception
@@ -63,11 +69,15 @@ Bugfixes:
 0.6.1 (2015-02-17)
 ------------------
 
+(reprozip only)
+
 Bugfixes:
 * Fixes an overflow in _pytracer for some syscalls.
 
 0.6 (2015-02-11)
 ----------------
+
+(reprounzip-vistrails didn't change)
 
 Bugfixes:
 * Fixes `debug` log messages not being printed
@@ -84,6 +94,8 @@ from package manager over unpacking the packed files
 
 0.5.1 (2014-12-18)
 ------------------
+
+(reprounzip-vistrails didn't change)
 
 Bugfixes:
 * Goes back to pack format 0.4: generates `.rpz` files readable by older reprounzip versions
