@@ -21,7 +21,7 @@ import sqlite3
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_WDIR, FILE_LINK
+    FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
@@ -143,6 +143,11 @@ def get_files(conn):
             f = files[r_name]
         if r_mode & FILE_WRITE:
             f.write()
+            # Mark the parent directory as read
+            if r_name.parent not in files:
+                fp = TracedFile(r_name.parent)
+                fp.read()
+                files[fp.path] = fp
         elif r_mode & FILE_READ:
             f.read()
 
@@ -198,30 +203,6 @@ def get_files(conn):
             if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                          for m in magic_dirs))
     return files, inputs, outputs
-
-
-def list_directories(conn):
-    """Gets additional needed directories from the trace database.
-
-    Returns the directories which are used as a process's working directory or
-    in which files are created.
-    """
-    cur = conn.cursor()
-    executed_files = cur.execute(
-            '''
-            SELECT name, mode
-            FROM opened_files
-            WHERE mode = ? OR mode = ?
-            ''',
-            (FILE_WDIR, FILE_WRITE))
-    executed_files = ((Path(n).resolve(), m) for n, m in executed_files)
-    # If WDIR, the name is a folder that was used as working directory
-    # If WRITE, the name is a file that was written to; its directory must
-    # exist
-    result = set(TracedFile(n if m == FILE_WDIR else n.parent)
-                 for n, m in executed_files)
-    cur.close()
-    return result
 
 
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
@@ -305,11 +286,6 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = identify_packages(files)
     else:
         packages = []
-
-    # Makes sure all the directories used as working directories are packed
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    files.update(d for d in list_directories(conn) if d.path.is_dir())
 
     # Writes configuration file
     config = directory / 'config.yml'
