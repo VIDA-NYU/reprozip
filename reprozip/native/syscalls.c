@@ -261,6 +261,7 @@ static int syscall_filecreating_at(const char *name, struct Process *process,
         else
             return syscall_unhandled_other(name, process, 0);
     }
+    return 0;
 }
 
 
