@@ -1,8 +1,10 @@
 Changelog
 =========
 
-0.7.1 (???)
------------
+0.7.1 (2015-07-14)
+------------------
+
+(reprozip only)
 
 Bugfixes:
 * Files (or links) created with rename, link or symlink then read will no longer be packed.
