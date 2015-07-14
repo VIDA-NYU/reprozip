@@ -23,7 +23,6 @@ from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_WDIR, FILE_LINK
-from reprozip.orderedset import OrderedSet
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
@@ -250,7 +249,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
             pkg = packages[oldpkg.name]
             # Here we build TracedFiles from the Files so that the comment
             # (size, etc) gets set
-            s = OrderedSet(TracedFile(fi.path) for fi in oldpkg.files)
+            s = set(TracedFile(fi.path) for fi in oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
