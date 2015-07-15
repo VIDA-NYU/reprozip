@@ -80,6 +80,7 @@ class TestReprozip(unittest.TestCase):
         reprozip.main.testrun = testrun
         reprozip.main.setup_logging = setup_logging
         old_argv = sys.argv
+        print("<<<<< argparse tests (disregard warnings)")
         try:
             for a, c, v in [('reprozip', 2, -1),
                             ('reprozip -v', 2, -1),
@@ -100,6 +101,7 @@ class TestReprozip(unittest.TestCase):
                     self.assertEqual(calls, [('l', v), ('t', v)])
                 calls = []
         finally:
+            print(">>>>> argparse tests")
             sys.argv = old_argv
             reprozip.main.testrun, reprozip.main.setup_logging = old_funcs
 
