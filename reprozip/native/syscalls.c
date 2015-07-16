@@ -105,16 +105,10 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
     if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
      && name != NULL)
     {
-        char *pathname = tracee_strdup(process->tid,
-                                       process->params[0].p);
-        if(pathname[0] != '/')
-        {
-            char *oldpath = pathname;
-            pathname = abspath(process->threadgroup->wd, oldpath);
-            free(oldpath);
-        }
+        char *pathname = abs_path_arg(process, 0);
         log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
                  name, pathname);
+        free(pathname);
     }
     return 0;
 }
