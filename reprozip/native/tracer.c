@@ -711,8 +711,10 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
         if(verbosity >= 2)
             log_info(0, "process %d created by initial fork()", child);
-        if(db_add_first_process(&process->identifier,
-                                process->threadgroup->wd) != 0)
+        if( (db_add_first_process(&process->identifier,
+                                  process->threadgroup->wd) != 0)
+         || (db_add_file_open(process->identifier, process->threadgroup->wd,
+                              FILE_WDIR, 1) != 0) )
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             db_close(1);

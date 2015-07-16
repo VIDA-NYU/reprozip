@@ -11,7 +11,6 @@ generation logic for the config YAML file.
 
 from __future__ import unicode_literals
 
-import heapq
 from itertools import count
 import logging
 import os
@@ -22,8 +21,7 @@ import sqlite3
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_WDIR, FILE_LINK
-from reprozip.orderedset import OrderedSet
+    FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
@@ -103,32 +101,21 @@ def get_files(conn):
                         f.read()
                         files[f.path] = f
 
-    # Adds executed files
-    exec_cursor = conn.cursor()
-    executed_files = exec_cursor.execute(
+    # Loops on executed files, and opened files, at the same time
+    cur = conn.cursor()
+    rows = cur.execute(
             '''
-            SELECT name, timestamp
+            SELECT 'exec' AS event_type, name, NULL AS mode, timestamp
             FROM executed_files
-            ORDER BY timestamp;
-            ''')
-    executed = set()
-    # ... and opened files
-    open_cursor = conn.cursor()
-    opened_files = open_cursor.execute(
-            '''
-            SELECT name, mode, timestamp
+            UNION ALL
+            SELECT 'open' AS event_type, name, mode, timestamp
             FROM opened_files
             ORDER BY timestamp;
             ''')
-    # Loop on both lists at once
-    rows = heapq.merge(((r[1], 'exec', r) for r in executed_files),
-                       ((r[2], 'open', r) for r in opened_files))
-    for ts, event_type, data in rows:
+    executed = set()
+    for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
-            r_name, r_timestamp = data
             r_mode = FILE_READ
-        else:  # event_type == 'open'
-            r_name, r_mode, r_timestamp = data
         r_name = Path(r_name)
 
         if event_type == 'exec':
@@ -156,14 +143,18 @@ def get_files(conn):
             f = files[r_name]
         if r_mode & FILE_WRITE:
             f.write()
+            # Mark the parent directory as read
+            if r_name.parent not in files:
+                fp = TracedFile(r_name.parent)
+                fp.read()
+                files[fp.path] = fp
         elif r_mode & FILE_READ:
             f.read()
 
         # Identifies input files
         if r_name.is_file() and r_name not in executed:
             access_files[-1].add(f)
-    exec_cursor.close()
-    open_cursor.close()
+    cur.close()
 
     # Further filters input files
     inputs = [[fi.path
@@ -214,30 +205,6 @@ def get_files(conn):
     return files, inputs, outputs
 
 
-def list_directories(conn):
-    """Gets additional needed directories from the trace database.
-
-    Returns the directories which are used as a process's working directory or
-    in which files are created.
-    """
-    cur = conn.cursor()
-    executed_files = cur.execute(
-            '''
-            SELECT name, mode
-            FROM opened_files
-            WHERE mode = ? OR mode = ?
-            ''',
-            (FILE_WDIR, FILE_WRITE))
-    executed_files = ((Path(n).resolve(), m) for n, m in executed_files)
-    # If WDIR, the name is a folder that was used as working directory
-    # If WRITE, the name is a file that was written to; its directory must
-    # exist
-    result = set(TracedFile(n if m == FILE_WDIR else n.parent)
-                 for n, m in executed_files)
-    cur.close()
-    return result
-
-
 def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     """Merges two sets of packages and files.
     """
@@ -250,7 +217,7 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
             pkg = packages[oldpkg.name]
             # Here we build TracedFiles from the Files so that the comment
             # (size, etc) gets set
-            s = OrderedSet(TracedFile(fi.path) for fi in oldpkg.files)
+            s = set(TracedFile(fi.path) for fi in oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
@@ -319,11 +286,6 @@ def write_configuration(directory, sort_packages, overwrite=False):
         files, packages = identify_packages(files)
     else:
         packages = []
-
-    # Makes sure all the directories used as working directories are packed
-    # (they already do if files from them are used, but empty directories do
-    # not get packed inside a tar archive)
-    files.update(d for d in list_directories(conn) if d.path.is_dir())
 
     # Writes configuration file
     config = directory / 'config.yml'
