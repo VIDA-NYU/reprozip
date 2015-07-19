@@ -26,14 +26,14 @@ script:
 Advanced
 
 ```yaml
+sudo: true
+
 env:
   global:
     - BRANCH=stable
     - QUIET=1
     - UML_FIG=0
     - UML_DOCKERCOMPOSE=1
-
-sudo: true
 
 install:
   - curl -sLo - http://j.mp/install-travis-docker | sh -xe
