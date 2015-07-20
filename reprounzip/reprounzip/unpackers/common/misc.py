@@ -228,7 +228,8 @@ class FileUploader(object):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
         member = tar.getmember(str(join_root(PosixPath('DATA'), input_path)))
-        member.name = str(temp.name)
+        name = temp.components[-1]
+        member.name = str(name)
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp
