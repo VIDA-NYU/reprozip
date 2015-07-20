@@ -427,6 +427,8 @@ class ContainerUploader(FileUploader):
                         'COPY \\\n    %s \\\n    %s\n' % (
                             unicode_(src),
                             unicode_(target)))
+                dockerfile.write('RUN /busybox chown 1000:1000 %s' %
+                                 shell_escape(unicode_(target)))
 
             # TODO : restore permissions?
 
