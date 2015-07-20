@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.7.2 (???)
+-----------
+
+Bugfixes:
+* Couldn't reset an input file to the original (packed) file on Python 3
+
 0.7.1 (2015-07-14)
 ------------------
 
