@@ -425,8 +425,8 @@ class ContainerUploader(FileUploader):
                 # FIXME : spaces in filenames will probably break Docker
                 dockerfile.write(
                         'COPY \\\n    %s \\\n    %s\n' % (
-                            unicode_(src),
-                            unicode_(target)))
+                            shell_escape(unicode_(src)),
+                            shell_escape(unicode_(target))))
                 dockerfile.write('RUN /busybox chown 1000:1000 %s' %
                                  shell_escape(unicode_(target)))
 
