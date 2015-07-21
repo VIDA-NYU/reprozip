@@ -624,37 +624,47 @@ static int handle_connect(struct Process *process,
 static int syscall_socketcall(const char *name, struct Process *process,
                               unsigned int udata)
 {
-    /* Argument 1 is an array of longs, which are either numbers of pointers */
-    uint64_t args = process->params[1].u;
-    /* Size of each element in the array */
-    const size_t wordsize = tracee_getwordsize(process->mode);
-    /* Note that void* pointer arithmetic is illegal, hence the uint */
-    if(process->params[0].u == SYS_ACCEPT)
-        return handle_accept(process,
-                             tracee_getptr(process->mode, process->tid,
-                                           (void*)(args + 1*wordsize)),
-                             tracee_getptr(process->mode, process->tid,
-                                           (void*)(args + 2*wordsize)));
-    else if(process->params[0].u == SYS_CONNECT)
-        return handle_connect(process,
-                              tracee_getptr(process->mode, process->tid,
-                                            (void*)(args + 1*wordsize)),
-                              tracee_getlong(process->mode, process->tid,
-                                             (void*)(args + 2*wordsize)));
-    else
-        return 0;
+    if(process->retvalue.i >= 0)
+    {
+        /* Argument 1 is an array of longs, which are either numbers of pointers */
+        uint64_t args = process->params[1].u;
+        /* Size of each element in the array */
+        const size_t wordsize = tracee_getwordsize(process->mode);
+        /* Note that void* pointer arithmetic is illegal, hence the uint */
+        if(process->params[0].u == SYS_ACCEPT)
+            return handle_accept(process,
+                                 tracee_getptr(process->mode, process->tid,
+                                               (void*)(args + 1*wordsize)),
+                                 tracee_getptr(process->mode, process->tid,
+                                               (void*)(args + 2*wordsize)));
+        else if(process->params[0].u == SYS_CONNECT)
+            return handle_connect(process,
+                                  tracee_getptr(process->mode, process->tid,
+                                                (void*)(args + 1*wordsize)),
+                                  tracee_getlong(process->mode, process->tid,
+                                                 (void*)(args + 2*wordsize)));
+    }
+    return 0;
 }
 
 static int syscall_accept(const char *name, struct Process *process,
                           unsigned int udata)
 {
-    return handle_accept(process, process->params[1].p, process->params[2].p);
+    if(process->retvalue.i >= 0)
+        return handle_accept(process,
+                             process->params[1].p, process->params[2].p);
+    else
+        return 0;
 }
 
 static int syscall_connect(const char *name, struct Process *process,
                            unsigned int udata)
 {
-    return handle_connect(process, process->params[1].p, process->params[2].u);
+    if(process->retvalue.i >= 0)
+        return handle_connect(process,
+                              process->params[1].p, process->params[2].u);
+    else
+        return 0;
 }
 
 
