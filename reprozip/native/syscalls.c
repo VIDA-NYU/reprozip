@@ -702,7 +702,14 @@ static int syscall_xxx_at(const char *name, struct Process *process,
         }
     }
     else
-        return syscall_unhandled_other(name, process, 0);
+    {
+        char *pathname = tracee_strdup(process->tid, process->params[1].p);
+        log_warn(process->tid,
+                 "process used unhandled system call %s(%d, \"%s\")",
+                 name, process->params[0].i, pathname);
+        free(pathname);
+        return 0;
+    }
 }
 
 
