@@ -35,6 +35,19 @@ from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
     download_file
 
 
+# How this all works:
+#  - setup/create just copies file to the target directory and writes the
+#    Dockerfile
+#  - setup/build creates the image and stores it in the unpacker info as
+#    'initial_image' and 'current_image'
+#  - run destroys the previous 'ran_container' if it exists, then runs again
+#    to create a new 'ran_container' from image 'current_image'
+#  - upload creates a Dockerfile in a temporary directory, copies all the files
+#    to upload there, and builds it. This creates a new 'current_image' with
+#    the files replaced
+#  - download just uses docker cp from 'ran_container'
+
+
 def select_image(runs):
     """Selects a base image for the experiment, with the correct distribution.
     """
