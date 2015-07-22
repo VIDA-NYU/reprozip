@@ -2,7 +2,7 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import os
 from rpaths import Path
@@ -81,7 +81,8 @@ class TestReprozip(unittest.TestCase):
         reprozip.main.testrun = testrun
         reprozip.main.setup_logging = setup_logging
         old_argv = sys.argv
-        print("<<<<< argparse tests (disregard warnings)")
+        print("<<<<< argparse tests for reprozip (disregard usage warnings)",
+              file=sys.stderr)
         try:
             for a, c, v in [('reprozip', 2, -1),
                             ('reprozip -v', 2, -1),
@@ -102,7 +103,7 @@ class TestReprozip(unittest.TestCase):
                     self.assertEqual(calls, [('l', v), ('t', v)])
                 calls = []
         finally:
-            print(">>>>> argparse tests")
+            print(">>>>> argparse tests", file=sys.stderr)
             sys.argv = old_argv
             reprozip.main.testrun, reprozip.main.setup_logging = old_funcs
 

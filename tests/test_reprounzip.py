@@ -2,7 +2,7 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import sys
 import unittest
@@ -86,6 +86,8 @@ class TestArgs(unittest.TestCase):
         reprounzip.unpackers.default.chroot_run = chroot_run
         reprounzip.main.setup_logging = setup_logging
         old_argv = sys.argv
+        print("<<<<< argparse tests for reprounzip (disregard usage warnings)",
+              file=sys.stderr)
         try:
             for a, c, v in [('reprounzip', 2, -1),
                             ('reprounzip -v', 2, -1),
@@ -107,6 +109,7 @@ class TestArgs(unittest.TestCase):
                     self.assertEqual(calls, [('l', v), ('c', v)])
                 calls = []
         finally:
+            print(">>>>> argparse tests", file=sys.stderr)
             sys.argv = old_argv
         (reprounzip.unpackers.default.chroot_run,
          reprounzip.main.setup_logging) = old_funcs
