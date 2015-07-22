@@ -298,6 +298,7 @@ def docker_reset(args):
         logging.warning("Image is already in the initial state, nothing to "
                         "reset")
     else:
+        logging.info("Removing image %s", image.decode('ascii'))
         retcode = subprocess.call(['docker', 'rmi', image])
         if retcode != 0:
             logging.warning("Can't remove previous image, docker returned %d",
@@ -413,6 +414,8 @@ def docker_run(args):
 
     # Commit to create new image
     new_image = make_unique_name(b'reprounzip_image_')
+    logging.info("Committing container %s to image %s",
+                 container.decode('ascii'), new_image.decode('ascii'))
     subprocess.check_call(['docker', 'commit', container, new_image])
 
     # Update image name
@@ -427,6 +430,7 @@ def docker_run(args):
 
     # Untag previous image, unless it is the initial_image
     if image != unpacked_info['initial_image']:
+        logging.info("Untagging previous image %s", image.decode('ascii'))
         subprocess.check_call(['docker', 'rmi', image])
 
     signals.post_run(target=target, retcode=retcode)
@@ -493,6 +497,8 @@ class ContainerUploader(FileUploader):
         else:
             logging.info("New image created: %s", image.decode('ascii'))
             if from_image != self.unpacked_info['initial_image']:
+                logging.info("Untagging previous image %s",
+                             from_image.decode('ascii'))
                 retcode = subprocess.call(['docker', 'rmi', from_image])
                 if retcode != 0:
                     logging.warning("Can't remove previous image, docker "
@@ -526,6 +532,7 @@ class ContainerDownloader(FileDownloader):
     def prepare_download(self, files):
         # Create a container from the image
         self.container = make_unique_name(b'reprounzip_dl_')
+        logging.info("Creating container %s", self.container.decode('ascii'))
         subprocess.check_call(['docker', 'create',
                                b'--name=' + self.container,
                                self.image])
@@ -546,6 +553,7 @@ class ContainerDownloader(FileDownloader):
             tmpdir.rmtree()
 
     def finalize(self):
+        logging.info("Removing container %s", self.container.decode('ascii'))
         retcode = subprocess.call(['docker', 'rm', self.container])
         if retcode != 0:
             logging.warning("Can't remove temporary container, docker "
