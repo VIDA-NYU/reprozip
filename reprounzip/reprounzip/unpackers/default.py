@@ -14,7 +14,7 @@ This file contains the default plugins that come with reprounzip:
   not packed and you do not have them installed.
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import argparse
 import logging

@@ -13,7 +13,7 @@ to this software (more utilities).
 
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import codecs
 import contextlib

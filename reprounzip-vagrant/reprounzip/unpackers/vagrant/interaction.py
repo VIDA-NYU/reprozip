@@ -21,7 +21,7 @@
 # 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import socket
 

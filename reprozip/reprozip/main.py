@@ -10,7 +10,7 @@ setuptools. It is also callable directly.
 It dispatchs to other routines, or handles the testrun command.
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import argparse
 import locale

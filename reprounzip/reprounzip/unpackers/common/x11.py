@@ -5,7 +5,7 @@
 """Utility functions dealing with X servers.
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import contextlib
 import logging

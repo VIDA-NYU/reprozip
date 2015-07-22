@@ -9,7 +9,7 @@ utilities that are used to build the .rpz pack file from the trace SQLite file
 and config YAML.
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import itertools
 import logging

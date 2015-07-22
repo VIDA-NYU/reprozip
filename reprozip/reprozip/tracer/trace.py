@@ -9,7 +9,7 @@ invokes the C tracer (_pytracer) to build the SQLite trace file, and the
 generation logic for the config YAML file.
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 from itertools import count
 import logging

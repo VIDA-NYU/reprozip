@@ -18,7 +18,7 @@ package that reprozip and reprounzip would both depend on.
 
 """
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import atexit
 from datetime import datetime
