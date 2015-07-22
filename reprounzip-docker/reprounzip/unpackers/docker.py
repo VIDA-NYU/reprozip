@@ -427,8 +427,12 @@ class ContainerUploader(FileUploader):
                         'COPY \\\n    %s \\\n    %s\n' % (
                             shell_escape(unicode_(src)),
                             shell_escape(unicode_(target))))
-                dockerfile.write('RUN /busybox chown 1000:1000 %s' %
-                                 shell_escape(unicode_(target)))
+
+            if self.docker_copy:
+                dockerfile.write('RUN /busybox chown 1000:1000 \\\n'
+                                 '    %s\n' % ' \\\n    '.join(
+                                     shell_escape(unicode_(target))
+                                     for src, target in self.docker_copy))
 
             # TODO : restore permissions?
 
