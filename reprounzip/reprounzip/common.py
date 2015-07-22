@@ -127,8 +127,6 @@ class InputOutputFile(object):
         self.write_runs = write_runs
 
     def __eq__(self, other):
-        print((self.path, self.read_runs, self.write_runs),
-              (other.path, other.read_runs, other.write_runs))
         return ((self.path, self.read_runs, self.write_runs) ==
                 (other.path, other.read_runs, other.write_runs))
 
