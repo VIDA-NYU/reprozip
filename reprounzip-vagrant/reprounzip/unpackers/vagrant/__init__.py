@@ -600,7 +600,7 @@ def _executable_in_path(executable):
 def check_vagrant_version():
     try:
         out = check_output(['vagrant', '--version'])
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError):
         logging.error("Couldn't run vagrant")
         sys.exit(1)
     out = out.decode('ascii').strip().lower().split()
