@@ -47,6 +47,7 @@ from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
 #    the files replaced
 #  - download creates a temporary container from 'current_image' and uses
 #    docker cp from it
+#  - reset destroys 'current_image' and resets it to 'initial_image'
 # This means that a lot of images will get layered on top of each other,
 # unfortunately this is necessary so that successive runs carry over the global
 # state as expected.
@@ -276,6 +277,33 @@ def docker_setup_build(args):
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
     write_dict(target / '.reprounzip', unpacked_info)
+
+
+@target_must_exist
+def docker_reset(args):
+    """Reset the image to the initial one.
+
+    This will quickly undo the effects of all the 'upload' and 'run' commands
+    on the environment.
+    """
+    target = Path(args.target[0])
+    unpacked_info = read_dict(target / '.reprounzip')
+    if 'initial_image' not in unpacked_info:
+        logging.critical("Image doesn't exist yet, have you run setup/build?")
+        sys.exit(1)
+    image = unpacked_info['current_image']
+    initial = unpacked_info['initial_image']
+
+    if image == initial:
+        logging.warning("Image is already in the initial state, nothing to "
+                        "reset")
+    else:
+        retcode = subprocess.call(['docker', 'rmi', image])
+        if retcode != 0:
+            logging.warning("Can't remove previous image, docker returned %d",
+                            retcode)
+        unpacked_info['current_image'] = initial
+        write_dict(target / '.reprounzip', unpacked_info)
 
 
 _addr_re = re.compile(br'inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
@@ -601,6 +629,8 @@ def setup(parser, **kwargs):
 
     setup   setup/create    creates Dockerfile (needs the pack filename)
             setup/build     builds the container from the Dockerfile
+    reset                   resets the Docker image to the initial state (just
+                            after setup)
     upload                  replaces input files in the container
                             (without arguments, lists input files)
     run                     runs the experiment in the container
@@ -664,6 +694,11 @@ def setup(parser, **kwargs):
     add_opt_general(parser_setup)
     parser_setup.set_defaults(func=composite_action(docker_setup_create,
                                                     docker_setup_build))
+
+    # reset
+    parser_reset = subparsers.add_parser('reset')
+    add_opt_general(parser_reset)
+    parser_reset.set_defaults(func=docker_reset)
 
     # upload
     parser_upload = subparsers.add_parser('upload')
