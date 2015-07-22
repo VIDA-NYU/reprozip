@@ -40,12 +40,16 @@ from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
 #    Dockerfile
 #  - setup/build creates the image and stores it in the unpacker info as
 #    'initial_image' and 'current_image'
-#  - run destroys the previous 'ran_container' if it exists, then runs again
-#    to create a new 'ran_container' from image 'current_image'
+#  - run runs a container from 'current_image', the commits it into the new
+#    'current_image'
 #  - upload creates a Dockerfile in a temporary directory, copies all the files
 #    to upload there, and builds it. This creates a new 'current_image' with
 #    the files replaced
-#  - download just uses docker cp from 'ran_container'
+#  - download creates a temporary container from 'current_image' and uses
+#    docker cp from it
+# This means that a lot of images will get layered on top of each other,
+# unfortunately this is necessary so that successive runs carry over the global
+# state as expected.
 
 
 def select_image(runs):
@@ -307,18 +311,7 @@ def docker_run(args):
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
-    # Destroy previous container
-    if 'ran_container' in unpacked_info:
-        container = unpacked_info.pop('ran_container')
-        logging.info("Destroying previous container %s",
-                     container.decode('ascii'))
-        retcode = subprocess.call(['docker', 'rm', '-f', container])
-        if retcode != 0:
-            logging.error("Error deleting previous container %s",
-                          container.decode('ascii'))
-        write_dict(target / '.reprounzip', unpacked_info)
-
-    # Use the initial image directly
+    # Get current image name
     if 'current_image' in unpacked_info:
         image = unpacked_info['current_image']
         logging.debug("Running from image %s", image.decode('ascii'))
@@ -390,9 +383,23 @@ def docker_run(args):
     retcode = outjson[0]["State"]["ExitCode"]
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
-    # Store container name (so we can download output files)
-    unpacked_info['ran_container'] = container
+    # Commit to create new image
+    new_image = make_unique_name(b'reprounzip_image_')
+    subprocess.check_call(['docker', 'commit', container, new_image])
+
+    # Update image name
+    unpacked_info['current_image'] = new_image
     write_dict(target / '.reprounzip', unpacked_info)
+
+    # Remove the container
+    logging.info("Destroying container %s", container.decode('ascii'))
+    retcode = subprocess.call(['docker', 'rm', container])
+    if retcode != 0:
+        logging.error("Error deleting container %s", container.decode('ascii'))
+
+    # Untag previous image, unless it is the initial_image
+    if image != unpacked_info['initial_image']:
+        subprocess.check_call(['docker', 'rmi', image])
 
     signals.post_run(target=target, retcode=retcode)
 
@@ -484,9 +491,16 @@ def docker_upload(args):
 
 
 class ContainerDownloader(FileDownloader):
-    def __init__(self, target, files, container):
-        self.container = container
+    def __init__(self, target, files, image):
+        self.image = image
         FileDownloader.__init__(self, target, files)
+
+    def prepare_download(self, files):
+        # Create a container from the image
+        self.container = make_unique_name(b'reprounzip_dl_')
+        subprocess.check_call(['docker', 'create',
+                               b'--name=' + self.container,
+                               self.image])
 
     def download(self, remote_path, local_path):
         # Docker copies to a file in the specified directory, cannot just take
@@ -503,6 +517,12 @@ class ContainerDownloader(FileDownloader):
         finally:
             tmpdir.rmtree()
 
+    def finalize(self):
+        retcode = subprocess.call(['docker', 'rm', self.container])
+        if retcode != 0:
+            logging.warning("Can't remove temporary container, docker "
+                            "returned %d", retcode)
+
 
 @target_must_exist
 def docker_download(args):
@@ -512,14 +532,13 @@ def docker_download(args):
     files = args.file
     unpacked_info = read_dict(target / '.reprounzip')
 
-    if 'ran_container' not in unpacked_info:
-        logging.critical("Container does not exist. Have you run the "
-                         "experiment?")
+    if 'current_image' not in unpacked_info:
+        logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
-    container = unpacked_info['ran_container']
-    logging.debug("Downloading from container %s", container.decode('ascii'))
+    image = unpacked_info['current_image']
+    logging.debug("Downloading from image %s", image.decode('ascii'))
 
-    ContainerDownloader(target, files, container)
+    ContainerDownloader(target, files, image)
 
 
 @target_must_exist
@@ -531,14 +550,6 @@ def docker_destroy_docker(args):
     if 'initial_image' not in unpacked_info:
         logging.critical("Image not created")
         sys.exit(1)
-
-    if 'ran_container' in unpacked_info:
-        container = unpacked_info.pop('ran_container')
-        logging.info("Destroying container...")
-        retcode = subprocess.call(['docker', 'rm', '-f', container])
-        if retcode != 0:
-            logging.error("Error deleting container %s",
-                          container.decode('ascii'))
 
     initial_image = unpacked_info.pop('initial_image')
 
