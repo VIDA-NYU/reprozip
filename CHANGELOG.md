@@ -4,8 +4,17 @@ Changelog
 0.7.2 (???)
 -----------
 
+Behavior change:
+* reprounzip-docker will now re-use the resulting image from the previous run when running again, instead of starting from scratch; a 'reset' command has been added to undo runs and uploads.
+
 Bugfixes:
 * Couldn't reset an input file to the original (packed) file on Python 3
+* Don't show a warning about network connections when they didn't succeed
+* Hide traceback when failing because Vagrant is not installed
+
+Features:
+* Display the relative portion of the path when unhandled xxx_at() syscalls are used, to give an idea of what's been missed
+* Add --dont-find-inputs-outputs to reprozip trace and reset, so you can clear that out if too many files would be selected (or if you don't use the feature)
 
 0.7.1 (2015-07-14)
 ------------------
@@ -15,6 +24,7 @@ Bugfixes:
 Bugfixes:
 * Files (or links) created with rename, link or symlink then read will no longer be packed.
 * A buffer overflow could happen in the log module, for instance when the experiment passes a very long argument to execve (over 4kB in a single argument) and running in debug mode (-v -v)
+
 
 0.7 (2015-07-07)
 ----------------
