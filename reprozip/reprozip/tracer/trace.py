@@ -266,7 +266,8 @@ def trace(binary, argv, directory, append, verbosity=1):
     logging.info("Program completed")
 
 
-def write_configuration(directory, sort_packages, overwrite=False):
+def write_configuration(directory, sort_packages, find_inputs_outputs,
+                        overwrite=False):
     """Writes the canonical YAML configuration file.
     """
     database = directory / 'trace.sqlite3'
@@ -362,7 +363,10 @@ def write_configuration(directory, sort_packages, overwrite=False):
     cur.close()
     conn.close()
 
-    inputs_outputs = compile_inputs_outputs(runs, inputs, outputs)
+    if find_inputs_outputs:
+        inputs_outputs = compile_inputs_outputs(runs, inputs, outputs)
+    else:
+        inputs_outputs = {}
 
     save_config(config, runs, packages, files, reprozip_version,
                 inputs_outputs)

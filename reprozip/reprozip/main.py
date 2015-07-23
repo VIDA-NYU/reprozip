@@ -183,6 +183,7 @@ def trace(args):
                                 args.verbosity)
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
+                                              args.find_inputs_outputs,
                                               overwrite=False)
 
 
@@ -194,6 +195,7 @@ def reset(args):
     """
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
+                                              args.find_inputs_outputs,
                                               overwrite=True)
 
 
@@ -245,6 +247,10 @@ def main(setup_streams=True):
                 '--dont-identify-packages', action='store_false', default=True,
                 dest='identify_packages',
                 help="do not try identify which package each file comes from")
+        opt.add_argument(
+                '--dont-find-inputs-outputs', action='store_false',
+                default=True, dest='find_inputs_outputs',
+                help="do not try to identify input and output files")
 
     parser = argparse.ArgumentParser(
             description="reprozip is the ReproZip component responsible for "
