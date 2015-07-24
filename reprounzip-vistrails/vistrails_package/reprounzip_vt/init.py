@@ -14,6 +14,9 @@ from vistrails.core.modules.vistrails_module import Module, ModuleError
 from . import configuration
 
 
+REPROUNZIP_VISTRAILS_INTERFACE_VERSION = '1'
+
+
 class Experiment(object):
     def __init__(self, path, unpacker):
         self.path = path
@@ -103,6 +106,7 @@ class Run(Module):
                                                        suffix='.txt')
 
         args = [python, '-m', 'reprounzip.plugins.vistrails',
+                REPROUNZIP_VISTRAILS_INTERFACE_VERSION,
                 experiment.unpacker, experiment.path,
                 '%d' % self.get_input('run_number')]
         for name in self.input_ports_order:

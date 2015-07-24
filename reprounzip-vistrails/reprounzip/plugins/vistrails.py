@@ -266,6 +266,20 @@ def setup_vistrails():
 def run_from_vistrails():
     setup_logging('REPROUNZIP-VISTRAILS', logging.INFO)
 
+    cli_version = 1
+    if len(sys.argv) > 1:
+        try:
+            cli_version = int(sys.argv[1])
+        except ValueError:
+            logging.info("Compatibility mode: reprounzip-vistrails didn't get "
+                         "a version number")
+    if cli_version != 1:
+        logging.critical("Unknown interface version %d; you are probably "
+                         "using a version of reprounzip-vistrails too old for "
+                         "your VisTrails package. Consider upgrading.",
+                         cli_version)
+        sys.exit(1)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('unpacker')
     parser.add_argument('directory')
@@ -274,7 +288,7 @@ def run_from_vistrails():
     parser.add_argument('--output-file', action='append', default=[])
     parser.add_argument('--cmdline', action='store')
 
-    args = parser.parse_args()
+    args = parser.parse_args(sys.argv[2:])
 
     config = load_config(Path(args.directory) / 'config.yml', canonical=True)
 
