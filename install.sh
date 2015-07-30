@@ -47,6 +47,7 @@ else
         sudo dpkg -i lxc-docker-${DOCKER_VERSION}_${DOCKER_VERSION}_amd64.deb && \
         rm -f lxc-docker-${DOCKER_VERSION}_${DOCKER_VERSION}_amd64.deb
 fi
+sudo mkdir -p /etc/docker
 sudo usermod -aG docker $USER
 sudo chown -R $USER /etc/docker
 
