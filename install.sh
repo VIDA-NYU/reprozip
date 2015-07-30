@@ -40,7 +40,7 @@ sudo chmod +x /usr/sbin/policy-rc.d
 #curl -s https://get.docker.com/ | sh
 DOCKER_VERSION=${DOCKER_VERSION:-1.7.1}
 if [ "x$DOCKER_VERSION" = "xget.docker.com" ]; then
-    curl -s https://get.docker.com/ | sh
+    curl -s https://get.docker.com/ | sh -xe
 else
     sudo mkdir -p /var/lib/docker
     wget https://get.docker.io/ubuntu/pool/main/l/lxc-docker-${DOCKER_VERSION}/lxc-docker-${DOCKER_VERSION}_${DOCKER_VERSION}_amd64.deb && \
