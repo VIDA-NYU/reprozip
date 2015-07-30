@@ -31,6 +31,11 @@ sudo apt-get update
 sudo apt-get install -y slirp lxc aufs-tools cgroup-lite
 
 
+# Avoid running installed daemons
+echo exit 101 | sudo tee /usr/sbin/policy-rc.d
+sudo chmod +x /usr/sbin/policy-rc.d
+
+
 # Install docker
 #curl -s https://get.docker.com/ | sh
 DOCKER_VERSION=${DOCKER_VERSION:-1.7.1}
