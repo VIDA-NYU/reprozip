@@ -198,6 +198,11 @@ class FileUploader(object):
                     local_path = self.extract_original_input(input_name,
                                                              input_path,
                                                              temp)
+                    if local_path is None:
+                        temp.remove()
+                        logging.warning("No original packed, can't restore "
+                                        "input file %s", input_name)
+                        continue
                 else:
                     local_path = Path(local_path)
                     logging.debug("Uploading file %s to %s",
@@ -227,7 +232,11 @@ class FileUploader(object):
 
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
-        member = tar.getmember(str(join_root(PosixPath('DATA'), input_path)))
+        try:
+            member = tar.getmember(str(join_root(PosixPath('DATA'),
+                                                 input_path)))
+        except KeyError:
+            return None
         name = temp.components[-1]
         member.name = str(name)
         tar.extract(member, str(temp.parent))
