@@ -2,7 +2,7 @@
 
 # Exit on first error
 set -e
-
+set -x
 # Debug
 # echo "Env: $(env)"
 # echo "Cmdline: $(cat /proc/cmdline)"
@@ -18,10 +18,14 @@ save_and_shutdown() {
     # save built for host result
     # force clean shutdown
     set +e
-    echo KILLING
-    kill -9 $(jobs -p)
-    halt -f
+    kill -9 $(jobs -p) &>/dev/null
+    halt -f &>/dev/null
 }
+
+
+# Create /lib/modules to prevent repeated warnings
+sudo mkdir -p /lib/modules/$(uname -r) && sudo depmod -a 2>/dev/null || true
+
 
 # make sure we shut down cleanly
 trap save_and_shutdown EXIT SIGINT SIGTERM
@@ -53,12 +57,21 @@ mount -t tmpfs none /var/run
 # takes the pain out of cgroups
 cgroups-mount
 
-# mount /var/lib/docker with a tmpfs
-mount -t tmpfs none /var/lib/docker
+# mount backen[5~d
+case ${DOCKER_BACKEND_FS} in
+    tmpfs)
+	    mount -t tmpfs none /var/lib/docker
+	    ;;
+    host)
+	    echo "Using host filesystem as backend"
+	    ;;
+    *)
+	    echo "Unsupported backend filesystem"
+	    exit 1
+esac
 
 # enable ipv4 forwarding for docker
 echo 1 > /proc/sys/net/ipv4/ip_forward
-
 
 # configure networking
 ip addr add 127.0.0.1 dev lo
@@ -75,13 +88,24 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 
 
 # Start docker daemon
-docker -d &
+if [ "${QUIET}" -eq 0 ]; then
+    docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &
+else
+    docker --storage-driver="${DOCKER_STORAGE_DRIVER}" -d -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 &>/dev/null &
+fi
+
+# Waiting for docker socket
 while ! [ -e /var/run/docker.sock ]; do sleep 0.1; done
 
 
-# Print docker version
-docker info
-docker version
+# Print docker information
+if [ "${QUIET}" -eq 0 ]; then
+    echo '+ docker info'
+    docker info
+    echo '+ docker version'
+    docker version
+fi
+
 
 # reset environment
 . "${UMLDIR}/.envp"
@@ -89,5 +113,5 @@ docker version
 # Call command
 command=$(cat "${UMLDIR}/.command")
 set +e
-/bin/bash -ce "${command}"
+/bin/bash -xec "${command}"
 echo $? > "${UMLDIR}/.exit_code"
