@@ -206,7 +206,7 @@ def pack(args):
     """
     target = Path(args.target)
     if not target.unicodename.lower().endswith('.rpz'):
-        target = Path(target.path + '.rpz')
+        target = Path(target.path + b'.rpz')
         logging.warning("Changing output filename to %s", target.unicodename)
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
