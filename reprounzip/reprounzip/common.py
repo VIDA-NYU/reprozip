@@ -342,10 +342,10 @@ inputs_outputs:""")
 
 - name: {name}
   path: {path}
-  read_by_runs: {readers}
-  written_by_runs: {writers}""".format(name=n, path=unicode_(f.path),
-                                       readers=repr(f.read_runs),
-                                       writers=repr(f.write_runs)))
+  written_by_runs: {writers}
+  read_by_runs: {readers}""".format(name=n, path=unicode_(f.path),
+                                    readers=repr(f.read_runs),
+                                    writers=repr(f.write_runs)))
 
         fp.write("""\
 
