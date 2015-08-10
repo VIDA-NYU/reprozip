@@ -16,7 +16,7 @@ import socket
 import struct
 import threading
 
-from reprounzip.utils import iteritems
+from reprounzip.utils import irange, iteritems
 
 
 # #include <X11/Xauth.h>
@@ -318,7 +318,7 @@ class X11Handler(object):
             raise RuntimeError("Invalid target display type")
         buf = xauth_record.as_bytes()
         xauth = ''.join(('\\x%02x' % ord(buf[i:i + 1]))
-                        for i in xrange(len(buf)))
+                        for i in irange(len(buf)))
         return ['echo -ne "%s" > %s' % (xauth, self.xauth)]
 
 
