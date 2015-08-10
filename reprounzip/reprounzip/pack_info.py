@@ -142,9 +142,9 @@ def print_info(args):
             for name, f in iteritems(inputs_outputs):
                 t = []
                 if f.read_runs:
-                    t += "in"
+                    t.append("in")
                 if f.write_runs:
-                    t += "out"
+                    t.append("out")
                 print("    %s (%s): %s" % (name, ' '.join(t), f.path))
 
     # Unpacker compatibility
