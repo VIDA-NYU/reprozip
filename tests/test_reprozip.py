@@ -5,14 +5,14 @@
 from __future__ import print_function, unicode_literals
 
 import os
-from rpaths import Path
+from rpaths import AbstractPath, Path
 import sqlite3
 import sys
 import unittest
 
 from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
-from reprozip.utils import UniqueNames, make_dir_writable
+from reprozip.utils import unicode_, UniqueNames, make_dir_writable
 
 
 class TestReprozip(unittest.TestCase):
@@ -205,15 +205,15 @@ class TestFiles(unittest.TestCase):
                         ''',
                         (name, timestamp, mode, is_dir, process))
             elif l[0] == 'exec':
-                process, name, wdir = l[1:]
+                process, name, wdir, argv = l[1:]
                 conn.execute(
                         '''
                         INSERT INTO executed_files(run_id, name, timestamp,
                                                    process, argv, envp,
                                                    workingdir)
-                        VALUES(0, ?, ?, ?, "ls", "", ?);
+                        VALUES(0, ?, ?, ?, ?, "", ?);
                         ''',
-                        (name, timestamp, process, wdir))
+                        (name, timestamp, process, argv, wdir))
             else:
                 assert False
 
@@ -225,23 +225,78 @@ class TestFiles(unittest.TestCase):
         finally:
             conn.close()
 
+    @classmethod
+    def make_paths(cls, obj):
+        if isinstance(obj, set):
+            return set(cls.make_paths(e) for e in obj)
+        elif isinstance(obj, list):
+            return [cls.make_paths(e) for e in obj]
+        elif isinstance(obj, AbstractPath):
+            return obj
+        elif isinstance(obj, (bytes, unicode_)):
+            return Path(obj)
+        else:
+            assert False
+
+    def assertEqualPaths(self, objs, second):
+        self.assertEqual(self.make_paths(objs), second)
+
     def test_get_files(self):
         files, inputs, outputs = self.do_test([
             ('proc', 0, None),
             ('open', 0, "/some/dir", True, FILE_WDIR),
-            ('exec', 0, "/some/dir/ls", "/some/dir"),
+            ('exec', 0, "/some/dir/ls", "/some/dir", b"ls\0"),
             ('open', 0, "/some/otherdir/in", False, FILE_READ),
             ('open', 0, "/some/thing/created", True, FILE_WRITE),
             ('open', 0, "/some/thing/created/file", False, FILE_WRITE),
             ('open', 0, "/some/thing/created/file", False, FILE_READ),
             ('open', 0, "/some/thing/created", True, FILE_WDIR),
-            ('exec', 0, "/some/thing/created/file", "/some/thing/created"),
+            ('exec', 0, "/some/thing/created/file", "/some/thing/created",
+             b"created\0"),
         ])
-        expected = [
+        expected = set([
             '/some/dir',
             '/some/dir/ls',
             '/some/otherdir/in',
             '/some/thing',
-        ]
-        self.assertEqual(set(Path(p) for p in expected),
-                         set(fi.path for fi in files))
+        ])
+        self.assertEqualPaths(expected,
+                              set(fi.path for fi in files))
+
+    def test_multiple_runs(self):
+        def fail(s):
+            assert False, "Shouldn't be called?"
+        old = Path.is_file, Path.stat
+        Path.is_file = lambda s: True
+        Path.stat = fail
+        try:
+            files, inputs, outputs = self.do_test([
+                ('proc', 0, None),
+                ('open', 0, "/some/dir", True, FILE_WDIR),
+                ('exec', 0, "/some/dir/ls", "/some/dir", b'ls\0/some/cli\0'),
+                ('open', 0, "/some/cli", False, FILE_WRITE),
+                ('open', 0, "/some/r", False, FILE_READ),
+                ('open', 0, "/some/rw", False, FILE_READ),
+                ('proc', 1, None),
+                ('open', 1, "/some/dir", True, FILE_WDIR),
+                ('exec', 1, "/some/dir/ls", "/some/dir", b'ls\0'),
+                ('open', 1, "/some/cli", False, FILE_READ),
+                ('open', 1, "/some/r", False, FILE_READ),
+                ('open', 1, "/some/rw", False, FILE_WRITE),
+            ])
+            expected = set([
+                '/some',
+                '/some/dir',
+                '/some/dir/ls',
+                '/some/r',
+                '/some/rw',
+            ])
+            self.assertEqualPaths(expected,
+                                  set(fi.path for fi in files))
+            self.assertEqualPaths([set(["/some/r", "/some/rw"]),
+                                   set(["/some/cli", "/some/r"])],
+                                  [set(l) for l in inputs])
+            self.assertEqualPaths([set(["/some/cli"]), set(["/some/rw"])],
+                                  [set(l) for l in outputs])
+        finally:
+            Path.is_file, Path.stat = old
