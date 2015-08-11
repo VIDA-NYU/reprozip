@@ -406,6 +406,9 @@ def compile_inputs_outputs(runs, inputs, outputs):
     make_unique = UniqueNames()
 
     for fi in flatten(2, (inputs, outputs)):
+        if fi in file_names:
+            continue
+
         # If it appears in at least one of the command-lines
         if fi in runs_with_file:
             # If it only appears once in the command-lines
