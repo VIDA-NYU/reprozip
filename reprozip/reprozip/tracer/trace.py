@@ -11,6 +11,7 @@ generation logic for the config YAML file.
 
 from __future__ import division, print_function, unicode_literals
 
+from collections import defaultdict
 from itertools import count
 import logging
 import os
@@ -30,6 +31,9 @@ from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
 
 class TracedFile(File):
     """Override of `~reprozip.common.File` that reads stats from filesystem.
+
+    It also memorizes how files are used, to select files that are only read,
+    and accurately guess input and output files.
     """
     #                               read
     #                              +------+
@@ -60,17 +64,29 @@ class TracedFile(File):
             else:
                 size = path.size()
                 self.comment = hsize(size)
+        self.what = None
+        self.runs = defaultdict(lambda: None)
         File.__init__(self, path, size)
 
-    def read(self):
+    def read(self, run):
         if self.what is None:
             self.what = TracedFile.ONLY_READ
 
-    def write(self):
+        if run is not None:
+            if self.runs[run] is None:
+                self.runs[run] = TracedFile.ONLY_READ
+
+    def write(self, run):
         if self.what is None:
             self.what = TracedFile.WRITTEN
         elif self.what == TracedFile.ONLY_READ:
             self.what = TracedFile.READ_THEN_WRITTEN
+
+        if run is not None:
+            if self.runs[run] is None:
+                self.runs[run] = TracedFile.WRITTEN
+            elif self.runs[run] == TracedFile.ONLY_READ:
+                self.runs[run] = TracedFile.READ_THEN_WRITTEN
 
 
 def get_files(conn):
@@ -98,7 +114,7 @@ def get_files(conn):
                 for filename in find_all_links(linker, True):
                     if filename not in files:
                         f = TracedFile(filename)
-                        f.read()
+                        f.read(None)
                         files[f.path] = f
 
     # Loops on executed files, and opened files, at the same time
@@ -113,6 +129,7 @@ def get_files(conn):
         ORDER BY timestamp;
         ''')
     executed = set()
+    run = 0
     for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
             r_mode = FILE_READ
@@ -125,13 +142,14 @@ def get_files(conn):
         while run_timestamps and r_timestamp > run_timestamps[0]:
             del run_timestamps[0]
             access_files.append(set())
+            run += 1
 
         # Adds symbolic links as read files
         for filename in find_all_links(r_name.parent if r_mode & FILE_LINK
                                        else r_name, False):
             if filename not in files:
                 f = TracedFile(filename)
-                f.read()
+                f.read(run)
                 files[f.path] = f
         # Go to final target
         if not r_mode & FILE_LINK:
@@ -142,14 +160,14 @@ def get_files(conn):
         else:
             f = files[r_name]
         if r_mode & FILE_WRITE:
-            f.write()
+            f.write(run)
             # Mark the parent directory as read
             if r_name.parent not in files:
                 fp = TracedFile(r_name.parent)
-                fp.read()
+                fp.read(run)
                 files[fp.path] = fp
         elif r_mode & FILE_READ:
-            f.read()
+            f.read(run)
 
         # Identifies input files
         if r_name.is_file() and r_name not in executed:
@@ -162,7 +180,7 @@ def get_files(conn):
                # Input files are regular files,
                if fi.path.is_file() and
                # ONLY_READ,
-               fi.what == TracedFile.ONLY_READ and
+               fi.runs[r] == TracedFile.ONLY_READ and
                # not executable,
                # FIXME : currently disabled; only remove executed files
                # not fi.path.stat().st_mode & 0b111 and
@@ -170,7 +188,7 @@ def get_files(conn):
                # not in a system directory
                not any(fi.path.lies_under(m)
                        for m in magic_dirs + system_dirs)]
-              for lst in access_files]
+              for r, lst in enumerate(access_files)]
 
     # Identify output files
     outputs = [[fi.path
@@ -178,11 +196,11 @@ def get_files(conn):
                 # Output files are regular files,
                 if fi.path.is_file() and
                 # WRITTEN
-                fi.what == TracedFile.WRITTEN and
+                fi.runs[r] == TracedFile.WRITTEN and
                 # not in a system directory
                 not any(fi.path.lies_under(m)
                         for m in magic_dirs + system_dirs)]
-               for lst in access_files]
+               for r, lst in enumerate(access_files)]
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
