@@ -326,38 +326,59 @@ class FileDownloader(object):
         pass
 
 
-def get_runs(runs, selected_run, cmdline):
+def get_runs(runs, selected_runs, cmdline):
     """Selects which run(s) to execute based on parts of the command-line.
 
     Will return an iterable of run numbers. Might also fail loudly or exit
     after printing the original command-line.
     """
-    if selected_run is None:
+    if selected_runs is None:
         if len(runs) == 1:
-            selected_run = 0
+            selected_runs = '0'
         else:
             logging.critical("There are several runs in this pack -- you have "
                              "to choose which one to use")
             sys.exit(1)
 
-    try:
-        selected_run = int(selected_run)
-    except ValueError:
-        logging.critical("Error: Run is not a number")
-        raise UsageError
-    if selected_run < 0 or selected_run >= len(runs):
-        logging.critical("Error: Expected 0 <= run <= %d, got %d",
-                         len(runs) - 1, selected_run)
-        sys.exit(1)
+    def parse_run(s):
+        try:
+            r = int(s)
+        except ValueError:
+            logging.critical("Error: Run is not a number")
+            raise UsageError
+        if r < 0 or r >= len(runs):
+            logging.critical("Error: Expected 0 <= run <= %d, got %d",
+                             len(runs) - 1, r)
+            sys.exit(1)
+        return r
+
+    sep = selected_runs.find('-')
+    if sep == -1:
+        selected_runs = parse_run(selected_runs),
+    else:
+        if sep > 0:
+            first = parse_run(selected_runs[:sep])
+        else:
+            first = 0
+        if sep + 1 < len(selected_runs):
+            last = parse_run(selected_runs[sep + 1:])
+        else:
+            last = len(runs) - 1
+        if last <= first:
+            logging.critical("Error: Last run number should be greater than "
+                             "the first")
+            sys.exit(1)
+        selected_runs = irange(first, last + 1)
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
-        print("Original command-line:")
-        print(' '.join(shell_escape(arg)
-                       for arg in runs[selected_run]['argv']))
+        print("Original command-lines:")
+        for run in selected_runs:
+            print(' '.join(shell_escape(arg)
+                           for arg in runs[run]['argv']))
         sys.exit(0)
 
-    return (int(selected_run),)
+    return selected_runs
 
 
 def interruptible_call(*args, **kwargs):

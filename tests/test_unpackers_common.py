@@ -2,11 +2,13 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
+import sys
 import unittest
 
-from reprounzip.unpackers.common import unique_names, make_unique_name
+from reprounzip.unpackers.common import UsageError, \
+    unique_names, make_unique_name, get_runs
 from reprounzip.utils import irange
 
 
@@ -25,3 +27,38 @@ class TestCommon(unittest.TestCase):
             self.assertTrue(n and isinstance(n, bytes) and
                             n[:13] == b'/some/prefix_')
         self.assertEqual(len(set(names)), len(names))
+
+
+class TestMisc(unittest.TestCase):
+    def do_ok(self, arg, expected):
+        try:
+            runs = get_runs([{}, {}, {}, {}], arg, None)
+        except (SystemExit, UsageError):
+            self.fail("get_runs(<4 runs>, %r) raised" % arg)
+        self.assertEqual(list(runs), expected)
+
+    def do_fail(self, arg):
+        self.assertRaises((SystemExit, UsageError),
+                          get_runs, [{}, {}, {}, {}], arg, None)
+
+    def test_get_runs(self):
+        """Tests get_runs(), parsing runs from the command-line."""
+        print("<<<<< get_runs tests for reprounzip (disregard parse errors)",
+              file=sys.stderr)
+        try:
+            self.do_fail('')
+            self.do_fail('a-')
+            self.do_fail('1-k')
+            self.do_ok('-', [0, 1, 2, 3])
+            self.do_ok('1-', [1, 2, 3])
+            self.do_ok('-2', [0, 1, 2])
+            self.do_ok('1-2', [1, 2])
+            self.do_ok('0-2', [0, 1, 2])
+            self.do_ok('1-3', [1, 2, 3])
+            self.do_fail('1-1')
+            self.do_fail('2-1')
+            self.do_fail('0-8')
+            self.do_fail('0-4')
+            self.do_ok('0-3', [0, 1, 2, 3])
+        finally:
+            print(">>>>> get_runs tests", file=sys.stderr)
