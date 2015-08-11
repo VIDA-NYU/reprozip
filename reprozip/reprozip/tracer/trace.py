@@ -330,12 +330,6 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             ORDER BY p.id DESC
             LIMIT 1;
             ''')
-        inputs = inputs[-1:]
-        outputs = outputs[-1:]
-
-        files, packages = merge_files(files, packages,
-                                      oldfiles,
-                                      oldpkgs)
     for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
         # Decodes command-line
         argv = r_argv.split('\0')
