@@ -173,9 +173,9 @@ def optional_return_type(req_args, other_args):
     def cstr(cls, *args, **kwargs):
         if len(args) > len(req_args) + len(other_args):
             raise TypeError(
-                    "Too many arguments (expected at least %d and no more "
-                    "than %d)" % (len(req_args),
-                                  len(req_args) + len(other_args)))
+                "Too many arguments (expected at least %d and no more than "
+                "%d)" % (len(req_args),
+                         len(req_args) + len(other_args)))
 
         args1, args2 = args[:len(req_args)], args[len(req_args):]
         req = dict((i, v) for i, v in enumerate(args1))

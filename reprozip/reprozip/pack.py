@@ -132,14 +132,14 @@ def pack(target, directory, sort_packages):
                          "alternate location.")
         sys.exit(1)
     runs, packages, other_files = config = load_config(
-            configfile,
-            canonical=False)
+        configfile,
+        canonical=False)
     additional_patterns = config.additional_patterns
     inputs_outputs = config.inputs_outputs
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     packages, other_files = canonicalize_config(
-            packages, other_files, additional_patterns, sort_packages)
+        packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
     tar = PackBuilder(target)

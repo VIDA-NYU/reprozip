@@ -195,16 +195,16 @@ class X11Handler(object):
             else:
                 self.connection_info = (socket.AF_INET, socket.SOCK_STREAM,
                                         ('127.0.0.1', tcp_portnum))
-                logging.debug(
-                        "Will connect to X display 127.0.0.1:%d via IPv4/TCP, "
-                        "no authentication", tcp_portnum)
+                logging.debug("Will connect to X display 127.0.0.1:%d via "
+                              "IPv4/TCP, no authentication",
+                              tcp_portnum)
 
         if self.connection_info is None:
             raise RuntimeError("Couldn't determine how to connect to local X "
                                "server, DISPLAY is %s" % (
-                                    repr(os.environ['DISPLAY'])
-                                    if 'DISPLAY' is os.environ
-                                    else 'not set'))
+                                   repr(os.environ['DISPLAY'])
+                                   if 'DISPLAY' is os.environ
+                                   else 'not set'))
 
     @classmethod
     def _locate_display(cls):

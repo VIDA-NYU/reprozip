@@ -479,14 +479,14 @@ class SSHUploader(FileUploader):
         logging.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
-                shell_escape(remote_path.path),
-                shell_escape(rtemp.path))
+            shell_escape(remote_path.path),
+            shell_escape(rtemp.path))
         chmod_cmd = '/bin/chmod --reference=%s %s' % (
-                shell_escape(remote_path.path),
-                shell_escape(rtemp.path))
+            shell_escape(remote_path.path),
+            shell_escape(rtemp.path))
         mv_cmd = '/bin/mv %s %s' % (
-                shell_escape(rtemp.path),
-                shell_escape(remote_path.path))
+            shell_escape(rtemp.path),
+            shell_escape(remote_path.path))
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
@@ -680,22 +680,22 @@ def setup(parser, **kwargs):
     def add_opt_setup(opts):
         opts.add_argument('pack', nargs=1, help="Pack to extract")
         opts.add_argument(
-                '--use-chroot', action='store_true',
-                default=True,
-                help=argparse.SUPPRESS)
+            '--use-chroot', action='store_true',
+            default=True,
+            help=argparse.SUPPRESS)
         opts.add_argument(
-                '--dont-use-chroot', action='store_false', dest='use_chroot',
-                default=True,
-                help=("Don't prefer original files nor use chroot in the "
-                      "virtual machine"))
+            '--dont-use-chroot', action='store_false', dest='use_chroot',
+            default=True,
+            help=("Don't prefer original files nor use chroot in the virtual "
+                  "machine"))
         opts.add_argument(
-                '--no-use-chroot', action='store_false', dest='use_chroot',
-                default=True, help=argparse.SUPPRESS)
+            '--no-use-chroot', action='store_false', dest='use_chroot',
+            default=True, help=argparse.SUPPRESS)
         opts.add_argument(
-                '--dont-bind-magic-dirs', action='store_false', default=True,
-                dest='bind_magic_dirs',
-                help="Don't mount /dev and /proc inside the chroot (no effect "
-                "if --dont-use-chroot is set)")
+            '--dont-bind-magic-dirs', action='store_false', default=True,
+            dest='bind_magic_dirs',
+            help="Don't mount /dev and /proc inside the chroot (no effect if "
+            "--dont-use-chroot is set)")
         opts.add_argument('--base-image', nargs=1, help="Vagrant box to use")
         opts.add_argument('--distribution', nargs=1,
                           help=("Distribution used in the Vagrant box (for "

@@ -82,12 +82,12 @@ def get_files(conn):
     # Finds run timestamps, so we can sort input/output files by run
     proc_cursor = conn.cursor()
     executions = proc_cursor.execute(
-            '''
-            SELECT timestamp
-            FROM processes
-            WHERE parent ISNULL
-            ORDER BY id;
-            ''')
+        '''
+        SELECT timestamp
+        FROM processes
+        WHERE parent ISNULL
+        ORDER BY id;
+        ''')
     run_timestamps = [r_timestamp for r_timestamp, in executions][1:]
     proc_cursor.close()
 
@@ -104,14 +104,14 @@ def get_files(conn):
     # Loops on executed files, and opened files, at the same time
     cur = conn.cursor()
     rows = cur.execute(
-            '''
-            SELECT 'exec' AS event_type, name, NULL AS mode, timestamp
-            FROM executed_files
-            UNION ALL
-            SELECT 'open' AS event_type, name, mode, timestamp
-            FROM opened_files
-            ORDER BY timestamp;
-            ''')
+        '''
+        SELECT 'exec' AS event_type, name, NULL AS mode, timestamp
+        FROM executed_files
+        UNION ALL
+        SELECT 'open' AS event_type, name, mode, timestamp
+        FROM opened_files
+        ORDER BY timestamp;
+        ''')
     executed = set()
     for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
@@ -186,22 +186,22 @@ def get_files(conn):
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
-            fi
-            for fi in itervalues(files)
-            if fi.what == TracedFile.READ_THEN_WRITTEN and
-            not any(fi.path.lies_under(m) for m in magic_dirs)]
+        fi
+        for fi in itervalues(files)
+        if fi.what == TracedFile.READ_THEN_WRITTEN and
+        not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
         logging.warning(
-                "Some files were read and then written. We will only pack the "
-                "final version of the file; reproducible experiments "
-                "shouldn't change their input files:\n%s",
-                ", ".join(unicode_(fi.path) for fi in read_then_written_files))
+            "Some files were read and then written. We will only pack the "
+            "final version of the file; reproducible experiments shouldn't "
+            "change their input files:\n%s",
+            ", ".join(unicode_(fi.path) for fi in read_then_written_files))
 
     files = set(
-            fi
-            for fi in itervalues(files)
-            if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                         for m in magic_dirs))
+        fi
+        for fi in itervalues(files)
+        if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
+                                                     for m in magic_dirs))
     return files, inputs, outputs
 
 
@@ -236,9 +236,9 @@ def trace(binary, argv, directory, append, verbosity=1):
     if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
             not cwd.lies_under('/usr/local')):
         logging.warning(
-                "You are running this experiment from a system directory! "
-                "Autodetection of non-system files will probably not work as "
-                "intended")
+            "You are running this experiment from a system directory! "
+            "Autodetection of non-system files will probably not work as "
+            "intended")
 
     # Trace directory
     if not append:
@@ -298,17 +298,17 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
         # executed file for that process (sorting by ids, which are
         # chronological)
         executions = cur.execute(
-                '''
-                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
-                FROM processes p
-                JOIN executed_files e ON e.id=(
-                    SELECT id FROM executed_files e2
-                    WHERE e2.process=p.id
-                    ORDER BY e2.id
-                    LIMIT 1
-                )
-                WHERE p.parent ISNULL;
-                ''')
+            '''
+            SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+            FROM processes p
+            JOIN executed_files e ON e.id=(
+                SELECT id FROM executed_files e2
+                WHERE e2.process=p.id
+                ORDER BY e2.id
+                LIMIT 1
+            )
+            WHERE p.parent ISNULL;
+            ''')
     else:
         # Loads in previous config
         runs, oldpkgs, oldfiles = load_config(config,
@@ -317,19 +317,19 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
 
         # Same query as previous block but only gets last process
         executions = cur.execute(
-                '''
-                SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
-                FROM processes p
-                JOIN executed_files e ON e.id=(
-                    SELECT id FROM executed_files e2
-                    WHERE e2.process=p.id
-                    ORDER BY e2.id
-                    LIMIT 1
-                )
-                WHERE p.parent ISNULL
-                ORDER BY p.id DESC
-                LIMIT 1;
-                ''')
+            '''
+            SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+            FROM processes p
+            JOIN executed_files e ON e.id=(
+                SELECT id FROM executed_files e2
+                WHERE e2.process=p.id
+                ORDER BY e2.id
+                LIMIT 1
+            )
+            WHERE p.parent ISNULL
+            ORDER BY p.id DESC
+            LIMIT 1;
+            ''')
         inputs = inputs[-1:]
         outputs = outputs[-1:]
 
@@ -425,7 +425,7 @@ def compile_inputs_outputs(runs, inputs, outputs):
                 if nb_file_args[run_nb] > 1:
                     parts.append(arg_nb)
                 file_names[fi] = make_unique(
-                        'arg%s' % '_'.join('%s' % s for s in parts))
+                    'arg%s' % '_'.join('%s' % s for s in parts))
             else:
                 file_names[fi] = make_unique('arg_%s' % fi.unicodename)
         else:

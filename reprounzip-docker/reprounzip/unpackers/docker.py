@@ -377,8 +377,8 @@ def docker_run(args):
         uid = run.get('uid', 1000)
         gid = run.get('gid', 1000)
         cmd = '/rpzsudo \'#%d\' \'#%d\' /busybox sh -c %s\n' % (
-                uid, gid,
-                shell_escape(cmd))
+            uid, gid,
+            shell_escape(cmd))
         cmds.append(cmd)
     cmds = x11.init_cmds + cmds
     cmds = ' && '.join(cmds)
@@ -388,8 +388,7 @@ def docker_run(args):
     # Creates forwarders
     forwarders = []
     for port, connector in x11.port_forward:
-        forwarders.append(
-                LocalForwarder(connector, port))
+        forwarders.append(LocalForwarder(connector, port))
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
@@ -476,9 +475,9 @@ class ContainerUploader(FileUploader):
             for src, target in self.docker_copy:
                 # FIXME : spaces in filenames will probably break Docker
                 dockerfile.write(
-                        'COPY \\\n    %s \\\n    %s\n' % (
-                            shell_escape(unicode_(src)),
-                            shell_escape(unicode_(target))))
+                    'COPY \\\n    %s \\\n    %s\n' % (
+                        shell_escape(unicode_(src)),
+                        shell_escape(unicode_(target))))
 
             if self.docker_copy:
                 dockerfile.write('RUN /busybox chown 1000:1000 \\\n'

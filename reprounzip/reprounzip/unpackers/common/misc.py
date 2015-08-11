@@ -155,9 +155,9 @@ class FileUploader(object):
     def run(self, files):
         reprounzip.common.record_usage(upload_files=len(files))
         input_files = dict(
-                (n, f.path)
-                for n, f in iteritems(self.get_config().inputs_outputs)
-                if f.read_runs)
+            (n, f.path)
+            for n, f in iteritems(self.get_config().inputs_outputs)
+            if f.read_runs)
 
         # No argument: list all the input files and exit
         if not files:
@@ -223,9 +223,8 @@ class FileUploader(object):
             self.finalize()
 
     def get_config(self):
-        return reprounzip.common.load_config(
-                self.target / 'config.yml',
-                canonical=True)
+        return reprounzip.common.load_config(self.target / 'config.yml',
+                                             canonical=True)
 
     def prepare_upload(self, files):
         pass
@@ -260,9 +259,9 @@ class FileDownloader(object):
     def run(self, files):
         reprounzip.common.record_usage(download_files=len(files))
         output_files = dict(
-                (n, f.path)
-                for n, f in iteritems(self.get_config().inputs_outputs)
-                if f.write_runs)
+            (n, f.path)
+            for n, f in iteritems(self.get_config().inputs_outputs)
+            if f.write_runs)
 
         # No argument: list all the output files and exit
         if not files:
@@ -298,9 +297,8 @@ class FileDownloader(object):
             self.finalize()
 
     def get_config(self):
-        return reprounzip.common.load_config(
-                self.target / 'config.yml',
-                canonical=True)
+        return reprounzip.common.load_config(self.target / 'config.yml',
+                                             canonical=True)
 
     def prepare_download(self, files):
         pass

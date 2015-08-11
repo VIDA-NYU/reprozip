@@ -57,10 +57,10 @@ def print_db(database):
 
     cur = conn.cursor()
     processes = cur.execute(
-            '''
-            SELECT id, parent, timestamp, exitcode
-            FROM processes;
-            ''')
+        '''
+        SELECT id, parent, timestamp, exitcode
+        FROM processes;
+        ''')
     print("\nProcesses:")
     header = "+------+--------+-------+------------------+"
     print(header)
@@ -83,10 +83,10 @@ def print_db(database):
 
     cur = conn.cursor()
     processes = cur.execute(
-            '''
-            SELECT id, name, timestamp, process, argv
-            FROM executed_files;
-            ''')
+        '''
+        SELECT id, name, timestamp, process, argv
+        FROM executed_files;
+        ''')
     print("\nExecuted files:")
     header = ("+--------+------------------+---------+------------------------"
               "---------------+")
@@ -111,10 +111,10 @@ def print_db(database):
 
     cur = conn.cursor()
     processes = cur.execute(
-            '''
-            SELECT id, name, timestamp, mode, process
-            FROM opened_files;
-            ''')
+        '''
+        SELECT id, name, timestamp, mode, process
+        FROM opened_files;
+        ''')
     print("\nFiles:")
     header = ("+--------+------------------+---------+------+-----------------"
               "---------------+")
@@ -244,18 +244,18 @@ def main(setup_streams=True):
                          help="where to store database and configuration file "
                          "(default: ./.reprozip-trace)")
         opt.add_argument(
-                '--dont-identify-packages', action='store_false', default=True,
-                dest='identify_packages',
-                help="do not try identify which package each file comes from")
+            '--dont-identify-packages', action='store_false', default=True,
+            dest='identify_packages',
+            help="do not try identify which package each file comes from")
         opt.add_argument(
-                '--dont-find-inputs-outputs', action='store_false',
-                default=True, dest='find_inputs_outputs',
-                help="do not try to identify input and output files")
+            '--dont-find-inputs-outputs', action='store_false',
+            default=True, dest='find_inputs_outputs',
+            help="do not try to identify input and output files")
 
     parser = argparse.ArgumentParser(
-            description="reprozip is the ReproZip component responsible for "
-                        "tracing and packing the execution of an experiment",
-            epilog="Please report issues to reprozip-users@vgc.poly.edu")
+        description="reprozip is the ReproZip component responsible for "
+                    "tracing and packing the execution of an experiment",
+        epilog="Please report issues to reprozip-users@vgc.poly.edu")
     add_options(parser)
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         dest='verbosity',
@@ -265,8 +265,8 @@ def main(setup_streams=True):
 
     # usage_report subcommand
     parser_stats = subparsers.add_parser(
-            'usage_report',
-            help="Enables or disables anonymous usage reports")
+        'usage_report',
+        help="Enables or disables anonymous usage reports")
     add_options(parser_stats)
     parser_stats.add_argument('--enable', action='store_true')
     parser_stats.add_argument('--disable', action='store_true')
@@ -274,44 +274,43 @@ def main(setup_streams=True):
 
     # trace command
     parser_trace = subparsers.add_parser(
-            'trace',
-            help="Runs the program and writes out database and configuration "
-            "file")
+        'trace',
+        help="Runs the program and writes out database and configuration file")
     add_options(parser_trace)
     parser_trace.add_argument(
-            '-a',
-            dest='arg0',
-            help="argument 0 to program, if different from program path")
+        '-a',
+        dest='arg0',
+        help="argument 0 to program, if different from program path")
     parser_trace.add_argument(
-            '-c', '--continue', action='store_true', dest='append',
-            help="add to the previous run instead of replacing it")
+        '-c', '--continue', action='store_true', dest='append',
+        help="add to the previous run instead of replacing it")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER,
                               help="command-line to run under trace")
     parser_trace.set_defaults(func=trace)
 
     # testrun command
     parser_testrun = subparsers.add_parser(
-            'testrun',
-            help="Runs the program and writes out the database contents")
+        'testrun',
+        help="Runs the program and writes out the database contents")
     add_options(parser_testrun)
     parser_testrun.add_argument(
-            '-a',
-            dest='arg0',
-            help="argument 0 to program, if different from program path")
+        '-a',
+        dest='arg0',
+        help="argument 0 to program, if different from program path")
     parser_testrun.add_argument('cmdline', nargs=argparse.REMAINDER)
     parser_testrun.set_defaults(func=testrun)
 
     # reset command
     parser_reset = subparsers.add_parser(
-            'reset',
-            help="Resets the configuration file")
+        'reset',
+        help="Resets the configuration file")
     add_options(parser_reset)
     parser_reset.set_defaults(func=reset)
 
     # pack command
     parser_pack = subparsers.add_parser(
-            'pack',
-            help="Packs the experiment according to the current configuration")
+        'pack',
+        help="Packs the experiment according to the current configuration")
     add_options(parser_pack)
     parser_pack.add_argument('target', nargs='?', default='experiment.rpz',
                              help="Destination file")

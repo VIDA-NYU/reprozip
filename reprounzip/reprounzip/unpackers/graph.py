@@ -98,22 +98,22 @@ def generate(target, directory, all_forks=False):
     # Reads processes from the database
     process_cursor = conn.cursor()
     process_rows = process_cursor.execute(
-            '''
-            SELECT id, parent, timestamp
-            FROM processes
-            ORDER BY id
-            ''')
+        '''
+        SELECT id, parent, timestamp
+        FROM processes
+        ORDER BY id
+        ''')
     processes = {}
     all_programs = []
 
     # ... and opened files...
     file_cursor = conn.cursor()
     file_rows = file_cursor.execute(
-            '''
-            SELECT name, timestamp, mode, process
-            FROM opened_files
-            ORDER BY id
-            ''')
+        '''
+        SELECT name, timestamp, mode, process
+        FROM opened_files
+        ORDER BY id
+        ''')
     binaries = set()
     files = OrderedSet()
     edges = OrderedSet()
@@ -121,11 +121,11 @@ def generate(target, directory, all_forks=False):
     # ... as well as executed files.
     exec_cursor = conn.cursor()
     exec_rows = exec_cursor.execute(
-            '''
-            SELECT name, timestamp, process, argv
-            FROM executed_files
-            ORDER BY id
-            ''')
+        '''
+        SELECT name, timestamp, process, argv
+        FROM executed_files
+        ORDER BY id
+        ''')
 
     # Loop on all event lists
     logging.info("Getting all events from database...")
@@ -312,12 +312,12 @@ def setup(parser, **kwargs):
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
     parser.add_argument(
-            '-d', '--dir', default='.reprozip-trace',
-            help="where the database and configuration file are stored "
-            "(default: ./.reprozip-trace)")
+        '-d', '--dir', default='.reprozip-trace',
+        help="where the database and configuration file are stored (default: "
+        "./.reprozip-trace)")
     parser.add_argument(
-            'pack', nargs=argparse.OPTIONAL,
-            help="Pack to extract (defaults to reading from --dir)")
+        'pack', nargs=argparse.OPTIONAL,
+        help="Pack to extract (defaults to reading from --dir)")
     parser.set_defaults(func=graph)
 
     return {'test_compatibility': COMPAT_OK}

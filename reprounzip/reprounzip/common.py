@@ -135,7 +135,7 @@ class InputOutputFile(object):
 
     def __repr__(self):
         return "<InputOutputFile(path=%r, read_runs=%r, write_runs=%r)>" % (
-                self.path, self.read_runs, self.write_runs)
+            self.path, self.read_runs, self.write_runs)
 
 
 def load_files(config, runs):
@@ -455,15 +455,15 @@ def setup_usage_report(name, version):
     atexit.register(os.remove, certificate_file.path)
 
     _usage_report = usagestats.Stats(
-            '~/.reprozip/usage_stats',
-            usagestats.Prompt(enable='%s usage_report --enable' % name,
-                              disable='%s usage_report --disable' % name),
-            os.environ.get('REPROZIP_USAGE_URL',
-                           'https://reprozip-stats.poly.edu/'),
-            version='%s %s' % (name, version),
-            unique_user_id=True,
-            env_var='REPROZIP_USAGE_STATS',
-            ssl_verify=certificate_file.path)
+        '~/.reprozip/usage_stats',
+        usagestats.Prompt(enable='%s usage_report --enable' % name,
+                          disable='%s usage_report --disable' % name),
+        os.environ.get('REPROZIP_USAGE_URL',
+                       'https://reprozip-stats.poly.edu/'),
+        version='%s %s' % (name, version),
+        unique_user_id=True,
+        env_var='REPROZIP_USAGE_STATS',
+        ssl_verify=certificate_file.path)
     try:
         os.getcwd().encode('ascii')
     except (UnicodeEncodeError, UnicodeDecodeError):

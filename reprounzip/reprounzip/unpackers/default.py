@@ -151,15 +151,14 @@ def directory_create(args):
         for f in pkg.files:
             if not Path(f.path).exists():
                 logging.error(
-                        "Missing file %s (from package %s that wasn't packed) "
-                        "on host, experiment will probably miss it.",
-                        f, pkg.name)
+                    "Missing file %s (from package %s that wasn't packed) "
+                    "on host, experiment will probably miss it.",
+                    f, pkg.name)
                 missing_files = True
     if missing_files:
         record_usage(directory_missing_pkgs=True)
-        logging.error(
-                "Some packages are missing, you should probably install "
-                "them.\nUse 'reprounzip installpkgs -h' for help")
+        logging.error("Some packages are missing, you should probably install "
+                      "them.\nUse 'reprounzip installpkgs -h' for help")
 
     # Unpacks files
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
@@ -244,8 +243,8 @@ def directory_run(args):
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(
-                unicode_(join_root(root,
-                                   Path(run['workingdir']))))
+            unicode_(join_root(root,
+                               Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
         environ = run['environ']
         if args.x11:
@@ -434,9 +433,9 @@ def chroot_create(args):
                 path = Path(f.path)
                 if not path.exists():
                     logging.error(
-                            "Missing file %s (from package %s) on host, "
-                            "experiment will probably miss it",
-                            path, pkg.name)
+                        "Missing file %s (from package %s) on host, "
+                        "experiment will probably miss it",
+                        path, pkg.name)
                     missing_files = True
                     continue
                 dest = join_root(root, path)
@@ -561,9 +560,9 @@ def chroot_run(args):
         userspec = '%s:%s' % (run.get('uid', 1000),
                               run.get('gid', 1000))
         cmd = 'chroot --userspec=%s %s /bin/sh -c %s' % (
-                userspec,
-                shell_escape(unicode_(root)),
-                shell_escape(cmd))
+            userspec,
+            shell_escape(unicode_(root)),
+            shell_escape(cmd))
         cmds.append(cmd)
     cmds = ['chroot %s /bin/sh -c %s' % (shell_escape(unicode_(root)),
                                          shell_escape(c))
@@ -598,11 +597,11 @@ def chroot_unmount(target):
             logging.info("Unmounting %s...", d)
             # Unmounts recursively
             subprocess.check_call(
-                    'grep %s /proc/mounts | '
-                    'cut -f2 -d" " | '
-                    'sort -r | '
-                    'xargs umount' % d,
-                    shell=True)
+                'grep %s /proc/mounts | '
+                'cut -f2 -d" " | '
+                'sort -r | '
+                'xargs umount' % d,
+                shell=True)
 
     unpacked_info['mounted'] = False
     write_dict(target / '.reprounzip', unpacked_info, 'chroot')
@@ -759,7 +758,7 @@ def test_same_pkgmngr(pack, config, **kwargs):
         return COMPAT_OK
     else:
         return COMPAT_NO, "Different distributions. Then: %s, now: %s" % (
-                orig_distribution, THIS_DISTRIBUTION)
+            orig_distribution, THIS_DISTRIBUTION)
 
 
 def test_linux_same_arch(pack, config, **kwargs):
@@ -776,7 +775,7 @@ def test_linux_same_arch(pack, config, **kwargs):
         return COMPAT_OK
     else:
         return COMPAT_NO, "Different architectures. Then: %s, now: %s" % (
-                orig_architecture, current_architecture)
+            orig_architecture, current_architecture)
 
 
 def setup_installpkgs(parser):
@@ -784,14 +783,14 @@ def setup_installpkgs(parser):
     """
     parser.add_argument('pack', nargs=1, help="Pack to process")
     parser.add_argument(
-            '-y', '--assume-yes', action='store_true', default=False,
-            help="Assumes yes for package manager's questions (if supported)")
+        '-y', '--assume-yes', action='store_true', default=False,
+        help="Assumes yes for package manager's questions (if supported)")
     parser.add_argument(
-            '--missing', action='store_true',
-            help="Only install packages that weren't packed")
+        '--missing', action='store_true',
+        help="Only install packages that weren't packed")
     parser.add_argument(
-            '--summary', action='store_true',
-            help="Don't install, print which packages are installed or not")
+        '--summary', action='store_true',
+        help="Don't install, print which packages are installed or not")
     parser.set_defaults(func=installpkgs)
 
     return {'test_compatibility': test_same_pkgmngr}
@@ -932,13 +931,13 @@ def setup_chroot(parser, **kwargs):
     add_opt_general(parser_setup)
     add_opt_owner(parser_setup)
     parser_setup.add_argument(
-            '--bind-magic-dirs', action='store_true',
-            dest='bind_magic_dirs', default=None,
-            help="Mount /dev and /proc inside the chroot")
+        '--bind-magic-dirs', action='store_true',
+        dest='bind_magic_dirs', default=None,
+        help="Mount /dev and /proc inside the chroot")
     parser_setup.add_argument(
-            '--dont-bind-magic-dirs', action='store_false',
-            dest='bind_magic_dirs', default=None,
-            help="Don't mount /dev and /proc inside the chroot")
+        '--dont-bind-magic-dirs', action='store_false',
+        dest='bind_magic_dirs', default=None,
+        help="Don't mount /dev and /proc inside the chroot")
     parser_setup.set_defaults(func=chroot_setup)
 
     # upload

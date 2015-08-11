@@ -71,15 +71,15 @@ class Signal(object):
                     info[arg] = kwargs.pop(arg)
                     if argtype == Signal.DEPRECATED:
                         warnings.warn(
-                                "signal: Argument %s is deprecated" % arg,
-                                category=SignalWarning,
-                                stacklevel=2)
+                            "signal: Argument %s is deprecated" % arg,
+                            category=SignalWarning,
+                            stacklevel=2)
         if kwargs:
             arg = next(iter(kwargs))
             warnings.warn(
-                    "signal: Unexpected argument %s; signal ignored" % arg,
-                    category=SignalWarning,
-                    stacklevel=2)
+                "signal: Unexpected argument %s; signal ignored" % arg,
+                category=SignalWarning,
+                stacklevel=2)
             return
 
         for listener in self._listeners:

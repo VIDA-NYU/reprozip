@@ -100,8 +100,8 @@ def windows_shell(chan):
                 if std:
                     with out_lock:
                         stdout.write(
-                                "\r\n*** EOF reached; (press F6 or ^Z then "
-                                "enter to end)\r\n")
+                            "\r\n*** EOF reached; (press F6 or ^Z then enter "
+                            "to end)\r\n")
                         stdout.flush()
                 break
             stream = [stderr_bytes, stdout_bytes][std]
