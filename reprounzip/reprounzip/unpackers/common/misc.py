@@ -19,7 +19,7 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange, iteritems, stdout_bytes
+from reprounzip.utils import irange, iteritems, stdout_bytes, join_root
 
 
 COMPAT_OK = 0
@@ -135,14 +135,6 @@ def sudo_url(arch):
     """
     return ('https://github.com/remram44/static-sudo'
             '/releases/download/current/rpzsudo-%s' % arch)
-
-
-def join_root(root, path):
-    """Prepends `root` to the absolute path `path`.
-    """
-    p_root, p_loc = path.split_root()
-    assert p_root == b'/'
-    return root / p_loc
 
 
 class FileUploader(object):

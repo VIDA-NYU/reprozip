@@ -290,6 +290,14 @@ def find_all_links(filename, include_target=False):
     return files
 
 
+def join_root(root, path):
+    """Prepends `root` to the absolute path `path`.
+    """
+    p_root, p_loc = path.split_root()
+    assert p_root == b'/'
+    return root / p_loc
+
+
 @contextlib.contextmanager
 def make_dir_writable(directory):
     """Context-manager that sets write permission on a directory.
