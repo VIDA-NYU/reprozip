@@ -14,7 +14,6 @@ See http://www.vagrantup.com/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
-import copy
 from distutils.version import LooseVersion
 import logging
 import os
@@ -24,9 +23,8 @@ from rpaths import PosixPath, Path
 import scp
 import subprocess
 import sys
-import tarfile
 
-from reprounzip.common import load_config, record_usage
+from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
@@ -188,11 +186,8 @@ def vagrant_setup_create(args):
     signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
-    tar = tarfile.open(str(pack), 'r:*')
-    member = copy.copy(tar.getmember('METADATA/config.yml'))
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
-    tar.close()
+    rpz_pack = RPZPack(pack)
+    rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
     runs, packages, other_files = load_config(target / 'config.yml', True)
@@ -247,8 +242,8 @@ def vagrant_setup_create(args):
         if use_chroot:
             fp.write('\n'
                      'mkdir /experimentroot; cd /experimentroot\n')
-            fp.write('tar zpxf /vagrant/experiment.rpz '
-                     '--numeric-owner --strip=1 DATA\n')
+            fp.write('tar zpxf /vagrant/data.tgz '
+                     '--numeric-owner --strip=1 %s\n' % rpz_pack.data_prefix)
             if mount_bind:
                 fp.write('\n'
                          'mkdir -p /experimentroot/dev\n'
@@ -270,25 +265,22 @@ def vagrant_setup_create(args):
             fp.write('\ncd /\n')
             paths = set()
             pathlist = []
-            dataroot = PosixPath('DATA')
             # Adds intermediate directories, and checks for existence in the
             # tar
-            tar = tarfile.open(str(pack), 'r:*')
             for f in other_files:
                 path = PosixPath('/')
+                # [1:] to skip 'DATA/' prefix
                 for c in f.path.components[1:]:
                     path = path / c
                     if path in paths:
                         continue
                     paths.add(path)
-                    datapath = join_root(dataroot, path)
                     try:
-                        tar.getmember(str(datapath))
+                        rpz_pack.get_data(path)
                     except KeyError:
-                        logging.info("Missing file %s", datapath)
+                        logging.info("Missing file %s", path)
                     else:
-                        pathlist.append(datapath)
-            tar.close()
+                        pathlist.append(path)
             # FIXME : for some reason we need reversed() here, I'm not sure
             # why. Need to read more of tar's docs.
             # TAR bug: --no-overwrite-dir removes --keep-old-files
@@ -297,9 +289,9 @@ def vagrant_setup_create(args):
             # introduced too recently. Instead, we just ignore the exit status
             with (target / 'rpz-files.list').open('wb') as lfp:
                 for p in reversed(pathlist):
-                    lfp.write(p.path)
+                    lfp.write(join_root(rpz_pack.data_prefix, p).path)
                     lfp.write(b'\0')
-            fp.write('tar zpxf /vagrant/experiment.rpz --keep-old-files '
+            fp.write('tar zpxf /vagrant/data.tgz --keep-old-files '
                      '--numeric-owner --strip=1 '
                      '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
@@ -319,7 +311,9 @@ mkdir -p /experimentroot/bin
 
     # Copies pack
     logging.info("Copying pack file...")
-    pack.copyfile(target / 'experiment.rpz')
+    rpz_pack.copy_data_tar(target / 'data.tgz')
+
+    rpz_pack.close()
 
     # Writes Vagrant file
     logging.info("Writing %s...", target / 'Vagrantfile')

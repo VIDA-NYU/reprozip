@@ -19,6 +19,7 @@ import sys
 import tarfile
 
 import reprounzip.common
+from reprounzip.common import RPZPack
 from reprounzip.utils import irange, iteritems, stdout_bytes, join_root, \
     copyfile
 
@@ -105,24 +106,9 @@ def load_config(pack):
     loads it. Note that decompressing a single file is inefficient, thus
     calling this method can be slow.
     """
-    tmp = Path.tempdir(prefix='reprozip_')
-    try:
-        # Loads info from package
-        tar = tarfile.open(str(pack), 'r:*')
-        f = tar.extractfile('METADATA/version')
-        version = f.read()
-        f.close()
-        if version != b'REPROZIP VERSION 1\n':
-            logging.critical("Unknown pack format")
-            sys.exit(1)
-        tar.extract('METADATA/config.yml', path=str(tmp))
-        tar.close()
-        configfile = tmp / 'METADATA/config.yml'
-        ret = reprounzip.common.load_config(configfile, canonical=True)
-    finally:
-        tmp.rmtree()
-
-    return ret
+    rpz_pack = RPZPack(pack)
+    with rpz_pack.with_config() as configfile:
+        return reprounzip.common.load_config(configfile, canonical=True)
 
 
 def busybox_url(arch):
@@ -141,6 +127,8 @@ def sudo_url(arch):
 class FileUploader(object):
     """Common logic for 'upload' commands.
     """
+    data_tgz = 'data.tgz'
+
     def __init__(self, target, input_files, files):
         self.target = target
         self.input_files = input_files
@@ -224,7 +212,7 @@ class FileUploader(object):
         pass
 
     def extract_original_input(self, input_name, input_path, temp):
-        tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
+        tar = tarfile.open(str(self.target / self.data_tgz), 'r:*')
         try:
             member = tar.getmember(str(join_root(PosixPath('DATA'),
                                                  input_path)))

@@ -13,7 +13,6 @@ See http://www.docker.io/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
-import copy
 from itertools import chain
 import json
 import logging
@@ -23,17 +22,16 @@ import re
 from rpaths import Path, PosixPath
 import subprocess
 import sys
-import tarfile
 
-from reprounzip.common import load_config, record_usage
+from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
-    join_root, FileUploader, FileDownloader, get_runs, interruptible_call
+    FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
-    download_file
+from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
+    check_output, download_file
 
 
 # How this all works:
@@ -134,11 +132,8 @@ def docker_setup_create(args):
     signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
-    tar = tarfile.open(str(pack), 'r:*')
-    member = copy.copy(tar.getmember('METADATA/config.yml'))
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
-    tar.close()
+    rpz_pack = RPZPack(pack)
+    rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
     runs, packages, other_files = load_config(target / 'config.yml', True)
@@ -156,7 +151,7 @@ def docker_setup_create(args):
     logging.debug("Distribution: %s", target_distribution or "unknown")
 
     target.mkdir(parents=True)
-    pack.copyfile(target / 'experiment.rpz')
+    rpz_pack.copy_data_tar(target / 'data.tgz')
 
     arch = runs[0]['architecture']
 
@@ -178,7 +173,7 @@ def docker_setup_create(args):
                       'rpzsudo-%s' % arch)
         fp.write('COPY rpzsudo /rpzsudo\n\n')
 
-        fp.write('COPY experiment.rpz /reprozip_experiment.rpz\n\n')
+        fp.write('COPY data.tgz /reprozip_data.tgz\n\n')
         fp.write('COPY rpz-files.list /rpz-files.list\n')
         fp.write('RUN \\\n'
                  '    chmod +x /busybox /rpzsudo && \\\n')
@@ -211,35 +206,33 @@ def docker_setup_create(args):
         # Untar
         paths = set()
         pathlist = []
-        dataroot = PosixPath('DATA')
         # Adds intermediate directories, and checks for existence in the tar
-        tar = tarfile.open(str(pack), 'r:*')
         missing_files = chain.from_iterable(pkg.files
                                             for pkg in missing_packages)
         for f in chain(other_files, missing_files):
             path = PosixPath('/')
+            # [1:] to skip 'DATA/' prefix
             for c in f.path.components[1:]:
                 path = path / c
                 if path in paths:
                     continue
                 paths.add(path)
-                datapath = join_root(dataroot, path)
                 try:
-                    tar.getmember(str(datapath))
+                    rpz_pack.get_data(path)
                 except KeyError:
-                    logging.info("Missing file %s", datapath)
+                    logging.info("Missing file %s", path)
                 else:
-                    pathlist.append(datapath)
-        tar.close()
+                    pathlist.append(path)
+        rpz_pack.close()
         # FIXME : for some reason we need reversed() here, I'm not sure why.
         # Need to read more of tar's docs.
         # TAR bug: --no-overwrite-dir removes --keep-old-files
         with (target / 'rpz-files.list').open('wb') as lfp:
             for p in reversed(pathlist):
-                lfp.write(p.path)
+                lfp.write(join_root(rpz_pack.data_prefix, p).path)
                 lfp.write(b'\0')
         fp.write('    cd / && '
-                 '(tar zpxf /reprozip_experiment.rpz -U --recursive-unlink '
+                 '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
                  '--numeric-owner --strip=1 --null -T /rpz-files.list || '
                  '/busybox echo "TAR reports errors, this might or might '
                  'not prevent the execution to run")\n')

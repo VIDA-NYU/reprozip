@@ -22,9 +22,9 @@ import logging
 from rpaths import PosixPath, Path
 import sqlite3
 import sys
-import tarfile
 
-from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
+from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
+    load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
 from reprounzip.utils import PY3, unicode_, iteritems, stderr, escape, \
@@ -56,7 +56,7 @@ class Process(CommonEqualityMixin):
         return id(self)
 
 
-def generate(target, directory, all_forks=False):
+def generate(target, configfile, database, all_forks=False):
     """Main function for the graph subcommand.
     """
     # In here, a file is any file on the filesystem. A binary is a file, that
@@ -70,10 +70,7 @@ def generate(target, directory, all_forks=False):
     # doesn't do anything worth showing on the graph, it will be erased, unless
     # all_forks is True (--all-forks).
 
-    database = directory / 'trace.sqlite3'
-
     # Reads package ownership from the configuration
-    configfile = directory / 'config.yml'
     if not configfile.is_file():
         logging.critical("Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
@@ -265,27 +262,15 @@ def graph(args):
     format.
     """
     if args.pack is not None:
-        tmp = Path.tempdir(prefix='reprounzip_')
-        try:
-            tar = tarfile.open(args.pack, 'r:*')
-            f = tar.extractfile('METADATA/version')
-            version = f.read()
-            f.close()
-            if version != b'REPROZIP VERSION 1\n':
-                logging.critical("Unknown pack format")
-                sys.exit(1)
-            try:
-                tar.extract('METADATA/config.yml', path=str(tmp))
-                tar.extract('METADATA/trace.sqlite3', path=str(tmp))
-            except KeyError as e:
-                logging.critical("Error extracting from pack: %s", e.args[0])
-            generate(Path(args.target[0]),
-                     tmp / 'METADATA',
-                     args.all_forks)
-        finally:
-            tmp.rmtree()
+        rpz_pack = RPZPack(args.pack)
+        with rpz_pack.with_config() as config:
+            with rpz_pack.with_trace() as trace:
+                generate(Path(args.target[0]), config, trace)
     else:
-        generate(Path(args.target[0]), Path(args.dir), args.all_forks)
+        tracedir = Path(args.dir)
+        generate(Path(args.target[0]),
+                 tracedir / 'config.yml', tracedir / 'trace.sqlite3',
+                 args.all_forks)
 
 
 def disabled_bug13676(args):
