@@ -269,8 +269,7 @@ def vagrant_setup_create(args):
             # tar
             for f in other_files:
                 path = PosixPath('/')
-                # [1:] to skip 'DATA/' prefix
-                for c in f.path.components[1:]:
+                for c in rpz_pack.remove_data_prefix(f.path).components:
                     path = path / c
                     if path in paths:
                         continue

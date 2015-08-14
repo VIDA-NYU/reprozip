@@ -211,8 +211,7 @@ def docker_setup_create(args):
                                             for pkg in missing_packages)
         for f in chain(other_files, missing_files):
             path = PosixPath('/')
-            # [1:] to skip 'DATA/' prefix
-            for c in f.path.components[1:]:
+            for c in rpz_pack.remove_data_prefix(f.path).components:
                 path = path / c
                 if path in paths:
                     continue

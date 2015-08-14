@@ -163,13 +163,9 @@ def directory_create(args):
 
     # Unpacks files
     members = rpz_pack.list_data()
-    if rpz_pack.data_prefix != PosixPath(''):
-        prefixlen = len(str(rpz_pack.data_prefix)) + 1  # +1 for '/'
-    else:
-        prefixlen = 0
     for m in members:
         # Remove 'DATA/' prefix
-        m.name = m.name[prefixlen:]
+        m.name = str(rpz_pack.remove_data_prefix(m.name))
         # Makes symlink targets relative
         if m.issym():
             linkname = PosixPath(m.linkname)
@@ -451,13 +447,9 @@ def chroot_create(args):
 
     # Unpacks files
     members = rpz_pack.list_data()
-    if rpz_pack.data_prefix != PosixPath(''):
-        prefixlen = len(str(rpz_pack.data_prefix)) + 1  # +1 for '/'
-    else:
-        prefixlen = 0
     for m in members:
         # Remove 'DATA/' prefix
-        m.name = m.name[prefixlen:]
+        m.name = str(rpz_pack.remove_data_prefix(m.name))
     if not restore_owner:
         uid = os.getuid()
         gid = os.getgid()
