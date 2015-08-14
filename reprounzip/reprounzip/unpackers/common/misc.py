@@ -7,6 +7,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import copy
 import functools
 import logging
 import os
@@ -236,6 +237,7 @@ class FileUploader(object):
                                                  input_path)))
         except KeyError:
             return None
+        member = copy.copy(member)
         member.name = str(temp.components[-1])
         tar.extract(member, str(temp.parent))
         tar.close()

@@ -17,6 +17,7 @@ This file contains the default plugins that come with reprounzip:
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+import copy
 import logging
 import os
 import pickle
@@ -131,7 +132,7 @@ def directory_create(args):
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
-    member = tar.getmember('METADATA/config.yml')
+    member = copy.copy(tar.getmember('METADATA/config.yml'))
     member.name = 'config.yml'
     tar.extract(member, str(target))
 
@@ -164,7 +165,9 @@ def directory_create(args):
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
-    members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
+    members = [copy.copy(m)
+               for m in tar.getmembers()
+               if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
     # Makes symlink targets relative
@@ -406,7 +409,7 @@ def chroot_create(args):
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
-    member = tar.getmember('METADATA/config.yml')
+    member = copy.copy(tar.getmember('METADATA/config.yml'))
     member.name = 'config.yml'
     tar.extract(member, str(target))
 
@@ -454,7 +457,9 @@ def chroot_create(args):
     if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
-    members = [m for m in tar.getmembers() if m.name.startswith('DATA/')]
+    members = [copy.copy(m)
+               for m in tar.getmembers()
+               if m.name.startswith('DATA/')]
     for m in members:
         m.name = m.name[5:]
     if not restore_owner:
@@ -665,6 +670,7 @@ class LocalUploader(FileUploader):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
         member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+        member = copy.copy(member)
         member.name = str(temp.components[-1])
         tar.extract(member, str(temp.parent))
         tar.close()

@@ -13,6 +13,7 @@ See http://www.docker.io/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+import copy
 from itertools import chain
 import json
 import logging
@@ -134,7 +135,7 @@ def docker_setup_create(args):
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
-    member = tar.getmember('METADATA/config.yml')
+    member = copy.copy(tar.getmember('METADATA/config.yml'))
     member.name = 'config.yml'
     tar.extract(member, str(target))
     tar.close()

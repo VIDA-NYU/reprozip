@@ -14,6 +14,7 @@ See http://www.vagrantup.com/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+import copy
 from distutils.version import LooseVersion
 import logging
 import os
@@ -188,7 +189,7 @@ def vagrant_setup_create(args):
 
     # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
-    member = tar.getmember('METADATA/config.yml')
+    member = copy.copy(tar.getmember('METADATA/config.yml'))
     member.name = 'config.yml'
     tar.extract(member, str(target))
     tar.close()
