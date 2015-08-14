@@ -246,10 +246,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     check_call(sudo + rpuz + ['chroot', 'setup', '--bind-magic-dirs',
                               'simple.rpz', 'simplechroot'])
     try:
-        # Run chroot
-        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
         output_in_chroot = join_root(Path('simplechroot/root'),
                                      orig_output_location)
+        # Run chroot
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
         with output_in_chroot.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
         # Get output file
@@ -263,10 +263,14 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
         # Run again
         check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err', 2)
-        output_in_chroot = join_root(Path('simplechroot/root'),
-                                     orig_output_location)
         with output_in_chroot.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '36'
+        # Reset input file
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot', ':arg1'])
+        # Run again
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
+        with output_in_chroot.open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '42'
         # Delete with wrong command (should fail)
         p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
                              stderr=subprocess.PIPE)
@@ -314,6 +318,20 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:voutput2.txt'])
             with Path('voutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
+            # Reset input file
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               ':arg1'])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrantchroot').path],
+                         'out')
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               'arg2:voutput1.txt'])
+            with Path('voutput1.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '42'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrantchroot').path])
@@ -355,6 +373,20 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:woutput2.txt'])
             with Path('woutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
+            # Reset input file
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrant').path,
+                               ':arg1'])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrant').path],
+                         'out')
+            # Get output file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrant').path,
+                               'arg2:voutput1.txt'])
+            with Path('voutput1.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '42'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrant').path])
@@ -389,6 +421,16 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:doutput2.txt'])
             with Path('doutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
+            # Reset input file
+            check_call(rpuz + ['docker', 'upload', 'simpledocker',
+                               ':arg1'])
+            # Run again
+            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out')
+            # Get output file
+            check_call(rpuz + ['docker', 'download', 'simpledocker',
+                               'arg2:doutput1.txt'])
+            with Path('doutput1.txt').open(encoding='utf-8') as fp:
+                assert fp.read().strip() == '42'
             # Destroy
             check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
         elif interactive:
