@@ -142,39 +142,48 @@ def pack(target, directory, sort_packages):
         packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
-    tar = PackBuilder(target)
+    tar = tarfile.open(str(target), 'w:gz')
 
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
     if trace.is_file():
-        tar.add(trace, Path('METADATA/trace.sqlite3'))
+        tar.add(str(trace), 'METADATA/trace.sqlite3')
 
-    # Add the files from the packages
-    for pkg in packages:
-        if pkg.packfiles:
-            logging.info("Adding files from package %s...", pkg.name)
-            files = []
-            for f in pkg.files:
-                if not Path(f.path).exists():
-                    logging.warning("Missing file %s from package %s",
-                                    f.path, pkg.name)
-                else:
-                    tar.add_data(f.path)
-                    files.append(f)
-            pkg.files = files
-        else:
-            logging.info("NOT adding files from package %s", pkg.name)
+    fd, tmp = Path.tempfile()
+    os.close(fd)
+    try:
+        datatar = PackBuilder(tmp)
+        # Add the files from the packages
+        for pkg in packages:
+            if pkg.packfiles:
+                logging.info("Adding files from package %s...", pkg.name)
+                files = []
+                for f in pkg.files:
+                    if not Path(f.path).exists():
+                        logging.warning("Missing file %s from package %s",
+                                        f.path, pkg.name)
+                    else:
+                        datatar.add_data(f.path)
+                        files.append(f)
+                pkg.files = files
+            else:
+                logging.info("NOT adding files from package %s", pkg.name)
 
-    # Add the rest of the files
-    logging.info("Adding other files...")
-    files = set()
-    for f in other_files:
-        if not Path(f.path).exists():
-            logging.warning("Missing file %s", f.path)
-        else:
-            tar.add_data(f.path)
-            files.add(f)
-    other_files = files
+        # Add the rest of the files
+        logging.info("Adding other files...")
+        files = set()
+        for f in other_files:
+            if not Path(f.path).exists():
+                logging.warning("Missing file %s", f.path)
+            else:
+                datatar.add_data(f.path)
+                files.add(f)
+        other_files = files
+        datatar.close()
+
+        tar.add(str(tmp), 'DATA.tar.gz')
+    finally:
+        tmp.remove()
 
     logging.info("Adding metadata...")
     # Stores pack version
@@ -182,8 +191,8 @@ def pack(target, directory, sort_packages):
     os.close(fd)
     try:
         with manifest.open('wb') as fp:
-            fp.write(b'REPROZIP VERSION 1\n')
-        tar.add(manifest, Path('METADATA/version'))
+            fp.write(b'REPROZIP VERSION 2\n')
+        tar.add(str(manifest), 'METADATA/version')
     finally:
         manifest.remove()
 
@@ -205,7 +214,7 @@ def pack(target, directory, sort_packages):
                     inputs_outputs, canonical=True,
                     pack_id=pack_id)
 
-        tar.add(can_configfile, Path('METADATA/config.yml'))
+        tar.add(str(can_configfile), 'METADATA/config.yml')
     finally:
         can_configfile.remove()
 
