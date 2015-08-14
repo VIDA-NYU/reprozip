@@ -236,8 +236,7 @@ class FileUploader(object):
                                                  input_path)))
         except KeyError:
             return None
-        name = temp.components[-1]
-        member.name = str(name)
+        member.name = str(temp.components[-1])
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp

@@ -385,7 +385,7 @@ def download_file(url, dest, cachename=None):
     The cache lives in ``~/.cache/reprozip/``.
     """
     if cachename is None:
-        cachename = dest.name
+        cachename = dest.components[-1]
 
     request = Request(url)
 
