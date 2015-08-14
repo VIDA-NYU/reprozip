@@ -384,6 +384,17 @@ def check_output(*popenargs, **kwargs):
     return out
 
 
+def copyfile(source, destination, CHUNK_SIZE=4096):
+    """Copies from one file object to another.
+    """
+    while True:
+        chunk = source.read(CHUNK_SIZE)
+        if chunk:
+            destination.write(chunk)
+        if len(chunk) != CHUNK_SIZE:
+            break
+
+
 def download_file(url, dest, cachename=None):
     """Downloads a file using a local cache.
 
@@ -429,13 +440,8 @@ def download_file(url, dest, cachename=None):
 
     logging.info("Download %s: downloading %s", cachename, url)
     try:
-        CHUNK_SIZE = 4096
         with cache.open('wb') as f:
-            while True:
-                chunk = response.read(CHUNK_SIZE)
-                if not chunk:
-                    break
-                f.write(chunk)
+            copyfile(response, f)
         response.close()
     except Exception as e:  # pragma: no cover
         try:

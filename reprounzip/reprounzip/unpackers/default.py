@@ -36,7 +36,8 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, \
-    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, download_file
+    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
+    download_file
 
 
 def installpkgs(args):
@@ -723,13 +724,7 @@ class LocalDownloader(FileDownloader):
                              remote_path)
             sys.exit(1)
         with remote_path.open('rb') as fp:
-            chunk = fp.read(1024)
-            if chunk:
-                stdout_bytes.write(chunk)
-            while len(chunk) == 1024:
-                chunk = fp.read(1024)
-                if chunk:
-                    stdout_bytes.write(chunk)
+            copyfile(fp, stdout_bytes)
 
     def download(self, remote_path, local_path):
         remote_path = join_root(self.root, remote_path)
