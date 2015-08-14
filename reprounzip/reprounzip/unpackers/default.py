@@ -162,7 +162,8 @@ def directory_create(args):
                       "them.\nUse 'reprounzip installpkgs -h' for help")
 
     # Unpacks files
-    if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
+    if any('..' in PosixPath(m.name).components or m.name.startswith('/')
+           for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
     members = [copy.copy(m)
@@ -454,7 +455,8 @@ def chroot_create(args):
             record_usage(chroot_mising_files=True)
 
     # Unpacks files
-    if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
+    if any('..' in PosixPath(m.name).components or m.name.startswith('/')
+           for m in tar.getmembers()):
         logging.critical("Tar archive contains invalid pathnames")
         sys.exit(1)
     members = [copy.copy(m)
