@@ -19,7 +19,9 @@ import sys
 import tarfile
 
 import reprounzip.common
-from reprounzip.utils import irange, iteritems, stdout_bytes
+from reprounzip.common import RPZPack
+from reprounzip.utils import irange, iteritems, stdout_bytes, join_root, \
+    copyfile
 
 
 COMPAT_OK = 0
@@ -104,24 +106,9 @@ def load_config(pack):
     loads it. Note that decompressing a single file is inefficient, thus
     calling this method can be slow.
     """
-    tmp = Path.tempdir(prefix='reprozip_')
-    try:
-        # Loads info from package
-        tar = tarfile.open(str(pack), 'r:*')
-        f = tar.extractfile('METADATA/version')
-        version = f.read()
-        f.close()
-        if version != b'REPROZIP VERSION 1\n':
-            logging.critical("Unknown pack format")
-            sys.exit(1)
-        tar.extract('METADATA/config.yml', path=str(tmp))
-        tar.close()
-        configfile = tmp / 'METADATA/config.yml'
-        ret = reprounzip.common.load_config(configfile, canonical=True)
-    finally:
-        tmp.rmtree()
-
-    return ret
+    rpz_pack = RPZPack(pack)
+    with rpz_pack.with_config() as configfile:
+        return reprounzip.common.load_config(configfile, canonical=True)
 
 
 def busybox_url(arch):
@@ -137,17 +124,11 @@ def sudo_url(arch):
             '/releases/download/current/rpzsudo-%s' % arch)
 
 
-def join_root(root, path):
-    """Prepends `root` to the absolute path `path`.
-    """
-    p_root, p_loc = path.split_root()
-    assert p_root == b'/'
-    return root / p_loc
-
-
 class FileUploader(object):
     """Common logic for 'upload' commands.
     """
+    data_tgz = 'data.tgz'
+
     def __init__(self, target, input_files, files):
         self.target = target
         self.input_files = input_files
@@ -231,7 +212,7 @@ class FileUploader(object):
         pass
 
     def extract_original_input(self, input_name, input_path, temp):
-        tar = tarfile.open(str(self.target / 'experiment.rpz'), 'r:*')
+        tar = tarfile.open(str(self.target / self.data_tgz), 'r:*')
         try:
             member = tar.getmember(str(join_root(PosixPath('DATA'),
                                                  input_path)))
@@ -311,13 +292,7 @@ class FileDownloader(object):
         self.download(remote_path, temp)
         # Output to stdout
         with temp.open('rb') as fp:
-            chunk = fp.read(1024)
-            if chunk:
-                stdout_bytes.write(chunk)
-            while len(chunk) == 1024:
-                chunk = fp.read(1024)
-                if chunk:
-                    stdout_bytes.write(chunk)
+            copyfile(fp, stdout_bytes)
         temp.remove()
 
     def download(self, remote_path, local_path):

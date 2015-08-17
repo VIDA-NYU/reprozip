@@ -28,7 +28,8 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import load_config as load_config_file, record_usage
+from reprounzip.common import RPZPack, load_config as load_config_file, \
+    record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, UsageError, CantFindInstaller, target_must_exist, \
@@ -36,7 +37,8 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, \
-    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, download_file
+    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
+    download_file
 
 
 def installpkgs(args):
@@ -131,10 +133,8 @@ def directory_create(args):
     signals.pre_setup(target=target, pack=pack)
 
     # Unpacks configuration file
-    tar = tarfile.open(str(pack), 'r:*')
-    member = copy.copy(tar.getmember('METADATA/config.yml'))
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
+    rpz_pack = RPZPack(pack)
+    rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
     config = load_config_file(target / 'config.yml', True)
@@ -162,24 +162,18 @@ def directory_create(args):
                       "them.\nUse 'reprounzip installpkgs -h' for help")
 
     # Unpacks files
-    if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
-        logging.critical("Tar archive contains invalid pathnames")
-        sys.exit(1)
-    members = [copy.copy(m)
-               for m in tar.getmembers()
-               if m.name.startswith('DATA/')]
+    members = rpz_pack.list_data()
     for m in members:
-        m.name = m.name[5:]
-    # Makes symlink targets relative
-    for m in members:
-        if not m.issym():
-            continue
-        linkname = PosixPath(m.linkname)
-        if linkname.is_absolute:
-            m.linkname = join_root(root, PosixPath(m.linkname)).path
+        # Remove 'DATA/' prefix
+        m.name = str(rpz_pack.remove_data_prefix(m.name))
+        # Makes symlink targets relative
+        if m.issym():
+            linkname = PosixPath(m.linkname)
+            if linkname.is_absolute:
+                m.linkname = join_root(root, PosixPath(m.linkname)).path
     logging.info("Extracting files...")
-    tar.extractall(str(root), members)
-    tar.close()
+    rpz_pack.extract_data(root, members)
+    rpz_pack.close()
 
     # Gets library paths
     lib_dirs = []
@@ -408,10 +402,8 @@ def chroot_create(args):
     restore_owner = should_restore_owner(args.restore_owner)
 
     # Unpacks configuration file
-    tar = tarfile.open(str(pack), 'r:*')
-    member = copy.copy(tar.getmember('METADATA/config.yml'))
-    member.name = 'config.yml'
-    tar.extract(member, str(target))
+    rpz_pack = RPZPack(pack)
+    rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
     config = load_config_file(target / 'config.yml', True)
@@ -454,14 +446,10 @@ def chroot_create(args):
             record_usage(chroot_mising_files=True)
 
     # Unpacks files
-    if any('..' in m.name or m.name.startswith('/') for m in tar.getmembers()):
-        logging.critical("Tar archive contains invalid pathnames")
-        sys.exit(1)
-    members = [copy.copy(m)
-               for m in tar.getmembers()
-               if m.name.startswith('DATA/')]
+    members = rpz_pack.list_data()
     for m in members:
-        m.name = m.name[5:]
+        # Remove 'DATA/' prefix
+        m.name = str(rpz_pack.remove_data_prefix(m.name))
     if not restore_owner:
         uid = os.getuid()
         gid = os.getgid()
@@ -469,8 +457,8 @@ def chroot_create(args):
             m.uid = uid
             m.gid = gid
     logging.info("Extracting files...")
-    tar.extractall(str(root), members)
-    tar.close()
+    rpz_pack.extract_data(root, members)
+    rpz_pack.close()
 
     # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
     sh_path = join_root(root, Path('/bin/sh'))
@@ -721,13 +709,7 @@ class LocalDownloader(FileDownloader):
                              remote_path)
             sys.exit(1)
         with remote_path.open('rb') as fp:
-            chunk = fp.read(1024)
-            if chunk:
-                stdout_bytes.write(chunk)
-            while len(chunk) == 1024:
-                chunk = fp.read(1024)
-                if chunk:
-                    stdout_bytes.write(chunk)
+            copyfile(fp, stdout_bytes)
 
     def download(self, remote_path, local_path):
         remote_path = join_root(self.root, remote_path)

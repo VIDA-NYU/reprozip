@@ -19,9 +19,8 @@ import pickle
 import platform
 from rpaths import Path
 import sys
-import tarfile
 
-from reprounzip.common import load_config as load_config_file
+from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, shell_escape
@@ -43,10 +42,8 @@ def print_info(args):
     pack_dirs = 0
     pack_symlinks = 0
     pack_others = 0
-    tar = tarfile.open(str(pack), 'r:*')
-    for m in tar.getmembers():
-        if not m.name.startswith('DATA/'):
-            continue
+    rpz_pack = RPZPack(pack)
+    for m in rpz_pack.list_data():
         pack_total_size += m.size
         pack_total_paths += 1
         if m.isfile():
@@ -57,7 +54,7 @@ def print_info(args):
             pack_symlinks += 1
         else:
             pack_others += 1
-    tar.close()
+    rpz_pack.close()
 
     meta_total_paths = 0
     meta_packed_packages_files = 0
