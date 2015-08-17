@@ -15,6 +15,9 @@ Bugfixes:
 Features:
 * Display the relative portion of the path when unhandled xxx_at() syscalls are used, to give an idea of what's been missed
 * Add --dont-find-inputs-outputs to reprozip trace and reset, so you can clear that out if too many files would be selected (or if you don't use the feature)
+* Rewrote reprounzip-vistrails plugin; uses a proper VisTrails package that now lives in the VisTrails distribution.
+* Check pack format in unpackers; won't try to unpack version 2
+* It is now possible to select multiple runs with `unpackername run 1-4`
 
 0.7.1 (2015-07-14)
 ------------------
