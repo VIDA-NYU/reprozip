@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.0.0 (???)
+-----------
+
+Behavior change:
+* .rpz pack format changed (version 1 -> 2). Pack is now uncompressed, data is in a nested TGZ archive; allows faster retrieval of metadata (config & trace).
+
 0.7.2 (???)
 -----------
 
