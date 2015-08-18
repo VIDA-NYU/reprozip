@@ -594,6 +594,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # simple-0.6.0.rpz
         'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBbl9SUjhrc'
         'UdtbGs',
+        # simple-0.7.1.rpz
+        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBRGp2Vm5VQ'
+        'VpWOGs',
     ]
     for url in old_packages:
         download_file(url, 'simple.rpz', url_quote(url))
