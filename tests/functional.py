@@ -15,9 +15,13 @@ import subprocess
 import sys
 import yaml
 
-from reprounzip.unpackers.common import join_root
-from reprounzip.utils import PY3, stderr_bytes, stderr
+if PY3:
+    from urllib.parse import quote as url_quote
+else:
+    from urllib2 import quote as url_quote
 
+from reprounzip.unpackers.common import join_root
+from reprounzip.utils import PY3, stderr_bytes, stderr, download_file
 
 tests = Path(__file__).parent.absolute()
 
@@ -578,6 +582,44 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         if 'dir2' in Path(f).parent.components:
             raise AssertionError("Created file shouldn't be packed: %s" %
                                  Path(f))
+
+    # ########################################
+    # Test old packages
+    #
+
+    old_packages = [
+        # simple-0.4.0.rpz
+        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBVG4xZW1Ve'
+        'DhXNTQ',
+        # simple-0.6.0.rpz
+        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBbl9SUjhrc'
+        'UdtbGs',
+    ]
+    for url in old_packages:
+        download_file(url, 'simple.rpz', url_quote(url))
+        # Info
+        check_call(rpuz + ['info', 'simple.rpz'])
+        # Show files
+        check_call(rpuz + ['showfiles', 'simple.rpz'])
+        # Lists packages
+        check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
+        # Unpack directory
+        check_call(rpuz + ['directory', 'setup', 'simple.rpz', 'simpledir'])
+        # Run directory
+        check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
+        output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
+        with output_in_dir.open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '42'
+        # Delete with wrong command (should fail)
+        p = subprocess.Popen(rpuz + ['chroot', 'destroy', 'simpledir'],
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        assert p.poll() != 0
+        err = err.splitlines()
+        assert b"Wrong unpacker used" in err[0]
+        assert err[1].startswith(b"usage: ")
+        # Delete directory
+        check_call(rpuz + ['directory', 'destroy', 'simpledir'])
 
     # ########################################
     # Copies back coverage report
