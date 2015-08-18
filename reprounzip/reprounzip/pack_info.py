@@ -44,6 +44,13 @@ def print_info(args):
     pack_symlinks = 0
     pack_others = 0
     tar = tarfile.open(str(pack), 'r:*')
+    f = tar.extractfile('METADATA/version')
+    version = f.read()
+    f.close()
+    if version != b'REPROZIP VERSION 1\n':
+        logging.critical("Unknown pack format")
+        sys.exit(1)
+
     for m in tar.getmembers():
         if not m.name.startswith('DATA/'):
             continue

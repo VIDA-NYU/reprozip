@@ -133,8 +133,15 @@ def docker_setup_create(args):
 
     signals.pre_setup(target=target, pack=pack)
 
-    # Unpacks configuration file
     tar = tarfile.open(str(pack), 'r:*')
+    f = tar.extractfile('METADATA/version')
+    version = f.read()
+    f.close()
+    if version != b'REPROZIP VERSION 1\n':
+        logging.critical("Unknown pack format")
+        sys.exit(1)
+
+    # Unpacks configuration file
     member = copy.copy(tar.getmember('METADATA/config.yml'))
     member.name = 'config.yml'
     tar.extract(member, str(target))
