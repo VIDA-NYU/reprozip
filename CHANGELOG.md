@@ -12,6 +12,7 @@ Bugfixes:
 * Don't show a warning about network connections when they didn't succeed
 * Hide traceback when failing because Vagrant is not installed
 * Fix input/output file detection assigning files to the same run
+* Fix selecting multiple runs in 'docker run'
 
 Features:
 * Display the relative portion of the path when unhandled xxx_at() syscalls are used, to give an idea of what's been missed

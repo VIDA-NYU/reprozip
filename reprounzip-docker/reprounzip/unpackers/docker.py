@@ -384,7 +384,7 @@ def docker_run(args):
         cmd += ' '.join(shell_escape(a) for a in argv)
         uid = run.get('uid', 1000)
         gid = run.get('gid', 1000)
-        cmd = '/rpzsudo \'#%d\' \'#%d\' /busybox sh -c %s\n' % (
+        cmd = '/rpzsudo \'#%d\' \'#%d\' /busybox sh -c %s' % (
             uid, gid,
             shell_escape(cmd))
         cmds.append(cmd)
