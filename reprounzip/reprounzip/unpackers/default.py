@@ -188,19 +188,6 @@ def directory_create(args):
     tar.extractall(str(root), members)
     tar.close()
 
-    # Gets library paths
-    lib_dirs = []
-    p = subprocess.Popen(['/sbin/ldconfig', '-v', '-N'],
-                         stdout=subprocess.PIPE)
-    try:
-        for l in p.stdout:
-            if len(l) < 3 or l[0] in (b' ', b'\t'):
-                continue
-            if l.endswith(b':\n'):
-                lib_dirs.append(Path(l[:-2]))
-    finally:
-        p.wait()
-
     # Original input files, so upload can restore them
     input_files = [f.path for n, f in iteritems(config.inputs_outputs)
                    if f.read_runs]
