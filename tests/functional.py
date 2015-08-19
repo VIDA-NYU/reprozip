@@ -15,11 +15,6 @@ import subprocess
 import sys
 import yaml
 
-if PY3:
-    from urllib.parse import quote as url_quote
-else:
-    from urllib2 import quote as url_quote
-
 from reprounzip.unpackers.common import join_root
 from reprounzip.utils import PY3, stderr_bytes, stderr, download_file
 
@@ -588,26 +583,28 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     #
 
     old_packages = [
-        # simple-0.4.0.rpz
-        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBVG4xZW1Ve'
-        'DhXNTQ',
-        # simple-0.6.0.rpz
-        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBbl9SUjhrc'
-        'UdtbGs',
-        # simple-0.7.1.rpz
-        'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBRGp2Vm5VQ'
-        'VpWOGs',
+        ('simple-0.4.0.rpz',
+         'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBVG4xZW1V'
+         'eDhXNTQ'),
+        ('simple-0.6.0.rpz',
+         'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBbl9SUjhr'
+         'cUdtbGs'),
+        ('simple-0.7.1.rpz',
+         'https://drive.google.com/uc?export=download&id=0B3ucPz7GSthBRGp2Vm5V'
+         'QVpWOGs'),
     ]
-    for url in old_packages:
-        download_file(url, 'simple.rpz', url_quote(url))
+    for name, url in old_packages:
+        f = Path(name)
+        if not f.exists():
+            download_file(url, f)
         # Info
-        check_call(rpuz + ['info', 'simple.rpz'])
+        check_call(rpuz + ['info', name])
         # Show files
-        check_call(rpuz + ['showfiles', 'simple.rpz'])
+        check_call(rpuz + ['showfiles', name])
         # Lists packages
-        check_call(rpuz + ['installpkgs', '--summary', 'simple.rpz'])
+        check_call(rpuz + ['installpkgs', '--summary', name])
         # Unpack directory
-        check_call(rpuz + ['directory', 'setup', 'simple.rpz', 'simpledir'])
+        check_call(rpuz + ['directory', 'setup', name, 'simpledir'])
         # Run directory
         check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
         output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
