@@ -334,17 +334,19 @@ def graph(args):
                 logging.critical("Error extracting from pack: %s", e.args[0])
             generate(Path(args.target[0]),
                      tmp / 'METADATA',
-                     args.all_forks)
+                     args.all_forks,
+                     args.packages, args.processes, args.otherfiles)
         finally:
             tmp.rmtree()
     else:
-        generate(Path(args.target[0]), Path(args.dir), args.all_forks)
+        generate(Path(args.target[0]), Path(args.dir), args.all_forks,
+                 args.packages, args.processes, args.otherfiles)
 
 
 def disabled_bug13676(args):
     stderr.write("Error: your version of Python, %s, is not supported\n"
                  "Versions before 2.7.3 are affected by bug 13676 and will "
-                 "not work be able to\nread the trace "
+                 "not be able to read\nthe trace "
                  "database\n" % sys.version.split(' ', 1)[0])
     sys.exit(1)
 
@@ -364,6 +366,15 @@ def setup(parser, **kwargs):
     parser.add_argument('target', nargs=1, help="Destination DOT file")
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
+    parser.add_argument('--packages', default='file',
+                        help="Level of detail for packages; 'file', 'package' "
+                        "or 'ignore' (default: 'file')")
+    parser.add_argument('--processes', default='thread',
+                        help="Level of detail for processes; 'thread', "
+                        "'process' or 'run' (default: 'thread')")
+    parser.add_argument('--otherfiles', default='all',
+                        help="Level of detail for non-package files; 'all', "
+                        "'io' or 'no' (default: 'all')")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',
         help="where the database and configuration file are stored (default: "
