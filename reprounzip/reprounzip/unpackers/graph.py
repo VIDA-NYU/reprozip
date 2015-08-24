@@ -56,7 +56,21 @@ class Process(CommonEqualityMixin):
         return id(self)
 
 
-def generate(target, directory, all_forks=False):
+LVL_PKG_FILE = 0        # Show individual files in packages
+LVL_PKG_PACKAGE = 1     # Aggregate by package
+LVL_PKG_IGNORE = 2      # Ignore packages, treat them like any file
+
+LVL_PROC_THREAD = 0     # Show every process and thread
+LVL_PROC_PROCESS = 1    # Only show processes, not threads
+LVL_PROC_RUN = 2        # Don't show individual processes, aggregate by run
+
+LVL_OTHER_ALL = 0       # Show every file, aggregate through directory list
+LVL_OTHER_IO = 1        # Only show input & output files
+LVL_OTHER_NO = 3        # Don't show other files
+
+
+def generate(target, directory, all_forks=False, level_pkgs='file',
+             level_processes='thread', level_other_files='all'):
     """Main function for the graph subcommand.
     """
     # In here, a file is any file on the filesystem. A binary is a file, that
@@ -69,6 +83,44 @@ def generate(target, directory, all_forks=False):
     # doesn't do anything (new process but still old binary). If that program
     # doesn't do anything worth showing on the graph, it will be erased, unless
     # all_forks is True (--all-forks).
+
+    try:
+        level_pkgs = {'file': LVL_PKG_FILE,
+                      'files': LVL_PKG_FILE,
+                      'package': LVL_PKG_PACKAGE,
+                      'packages': LVL_PKG_PACKAGE,
+                      'ignore': LVL_PKG_IGNORE,
+                      'none': LVL_PKG_IGNORE}[level_pkgs]
+    except KeyError:
+        logging.critical("Unknown level of detail for packages: '%s'",
+                         level_pkgs)
+        sys.exit(1)
+    try:
+        level_processes = {'thread': LVL_PROC_THREAD,
+                           'threads': LVL_PROC_THREAD,
+                           'process': LVL_PROC_PROCESS,
+                           'processes': LVL_PROC_PROCESS,
+                           'run': LVL_PROC_RUN,
+                           'runs': LVL_PROC_RUN}[level_processes]
+    except KeyError:
+        logging.critical("Unknown level of detail for processes: '%s'",
+                         level_processes)
+        sys.exit(1)
+    if level_other_files.startswith('depth:'):
+        file_depth = int(level_other_files[6:])
+        level_other_files = 'all'
+    else:
+        file_depth = 9999999
+    try:
+        level_other_files = {'all': LVL_OTHER_ALL,
+                             'io': LVL_OTHER_IO,
+                             'inputoutput': LVL_OTHER_IO,
+                             'no': LVL_OTHER_NO,
+                             'none': LVL_OTHER_NO}[level_other_files]
+    except KeyError:
+        logging.critical("Unknown level of detail for other files: '%s'",
+                         level_other_files)
+        sys.exit(1)
 
     database = directory / 'trace.sqlite3'
 
