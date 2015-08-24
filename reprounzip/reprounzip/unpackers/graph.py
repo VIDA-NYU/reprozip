@@ -178,6 +178,7 @@ def generate(target, configfile, database, all_forks=False):
             argv = tuple(r_argv.split('\0'))
             if not argv[-1]:
                 argv = argv[:-1]
+            files.add(r_name)
             edges.add((process, r_name, None, argv))
 
     process_cursor.close()
