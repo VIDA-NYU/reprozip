@@ -148,7 +148,11 @@ class Process(object):
             return 'prog%d' % prog.id
 
     def json(self, process_map):
-        name = "%s (%d)" % (self.binary or "-", self.pid)
+        name = "%d" % self.pid
+        long_name = "%s (%d)" % (PosixPath(self.binary).components[-1]
+                                 if self.binary else "-",
+                                 self.pid)
+        description = "%s\n%d" % (self.binary, self.pid)
         if self.parent is not None:
             if self.created == C_FORK:
                 reason = "fork"
@@ -161,7 +165,8 @@ class Process(object):
             parent = [process_map[self.parent], reason]
         else:
             parent = None
-        return {'name': name, 'parent': parent, 'reads': [], 'writes': []}
+        return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
+                'long_name': long_name, 'description': description}
 
 
 class Package(object):
