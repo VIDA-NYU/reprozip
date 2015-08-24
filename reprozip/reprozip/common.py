@@ -138,7 +138,7 @@ class InputOutputFile(object):
             self.path, self.read_runs, self.write_runs)
 
 
-def load_files(config, runs):
+def load_iofiles(config, runs):
     """Loads the inputs_outputs part of the configuration.
 
     This tests for duplicates, merge the lists of executions, and optionally
@@ -234,7 +234,7 @@ def load_config(filename, canonical, File=File, Package=Package):
     packages = read_packages(config.get('packages'), File, Package)
     other_files = read_files(config.get('other_files'), File)
 
-    inputs_outputs = load_files(config, runs)
+    inputs_outputs = load_iofiles(config, runs)
 
     # reprozip < 0.7 compatibility: set inputs/outputs on runs (for plugins)
     for i, run in enumerate(runs):
