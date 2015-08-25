@@ -40,6 +40,7 @@ C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
 LVL_PKG_FILE = 0        # Show individual files in packages
 LVL_PKG_PACKAGE = 1     # Aggregate by package
 LVL_PKG_IGNORE = 2      # Ignore packages, treat them like any file
+LVL_PKG_DROP = 3        # Drop every file that comes from a package
 
 LVL_PROC_THREAD = 0     # Show every process and thread
 LVL_PROC_PROCESS = 1    # Only show processes, not threads
@@ -166,7 +167,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                       'package': LVL_PKG_PACKAGE,
                       'packages': LVL_PKG_PACKAGE,
                       'ignore': LVL_PKG_IGNORE,
-                      'none': LVL_PKG_IGNORE}[level_pkgs]
+                      'drop': LVL_PKG_DROP}[level_pkgs]
     except KeyError:
         logging.critical("Unknown level of detail for packages: '%s'",
                          level_pkgs)
@@ -192,7 +193,8 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                              'io': LVL_OTHER_IO,
                              'inputoutput': LVL_OTHER_IO,
                              'no': LVL_OTHER_NO,
-                             'none': LVL_OTHER_NO}[level_other_files]
+                             'none': LVL_OTHER_NO,
+                             'drop': LVL_OTHER_NO}[level_other_files]
     except KeyError:
         logging.critical("Unknown level of detail for other files: '%s'",
                          level_other_files)
@@ -359,6 +361,11 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
     if level_pkgs == LVL_PKG_IGNORE:
         packages = []
         other_files = files
+    elif level_pkgs == LVL_PKG_DROP:
+        packages = []
+        package_files = set(f.path
+                            for pkg in config.packages for f in pkg.files)
+        other_files = [f for f in files if f not in package_files]
     else:
         logging.info("Organizes packages...")
         file2package = dict((f.path, pkg)
@@ -509,8 +516,8 @@ def setup(parser, **kwargs):
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
     parser.add_argument('--packages', default='file',
-                        help="Level of detail for packages; 'file', 'package' "
-                        "or 'ignore' (default: 'file')")
+                        help="Level of detail for packages; 'file', "
+                        "'package', 'drop' or 'ignore' (default: 'file')")
     parser.add_argument('--processes', default='thread',
                         help="Level of detail for processes; 'thread', "
                         "'process' or 'run' (default: 'thread')")
