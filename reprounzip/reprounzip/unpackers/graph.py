@@ -240,7 +240,7 @@ def read_events(database, all_forks):
     file_cursor = conn.cursor()
     file_rows = file_cursor.execute(
         '''
-        SELECT name, timestamp, mode, process
+        SELECT name, timestamp, mode, process, is_directory
         FROM opened_files
         ORDER BY id
         ''')
@@ -288,9 +288,9 @@ def read_events(database, all_forks):
             run.processes.append(process)
 
         elif event_type == 'open':
-            r_name, r_timestamp, r_mode, r_process = data
+            r_name, r_timestamp, r_mode, r_process, r_directory = data
             r_name = normalize_path(r_name)
-            if r_mode != FILE_WDIR:
+            if not (r_mode & FILE_WDIR or r_directory):
                 process = processes[r_process]
                 files.add(r_name)
                 edges.add((process, r_name, r_mode, None))
