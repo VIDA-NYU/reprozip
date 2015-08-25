@@ -7,8 +7,8 @@ Changelog
 Behavior change:
 * .rpz pack format changed (version 1 -> 2). Pack is now uncompressed, data is in a nested TGZ archive; allows faster retrieval of metadata (config & trace).
 
-0.7.2 (???)
------------
+0.7.2 (2015-08-24)
+------------------
 
 Behavior change:
 * reprounzip-docker will now re-use the resulting image from the previous run when running again, instead of starting from scratch; a 'reset' command has been added to undo runs and uploads.
