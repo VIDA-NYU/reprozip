@@ -27,33 +27,14 @@ import tarfile
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
-from reprounzip.utils import PY3, unicode_, iteritems, stderr, escape, \
-    CommonEqualityMixin, normalize_path
+from reprounzip.utils import PY3, unicode_, itervalues, stderr, escape, \
+    normalize_path
 
 
 C_INITIAL = 0   # First process or don't know
 C_FORK = 1      # Might actually be any one of fork, vfork or clone
 C_EXEC = 2      # Replaced image with execve
 C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
-
-
-class Process(CommonEqualityMixin):
-    """Structure representing a process in the experiment.
-    """
-    def __init__(self, pid, parent, timestamp, acted, binary, created):
-        self.pid = pid
-        self.parent = parent
-        self.timestamp = timestamp
-        # Whether that process has done something yet. If it execve()s and
-        # hasn't done anything since it forked, no need for it to appear
-        self.acted = acted
-        # Executable file
-        self.binary = binary
-        # How was this process created, one of the C_* constants
-        self.created = created
-
-    def __hash__(self):
-        return id(self)
 
 
 LVL_PKG_FILE = 0        # Show individual files in packages
@@ -69,21 +50,116 @@ LVL_OTHER_IO = 1        # Only show input & output files
 LVL_OTHER_NO = 3        # Don't show other files
 
 
-def generate(target, directory, all_forks=False, level_pkgs='file',
-             level_processes='thread', level_other_files='all'):
-    """Main function for the graph subcommand.
+class Run(object):
+    """Structure representing a whole run.
     """
-    # In here, a file is any file on the filesystem. A binary is a file, that
-    # gets executed. A process is a system-level task, identified by its pid
-    # (pids don't get reused in the database).
-    # What I call program is the couple (process, binary), so forking creates a
-    # new program (with the same binary) and exec'ing creates a new program as
-    # well (with the same process)
-    # Because of this, fork+exec will create an intermediate program that
-    # doesn't do anything (new process but still old binary). If that program
-    # doesn't do anything worth showing on the graph, it will be erased, unless
-    # all_forks is True (--all-forks).
+    def __init__(self, nb):
+        self.nb = nb
+        self.processes = []
 
+    def dot(self, fp, level_processes):
+        assert self.processes
+        if level_processes == LVL_PROC_RUN:
+            fp.write('    run%d [label="%d: %s"];\n' % (
+                     self.nb, self.nb, self.processes[0].binary or "-"))
+        else:
+            for process in self.processes:
+                if level_processes == LVL_PROC_THREAD or not process.thread:
+                    process.dot(fp, level_processes)
+
+    def dot_endpoint(self, level_processes):
+        return 'run%d' % self.nb
+
+
+class Process(object):
+    """Structure representing a process in the experiment.
+    """
+    _id_gen = 0
+
+    def __init__(self, pid, run, parent, timestamp, thread, acted, binary,
+                 created):
+        self.id = Process._id_gen
+        Process._id_gen += 1
+        self.pid = pid
+        self.run = run
+        self.parent = parent
+        self.timestamp = timestamp
+        self.thread = thread
+        # Whether that process has done something yet. If it execve()s and
+        # hasn't done anything since it forked, no need for it to appear
+        self.acted = acted
+        # Executable file
+        self.binary = binary
+        # How was this process created, one of the C_* constants
+        self.created = created
+
+    def dot(self, fp, level_processes):
+        fp.write('    prog%d [label="%s (%d)"];\n' % (
+                 self.id, escape(unicode_(self.binary) or "-"), self.pid))
+        if self.parent is not None:
+            reason = ''
+            if self.created == C_FORK:
+                reason = "fork"
+            elif self.created == C_EXEC:
+                reason = "exec"
+            elif self.created == C_FORKEXEC:
+                reason = "fork+exec"
+            fp.write('    prog%d -> prog%d [label="%s"];\n' % (
+                     self.parent.id, self.id, reason))
+
+    def dot_endpoint(self, level_processes):
+        if level_processes == LVL_PROC_RUN:
+            return self.run.dot_endpoint(level_processes)
+        else:
+            prog = self
+            if level_processes == LVL_PROC_PROCESS:
+                while prog.thread:
+                    prog = prog.parent
+            return 'prog%d' % prog.id
+
+
+class Package(object):
+    """Structure representing a system package.
+    """
+    _id_gen = 0
+
+    def __init__(self, name, version=None):
+        self.id = Package._id_gen
+        Package._id_gen += 1
+        self.name = name
+        self.version = version
+        self.files = set()
+
+    def dot(self, fp, level_pkgs):
+        if not self.files:
+            return
+
+        if level_pkgs == LVL_PKG_PACKAGE:
+            fp.write('    "pkg %s" [label=' % escape(self.name))
+            if self.version:
+                fp.write('"%s %s"];\n' % (
+                         escape(self.name), escape(self.version)))
+            else:
+                fp.write('"%s"];\n' % escape(self.name))
+        elif level_pkgs == LVL_PKG_FILE:
+            fp.write('    subgraph cluster%d {\n        label=' % self.id)
+            if self.version:
+                fp.write('"%s %s";\n' % (
+                         escape(self.name), escape(self.version)))
+            else:
+                fp.write('"%s";\n' % escape(self.name))
+            for f in self.files:
+                fp.write('        "%s";\n' % escape(unicode_(f)))
+            fp.write('    }\n')
+
+    def dot_endpoint(self, f, level_pkgs):
+        if level_pkgs == LVL_PKG_PACKAGE:
+            return '"pkg %s"' % escape(self.name)
+        else:
+            return '"%s"' % escape(unicode_(f))
+
+
+def parse_levels(level_pkgs, level_processes, level_other_files):
     try:
         level_pkgs = {'file': LVL_PKG_FILE,
                       'files': LVL_PKG_FILE,
@@ -110,7 +186,7 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         file_depth = int(level_other_files[6:])
         level_other_files = 'all'
     else:
-        file_depth = 9999999
+        file_depth = None
     try:
         level_other_files = {'all': LVL_OTHER_ALL,
                              'io': LVL_OTHER_IO,
@@ -122,18 +198,20 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                          level_other_files)
         sys.exit(1)
 
-    database = directory / 'trace.sqlite3'
+    return level_pkgs, level_processes, level_other_files, file_depth
 
-    # Reads package ownership from the configuration
-    configfile = directory / 'config.yml'
-    if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
-        sys.exit(1)
-    runs, packages, other_files = load_config(configfile, canonical=False)
-    packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
+
+def read_events(database, all_forks):
+    # In here, a file is any file on the filesystem. A binary is a file, that
+    # gets executed. A process is a system-level task, identified by its pid
+    # (pids don't get reused in the database).
+    # What I call program is the couple (process, binary), so forking creates a
+    # new program (with the same binary) and exec'ing creates a new program as
+    # well (with the same process)
+    # Because of this, fork+exec will create an intermediate program that
+    # doesn't do anything (new process but still old binary). If that program
+    # doesn't do anything worth showing on the graph, it will be erased, unless
+    # all_forks is True (--all-forks).
 
     if PY3:
         # On PY3, connect() only accepts unicode
@@ -151,7 +229,7 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
     process_cursor = conn.cursor()
     process_rows = process_cursor.execute(
         '''
-        SELECT id, parent, timestamp
+        SELECT id, parent, timestamp, is_thread
         FROM processes
         ORDER BY id
         ''')
@@ -167,7 +245,7 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         ORDER BY id
         ''')
     binaries = set()
-    files = OrderedSet()
+    files = set()
     edges = OrderedSet()
 
     # ... as well as executed files.
@@ -184,23 +262,30 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
     rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
                        ((r[1], 'open', r) for r in file_rows),
                        ((r[1], 'exec', r) for r in exec_rows))
+    runs = []
+    run = None
     for ts, event_type, data in rows:
         if event_type == 'process':
-            r_id, r_parent, r_timestamp = data
+            r_id, r_parent, r_timestamp, r_thread = data
             if r_parent is not None:
                 parent = processes[r_parent]
                 binary = parent.binary
             else:
+                run = Run(len(runs))
+                runs.append(run)
                 parent = None
                 binary = None
-            p = Process(r_id,
-                        parent,
-                        r_timestamp,
-                        False,
-                        binary,
-                        C_INITIAL if r_parent is None else C_FORK)
-            processes[r_id] = p
-            all_programs.append(p)
+            process = Process(r_id,
+                              run,
+                              parent,
+                              r_timestamp,
+                              r_thread,
+                              False,
+                              binary,
+                              C_INITIAL if r_parent is None else C_FORK)
+            processes[r_id] = process
+            all_programs.append(process)
+            run.processes.append(process)
 
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
@@ -223,13 +308,16 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                 process.acted = True
             else:
                 process = Process(process.pid,
+                                  run,
                                   process,
                                   r_timestamp,
+                                  False,
                                   True,         # Hides exec only once
                                   r_name,
                                   C_EXEC)
                 all_programs.append(process)
                 processes[r_process] = process
+                run.processes.append(process)
             argv = tuple(r_argv.split('\0'))
             if not argv[-1]:
                 argv = argv[:-1]
@@ -238,75 +326,129 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
 
     process_cursor.close()
     file_cursor.close()
+    exec_cursor.close()
     conn.close()
 
+    return runs, files, edges
+
+
+def generate(target, directory, all_forks=False, level_pkgs='file',
+             level_processes='thread', level_other_files='all'):
+    """Main function for the graph subcommand.
+    """
+    level_pkgs, level_processes, level_other_files, file_depth = \
+        parse_levels(level_pkgs, level_processes, level_other_files)
+
+    database = directory / 'trace.sqlite3'
+
+    # Reads package ownership from the configuration
+    configfile = directory / 'config.yml'
+    if not configfile.is_file():
+        logging.critical("Configuration file does not exist!\n"
+                         "Did you forget to run 'reprozip trace'?\n"
+                         "If not, you might want to use --dir to specify an "
+                         "alternate location.")
+        sys.exit(1)
+    config = load_config(configfile, canonical=False)
+
+    runs, files, edges = read_events(database, all_forks)
+
+    package_map = {}
+
     # Puts files in packages
-    logging.info("Organizes packages...")
-    package_files = {}
-    other_files = []
-    for f in files:
-        pkg = packages.get(f)
-        if pkg is not None:
-            package_files.setdefault((pkg.name, pkg.version), []).append(f)
-        else:
-            other_files.append(f)
+    if level_pkgs == LVL_PKG_IGNORE:
+        packages = []
+        other_files = files
+    else:
+        logging.info("Organizes packages...")
+        file2package = dict((f.path, pkg)
+                            for pkg in config.packages for f in pkg.files)
+        packages = {}
+        other_files = []
+        for f in files:
+            pkg = file2package.get(f)
+            if pkg is not None:
+                package = packages.get(pkg.name)
+                if package is None:
+                    package = Package(pkg.name, pkg.version)
+                    packages[pkg.name] = package
+                package.files.add(f)
+                package_map[f] = package
+            else:
+                other_files.append(f)
+        packages = list(itervalues(packages))
+
+    # Filter other files
+    if level_other_files == LVL_OTHER_ALL and file_depth is not None:
+        other_files = set(PosixPath(*f.components[:file_depth + 1])
+                          for f in other_files)
+        edges = OrderedSet((prog,
+                            f if f in package_map
+                            else PosixPath(*f.components[:file_depth + 1]),
+                            mode,
+                            argv)
+                           for prog, f, mode, argv in edges)
+    else:
+        if level_other_files == LVL_OTHER_IO:
+            inputs_outputs = set(f.path
+                                 for f in itervalues(config.inputs_outputs))
+            other_files = set(f for f in other_files if f in inputs_outputs)
+            edges = OrderedSet((prog, f, mode, argv)
+                               for prog, f, mode, argv in edges
+                               if f in package_map or f in other_files)
+        elif level_other_files == LVL_OTHER_NO:
+            other_files = set()
+            edges = OrderedSet((prog, f, mode, argv)
+                               for prog, f, mode, argv in edges
+                               if f in package_map)
 
     # Writes DOT file
     with target.open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
+
         # Programs
         logging.info("Writing programs...")
-        for program in all_programs:
-            fp.write('    prog%d [label="%s (%d)"];\n' % (
-                     id(program), program.binary or "-", program.pid))
-            if program.parent is not None:
-                reason = ''
-                if program.created == C_FORK:
-                    reason = "fork"
-                elif program.created == C_EXEC:
-                    reason = "exec"
-                elif program.created == C_FORKEXEC:
-                    reason = "fork+exec"
-                fp.write('    prog%d -> prog%d [label="%s"];\n' % (
-                         id(program.parent), id(program), reason))
+        for run in runs:
+            run.dot(fp, level_processes)
 
-        fp.write('\n    node [shape=ellipse];\n\n    /* system packages */\n')
+        fp.write('\n    node [shape=ellipse];\n')
 
-        # Files from packages
-        logging.info("Writing packages...")
-        for i, ((name, version), files) in enumerate(iteritems(package_files)):
-            fp.write('    subgraph cluster%d {\n        label=' % i)
-            if version:
-                fp.write('"%s %s";\n' % (escape(name), escape(version)))
-            else:
-                fp.write('"%s";\n' % escape(name))
-            for f in files:
-                fp.write('        "%s";\n' % escape(unicode_(f)))
-            fp.write('    }\n')
+        # Packages
+        if level_pkgs != LVL_PKG_IGNORE:
+            logging.info("Writing packages...")
+            fp.write('\n    /* system packages */\n')
+            for package in sorted(packages, key=lambda pkg: pkg.name):
+                package.dot(fp, level_pkgs)
 
         fp.write('\n    /* other files */\n')
 
         # Other files
         logging.info("Writing other files...")
-        for f in other_files:
-            fp.write('    "%s"\n' % escape(unicode_(f)))
+        for f in sorted(other_files):
+            fp.write('    "%s";\n' % escape(unicode_(f)))
 
         fp.write('\n')
 
         # Edges
         logging.info("Connecting edges...")
         for prog, f, mode, argv in edges:
+            endp_prog = prog.dot_endpoint(level_processes)
+            if f in package_map:
+                endp_file = package_map[f].dot_endpoint(f, level_processes)
+            else:
+                endp_file = '"%s"' % escape(unicode_(f))
+
             if mode is None:
-                fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (
-                         escape(unicode_(f)),
-                         id(prog),
+                fp.write('    %s -> %s [color=blue, label="%s"];\n' % (
+                         endp_file,
+                         endp_prog,
                          escape(' '.join(argv))))
             elif mode & FILE_WRITE:
-                fp.write('    prog%d -> "%s" [color=red];\n' % (
-                         id(prog), escape(unicode_(f))))
+                fp.write('    %s -> %s [color=red];\n' % (
+                         endp_prog, endp_file))
             elif mode & FILE_READ:
-                fp.write('    "%s" -> prog%d [color=green];\n' % (
-                         escape(unicode_(f)), id(prog)))
+                fp.write('    %s -> %s [color=green];\n' % (
+                         endp_file, endp_prog))
 
         fp.write('}\n')
 
