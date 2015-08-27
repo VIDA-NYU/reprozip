@@ -357,9 +357,21 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
 
     runs, files, edges = read_events(database, all_forks)
 
-    package_map = {}
+    # Apply regexes
+    ignore = [lambda path, r=re.compile(p): r.search(path) is not None
+              for p in regex_filters or []]
+
+    def filefilter(path):
+        path = unicode_(path)
+        return not any(f(path) for f in ignore)
+
+    files = set(f for f in files if filefilter(f))
+    edges = [(prog, f, mode, argv)
+             for prog, f, mode, argv in edges
+             if filefilter(f)]
 
     # Puts files in packages
+    package_map = {}
     if level_pkgs == LVL_PKG_IGNORE:
         packages = []
         other_files = files
@@ -410,23 +422,6 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
             edges = [(prog, f, mode, argv)
                      for prog, f, mode, argv in edges
                      if f in package_map]
-
-    # Apply regexes
-    if regex_filters:
-        ignore = [lambda path, r=re.compile(p): r.search(path) is not None
-                  for p in regex_filters or []]
-
-        def filefilter(path):
-            path = unicode_(path)
-            if any(f(path) for f in ignore):
-                logging.debug("IGN %s", path)
-                return False
-            return True
-
-        other_files = set(f for f in other_files if filefilter(f))
-        edges = [(prog, f, mode, argv)
-                 for prog, f, mode, argv in edges
-                 if filefilter(f)]
 
     # Writes DOT file
     with target.open('w', encoding='utf-8', newline='\n') as fp:
