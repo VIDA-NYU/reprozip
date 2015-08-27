@@ -370,8 +370,8 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
             return None
         if not (replace or aggregates):
             return path
-        for f in replace:
-            pathuni_ = f(pathuni)
+        for fi in replace:
+            pathuni_ = fi(pathuni)
             if pathuni_ != pathuni:
                 logging.debug("SUB %s -> %s", pathuni, pathuni_)
             pathuni = pathuni_
@@ -383,17 +383,17 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         return PosixPath(pathuni)
 
     files_new = set()
-    for f in files:
-        f = filefilter(f)
-        if f is not None:
-            files_new.add(f)
+    for fi in files:
+        fi = filefilter(fi)
+        if fi is not None:
+            files_new.add(fi)
     files = files_new
 
     edges_new = OrderedSet()
-    for prog, f, mode, argv in edges:
-        f = filefilter(f)
-        if f is not None:
-            edges_new.add((prog, f, mode, argv))
+    for prog, fi, mode, argv in edges:
+        fi = filefilter(fi)
+        if fi is not None:
+            edges_new.add((prog, fi, mode, argv))
     edges = edges_new
 
     # Puts files in packages
@@ -412,17 +412,17 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                             for pkg in config.packages for f in pkg.files)
         packages = {}
         other_files = []
-        for f in files:
-            pkg = file2package.get(f)
+        for fi in files:
+            pkg = file2package.get(fi)
             if pkg is not None:
                 package = packages.get(pkg.name)
                 if package is None:
                     package = Package(pkg.name, pkg.version)
                     packages[pkg.name] = package
-                package.files.add(f)
-                package_map[f] = package
+                package.files.add(fi)
+                package_map[fi] = package
             else:
-                other_files.append(f)
+                other_files.append(fi)
         packages = list(itervalues(packages))
 
     # Filter other files
@@ -471,19 +471,19 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
 
         # Other files
         logging.info("Writing other files...")
-        for f in sorted(other_files):
-            fp.write('    "%s";\n' % escape(unicode_(f)))
+        for fi in sorted(other_files):
+            fp.write('    "%s";\n' % escape(unicode_(fi)))
 
         fp.write('\n')
 
         # Edges
         logging.info("Connecting edges...")
-        for prog, f, mode, argv in edges:
+        for prog, fi, mode, argv in edges:
             endp_prog = prog.dot_endpoint(level_processes)
-            if f in package_map:
-                endp_file = package_map[f].dot_endpoint(f, level_processes)
+            if fi in package_map:
+                endp_file = package_map[fi].dot_endpoint(fi, level_processes)
             else:
-                endp_file = '"%s"' % escape(unicode_(f))
+                endp_file = '"%s"' % escape(unicode_(fi))
 
             if mode is None:
                 fp.write('    %s -> %s [color=blue, label="%s"];\n' % (
