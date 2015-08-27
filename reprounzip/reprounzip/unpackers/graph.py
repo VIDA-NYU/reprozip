@@ -19,7 +19,8 @@ from __future__ import division, print_function, unicode_literals
 import argparse
 import heapq
 import logging
-from rpaths import Path
+import re
+from rpaths import PosixPath, Path
 import sqlite3
 import sys
 import tarfile
@@ -335,7 +336,8 @@ def read_events(database, all_forks):
 
 
 def generate(target, directory, all_forks=False, level_pkgs='file',
-             level_processes='thread', level_other_files='all'):
+             level_processes='thread', level_other_files='all',
+             regex_filters=None):
     """Main function for the graph subcommand.
     """
     level_pkgs, level_processes, level_other_files, file_depth = \
@@ -400,14 +402,31 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
             inputs_outputs = set(f.path
                                  for f in itervalues(config.inputs_outputs))
             other_files = set(f for f in other_files if f in inputs_outputs)
-            edges = OrderedSet((prog, f, mode, argv)
-                               for prog, f, mode, argv in edges
-                               if f in package_map or f in other_files)
+            edges = [(prog, f, mode, argv)
+                     for prog, f, mode, argv in edges
+                     if f in package_map or f in other_files]
         elif level_other_files == LVL_OTHER_NO:
             other_files = set()
-            edges = OrderedSet((prog, f, mode, argv)
-                               for prog, f, mode, argv in edges
-                               if f in package_map)
+            edges = [(prog, f, mode, argv)
+                     for prog, f, mode, argv in edges
+                     if f in package_map]
+
+    # Apply regexes
+    if regex_filters:
+        ignore = [lambda path, r=re.compile(p): r.search(path) is not None
+                  for p in regex_filters or []]
+
+        def filefilter(path):
+            path = unicode_(path)
+            if any(f(path) for f in ignore):
+                logging.debug("IGN %s", path)
+                return False
+            return True
+
+        other_files = set(f for f in other_files if filefilter(f))
+        edges = [(prog, f, mode, argv)
+                 for prog, f, mode, argv in edges
+                 if filefilter(f)]
 
     # Writes DOT file
     with target.open('w', encoding='utf-8', newline='\n') as fp:
@@ -484,12 +503,14 @@ def graph(args):
             generate(Path(args.target[0]),
                      tmp / 'METADATA',
                      args.all_forks,
-                     args.packages, args.processes, args.otherfiles)
+                     args.packages, args.processes, args.otherfiles,
+                     args.regex_filter)
         finally:
             tmp.rmtree()
     else:
         generate(Path(args.target[0]), Path(args.dir), args.all_forks,
-                 args.packages, args.processes, args.otherfiles)
+                 args.packages, args.processes, args.otherfiles,
+                 args.regex_filter)
 
 
 def disabled_bug13676(args):
@@ -524,6 +545,8 @@ def setup(parser, **kwargs):
     parser.add_argument('--otherfiles', default='all',
                         help="Level of detail for non-package files; 'all', "
                         "'io' or 'no' (default: 'all')")
+    parser.add_argument('--regex-filter', action='append',
+                        help="Glob patterns of files to ignore")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',
         help="where the database and configuration file are stored (default: "
