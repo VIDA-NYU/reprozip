@@ -480,6 +480,11 @@ def graph(args):
     Reads in the trace sqlite3 database and writes out a graph in GraphViz DOT
     format.
     """
+    def call_generate(args, directory):
+        generate(Path(args.target[0]), directory, args.all_forks,
+                 args.packages, args.processes, args.otherfiles,
+                 args.regex_filter)
+
     if args.pack is not None:
         tmp = Path.tempdir(prefix='reprounzip_')
         try:
@@ -495,17 +500,11 @@ def graph(args):
                 tar.extract('METADATA/trace.sqlite3', path=str(tmp))
             except KeyError as e:
                 logging.critical("Error extracting from pack: %s", e.args[0])
-            generate(Path(args.target[0]),
-                     tmp / 'METADATA',
-                     args.all_forks,
-                     args.packages, args.processes, args.otherfiles,
-                     args.regex_filter)
+            call_generate(args, tmp / 'METADATA')
         finally:
             tmp.rmtree()
     else:
-        generate(Path(args.target[0]), Path(args.dir), args.all_forks,
-                 args.packages, args.processes, args.otherfiles,
-                 args.regex_filter)
+        call_generate(args, Path(args.dir))
 
 
 def disabled_bug13676(args):
