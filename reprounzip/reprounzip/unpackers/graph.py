@@ -354,6 +354,8 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                          "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
+    inputs_outputs = set(f.path
+                         for f in itervalues(config.inputs_outputs))
 
     runs, files, edges = read_events(database, all_forks)
 
@@ -437,8 +439,6 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                            for prog, f, mode, argv in edges)
     else:
         if level_other_files == LVL_OTHER_IO:
-            inputs_outputs = set(f.path
-                                 for f in itervalues(config.inputs_outputs))
             other_files = set(f for f in other_files if f in inputs_outputs)
             edges = [(prog, f, mode, argv)
                      for prog, f, mode, argv in edges
@@ -451,14 +451,18 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
 
     # Writes DOT file
     with target.open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
+        fp.write('digraph G {\n    /* programs */\n'
+                 '    node [shape=box fontcolor=white '
+                 'fillcolor=black style=filled];\n')
 
         # Programs
         logging.info("Writing programs...")
         for run in runs:
             run.dot(fp, level_processes)
 
-        fp.write('\n    node [shape=ellipse];\n')
+        fp.write('\n'
+                 '    node [shape=ellipse fontcolor="#131C39" '
+                 'fillcolor="#C9D2ED"];\n')
 
         # Packages
         if level_pkgs != LVL_PKG_IGNORE:
@@ -472,7 +476,11 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         # Other files
         logging.info("Writing other files...")
         for fi in sorted(other_files):
-            fp.write('    "%s";\n' % escape(unicode_(fi)))
+            if fi in inputs_outputs:
+                fp.write('    "%s" [fillcolor="#A3B4E0"];\n' %
+                         escape(unicode_(fi)))
+            else:
+                fp.write('    "%s";\n' % escape(unicode_(fi)))
 
         fp.write('\n')
 
@@ -486,15 +494,15 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                 endp_file = '"%s"' % escape(unicode_(fi))
 
             if mode is None:
-                fp.write('    %s -> %s [color=blue, label="%s"];\n' % (
+                fp.write('    %s -> %s [style=bold, label="%s"];\n' % (
                          endp_file,
                          endp_prog,
                          escape(' '.join(argv))))
             elif mode & FILE_WRITE:
-                fp.write('    %s -> %s [color=red];\n' % (
+                fp.write('    %s -> %s [color="#000088"];\n' % (
                          endp_prog, endp_file))
             elif mode & FILE_READ:
-                fp.write('    %s -> %s [color=green];\n' % (
+                fp.write('    %s -> %s [color="#8888CC"];\n' % (
                          endp_file, endp_prog))
 
         fp.write('}\n')
