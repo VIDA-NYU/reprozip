@@ -337,7 +337,7 @@ def read_events(database, all_forks):
 
 def generate(target, directory, all_forks=False, level_pkgs='file',
              level_processes='thread', level_other_files='all',
-             regex_filters=None):
+             regex_filters=None, regex_replaces=None):
     """Main function for the graph subcommand.
     """
     level_pkgs, level_processes, level_other_files, file_depth = \
@@ -360,15 +360,36 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
     # Apply regexes
     ignore = [lambda path, r=re.compile(p): r.search(path) is not None
               for p in regex_filters or []]
+    replace = [lambda path, r=re.compile(p): r.sub(repl, path)
+               for p, repl in regex_replaces or []]
 
     def filefilter(path):
-        path = unicode_(path)
-        return not any(f(path) for f in ignore)
+        pathuni = unicode_(path)
+        if any(f(pathuni) for f in ignore):
+            logging.debug("IGN %s", pathuni)
+            return None
+        if not replace:
+            return path
+        for f in replace:
+            pathuni_ = f(pathuni)
+            if pathuni_ != pathuni:
+                logging.debug("SUB %s -> %s", pathuni, pathuni_)
+            pathuni = pathuni_
+        return PosixPath(pathuni)
 
-    files = set(f for f in files if filefilter(f))
-    edges = [(prog, f, mode, argv)
-             for prog, f, mode, argv in edges
-             if filefilter(f)]
+    files_new = set()
+    for f in files:
+        f = filefilter(f)
+        if f is not None:
+            files_new.add(f)
+    files = files_new
+
+    edges_new = OrderedSet()
+    for prog, f, mode, argv in edges:
+        f = filefilter(f)
+        if f is not None:
+            edges_new.add((prog, f, mode, argv))
+    edges = edges_new
 
     # Puts files in packages
     package_map = {}
@@ -483,7 +504,7 @@ def graph(args):
     def call_generate(args, directory):
         generate(Path(args.target[0]), directory, args.all_forks,
                  args.packages, args.processes, args.otherfiles,
-                 args.regex_filter)
+                 args.regex_filter, args.regex_replace)
 
     if args.pack is not None:
         tmp = Path.tempdir(prefix='reprounzip_')
@@ -541,6 +562,8 @@ def setup(parser, **kwargs):
                         "'io' or 'no' (default: 'all')")
     parser.add_argument('--regex-filter', action='append',
                         help="Glob patterns of files to ignore")
+    parser.add_argument('--regex-replace', action='append', nargs=2,
+                        help="Apply regular expression replacement to files")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',
         help="where the database and configuration file are stored (default: "
