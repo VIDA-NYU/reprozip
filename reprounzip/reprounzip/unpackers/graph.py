@@ -337,7 +337,7 @@ def read_events(database, all_forks):
 
 def generate(target, directory, all_forks=False, level_pkgs='file',
              level_processes='thread', level_other_files='all',
-             regex_filters=None, regex_replaces=None):
+             regex_filters=None, regex_replaces=None, aggregates=None):
     """Main function for the graph subcommand.
     """
     level_pkgs, level_processes, level_other_files, file_depth = \
@@ -368,13 +368,18 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         if any(f(pathuni) for f in ignore):
             logging.debug("IGN %s", pathuni)
             return None
-        if not replace:
+        if not (replace or aggregates):
             return path
         for f in replace:
             pathuni_ = f(pathuni)
             if pathuni_ != pathuni:
                 logging.debug("SUB %s -> %s", pathuni, pathuni_)
             pathuni = pathuni_
+        for prefix in aggregates or []:
+            if pathuni.startswith(prefix):
+                logging.debug("AGG %s -> %s", pathuni, prefix)
+                pathuni = prefix
+                break
         return PosixPath(pathuni)
 
     files_new = set()
@@ -504,7 +509,8 @@ def graph(args):
     def call_generate(args, directory):
         generate(Path(args.target[0]), directory, args.all_forks,
                  args.packages, args.processes, args.otherfiles,
-                 args.regex_filter, args.regex_replace)
+                 args.regex_filter, args.regex_replace,
+                 args.aggregate)
 
     if args.pack is not None:
         tmp = Path.tempdir(prefix='reprounzip_')
@@ -560,6 +566,8 @@ def setup(parser, **kwargs):
     parser.add_argument('--otherfiles', default='all',
                         help="Level of detail for non-package files; 'all', "
                         "'io' or 'no' (default: 'all')")
+    parser.add_argument('--aggregate', action='append',
+                        help="Aggregate all files under this path")
     parser.add_argument('--regex-filter', action='append',
                         help="Glob patterns of files to ignore")
     parser.add_argument('--regex-replace', action='append', nargs=2,
