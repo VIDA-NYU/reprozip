@@ -335,6 +335,14 @@ def read_events(database, all_forks):
     return runs, files, edges
 
 
+def format_argv(argv):
+    joined = ' '.join(argv)
+    if len(joined) < 50:
+        return joined
+    else:
+        return "%s ..." % argv[0]
+
+
 def generate(target, directory, all_forks=False, level_pkgs='file',
              level_processes='thread', level_other_files='all',
              regex_filters=None, regex_replaces=None, aggregates=None):
@@ -497,7 +505,7 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                 fp.write('    %s -> %s [style=bold, label="%s"];\n' % (
                          endp_file,
                          endp_prog,
-                         escape(' '.join(argv))))
+                         escape(format_argv(argv))))
             elif mode & FILE_WRITE:
                 fp.write('    %s -> %s [color="#000088"];\n' % (
                          endp_prog, endp_file))
