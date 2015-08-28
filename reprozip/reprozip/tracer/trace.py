@@ -26,7 +26,7 @@ from reprozip.common import File, InputOutputFile, load_config, save_config, \
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
-    unicode_, flatten, UniqueNames, hsize, find_all_links
+    unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links
 
 
 class TracedFile(File):
@@ -133,7 +133,7 @@ def get_files(conn):
     for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
             r_mode = FILE_READ
-        r_name = Path(r_name)
+        r_name = Path(normalize_path(r_name))
 
         if event_type == 'exec':
             executed.add(r_name)

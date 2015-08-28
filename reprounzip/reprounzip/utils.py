@@ -23,7 +23,7 @@ import locale
 import logging
 import operator
 import os
-from rpaths import Path
+from rpaths import Path, PosixPath
 import stat
 import subprocess
 import sys
@@ -236,6 +236,17 @@ def hsize(nbytes):
         return "{0:.2f} TB".format(nbytes / TB)
     else:
         return "{0:.2f} PB".format(nbytes / PB)
+
+
+def normalize_path(path):
+    """Normalize a path obtained from the database.
+    """
+    # For some reason, os.path.normpath() keeps multiple leading slashes
+    # We don't want this since it has no meaning on Linux
+    path = PosixPath(path)
+    if path.path.startswith(path._sep + path._sep):
+        path = PosixPath(path.path[1:])
+    return path
 
 
 def find_all_links_recursive(filename, files):

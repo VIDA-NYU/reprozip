@@ -28,7 +28,7 @@ from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
 from reprounzip.utils import PY3, unicode_, iteritems, stderr, escape, \
-    CommonEqualityMixin
+    CommonEqualityMixin, normalize_path
 
 
 C_INITIAL = 0   # First process or don't know
@@ -152,7 +152,7 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process = data
-            r_name = PosixPath(r_name)
+            r_name = normalize_path(r_name)
             if r_mode != FILE_WDIR:
                 process = processes[r_process]
                 files.add(r_name)
