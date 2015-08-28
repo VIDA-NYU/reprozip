@@ -1,4 +1,6 @@
-sudo: true
+sudo: required
+services:
+  - docker
 language: python
 env:
   - TEST_MODE=run_program
