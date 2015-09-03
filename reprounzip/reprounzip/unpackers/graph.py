@@ -18,6 +18,7 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 import heapq
+import json
 import logging
 import re
 from rpaths import PosixPath, Path
@@ -76,6 +77,29 @@ class Run(object):
     def dot_endpoint(self, level_processes):
         return 'run%d' % self.nb
 
+    def json(self, prog_map, level_processes):
+        assert self.processes
+        if level_processes == LVL_PROC_RUN:
+            json_process = self.processes[0].json()
+            for process in self.processes:
+                prog_map[process] = json_process
+            return [json_process]
+        else:
+            run = []
+            process_idx_map = {}
+            for process in self.processes:
+                if level_processes == LVL_PROC_THREAD or not process.thread:
+                    process_idx_map[process] = len(run)
+                    json_process = process.json(process_idx_map)
+                    prog_map[process] = json_process
+                    run.append(json_process)
+                else:
+                    p_process = process
+                    while p_process.thread:
+                        p_process = p_process.parent
+                    prog_map[process] = prog_map[p_process]
+            return run
+
 
 class Process(object):
     """Structure representing a process in the experiment.
@@ -123,6 +147,22 @@ class Process(object):
                     prog = prog.parent
             return 'prog%d' % prog.id
 
+    def json(self, process_map):
+        name = "%s (%d)" % (self.binary or "-", self.pid)
+        if self.parent is not None:
+            if self.created == C_FORK:
+                reason = "fork"
+            elif self.created == C_EXEC:
+                reason = "exec"
+            elif self.created == C_FORKEXEC:
+                reason = "fork+exec"
+            else:
+                assert False
+            parent = [process_map[self.parent], reason]
+        else:
+            parent = None
+        return {'name': name, 'parent': parent, 'reads': [], 'writes': []}
+
 
 class Package(object):
     """Structure representing a system package.
@@ -163,6 +203,10 @@ class Package(object):
             return '"pkg %s"' % escape(self.name)
         else:
             return '"%s"' % escape(unicode_(f))
+
+    def json(self, level_pkgs):
+        return {'name': self.name, 'version': self.version or None,
+                'files': []}
 
 
 def parse_levels(level_pkgs, level_processes, level_other_files):
@@ -545,7 +589,36 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
                inputs_outputs, level_pkgs, level_processes, level_other_files):
     """Writes a JSON file suitable for further processing.
     """
-    raise NotImplementedError
+    # Packages
+    json_packages = [pkg.json(level_pkgs) for pkg in packages]
+
+    # Other files
+    json_other_files = [unicode_(fi) for fi in sorted(other_files)]
+
+    # Programs
+    prog_map = {}
+    json_runs = [run.json(prog_map, level_processes) for run in runs]
+
+    # Connect edges
+    for prog, f, mode, argv in edges:
+        if mode is None:
+            prog_map[prog]['reads'].append(unicode_(f))
+            # TODO: argv?
+        elif mode & FILE_WRITE:
+            prog_map[prog]['writes'].append(unicode_(f))
+        elif mode & FILE_READ:
+            prog_map[prog]['reads'].append(unicode_(f))
+
+    json_other_files.sort()
+
+    with target.open('w', encoding='utf-8', newline='\n') as fp:
+        json.dump({'packages': sorted(itervalues(json_packages),
+                                      key=lambda p: p['name']),
+                   'other_files': json_other_files,
+                   'runs': json_runs},
+                  fp,
+                  indent=2,
+                  sort_keys=True)
 
 
 def graph(args):
