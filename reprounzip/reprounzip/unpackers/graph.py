@@ -38,6 +38,10 @@ C_EXEC = 2      # Replaced image with execve
 C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
 
 
+FORMAT_DOT = 0
+FORMAT_JSON = 1
+
+
 LVL_PKG_FILE = 0        # Show individual files in packages
 LVL_PKG_PACKAGE = 1     # Aggregate by package
 LVL_PKG_IGNORE = 2      # Ignore packages, treat them like any file
@@ -343,11 +347,19 @@ def format_argv(argv):
         return "%s ..." % argv[0]
 
 
-def generate(target, directory, all_forks=False, level_pkgs='file',
-             level_processes='thread', level_other_files='all',
+def generate(target, directory, all_forks=False, graph_format='dot',
+             level_pkgs='file', level_processes='thread',
+             level_other_files='all',
              regex_filters=None, regex_replaces=None, aggregates=None):
     """Main function for the graph subcommand.
     """
+    try:
+        graph_format = {'dot': FORMAT_DOT, 'DOT': FORMAT_DOT,
+                        'json': FORMAT_JSON, 'JSON': FORMAT_JSON}[graph_format]
+    except KeyError:
+        logging.critical("Unknown output format %r", graph_format)
+        sys.exit(1)
+
     level_pkgs, level_processes, level_other_files, file_depth = \
         parse_levels(level_pkgs, level_processes, level_other_files)
 
@@ -457,7 +469,20 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
                      for prog, f, mode, argv in edges
                      if f in package_map]
 
-    # Writes DOT file
+    args = (target, runs, packages, other_files, package_map, edges,
+            inputs_outputs, level_pkgs, level_processes, level_other_files)
+    if graph_format == FORMAT_DOT:
+        graph_dot(*args)
+    elif graph_format == FORMAT_JSON:
+        graph_json(*args)
+    else:
+        assert False
+
+
+def graph_dot(target, runs, packages, other_files, package_map, edges,
+              inputs_outputs, level_pkgs, level_processes, level_other_files):
+    """Writes a GraphViz DOT file from the collected information.
+    """
     with target.open('w', encoding='utf-8', newline='\n') as fp:
         fp.write('digraph G {\n    /* programs */\n'
                  '    node [shape=box fontcolor=white '
@@ -516,14 +541,21 @@ def generate(target, directory, all_forks=False, level_pkgs='file',
         fp.write('}\n')
 
 
+def graph_json(target, runs, packages, other_files, package_map, edges,
+               inputs_outputs, level_pkgs, level_processes, level_other_files):
+    """Writes a JSON file suitable for further processing.
+    """
+    raise NotImplementedError
+
+
 def graph(args):
     """graph subcommand.
 
     Reads in the trace sqlite3 database and writes out a graph in GraphViz DOT
-    format.
+    format or JSON.
     """
     def call_generate(args, directory):
-        generate(Path(args.target[0]), directory, args.all_forks,
+        generate(Path(args.target[0]), directory, args.all_forks, args.format,
                  args.packages, args.processes, args.otherfiles,
                  args.regex_filter, args.regex_replace,
                  args.aggregate)
@@ -588,6 +620,12 @@ def setup(parser, **kwargs):
                         help="Glob patterns of files to ignore")
     parser.add_argument('--regex-replace', action='append', nargs=2,
                         help="Apply regular expression replacement to files")
+    parser.add_argument('--dot', action='store_const', dest='format',
+                        const='dot', default='dot',
+                        help="Set the output format to DOT (this is the "
+                        "default)")
+    parser.add_argument('--json', action='store_const', dest='format',
+                        const='json', help="Set the output format to JSON")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',
         help="where the database and configuration file are stored (default: "
