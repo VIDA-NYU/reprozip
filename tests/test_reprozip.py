@@ -165,14 +165,14 @@ class TestFiles(unittest.TestCase):
         files, inputs, outputs = self.do_test([
             ('proc', 0, None),
             ('open', 0, "/some/dir", True, FILE_WDIR),
-            ('exec', 0, "/some/dir/ls", "/some/dir", b"ls\0"),
+            ('exec', 0, "/some/dir/ls", "/some/dir", "ls\0"),
             ('open', 0, "/some/otherdir/in", False, FILE_READ),
             ('open', 0, "/some/thing/created", True, FILE_WRITE),
             ('open', 0, "/some/thing/created/file", False, FILE_WRITE),
             ('open', 0, "/some/thing/created/file", False, FILE_READ),
             ('open', 0, "/some/thing/created", True, FILE_WDIR),
             ('exec', 0, "/some/thing/created/file", "/some/thing/created",
-             b"created\0"),
+             "created\0"),
         ])
         expected = set([
             '/some/dir',
