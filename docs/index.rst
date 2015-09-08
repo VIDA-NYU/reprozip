@@ -31,3 +31,4 @@ Links
 
 * `Project website <http://vida-nyu.github.io/reprozip/>`__
 * `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__
+* `Mailing list: reprozip-users@vgc.poly.edu <http://vgc.poly.edu/mailman/listinfo/reprozip-users>`__
