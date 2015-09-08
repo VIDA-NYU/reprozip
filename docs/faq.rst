@@ -5,15 +5,15 @@ Frequently Asked Questions
 
 ..  _file_id:
 
-Why `reprozip` does not identify my input/output file?
-======================================================
+Why doesn't `reprozip` identify my input/output file?
+=====================================================
 
 ReproZip uses some heuristics to determine what is and what is not an input or output file. However, this is intended to be a starting point: you should check the configuration file (``input_files`` and ``output_files`` sections) and add/remove paths there; giving readable id names to input/output files, such as `database-log` or `lookup-table`, also helps.
 
 ..  _moving-outputs:
 
-Why `reprounzip` cannot get my output files after reproducing an experiment?
-============================================================================
+Why can't `reprounzip` get my output files after reproducing an experiment?
+===========================================================================
 
 This is probably the case where these output files do not have a fixed path name. It is common for experiments to dynamically choose where the outputs should be written, e.g.: by putting the date and time in the filename. However, ReproZip uses filenames in the ``output_files`` section of the configuration file to detect those when reproducing the experiment: if the name of the output file when reproducing is different from when it was originally packed, ReproZip cannot detect these as output files, and therefore, cannot get them through the ``download`` command.
 
@@ -21,8 +21,8 @@ The easiest way to solve this issue is to write a simple bash script that runs y
 
 ..  _systemd:
 
-Why no files are packed when tracing a daemon?
-==============================================
+Why aren't any files packed when tracing a daemon?
+==================================================
 
 If you are starting the daemon via the `service` tool, it might be calling `init` over a client/server connection. In this situation, ReproZip will successfully pack the client, but anything the server (`init`) does will not be captured.
 
