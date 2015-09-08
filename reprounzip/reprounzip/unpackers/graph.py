@@ -172,16 +172,14 @@ class Process(object):
 class Package(object):
     """Structure representing a system package.
     """
-    _id_gen = 0
-
     def __init__(self, name, version=None):
-        self.id = Package._id_gen
-        Package._id_gen += 1
+        self.id = None
         self.name = name
         self.version = version
         self.files = set()
 
     def dot(self, fp, level_pkgs):
+        assert self.id is not None
         if not self.files:
             return
 
@@ -199,8 +197,8 @@ class Package(object):
                          escape(self.name), escape(self.version)))
             else:
                 fp.write('"%s";\n' % escape(self.name))
-            for f in self.files:
-                fp.write('        "%s";\n' % escape(unicode_(f)))
+            for f in sorted(unicode_(f) for f in self.files):
+                fp.write('        "%s";\n' % escape(f))
             fp.write('    }\n')
 
     def dot_endpoint(self, f, level_pkgs):
@@ -213,7 +211,7 @@ class Package(object):
         if level_pkgs == LVL_PKG_PACKAGE:
             files = []
         elif level_pkgs == LVL_PKG_FILE:
-            files = list(self.files)
+            files = sorted(unicode_(f) for f in self.files)
         else:
             assert False
         return {'name': self.name, 'version': self.version or None,
@@ -500,7 +498,9 @@ def generate(target, directory, all_forks=False, graph_format='dot',
                 package_map[fi] = package
             else:
                 other_files.append(fi)
-        packages = list(itervalues(packages))
+        packages = sorted(itervalues(packages), key=lambda pkg: pkg.name)
+        for i, pkg in enumerate(packages):
+            pkg.id = i
 
     # Filter other files
     if level_other_files == LVL_OTHER_ALL and file_depth is not None:
