@@ -81,6 +81,8 @@ Right after the runs come the input and output files. These are the files that R
       read_by_runs: []
       written_by_runs: [0]
 
+Note that you can prevent `reprozip` from guessing which files are inputs or outputs using the ``--dont-find-inputs-outputs`` flag.
+
 ..  seealso:: :ref:`file_id`
 
 The next section in the configuration file shows the files to be packed. If the software dependencies were identified by the package manager of the system during the ``reprozip trace`` command, they will be listed under ``packages``; the file dependencies not identified in software packages are listed under ``other_files``::
