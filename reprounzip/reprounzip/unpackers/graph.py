@@ -616,14 +616,21 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
 
     json_other_files.sort()
 
-    with target.open('w', encoding='utf-8', newline='\n') as fp:
-        json.dump({'packages': sorted(itervalues(json_packages),
+    if PY3:
+        fp = target.open('w', encoding='utf-8', newline='\n')
+    else:
+        fp = target.open('wb')
+    try:
+        json.dump({'packages': sorted(json_packages,
                                       key=lambda p: p['name']),
                    'other_files': json_other_files,
                    'runs': json_runs},
                   fp,
+                  ensure_ascii=False,
                   indent=2,
                   sort_keys=True)
+    finally:
+        fp.close()
 
 
 def graph(args):
