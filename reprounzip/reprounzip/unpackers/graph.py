@@ -210,8 +210,14 @@ class Package(object):
             return '"%s"' % escape(unicode_(f))
 
     def json(self, level_pkgs):
+        if level_pkgs == LVL_PKG_PACKAGE:
+            files = []
+        elif level_pkgs == LVL_PKG_FILE:
+            files = list(self.files)
+        else:
+            assert False
         return {'name': self.name, 'version': self.version or None,
-                'files': []}
+                'files': files}
 
 
 def parse_levels(level_pkgs, level_processes, level_other_files):
