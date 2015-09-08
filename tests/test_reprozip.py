@@ -163,14 +163,15 @@ class TestFiles(unittest.TestCase):
 
     def test_get_files(self):
         files, inputs, outputs = self.do_test([
-            ('proc', 0, None),
+            ('proc', 0, None, False),
             ('open', 0, "/some/dir", True, FILE_WDIR),
             ('exec', 0, "/some/dir/ls", "/some/dir", "ls\0"),
             ('open', 0, "/some/otherdir/in", False, FILE_READ),
             ('open', 0, "/some/thing/created", True, FILE_WRITE),
-            ('open', 0, "/some/thing/created/file", False, FILE_WRITE),
-            ('open', 0, "/some/thing/created/file", False, FILE_READ),
-            ('open', 0, "/some/thing/created", True, FILE_WDIR),
+            ('proc', 1, 0, False),
+            ('open', 1, "/some/thing/created/file", False, FILE_WRITE),
+            ('open', 1, "/some/thing/created/file", False, FILE_READ),
+            ('open', 1, "/some/thing/created", True, FILE_WDIR),
             ('exec', 0, "/some/thing/created/file", "/some/thing/created",
              "created\0"),
         ])
@@ -191,17 +192,18 @@ class TestFiles(unittest.TestCase):
         Path.stat = fail
         try:
             files, inputs, outputs = self.do_test([
-                ('proc', 0, None),
+                ('proc', 0, None, False),
                 ('open', 0, "/some/dir", True, FILE_WDIR),
                 ('exec', 0, "/some/dir/ls", "/some/dir", b'ls\0/some/cli\0'),
                 ('open', 0, "/some/cli", False, FILE_WRITE),
                 ('open', 0, "/some/r", False, FILE_READ),
                 ('open', 0, "/some/rw", False, FILE_READ),
-                ('proc', 1, None),
+                ('proc', 1, None, False),
                 ('open', 1, "/some/dir", True, FILE_WDIR),
                 ('exec', 1, "/some/dir/ls", "/some/dir", b'ls\0'),
                 ('open', 1, "/some/cli", False, FILE_READ),
-                ('open', 1, "/some/r", False, FILE_READ),
+                ('proc', 2, 1, True),
+                ('open', 2, "/some/r", False, FILE_READ),
                 ('open', 1, "/some/rw", False, FILE_WRITE),
             ])
             expected = set([

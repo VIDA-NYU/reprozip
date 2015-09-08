@@ -73,14 +73,14 @@ def make_database(insert, path=None):
 
     for timestamp, l in enumerate(insert):
         if l[0] == 'proc':
-            ident, parent = l[1:]
+            ident, parent, is_thread = l[1:]
             conn.execute(
                     '''
                     INSERT INTO processes(id, run_id, parent, timestamp,
                                           is_thread, exitcode)
-                    VALUES(?, 0, ?, ?, 0, 0);
+                    VALUES(?, 0, ?, ?, ?, 0);
                     ''',
-                    (ident, parent, timestamp))
+                    (ident, parent, timestamp, is_thread))
         elif l[0] == 'open':
             process, name, is_dir, mode = l[1:]
             conn.execute(
