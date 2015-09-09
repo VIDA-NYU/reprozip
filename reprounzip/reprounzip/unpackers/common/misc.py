@@ -308,6 +308,9 @@ def get_runs(runs, selected_runs, cmdline):
     Will return an iterable of run numbers. Might also fail loudly or exit
     after printing the original command-line.
     """
+    name_map = dict((r['id'], i) for i, r in enumerate(runs) if 'id' in r)
+    run_list = []
+
     if selected_runs is None:
         if len(runs) == 1:
             selected_runs = '0'
@@ -320,7 +323,7 @@ def get_runs(runs, selected_runs, cmdline):
         try:
             r = int(s)
         except ValueError:
-            logging.critical("Error: Run is not a number")
+            logging.critical("Error: Unknown run %s", s)
             raise UsageError
         if r < 0 or r >= len(runs):
             logging.critical("Error: Expected 0 <= run <= %d, got %d",
@@ -328,33 +331,39 @@ def get_runs(runs, selected_runs, cmdline):
             sys.exit(1)
         return r
 
-    sep = selected_runs.find('-')
-    if sep == -1:
-        selected_runs = parse_run(selected_runs),
-    else:
-        if sep > 0:
-            first = parse_run(selected_runs[:sep])
+    for run_item in selected_runs.split(','):
+        run_item = run_item.strip()
+        if run_item in name_map:
+            run_list.append(name_map[run_item])
+            continue
+
+        sep = run_item.find('-')
+        if sep == -1:
+            run_list.append(parse_run(run_item))
         else:
-            first = 0
-        if sep + 1 < len(selected_runs):
-            last = parse_run(selected_runs[sep + 1:])
-        else:
-            last = len(runs) - 1
-        if last <= first:
-            logging.critical("Error: Last run number should be greater than "
-                             "the first")
-            sys.exit(1)
-        selected_runs = irange(first, last + 1)
+            if sep > 0:
+                first = parse_run(run_item[:sep])
+            else:
+                first = 0
+            if sep + 1 < len(run_item):
+                last = parse_run(run_item[sep + 1:])
+            else:
+                last = len(runs) - 1
+            if last <= first:
+                logging.critical("Error: Last run number should be greater "
+                                 "than the first")
+                sys.exit(1)
+            run_list.extend(irange(first, last + 1))
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
         print("Original command-lines:")
-        for run in selected_runs:
+        for run in run_list:
             print(' '.join(shell_escape(arg)
                            for arg in runs[run]['argv']))
         sys.exit(0)
 
-    return selected_runs
+    return run_list
 
 
 def interruptible_call(*args, **kwargs):
