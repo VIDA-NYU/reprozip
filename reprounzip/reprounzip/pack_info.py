@@ -24,7 +24,7 @@ from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, shell_escape
-from reprounzip.utils import iteritems, hsize
+from reprounzip.utils import iteritems, itervalues, hsize
 
 
 def print_info(args):
@@ -116,7 +116,7 @@ def print_info(args):
                                                   current_architecture))
         print("Distribution: %s (current: %s)" % (
               meta_distribution, current_distribution or "(not Linux)"))
-        print("Executions (%d):" % len(runs))
+        print("Runs (%d):" % len(runs))
         for i, run in enumerate(runs):
             cmdline = ' '.join(shell_escape(a) for a in run['argv'])
             if len(runs) > 1:
@@ -195,35 +195,59 @@ def showfiles(args):
             unpacked_info = pickle.load(fp)
         assigned_input_files = unpacked_info.get('input_files', {})
 
-        print("Input files:")
-        for input_name, f in iteritems(config.inputs_outputs):
-            if not f.read_runs:
-                continue
-            print("    %s (%s)" % (input_name, f.path))
-            if assigned_input_files.get(input_name) is not None:
-                assigned = assigned_input_files[input_name]
-            else:
-                assigned = "(original)"
-            print("      %s" % assigned)
+        if any(f.read_runs for f in itervalues(config.inputs_outputs)):
+            print("Input files:")
+            for input_name, f in iteritems(config.inputs_outputs):
+                if not f.read_runs:
+                    continue
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (input_name, f.path))
+                else:
+                    print("    %s" % input_name)
+                if assigned_input_files.get(input_name) is not None:
+                    assigned = assigned_input_files[input_name]
+                else:
+                    assigned = "(original)"
+                print("      %s" % assigned)
+        else:
+            print("Input files: none")
 
-        print("Output files:")
-        for output_name, f in iteritems(config.inputs_outputs):
-            if f.write_runs:
-                print("    %s (%s)" % (output_name, f.path))
+        if any(f.write_runs for f in itervalues(config.inputs_outputs)):
+            print("Output files:")
+            for output_name, f in iteritems(config.inputs_outputs):
+                if f.write_runs:
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (output_name, f.path))
+                    else:
+                        print("    %s" % output_name)
+        else:
+            print("Output files: none")
 
     else:  # pack.is_file()
         # Reads info from a pack file
         config = load_config(pack)
 
-        print("Input files:")
-        for input_name, f in iteritems(config.inputs_outputs):
-            if f.read_runs:
-                print("    %s (%s)" % (input_name, f.path))
+        if any(f.read_runs for f in itervalues(config.inputs_outputs)):
+            print("Input files:")
+            for input_name, f in iteritems(config.inputs_outputs):
+                if f.read_runs:
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (input_name, f.path))
+                    else:
+                        print("    %s" % input_name)
+        else:
+            print("Input files: none")
 
-        print("Output files:")
-        for output_name, f in iteritems(config.inputs_outputs):
-            if f.write_runs:
-                print("    %s (%s)" % (output_name, f.path))
+        if any(f.write_runs for f in itervalues(config.inputs_outputs)):
+            print("Output files:")
+            for output_name, f in iteritems(config.inputs_outputs):
+                if f.write_runs:
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (output_name, f.path))
+                    else:
+                        print("    %s" % output_name)
+        else:
+            print("Output files: none")
 
 
 def setup_info(parser, **kwargs):

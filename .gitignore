@@ -63,3 +63,6 @@ nosetests.xml
 
 # Vagrant
 .vagrant
+
+/tests/vagrant
+/docs/_build

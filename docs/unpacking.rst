@@ -17,28 +17,43 @@ Before unpacking an experiment, it is often useful to have further information w
 
     $ reprounzip info <package>
 
-where `<package>` corresponds to the experiment package (i.e.: the ``.rpz`` file). You can use ``-v`` for `verbose` before the command to get more detailed information on the package, e.g. ``reprounzip -v info experiment.rpz``.
+where `<package>` corresponds to the experiment package (i.e., the ``.rpz`` file).
 
-The output of this command has three sections. The first section, `Pack Information`, contains general information about the experiment package, including size and total number of files::
+The output of this command has three sections. The first section, `Pack information`, contains general information about the experiment package, including size and total number of files::
 
     ----- Pack information -----
     Compressed size: <compressed-size>
     Unpacked size: <unpacked-size>
     Total packed paths: <number>
 
-The next section, `Metadata`, contains information about dependencies (i.e., software packages), machine architecture from the packing environment, and experiment execution::
+The next section, `Metadata`, contains information about dependencies (i.e., software packages), machine architecture from the packing environment, and experiment runs::
 
     ----- Metadata -----
     Total software packages: <total-number-software-packages>
     Packed software packages: <number-packed-software-packages>
     Architecture: <original-architecture> (current: <current-architecture>)
     Distribution: <original-operating-system> (current: <current-operating-system>)
-    Executions:
-        <command-line>
-            wd: <working-directory>
-            exitcode: 0
+    Runs:
+        <run-id>: <command-line>
+        <run-id>: <command-line>
+        ...
 
 Note that, for `Architecture` and `Distribution`, the command shows information with respect to both the original environment (i.e., the environment where the experiment was packed) and the current one (i.e., the environment where the experiment is to be unpacked). This helps users understand the differences between the environments in order to provide a better guidance in choosing the most appropriate unpacker.
+
+If the verbose mode is used, more detailed information on the runs is provided::
+
+    $ reprounzip -v info <package>
+    ...
+    ----- Metadata -----
+    ...
+    Runs:
+        <run-id>: <command-line>
+            wd: <working-directory>
+            exitcode: <exit-code>
+        <run-id>: <command-line>
+            wd: <working-directory>
+            exitcode: <exit-code>
+        ...
 
 Last, the section `Unpackers` shows which of the installed *reprounzip* unpackers can be successfully used in the current environment::
 
@@ -50,9 +65,7 @@ Last, the section `Unpackers` shows which of the installed *reprounzip* unpacker
     Unknown:
         ...
 
-`Compatible` lists the unpackers that can be used in the current environment, while `Incompatible` lists the unpackers that are not supported in the current environment. An additional `Unknown` list shows the installed unpackers that might not work.
-
-As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the :ref:`reprounzip-vagrant <unpack-vagrant>` plugin) is compatible, but :ref:`installpkgs <unpack-installpkgs>` is not; `vagrant` may also be listed under `Unknown` if the `vagrant` command is not found in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`__ is not installed).
+`Compatible` lists the unpackers that can be used in the current environment, while `Incompatible` lists the unpackers that are not supported in the current environment. When using the verbose mode, an additional `Unknown` list shows the installed unpackers that may not work. As an example, for an experiment originally packed on Ubuntu and a user reproducing it on Windows, the `vagrant` unpacker (available through the :ref:`reprounzip-vagrant <unpack-vagrant>` plugin) is compatible, but :ref:`installpkgs <unpack-installpkgs>` is not; `vagrant` may also be listed under `Unknown` if ``vagrant`` is not in PATH (e.g.: if `Vagrant <https://www.vagrantup.com/>`__ is not installed).
 
 ..  _showfiles:
 
@@ -83,6 +96,8 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
 
 This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
+..  _provenance-graph:
+
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
 
@@ -94,6 +109,8 @@ ReproZip also allows users to generate a *provenance graph* related to the exper
 where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph.
 
 ..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
+
+..  _unpack-unpackers:
 
 Unpackers
 =========
@@ -207,11 +224,16 @@ After creating the directory, the experiment can be reproduced by issuing the ``
 
     $ reprounzip vagrant run <path>
 
-which will execute the entire experiment inside the experiment directory. Users may also change the command line of the experiment by using ``--cmdline``::
+which will execute the experiment inside the experiment directory. Users may also change the command line of the experiment by using ``--cmdline``::
 
     $ reprounzip vagrant run <path> --cmdline <new-command-line>
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
+
+If the package contains multiple `runs` (separate commands that were packed together), you need to provide the id of the run to be reproduced::
+
+    $ reprounzip vagrant run <path> <run-id>
+    $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
 
 If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
 
