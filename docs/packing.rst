@@ -44,20 +44,23 @@ The first part of the configuration file gives general information with respect 
     # Run info
     version: <reprozip-version>
     runs:
-      - id: <run-id>
-        architecture: <machine-architecture>
-        argv: <command-line-arguments>
-        binary: <command-line-binary>
-        distribution: <linux-distribution>
-        environ: <environment-variables>
-        exitcode: <exit-code>
-        gid: <group-id>
-        hostname: <machine-hostname>
-        system: <system-kernel>
-        uid: <user-id>
-        workingdir: <working-directory>
-      - id: ...
-      ...
+    # Run 0
+    - id: <run-id>
+      architecture: <machine-architecture>
+      argv: <command-line-arguments>
+      binary: <command-line-binary>
+      distribution: <linux-distribution>
+      environ: <environment-variables>
+      exitcode: <exit-code>
+      gid: <group-id>
+      hostname: <machine-hostname>
+      system: <system-kernel>
+      uid: <user-id>
+      workingdir: <working-directory>
+      
+    # Run 1
+    - id: ...
+    ...
 
 If necessary, users may change command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Users may also give a more meaningful and user-friendly identifier for a run by changing ``id``. Other attributes should not be changed in general.
 
