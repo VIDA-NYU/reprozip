@@ -28,7 +28,7 @@ import tarfile
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, UsageError
 from reprounzip.utils import PY3, unicode_, itervalues, stderr, escape, \
     normalize_path
 
@@ -209,7 +209,7 @@ class Package(object):
 
     def json(self, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
-            files = []
+            raise UsageError("JSON output doesn't support --packages package")
         elif level_pkgs == LVL_PKG_FILE:
             files = sorted(unicode_(f) for f in self.files)
         else:
@@ -612,13 +612,14 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
 
     # Connect edges
     for prog, f, mode, argv in edges:
+        what = unicode_(f)
         if mode is None:
-            prog_map[prog]['reads'].append(unicode_(f))
+            prog_map[prog]['reads'].append(what)
             # TODO: argv?
         elif mode & FILE_WRITE:
-            prog_map[prog]['writes'].append(unicode_(f))
+            prog_map[prog]['writes'].append(what)
         elif mode & FILE_READ:
-            prog_map[prog]['reads'].append(unicode_(f))
+            prog_map[prog]['reads'].append(what)
 
     json_other_files.sort()
 

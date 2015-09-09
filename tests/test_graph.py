@@ -12,6 +12,7 @@ import unittest
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, FILE_STAT
 from reprounzip.unpackers import graph
+from reprounzip.unpackers.common import UsageError
 
 from tests.common import make_database
 
@@ -116,13 +117,46 @@ other_files:
     def tearDownClass(cls):
         cls._trace.rmtree()
 
-    def test_dot(self):
+    def do_dot_test(self, expected, **kwargs):
+        graph.Process._id_gen = 0
         fd, target = Path.tempfile(prefix='rpz_testgraph_', suffix='.dot')
         os.close(fd)
         try:
-            graph.generate(target, self._trace)
+            graph.generate(target, self._trace, **kwargs)
+            if expected is False:
+                self.fail("DOT generation didn't fail as expected")
             with target.open('r') as fp:
-                self.assertEqual("""\
+                self.assertEqual(expected, fp.read())
+        except UsageError:
+            if expected is not False:
+                raise
+        finally:
+            target.remove()
+
+    def do_json_test(self, expected, **kwargs):
+        graph.Process._id_gen = 0
+        fd, target = Path.tempfile(prefix='rpz_testgraph_', suffix='.json')
+        os.close(fd)
+        try:
+            graph.generate(target, self._trace, graph_format='json', **kwargs)
+            if expected is False:
+                self.fail("JSON generation didn't fail as expected")
+            with target.open('r', encoding='utf-8') as fp:
+                obj = json.load(fp)
+            self.assertEqual(expected, obj)
+        except UsageError:
+            if expected is not False:
+                raise
+        finally:
+            target.remove()
+
+    def do_tests(self, expected_dot, expected_json, **kwargs):
+        self.do_dot_test(expected_dot, **kwargs)
+        self.do_json_test(expected_json, **kwargs)
+
+    def test_simple(self):
+        self.do_tests(
+            """\
 digraph G {
     /* programs */
     node [shape=box fontcolor=white fillcolor=black style=filled];
@@ -187,81 +221,128 @@ digraph G {
     "/some/dir/thing" -> prog6 [color="#8888CC"];
     prog6 -> "/some/dir/result" [color="#000088"];
 }
-""", fp.read())
-        finally:
-            target.remove()
+""",
+            {'packages': [{'name': 'pkg1', 'version': '1.0',
+                           'files': ['/usr/bin/wc']},
+                          {'name': 'pkg2', 'version': '1.0',
+                           'files': ['/etc/2_two.cfg',
+                                     '/usr/lib/2_one.so']},
+                          {'name': 'python', 'version': '2.7',
+                           'files': ['/usr/bin/python']}],
+             'other_files': ['/bin/sh',
+                             '/some/dir/drive.py',
+                             '/some/dir/experiment',
+                             '/some/dir/one',
+                             '/some/dir/report',
+                             '/some/dir/result',
+                             '/some/dir/thing',
+                             '/some/dir/two',
+                             '/usr/share/1_one.pyc'],
+             'runs': [[{'name': '0',
+                        'long_name': 'sh (0)',
+                        'description': '/bin/sh\n0',
+                        'parent': None,
+                        'reads': ['/bin/sh', '/usr/share/1_one.pyc'],
+                        'writes': ['/some/dir/one']},
+                       {'name': '0',
+                        'long_name': 'python (0)',
+                        'description': '/usr/bin/python\n0',
+                        'parent': [0, 'exec'],
+                        'reads': ['/usr/bin/python',
+                                  '/some/dir/drive.py',
+                                  '/some/dir/one',
+                                  '/etc/2_two.cfg'],
+                        'writes': []},
+                       {'name': '1',
+                        'long_name': 'experiment (1)',
+                        'description': '/some/dir/experiment\n1',
+                        'parent': [1, 'fork+exec'],
+                        'reads': ['/some/dir/experiment',
+                                  '/usr/lib/2_one.so'],
+                        'writes': ['/some/dir/two']},
+                       {'name': '0',
+                        'long_name': 'wc (0)',
+                        'description': '/usr/bin/wc\n0',
+                        'parent': [1, 'exec'],
+                        'reads': ['/usr/bin/wc', '/some/dir/two'],
+                        'writes': []}],
 
-    def test_json(self):
-        fd, target = Path.tempfile(prefix='rpz_testgraph_', suffix='.json')
-        os.close(fd)
-        try:
-            graph.generate(target, self._trace, graph_format='json')
-            with target.open('r', encoding='utf-8') as fp:
-                obj = json.load(fp)
-            expected = {
-                'packages': [{'name': 'pkg1', 'version': '1.0',
-                              'files': ['/usr/bin/wc']},
-                             {'name': 'pkg2', 'version': '1.0',
-                              'files': ['/etc/2_two.cfg',
-                                        '/usr/lib/2_one.so']},
-                             {'name': 'python', 'version': '2.7',
-                              'files': ['/usr/bin/python']}],
-                'other_files': ['/bin/sh',
-                                '/some/dir/drive.py',
-                                '/some/dir/experiment',
-                                '/some/dir/one',
-                                '/some/dir/report',
-                                '/some/dir/result',
-                                '/some/dir/thing',
-                                '/some/dir/two',
-                                '/usr/share/1_one.pyc'],
-                'runs': [[{'name': '0',
-                           'long_name': 'sh (0)',
-                           'description': '/bin/sh\n0',
-                           'parent': None,
-                           'reads': ['/bin/sh', '/usr/share/1_one.pyc'],
-                           'writes': ['/some/dir/one']},
-                          {'name': '0',
-                           'long_name': 'python (0)',
-                           'description': '/usr/bin/python\n0',
-                           'parent': [0, 'exec'],
-                           'reads': ['/usr/bin/python',
-                                     '/some/dir/drive.py',
-                                     '/some/dir/one',
-                                     '/etc/2_two.cfg'],
-                           'writes': []},
-                          {'name': '1',
-                           'long_name': 'experiment (1)',
-                           'description': '/some/dir/experiment\n1',
-                           'parent': [1, 'fork+exec'],
-                           'reads': ['/some/dir/experiment',
-                                     '/usr/lib/2_one.so'],
-                           'writes': ['/some/dir/two']},
-                          {'name': '0',
-                           'long_name': 'wc (0)',
-                           'description': '/usr/bin/wc\n0',
-                           'parent': [1, 'exec'],
-                           'reads': ['/usr/bin/wc', '/some/dir/two'],
-                           'writes': []}],
+                      [{'name': '2',
+                        'long_name': 'sh (2)',
+                        'description': '/bin/sh\n2',
+                        'parent': None,
+                        'reads': ['/bin/sh'],
+                        'writes': []},
+                       {'name': '3',
+                        'long_name': 'python (3)',
+                        'description': '/usr/bin/python\n3',
+                        'parent': [0, 'fork+exec'],
+                        'reads': ['/usr/bin/python', '/some/dir/one'],
+                        'writes': ['/some/dir/thing']},
+                       {'name': '2',
+                        'long_name': 'report (2)',
+                        'description': '/some/dir/report\n2',
+                        'parent': [0, 'exec'],
+                        'reads': ['/some/dir/report', '/some/dir/thing'],
+                        'writes': ['/some/dir/result']}]]})
 
-                         [{'name': '2',
-                           'long_name': 'sh (2)',
-                           'description': '/bin/sh\n2',
-                           'parent': None,
-                           'reads': ['/bin/sh'],
-                           'writes': []},
-                          {'name': '3',
-                           'long_name': 'python (3)',
-                           'description': '/usr/bin/python\n3',
-                           'parent': [0, 'fork+exec'],
-                           'reads': ['/usr/bin/python', '/some/dir/one'],
-                           'writes': ['/some/dir/thing']},
-                          {'name': '2',
-                           'long_name': 'report (2)',
-                           'description': '/some/dir/report\n2',
-                           'parent': [0, 'exec'],
-                           'reads': ['/some/dir/report', '/some/dir/thing'],
-                           'writes': ['/some/dir/result']}]]}
-            self.assertEqual(expected, obj)
-        finally:
-            target.remove()
+    def test_collapsed_packages(self):
+        self.do_tests(
+            """\
+digraph G {
+    /* programs */
+    node [shape=box fontcolor=white fillcolor=black style=filled];
+    prog0 [label="/bin/sh (0)"];
+    prog1 [label="/usr/bin/python (0)"];
+    prog0 -> prog1 [label="exec"];
+    prog2 [label="/some/dir/experiment (1)"];
+    prog1 -> prog2 [label="fork+exec"];
+    prog3 [label="/usr/bin/wc (0)"];
+    prog1 -> prog3 [label="exec"];
+    prog4 [label="/bin/sh (2)"];
+    prog5 [label="/usr/bin/python (3)"];
+    prog4 -> prog5 [label="fork+exec"];
+    prog6 [label="/some/dir/report (2)"];
+    prog4 -> prog6 [label="exec"];
+
+    node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
+
+    /* system packages */
+    "pkg pkg1" [label="pkg1 1.0"];
+    "pkg pkg2" [label="pkg2 1.0"];
+    "pkg python" [label="python 2.7"];
+
+    /* other files */
+    "/bin/sh";
+    "/some/dir/drive.py";
+    "/some/dir/experiment";
+    "/some/dir/one";
+    "/some/dir/report";
+    "/some/dir/result";
+    "/some/dir/thing";
+    "/some/dir/two";
+
+    "/bin/sh" -> prog0 [style=bold, label="sh script_1"];
+    "/usr/share/1_one.py" -> prog0 [color="#8888CC"];
+    prog0 -> "/some/dir/one" [color="#000088"];
+    "/usr/bin/python" -> prog1 [style=bold, label="python drive.py"];
+    "/some/dir/drive.py" -> prog1 [color="#8888CC"];
+    "/some/dir/one" -> prog1 [color="#8888CC"];
+    "/etc/2_two.cfg" -> prog1 [color="#8888CC"];
+    "/some/dir/experiment" -> prog2 [style=bold, label="experiment"];
+    "/usr/lib/2_one.so" -> prog2 [color="#8888CC"];
+    prog2 -> "/some/dir/two" [color="#000088"];
+    "/usr/bin/wc" -> prog3 [style=bold, label="wc out.txt"];
+    "/some/dir/two" -> prog3 [color="#8888CC"];
+    "/bin/sh" -> prog4 [style=bold, label="sh script_2"];
+    "/usr/bin/python" -> prog5 [style=bold, label="python -"];
+    "/some/dir/one" -> prog5 [color="#8888CC"];
+    prog5 -> "/some/dir/thing" [color="#000088"];
+    "/some/dir/report" -> prog6 [style=bold, label="./report -v"];
+    "/some/dir/thing" -> prog6 [color="#8888CC"];
+    prog6 -> "/some/dir/result" [color="#000088"];
+}
+""",
+            False,
+            level_pkgs='package',
+            regex_replaces=[('.pyc$', '.py')])
