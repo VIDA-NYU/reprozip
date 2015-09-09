@@ -19,7 +19,7 @@ from __future__ import division, print_function, unicode_literals
 import argparse
 import heapq
 import logging
-from rpaths import PosixPath, Path
+from rpaths import Path
 import sqlite3
 import sys
 import tarfile
@@ -160,7 +160,7 @@ def generate(target, directory, all_forks=False):
 
         elif event_type == 'exec':
             r_name, r_timestamp, r_process, r_argv = data
-            r_name = PosixPath(r_name)
+            r_name = normalize_path(r_name)
             process = processes[r_process]
             binaries.add(r_name)
             # Here we split this process in two "programs", unless the previous
