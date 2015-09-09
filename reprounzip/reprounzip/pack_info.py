@@ -129,10 +129,10 @@ def print_info(args):
         print("Runs (%d):" % len(runs))
         for i, run in enumerate(runs):
             cmdline = ' '.join(shell_escape(a) for a in run['argv'])
-            if len(runs) > 1:
-                print("    %d: %s" % (i, cmdline))
-            else:
+            if len(runs) == 1 and run['id'] == "run0":
                 print("    %s" % cmdline)
+            else:
+                print("    %s: %s" % (run['id'], cmdline))
             if args.verbosity >= 2:
                 print("        wd: %s" % run['workingdir'])
                 if 'signal' in run:
