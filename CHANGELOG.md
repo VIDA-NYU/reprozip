@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.7.3 (???)
+-----------
+
+Features:
+* Runs in the configuration file now have an 'id' field, that will be shown by 'reprounzip info' and can be selected when running
+
 0.7.2 (2015-08-24)
 ------------------
 
