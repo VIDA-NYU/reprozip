@@ -83,6 +83,8 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
 
 This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
+..  _provenance-graph:
+
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
 

@@ -8,7 +8,7 @@ Frequently Asked Questions
 Why doesn't `reprozip` identify my input/output file?
 =====================================================
 
-ReproZip uses some heuristics to determine what is and what is not an input or output file. However, this is intended to be a starting point: you should check the configuration file (``input_files`` and ``output_files`` sections) and add/remove paths there; giving readable id names to input/output files, such as `database-log` or `lookup-table`, also helps.
+ReproZip uses some heuristics to identify an input or output file. However, this is only intended to be a starting point: you should check the configuration file and edit the ``inputs_outputs`` section if necessary; giving readable names to input/output files also helps during reproduction. Please refer to :ref:`packing-config` for more information.
 
 ..  _moving-outputs:
 
@@ -185,6 +185,6 @@ Why does ``reprounzip run`` fail with ``no such file or directory`` or similar?
 
 This error message may have different reasons, but it often means that a specific version of a library or a dynamic linker is missing.
 
-If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment. You may want to try using the packed files directly to guarantee compatibility. Also, note that, while packing, the user can choose not to include some packages, meaning that `reprounzip` will have to install the one from the package manager, which, again, is not guaranteed to be compatible. In this case, try contacting the author of the ReproZip package.
+If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment. You may want to try using the packed files directly to ensure compatibility. Also, note that, while packing, the user can choose not to include some packages, meaning that `reprounzip` will have to install the one from the package manager, which, again, is not guaranteed to be compatible. In this case, try contacting the author of the ReproZip package.
 
 When using ``reprounzip vagrant`` and ``reprounzip docker``, ReproZip tries to detect the closest base system for unpacking the experiment. You may also want to try a different base system that you think it is closer to the original one by using the option ``--base-image`` when running these unpackers.
