@@ -210,7 +210,10 @@ def showfiles(args):
             for input_name, f in iteritems(config.inputs_outputs):
                 if not f.read_runs:
                     continue
-                print("    %s (%s)" % (input_name, f.path))
+                if args.verbosity >= 2:
+                    print("    %s (%s)" % (input_name, f.path))
+                else:
+                    print("    %s" % input_name)
                 if assigned_input_files.get(input_name) is not None:
                     assigned = assigned_input_files[input_name]
                 else:
@@ -223,7 +226,10 @@ def showfiles(args):
             print("Output files:")
             for output_name, f in iteritems(config.inputs_outputs):
                 if f.write_runs:
-                    print("    %s (%s)" % (output_name, f.path))
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (output_name, f.path))
+                    else:
+                        print("    %s" % output_name)
         else:
             print("Output files: none")
 
@@ -235,7 +241,10 @@ def showfiles(args):
             print("Input files:")
             for input_name, f in iteritems(config.inputs_outputs):
                 if f.read_runs:
-                    print("    %s (%s)" % (input_name, f.path))
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (input_name, f.path))
+                    else:
+                        print("    %s" % input_name)
         else:
             print("Input files: none")
 
@@ -243,7 +252,10 @@ def showfiles(args):
             print("Output files:")
             for output_name, f in iteritems(config.inputs_outputs):
                 if f.write_runs:
-                    print("    %s (%s)" % (output_name, f.path))
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (output_name, f.path))
+                    else:
+                        print("    %s" % output_name)
         else:
             print("Output files: none")
 
