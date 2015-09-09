@@ -32,7 +32,9 @@ class TestCommon(unittest.TestCase):
 class TestMisc(unittest.TestCase):
     def do_ok(self, arg, expected):
         try:
-            runs = get_runs([{}, {}, {}, {}], arg, None)
+            runs = get_runs(
+                [{'id': 'one'}, {'id': 'two-heh'}, {'id': 'three'}, {}],
+                arg, None)
         except (SystemExit, UsageError):
             self.fail("get_runs(<4 runs>, %r) raised" % arg)
         self.assertEqual(list(runs), expected)
@@ -60,5 +62,10 @@ class TestMisc(unittest.TestCase):
             self.do_fail('0-8')
             self.do_fail('0-4')
             self.do_ok('0-3', [0, 1, 2, 3])
+            self.do_ok('one', [0])
+            self.do_ok('two-heh', [1]),
+            self.do_ok('one,three', [0, 2])
+            self.do_ok('1,three', [1, 2])
+            self.do_ok('2-3,two-heh', [2, 3, 1])
         finally:
             print(">>>>> get_runs tests", file=sys.stderr)
