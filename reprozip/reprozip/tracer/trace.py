@@ -360,7 +360,8 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        runs.append({'binary': r_name, 'argv': argv,
+        runs.append({'id': "run%d" % len(runs),
+                     'binary': r_name, 'argv': argv,
                      'workingdir': unicode_(Path(r_workingdir)),
                      'architecture': platform.machine().lower(),
                      'distribution': distribution,
