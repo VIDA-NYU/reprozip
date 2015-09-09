@@ -45,8 +45,7 @@ The first part of the configuration file gives general information with respect 
     version: <reprozip-version>
     runs:
     # Run 0
-    - id: <run-id>
-      architecture: <machine-architecture>
+    - architecture: <machine-architecture>
       argv: <command-line-arguments>
       binary: <command-line-binary>
       distribution: <linux-distribution>
@@ -59,10 +58,9 @@ The first part of the configuration file gives general information with respect 
       workingdir: <working-directory>
       
     # Run 1
-    - id: ...
-    ...
+    - ...
 
-If necessary, users may change command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Users may also give a more meaningful and user-friendly identifier for a run by changing ``id``. Other attributes should not be changed in general.
+If necessary, users may change command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Other attributes should not be changed in general.
 
 The next section brings information about input and output files, including their original paths and which runs read and/or wrote them. These are the files that `reprozip` identified as the main input or result of the experiment, which `reprounzip` will later be able to replace and extract from the experiment when reproducing it. You may add, remove, or edit these files in case `reprozip` fails in recognizing any important information, as well as give meaningful names to them by editing ``name``::
 
