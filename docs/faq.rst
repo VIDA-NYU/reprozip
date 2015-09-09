@@ -97,11 +97,6 @@ What if my experiment runs on a distributed environment?
 
 ReproZip cannot trace across multiple machines. You could trace each component separately, but ReproZip has no support yet to setup these multiple machines in the right way from the multiple ``.rpz`` files. In particular, you will probably need to set up the same network for the components to talk to each other.
 
-What if I need to pack multiple command lines?
-==============================================
-
-The easiest way, in this case, is to write a script that runs all the desired command lines, and then to trace the execution of this script with `reprozip`.
-
 ..  _pycrypto_windows:
 
 Why does `reprounzip-vagrant` installation fail with error ``Unable to find vcvarsall.bat`` on Windows?
@@ -127,10 +122,10 @@ Or use the following command in case you want all the available plugins::
 
     $ pip install -I reprounzip[all]
 
-I'm seeing warnings from requests/urllib3
-=========================================
+Why are there warnings from requests/urllib3?
+=============================================
 
-The warning might go something like this::
+You may be seeing warnings like this::
 
     /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/util/ssl_.py:79:
     InsecurePlatformWarning: A true SSLContext object is not available. This
@@ -138,7 +133,7 @@ The warning might go something like this::
     connections to fail. For more information, see
     https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
 
-Most Python versions are insecure, because they don't validate SSL certificates. Python 2.7.9 and later shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]`` which should bring in the missing components.
+Most Python versions are insecure, because they do not validate SSL certificates. Python 2.7.9 and later shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]``, which should bring in the missing components.
 
 Why does the experiment fail with ``Error: Can't open display: :0``?
 ====================================================================
@@ -150,7 +145,7 @@ The experiment probably involves running a GUI tool. The `reprounzip` component 
 Why does `reprounzip directory` fail with ``IOError``?
 ======================================================
 
-The `directory` unpacker does not provide any isolation from the filesystem, so if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
+The `directory` unpacker does not provide any isolation from the filesystem: if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
 
 ..  _distribnotfound:
 
