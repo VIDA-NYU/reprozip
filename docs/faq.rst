@@ -5,15 +5,15 @@ Frequently Asked Questions
 
 ..  _file_id:
 
-Why `reprozip` does not identify my input/output file?
-======================================================
+Why doesn't `reprozip` identify my input/output file?
+=====================================================
 
-ReproZip uses some heuristics to determine what is and what is not an input or output file. However, this is intended to be a starting point: you should check the configuration file (``input_files`` and ``output_files`` sections) and add/remove paths there; giving readable id names to input/output files, such as `database-log` or `lookup-table`, also helps.
+ReproZip uses some heuristics to identify an input or output file. However, this is only intended to be a starting point: you should check the configuration file and edit the ``inputs_outputs`` section if necessary; giving readable names to input/output files also helps during reproduction. Please refer to :ref:`packing-config` for more information.
 
 ..  _moving-outputs:
 
-Why `reprounzip` cannot get my output files after reproducing an experiment?
-============================================================================
+Why can't `reprounzip` get my output files after reproducing an experiment?
+===========================================================================
 
 This is probably the case where these output files do not have a fixed path name. It is common for experiments to dynamically choose where the outputs should be written, e.g.: by putting the date and time in the filename. However, ReproZip uses filenames in the ``output_files`` section of the configuration file to detect those when reproducing the experiment: if the name of the output file when reproducing is different from when it was originally packed, ReproZip cannot detect these as output files, and therefore, cannot get them through the ``download`` command.
 
@@ -21,8 +21,8 @@ The easiest way to solve this issue is to write a simple bash script that runs y
 
 ..  _systemd:
 
-Why no files are packed when tracing a daemon?
-==============================================
+Why aren't any files packed when tracing a daemon?
+==================================================
 
 If you are starting the daemon via the `service` tool, it might be calling `init` over a client/server connection. In this situation, ReproZip will successfully pack the client, but anything the server (`init`) does will not be captured.
 
@@ -97,11 +97,6 @@ What if my experiment runs on a distributed environment?
 
 ReproZip cannot trace across multiple machines. You could trace each component separately, but ReproZip has no support yet to setup these multiple machines in the right way from the multiple ``.rpz`` files. In particular, you will probably need to set up the same network for the components to talk to each other.
 
-What if I need to pack multiple command lines?
-==============================================
-
-The easiest way, in this case, is to write a script that runs all the desired command lines, and then to trace the execution of this script with `reprozip`.
-
 ..  _pycrypto_windows:
 
 Why does `reprounzip-vagrant` installation fail with error ``Unable to find vcvarsall.bat`` on Windows?
@@ -127,10 +122,10 @@ Or use the following command in case you want all the available plugins::
 
     $ pip install -I reprounzip[all]
 
-I'm seeing warnings from requests/urllib3
-=========================================
+Why are there warnings from requests/urllib3?
+=============================================
 
-The warning might go something like this::
+You may be seeing warnings like this::
 
     /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/util/ssl_.py:79:
     InsecurePlatformWarning: A true SSLContext object is not available. This
@@ -138,7 +133,7 @@ The warning might go something like this::
     connections to fail. For more information, see
     https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
 
-Most Python versions are insecure, because they don't validate SSL certificates. Python 2.7.9 and later shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]`` which should bring in the missing components.
+Most Python versions are insecure, because they do not validate SSL certificates. Python 2.7.9 and later shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]``, which should bring in the missing components.
 
 Why does the experiment fail with ``Error: Can't open display: :0``?
 ====================================================================
@@ -150,7 +145,7 @@ The experiment probably involves running a GUI tool. The `reprounzip` component 
 Why does `reprounzip directory` fail with ``IOError``?
 ======================================================
 
-The `directory` unpacker does not provide any isolation from the filesystem, so if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
+The `directory` unpacker does not provide any isolation from the filesystem: if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found. Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work.
 
 ..  _distribnotfound:
 
@@ -185,6 +180,6 @@ Why does ``reprounzip run`` fail with ``no such file or directory`` or similar?
 
 This error message may have different reasons, but it often means that a specific version of a library or a dynamic linker is missing.
 
-If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment. You may want to try using the packed files directly to guarantee compatibility. Also, note that, while packing, the user can choose not to include some packages, meaning that `reprounzip` will have to install the one from the package manager, which, again, is not guaranteed to be compatible. In this case, try contacting the author of the ReproZip package.
+If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment. You may want to try using the packed files directly to ensure compatibility. Also, note that, while packing, the user can choose not to include some packages, meaning that `reprounzip` will have to install the one from the package manager, which, again, is not guaranteed to be compatible. In this case, try contacting the author of the ReproZip package.
 
 When using ``reprounzip vagrant`` and ``reprounzip docker``, ReproZip tries to detect the closest base system for unpacking the experiment. You may also want to try a different base system that you think it is closer to the original one by using the option ``--base-image`` when running these unpackers.
