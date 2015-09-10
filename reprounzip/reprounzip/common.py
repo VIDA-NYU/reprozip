@@ -72,8 +72,8 @@ class Package(CommonEqualityMixin):
         self.packfiles = packfiles
         self.size = size
 
-    def add_file(self, filename):
-        self.files.append(filename)
+    def add_file(self, file_):
+        self.files.append(file_)
 
     def __unicode__(self):
         return '%s (%s)' % (self.name, self.version)
