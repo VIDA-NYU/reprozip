@@ -17,7 +17,6 @@ from itertools import chain
 import json
 import logging
 import os
-import pickle
 import re
 from rpaths import Path, PosixPath
 import subprocess
@@ -26,9 +25,10 @@ import sys
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
-    UsageError, CantFindInstaller, composite_action, target_must_exist, \
+    CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
-    FileUploader, FileDownloader, get_runs, interruptible_call
+    FileUploader, FileDownloader, get_runs, interruptible_call, \
+    metadata_read, metadata_write
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     check_output, download_file
@@ -104,20 +104,12 @@ def select_image(runs):
             return 'debian', 'debian:jessie'
 
 
-def write_dict(filename, dct):
-    to_write = {'unpacker': 'docker'}
-    to_write.update(dct)
-    with filename.open('wb') as fp:
-        pickle.dump(to_write, fp, 2)
+def write_dict(path, dct):
+    metadata_write(path, dct, 'docker')
 
 
-def read_dict(filename):
-    with filename.open('rb') as fp:
-        dct = pickle.load(fp)
-    if dct['unpacker'] != 'docker':
-        logging.critical("Wrong unpacker used: %s != docker" % dct['unpacker'])
-        raise UsageError
-    return dct
+def read_dict(path):
+    return metadata_read(path, 'docker')
 
 
 def docker_setup_create(args):
@@ -237,7 +229,7 @@ def docker_setup_create(args):
                  'not prevent the execution to run")\n')
 
     # Meta-data for reprounzip
-    write_dict(target / '.reprounzip', {})
+    write_dict(target, {})
 
     signals.post_setup(target=target, pack=pack)
 
@@ -247,7 +239,7 @@ def docker_setup_build(args):
     """Builds the container from the Dockerfile
     """
     target = Path(args.target[0])
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     if 'initial_image' in unpacked_info:
         logging.critical("Image already built")
         sys.exit(1)
@@ -269,7 +261,7 @@ def docker_setup_build(args):
 
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
-    write_dict(target / '.reprounzip', unpacked_info)
+    write_dict(target, unpacked_info)
 
 
 @target_must_exist
@@ -280,7 +272,7 @@ def docker_reset(args):
     on the environment.
     """
     target = Path(args.target[0])
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     if 'initial_image' not in unpacked_info:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
@@ -297,7 +289,7 @@ def docker_reset(args):
             logging.warning("Can't remove previous image, docker returned %d",
                             retcode)
         unpacked_info['current_image'] = initial
-        write_dict(target / '.reprounzip', unpacked_info)
+        write_dict(target, unpacked_info)
 
 
 _addr_re = re.compile(br'inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
@@ -325,7 +317,7 @@ def docker_run(args):
     """Runs the experiment in the container.
     """
     target = Path(args.target[0])
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     cmdline = args.cmdline
 
     # Loads config
@@ -412,7 +404,7 @@ def docker_run(args):
 
     # Update image name
     unpacked_info['current_image'] = new_image
-    write_dict(target / '.reprounzip', unpacked_info)
+    write_dict(target, unpacked_info)
 
     # Remove the container
     logging.info("Destroying container %s", container.decode('ascii'))
@@ -496,7 +488,7 @@ class ContainerUploader(FileUploader):
                     logging.warning("Can't remove previous image, docker "
                                     "returned %d", retcode)
             self.unpacked_info['current_image'] = image
-            write_dict(self.target / '.reprounzip', self.unpacked_info)
+            write_dict(self.target, self.unpacked_info)
 
         self.build_directory.rmtree()
 
@@ -507,13 +499,13 @@ def docker_upload(args):
     """
     target = Path(args.target[0])
     files = args.file
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     input_files = unpacked_info.setdefault('input_files', {})
 
     try:
         ContainerUploader(target, input_files, files, unpacked_info)
     finally:
-        write_dict(target / '.reprounzip', unpacked_info)
+        write_dict(target, unpacked_info)
 
 
 class ContainerDownloader(FileDownloader):
@@ -558,7 +550,7 @@ def docker_download(args):
     """
     target = Path(args.target[0])
     files = args.file
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
 
     if 'current_image' not in unpacked_info:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
@@ -574,7 +566,7 @@ def docker_destroy_docker(args):
     """Destroys the container and images.
     """
     target = Path(args.target[0])
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     if 'initial_image' not in unpacked_info:
         logging.critical("Image not created")
         sys.exit(1)
@@ -600,7 +592,7 @@ def docker_destroy_dir(args):
     """Destroys the directory.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
+    read_dict(target)
 
     logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)

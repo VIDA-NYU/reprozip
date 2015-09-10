@@ -20,7 +20,6 @@ import argparse
 import copy
 import logging
 import os
-import pickle
 import platform
 from rpaths import PosixPath, DefaultAbstractPath, Path
 import socket
@@ -32,9 +31,10 @@ from reprounzip.common import RPZPack, load_config as load_config_file, \
     record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
-    COMPAT_OK, COMPAT_NO, UsageError, CantFindInstaller, target_must_exist, \
+    COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, \
     shell_escape, load_config, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs, interruptible_call
+    FileUploader, FileDownloader, get_runs, interruptible_call, \
+    metadata_read, metadata_write
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
@@ -88,23 +88,6 @@ def installpkgs(args):
                                 "%s", real, pkg.name, req)
         if r != 0:
             sys.exit(r)
-
-
-def write_dict(filename, dct, type_):
-    to_write = {'unpacker': type_}
-    to_write.update(dct)
-    with filename.open('wb') as fp:
-        pickle.dump(to_write, fp, 2)
-
-
-def read_dict(filename, type_):
-    with filename.open('rb') as fp:
-        dct = pickle.load(fp)
-    if type_ is not None and dct['unpacker'] != type_:
-        logging.critical("Wrong unpacker used: %s != %s" % (dct['unpacker'],
-                                                            type_))
-        raise UsageError
-    return dct
 
 
 def directory_create(args):
@@ -187,7 +170,7 @@ def directory_create(args):
         inputtar.close()
 
     # Meta-data for reprounzip
-    write_dict(target / '.reprounzip', {}, 'directory')
+    metadata_write(target, {}, 'directory')
 
     signals.post_setup(target=target, pack=pack)
 
@@ -197,7 +180,7 @@ def directory_run(args):
     """Runs the command in the directory.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip', 'directory')
+    metadata_read(target, 'directory')
     cmdline = args.cmdline
 
     # Loads config
@@ -290,7 +273,7 @@ def directory_destroy(args):
     """Destroys the directory.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip', 'directory')
+    metadata_read(target, 'directory')
 
     logging.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
@@ -478,7 +461,7 @@ def chroot_create(args):
         inputtar.close()
 
     # Meta-data for reprounzip
-    write_dict(target / '.reprounzip', {}, 'chroot')
+    metadata_write(target, {}, 'chroot')
 
     signals.post_setup(target=target, pack=pack)
 
@@ -488,7 +471,7 @@ def chroot_mount(args):
     """Mounts /dev and /proc inside the chroot directory.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip', 'chroot')
+    metadata_read(target, 'chroot')
 
     for m in ('/dev', '/dev/pts', '/proc'):
         d = join_root(target / 'root', Path(m))
@@ -496,7 +479,7 @@ def chroot_mount(args):
         logging.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
-    write_dict(target / '.reprounzip', {'mounted': True}, 'chroot')
+    metadata_write(target, {'mounted': True}, 'chroot')
 
     logging.warning("The host's /dev and /proc have been mounted into the "
                     "chroot. Do NOT remove the unpacked directory with "
@@ -508,7 +491,7 @@ def chroot_run(args):
     """Runs the command in the chroot.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip', 'chroot')
+    metadata_read(target, 'chroot')
     cmdline = args.cmdline
 
     # Loads config
@@ -564,7 +547,7 @@ def chroot_run(args):
 def chroot_unmount(target):
     """Unmount magic directories, if they are mounted.
     """
-    unpacked_info = read_dict(target / '.reprounzip', 'chroot')
+    unpacked_info = metadata_read(target, 'chroot')
     mounted = unpacked_info.get('mounted', False)
 
     if not mounted:
@@ -584,7 +567,7 @@ def chroot_unmount(target):
                 shell=True)
 
     unpacked_info['mounted'] = False
-    write_dict(target / '.reprounzip', unpacked_info, 'chroot')
+    metadata_write(target, unpacked_info, 'chroot')
 
     return True
 
@@ -605,7 +588,7 @@ def chroot_destroy_dir(args):
     """Destroys the directory.
     """
     target = Path(args.target[0])
-    mounted = read_dict(target / '.reprounzip', 'chroot').get('mounted', False)
+    mounted = metadata_read(target, 'chroot').get('mounted', False)
 
     if mounted:
         logging.critical("Magic directories might still be mounted")
@@ -669,14 +652,14 @@ def upload(args):
     """
     target = Path(args.target[0])
     files = args.file
-    unpacked_info = read_dict(target / '.reprounzip', args.type)
+    unpacked_info = metadata_read(target, args.type)
     input_files = unpacked_info.setdefault('input_files', {})
 
     try:
         LocalUploader(target, input_files, files,
                       args.type, args.type == 'chroot' and args.restore_owner)
     finally:
-        write_dict(target / '.reprounzip', unpacked_info, args.type)
+        metadata_write(target, unpacked_info, args.type)
 
 
 class LocalDownloader(FileDownloader):
@@ -716,7 +699,7 @@ def download(args):
     """
     target = Path(args.target[0])
     files = args.file
-    read_dict(target / '.reprounzip', args.type)
+    metadata_read(target, args.type)
 
     LocalDownloader(target, files, args.type)
 

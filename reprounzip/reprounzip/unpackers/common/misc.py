@@ -11,6 +11,7 @@ import copy
 import functools
 import logging
 import os
+import pickle
 import random
 from rpaths import PosixPath, Path
 import signal
@@ -384,3 +385,48 @@ def interruptible_call(*args, **kwargs):
         return proc[0].wait()
     finally:
         signal.signal(signal.SIGINT, signal.default_int_handler)
+
+
+def metadata_read(path, type_):
+    """Read the unpacker-specific metadata from an unpacked directory.
+
+    :param path: The unpacked directory; `.reprounzip` will be appended to get
+    the name of the pickle file.
+    :param type_: The name of the unpacker, to check for consistency.
+
+    Unpackers need to store some specific information, along with the status of
+    the input files. This is done in a consistent way so that showfiles can
+    access it (and because duplicating code is not necessary here).
+
+    It's a simple pickled dictionary under path / '.reprounzip'. The
+    'input_files' key stores the status of the input files.
+
+    If you change it, don't forget to call `metadata_write` to write it to disk
+    again.
+    """
+    filename = path / '.reprounzip'
+
+    with filename.open('rb') as fp:
+        dct = pickle.load(fp)
+    if type_ is not None and dct['unpacker'] != type_:
+        logging.critical("Wrong unpacker used: %s != %s" % (dct['unpacker'],
+                                                            type_))
+        raise UsageError
+    return dct
+
+
+def metadata_write(path, dct, type_):
+    """Write the unpacker-specific metadata in an unpacked directory.
+
+    :param path: The unpacked directory; `.reprounzip` will be appended to get
+    the name of the pickle file.
+    :param type_: The name of the unpacker, that is written to the pickle file
+    under the key 'unpacker'.
+    :param dct: The dictionary with the info to write to the file.
+    """
+    filename = path / '.reprounzip'
+
+    to_write = {'unpacker': type_}
+    to_write.update(dct)
+    with filename.open('wb') as fp:
+        pickle.dump(to_write, fp, 2)

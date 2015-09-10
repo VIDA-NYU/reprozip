@@ -15,7 +15,6 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import logging
-import pickle
 import platform
 from rpaths import Path
 import sys
@@ -23,7 +22,7 @@ import sys
 from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
-    COMPAT_NO, shell_escape
+    COMPAT_NO, shell_escape, metadata_read
 from reprounzip.utils import iteritems, itervalues, hsize
 
 
@@ -191,8 +190,7 @@ def showfiles(args):
                                   canonical=True)
         # The '.reprounzip' file is a pickled dictionary, it contains the name
         # of the files that replaced each input file (if upload was used)
-        with pack.open('rb', '.reprounzip') as fp:
-            unpacked_info = pickle.load(fp)
+        unpacked_info = metadata_read(pack, None)
         assigned_input_files = unpacked_info.get('input_files', {})
 
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
