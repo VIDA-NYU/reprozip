@@ -106,7 +106,7 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
      && name != NULL)
     {
         char *pathname = abs_path_arg(process, 0);
-        log_warn(process->tid, "process used unhandled system call %s(\"%s\")",
+        log_info(process->tid, "process used unhandled system call %s(\"%s\")",
                  name, pathname);
         free(pathname);
     }
@@ -118,7 +118,7 @@ static int syscall_unhandled_other(const char *name, struct Process *process,
 {
     if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
      && name != NULL)
-        log_warn(process->tid, "process used unhandled system call %s", name);
+        log_info(process->tid, "process used unhandled system call %s", name);
     return 0;
 }
 
@@ -600,7 +600,7 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn(process->tid, "process accepted a connection from %s",
+        log_info(process->tid, "process accepted a connection from %s",
                  print_sockaddr(address, addrlen));
         free(address);
     }
@@ -614,7 +614,7 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_warn(process->tid, "process connected to %s",
+        log_info(process->tid, "process connected to %s",
                  print_sockaddr(address, addrlen));
         free(address);
     }
@@ -714,7 +714,7 @@ static int syscall_xxx_at(const char *name, struct Process *process,
     else
     {
         char *pathname = tracee_strdup(process->tid, process->params[1].p);
-        log_warn(process->tid,
+        log_info(process->tid,
                  "process used unhandled system call %s(%d, \"%s\")",
                  name, process->params[0].i, pathname);
         free(pathname);

@@ -538,9 +538,9 @@ static int trace(pid_t first_proc, int *first_exit_code)
             else if(signum == SIGTRAP)
             {
                 /* LCOV_EXCL_START : Processes shouldn't be getting SIGTRAPs */
-                log_warn(0,
-                         "NOT delivering SIGTRAP to %d\n"
-                         "    waitstatus=0x%X", tid, status);
+                log_error(0,
+                          "NOT delivering SIGTRAP to %d\n"
+                          "    waitstatus=0x%X", tid, status);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
                 /* LCOV_EXCL_END */
             }
