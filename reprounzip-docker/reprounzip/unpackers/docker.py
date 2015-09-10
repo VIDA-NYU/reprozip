@@ -28,7 +28,8 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     FileUploader, FileDownloader, get_runs, interruptible_call, \
-    metadata_read, metadata_write, metadata_initial_iofiles
+    metadata_read, metadata_write, metadata_initial_iofiles, \
+    metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     check_output, download_file
@@ -322,7 +323,8 @@ def docker_run(args):
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    config = load_config(target / 'config.yml', True)
+    runs = config.runs
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
@@ -417,6 +419,10 @@ def docker_run(args):
     if image != unpacked_info['initial_image']:
         logging.info("Untagging previous image %s", image.decode('ascii'))
         subprocess.check_call(['docker', 'rmi', image])
+
+    # Update input file status
+    metadata_update_run(config, unpacked_info, selected_runs)
+    write_dict(target, unpacked_info)
 
     signals.post_run(target=target, retcode=retcode)
 

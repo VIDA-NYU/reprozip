@@ -29,7 +29,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, metadata_read, metadata_write, \
-    metadata_initial_iofiles
+    metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -355,13 +355,15 @@ def vagrant_run(args):
     """Runs the experiment in the virtual machine.
     """
     target = Path(args.target[0])
-    use_chroot = read_dict(target).get('use_chroot', True)
+    unpacked_info = read_dict(target)
+    use_chroot = unpacked_info.get('use_chroot', True)
     cmdline = args.cmdline
 
     check_vagrant_version()
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    config = load_config(target / 'config.yml', True)
+    runs = config.runs
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
@@ -426,6 +428,10 @@ def vagrant_run(args):
                               not args.no_pty,
                               x11.port_forward)
     stderr.write("\r\n*** Command finished, status: %d\r\n" % retcode)
+
+    # Update input file status
+    metadata_update_run(config, unpacked_info, selected_runs)
+    write_dict(target, unpacked_info)
 
     signals.post_run(target=target, retcode=retcode)
 

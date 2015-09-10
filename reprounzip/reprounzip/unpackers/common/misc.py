@@ -474,3 +474,26 @@ def metadata_initial_iofiles(config, dct=None):
     dct['input_files'] = dict((n, False) for n in itervalues(path2iofile))
 
     return dct
+
+
+def metadata_update_run(config, dct, runs):
+    """Update the unpacker metadata after some runs have executed.
+
+    :param runs: An iterable of run numbers that were probably executed.
+
+    This maintains a crude idea of the status of input files by updating the
+    files that are outputs of the runs that were just executed. This means that
+    files that were uploaded by the user will no longer be shown as uploaded
+    (they have been overwritten by the experiment) and files that weren't
+    packed exist from now on.
+
+    This is not very reliable because a run might have created a file that is
+    not designated as its output anyway, or might have failed and thus not
+    created the output (or a bad output).
+    """
+    runs = set(runs)
+    input_files = dct.setdefault('input_files', {})
+
+    for name, fi in iteritems(config.inputs_outputs):
+        if fi.read_runs and any(r in runs for r in fi.write_runs):
+            input_files[name] = True

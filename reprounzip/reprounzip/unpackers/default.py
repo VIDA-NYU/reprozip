@@ -31,10 +31,10 @@ from reprounzip.common import RPZPack, load_config as load_config_file, \
     record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
-    COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, \
-    shell_escape, load_config, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs, interruptible_call, \
-    metadata_read, metadata_write, metadata_initial_iofiles
+    COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, shell_escape, \
+    load_config, select_installer, busybox_url, join_root, FileUploader, \
+    FileDownloader, get_runs, interruptible_call, metadata_read, \
+    metadata_write, metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
@@ -180,11 +180,12 @@ def directory_run(args):
     """Runs the command in the directory.
     """
     target = Path(args.target[0])
-    metadata_read(target, 'directory')
+    unpacked_info = metadata_read(target, 'directory')
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+    config = load_config_file(target / 'config.yml', True)
+    runs = config.runs
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
@@ -266,6 +267,10 @@ def directory_run(args):
     retcode = interruptible_call(cmds, shell=True)
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
+
+    # Update input file status
+    metadata_update_run(config, unpacked_info, selected_runs)
+    metadata_write(target, unpacked_info, 'directory')
 
 
 @target_must_exist
@@ -492,11 +497,12 @@ def chroot_run(args):
     """Runs the command in the chroot.
     """
     target = Path(args.target[0])
-    metadata_read(target, 'chroot')
+    unpacked_info = metadata_read(target, 'chroot')
     cmdline = args.cmdline
 
     # Loads config
-    runs, packages, other_files = load_config_file(target / 'config.yml', True)
+    config = load_config_file(target / 'config.yml', True)
+    runs = config.runs
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
@@ -543,6 +549,10 @@ def chroot_run(args):
     retcode = interruptible_call(cmds, shell=True)
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
+
+    # Update input file status
+    metadata_update_run(config, unpacked_info, selected_runs)
+    metadata_write(target, unpacked_info, 'chroot')
 
 
 def chroot_unmount(target):
