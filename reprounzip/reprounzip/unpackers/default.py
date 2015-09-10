@@ -35,7 +35,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     shell_escape, load_config, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, irange, iteritems, \
+from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, download_file
 
 
@@ -189,7 +189,7 @@ def directory_create(args):
     tar.close()
 
     # Original input files, so upload can restore them
-    input_files = [f.path for n, f in iteritems(config.inputs_outputs)
+    input_files = [f.path for f in itervalues(config.inputs_outputs)
                    if f.read_runs]
     if input_files:
         logging.info("Packing up original input files...")
@@ -493,7 +493,7 @@ def chroot_create(args):
                 env_path.symlink('/bin/busybox')
 
     # Original input files, so upload can restore them
-    input_files = [f.path for n, f in iteritems(config.inputs_outputs)
+    input_files = [f.path for f in itervalues(config.inputs_outputs)
                    if f.read_runs]
     if input_files:
         logging.info("Packing up original input files...")
