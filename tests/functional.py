@@ -594,6 +594,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
          'QVpWOGs'),
     ]
     for name, url in old_packages:
+        print("Testing old package %s" % name)
         f = Path(name)
         if not f.exists():
             download_file(url, f)
@@ -607,7 +608,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_call(rpuz + ['directory', 'setup', name, 'simpledir'])
         # Run directory
         check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
-        output_in_dir = join_root(Path('simpledir/root'), orig_output_location)
+        output_in_dir = Path('simpledir/root/tmp')
+        output_in_dir = output_in_dir.listdir('reprozip_*')[0]
+        output_in_dir = output_in_dir / 'simple_output.txt'
         with output_in_dir.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
         # Delete with wrong command (should fail)
