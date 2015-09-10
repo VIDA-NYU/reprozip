@@ -28,7 +28,8 @@ from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs, metadata_read, metadata_write
+    FileUploader, FileDownloader, get_runs, metadata_read, metadata_write, \
+    metadata_initial_iofiles
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -180,7 +181,8 @@ def vagrant_setup_create(args):
     rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    runs, packages, other_files = config = load_config(target / 'config.yml',
+                                                       True)
 
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
@@ -321,7 +323,8 @@ mkdir -p /experimentroot/bin
         fp.write('end\n')
 
     # Meta-data for reprounzip
-    write_dict(target, {'use_chroot': use_chroot})
+    write_dict(target, metadata_initial_iofiles(config,
+                                                {'use_chroot': use_chroot}))
 
     signals.post_setup(target=target, pack=pack)
 

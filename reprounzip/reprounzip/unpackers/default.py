@@ -34,7 +34,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, \
     shell_escape, load_config, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, interruptible_call, \
-    metadata_read, metadata_write
+    metadata_read, metadata_write, metadata_initial_iofiles
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
@@ -170,7 +170,7 @@ def directory_create(args):
         inputtar.close()
 
     # Meta-data for reprounzip
-    metadata_write(target, {}, 'directory')
+    metadata_write(target, metadata_initial_iofiles(config), 'directory')
 
     signals.post_setup(target=target, pack=pack)
 
@@ -461,7 +461,7 @@ def chroot_create(args):
         inputtar.close()
 
     # Meta-data for reprounzip
-    metadata_write(target, {}, 'chroot')
+    metadata_write(target, metadata_initial_iofiles(config), 'chroot')
 
     signals.post_setup(target=target, pack=pack)
 
@@ -471,7 +471,7 @@ def chroot_mount(args):
     """Mounts /dev and /proc inside the chroot directory.
     """
     target = Path(args.target[0])
-    metadata_read(target, 'chroot')
+    unpacked_info = metadata_read(target, 'chroot')
 
     for m in ('/dev', '/dev/pts', '/proc'):
         d = join_root(target / 'root', Path(m))
@@ -479,7 +479,8 @@ def chroot_mount(args):
         logging.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
-    metadata_write(target, {'mounted': True}, 'chroot')
+    unpacked_info['mounted'] = True
+    metadata_write(target, unpacked_info, 'chroot')
 
     logging.warning("The host's /dev and /proc have been mounted into the "
                     "chroot. Do NOT remove the unpacked directory with "

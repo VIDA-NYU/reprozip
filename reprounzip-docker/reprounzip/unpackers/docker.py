@@ -28,7 +28,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     FileUploader, FileDownloader, get_runs, interruptible_call, \
-    metadata_read, metadata_write
+    metadata_read, metadata_write, metadata_initial_iofiles
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     check_output, download_file
@@ -128,7 +128,8 @@ def docker_setup_create(args):
     rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    runs, packages, other_files = config = load_config(target / 'config.yml',
+                                                       True)
 
     if args.base_image:
         record_usage(docker_explicit_base=True)
@@ -229,7 +230,7 @@ def docker_setup_create(args):
                  'not prevent the execution to run")\n')
 
     # Meta-data for reprounzip
-    write_dict(target, {})
+    write_dict(target, metadata_initial_iofiles(config))
 
     signals.post_setup(target=target, pack=pack)
 
