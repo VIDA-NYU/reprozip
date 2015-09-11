@@ -29,8 +29,8 @@ from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, UsageError
-from reprounzip.utils import PY3, unicode_, iteritems, itervalues, stderr, \
-    escape, normalize_path
+from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
+    unicode_, escape, normalize_path
 
 
 C_INITIAL = 0   # First process or don't know
@@ -62,6 +62,7 @@ class Run(object):
     """
     def __init__(self, nb):
         self.nb = nb
+        self.name = "run %d" % nb
         self.processes = []
 
     def dot(self, fp, level_processes):
@@ -70,9 +71,12 @@ class Run(object):
             fp.write('    run%d [label="%d: %s"];\n' % (
                      self.nb, self.nb, self.processes[0].binary or "-"))
         else:
+            fp.write('    subgraph cluster_run%d {\n        label="%s";\n' % (
+                     self.nb, escape(self.name)))
             for process in self.processes:
                 if level_processes == LVL_PROC_THREAD or not process.thread:
-                    process.dot(fp, level_processes)
+                    process.dot(fp, level_processes, indent=2)
+            fp.write('    }\n')
 
     def dot_endpoint(self, level_processes):
         return 'run%d' % self.nb
@@ -123,8 +127,8 @@ class Process(object):
         # How was this process created, one of the C_* constants
         self.created = created
 
-    def dot(self, fp, level_processes):
-        fp.write('    prog%d [label="%s (%d)"];\n' % (
+    def dot(self, fp, level_processes, indent=1):
+        fp.write('    ' * indent + 'prog%d [label="%s (%d)"];\n' % (
                  self.id, escape(unicode_(self.binary) or "-"), self.pid))
         if self.parent is not None:
             reason = ''
@@ -134,7 +138,7 @@ class Process(object):
                 reason = "exec"
             elif self.created == C_FORKEXEC:
                 reason = "fork+exec"
-            fp.write('    prog%d -> prog%d [label="%s"];\n' % (
+            fp.write('    ' * indent + 'prog%d -> prog%d [label="%s"];\n' % (
                      self.parent.id, self.id, reason))
 
     def dot_endpoint(self, level_processes):
@@ -191,7 +195,7 @@ class Package(object):
             else:
                 fp.write('"%s"];\n' % escape(self.name))
         elif level_pkgs == LVL_PKG_FILE:
-            fp.write('    subgraph cluster%d {\n        label=' % self.id)
+            fp.write('    subgraph cluster_pkg%d {\n        label=' % self.id)
             if self.version:
                 fp.write('"%s %s";\n' % (
                          escape(self.name), escape(self.version)))
@@ -428,6 +432,14 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                           for n, f in iteritems(config.inputs_outputs))
 
     runs, files, edges = read_events(database, all_forks)
+
+    # Label the runs
+    if len(runs) != len(config.runs):
+        logging.warning("Configuration file doesn't list the same number of "
+                        "runs we found in the database!")
+    else:
+        for config_run, run in izip(config.runs, runs):
+            run.name = config_run['id']
 
     # Apply regexes
     ignore = [lambda path, r=re.compile(p): r.search(path) is not None

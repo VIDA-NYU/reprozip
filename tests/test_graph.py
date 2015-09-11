@@ -63,8 +63,19 @@ class TestGraph(unittest.TestCase):
             fp.write("""\
 version: "0.7"
 runs:
+- id: first run
+  architecture: x86_64
+  argv: [sh, "script_1"]
+  binary: /some/dir/one
+  distribution: [debian, '8.0']
+  environ: {USER: remram}
+  exitcode: 0
+  uid: 1000
+  gid: 1000
+  hostname: test
+  workingdir: /user/dir
 - architecture: x86_64
-  argv: [./one]
+  argv: ["sh", "script_2"]
   binary: /some/dir/one
   distribution: [debian, '8.0']
   environ: {USER: remram}
@@ -170,32 +181,38 @@ other_files:
 digraph G {
     /* programs */
     node [shape=box fontcolor=white fillcolor=black style=filled];
-    prog0 [label="/bin/sh (0)"];
-    prog1 [label="/usr/bin/python (0)"];
-    prog0 -> prog1 [label="exec"];
-    prog2 [label="/some/dir/experiment (1)"];
-    prog1 -> prog2 [label="fork+exec"];
-    prog3 [label="/usr/bin/wc (0)"];
-    prog1 -> prog3 [label="exec"];
-    prog4 [label="/bin/sh (2)"];
-    prog5 [label="/usr/bin/python (3)"];
-    prog4 -> prog5 [label="fork+exec"];
-    prog6 [label="/some/dir/report (2)"];
-    prog4 -> prog6 [label="exec"];
+    subgraph cluster_run0 {
+        label="first run";
+        prog0 [label="/bin/sh (0)"];
+        prog1 [label="/usr/bin/python (0)"];
+        prog0 -> prog1 [label="exec"];
+        prog2 [label="/some/dir/experiment (1)"];
+        prog1 -> prog2 [label="fork+exec"];
+        prog3 [label="/usr/bin/wc (0)"];
+        prog1 -> prog3 [label="exec"];
+    }
+    subgraph cluster_run1 {
+        label="run1";
+        prog4 [label="/bin/sh (2)"];
+        prog5 [label="/usr/bin/python (3)"];
+        prog4 -> prog5 [label="fork+exec"];
+        prog6 [label="/some/dir/report (2)"];
+        prog4 -> prog6 [label="exec"];
+    }
 
     node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
 
     /* system packages */
-    subgraph cluster0 {
+    subgraph cluster_pkg0 {
         label="pkg1 1.0";
         "/usr/bin/wc";
     }
-    subgraph cluster1 {
+    subgraph cluster_pkg1 {
         label="pkg2 1.0";
         "/etc/2_two.cfg";
         "/usr/lib/2_one.so";
     }
-    subgraph cluster2 {
+    subgraph cluster_pkg2 {
         label="python 2.7";
         "/usr/bin/python";
     }
@@ -302,18 +319,24 @@ digraph G {
 digraph G {
     /* programs */
     node [shape=box fontcolor=white fillcolor=black style=filled];
-    prog0 [label="/bin/sh (0)"];
-    prog1 [label="/usr/bin/python (0)"];
-    prog0 -> prog1 [label="exec"];
-    prog2 [label="/some/dir/experiment (1)"];
-    prog1 -> prog2 [label="fork+exec"];
-    prog3 [label="/usr/bin/wc (0)"];
-    prog1 -> prog3 [label="exec"];
-    prog4 [label="/bin/sh (2)"];
-    prog5 [label="/usr/bin/python (3)"];
-    prog4 -> prog5 [label="fork+exec"];
-    prog6 [label="/some/dir/report (2)"];
-    prog4 -> prog6 [label="exec"];
+    subgraph cluster_run0 {
+        label="first run";
+        prog0 [label="/bin/sh (0)"];
+        prog1 [label="/usr/bin/python (0)"];
+        prog0 -> prog1 [label="exec"];
+        prog2 [label="/some/dir/experiment (1)"];
+        prog1 -> prog2 [label="fork+exec"];
+        prog3 [label="/usr/bin/wc (0)"];
+        prog1 -> prog3 [label="exec"];
+    }
+    subgraph cluster_run1 {
+        label="run1";
+        prog4 [label="/bin/sh (2)"];
+        prog5 [label="/usr/bin/python (3)"];
+        prog4 -> prog5 [label="fork+exec"];
+        prog6 [label="/some/dir/report (2)"];
+        prog4 -> prog6 [label="exec"];
+    }
 
     node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
 
