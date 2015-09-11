@@ -18,17 +18,19 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 import heapq
+import json
 import logging
-from rpaths import Path
+import re
+from rpaths import PosixPath, Path
 import sqlite3
 import sys
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
-from reprounzip.utils import PY3, unicode_, iteritems, stderr, escape, \
-    CommonEqualityMixin, normalize_path
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, UsageError
+from reprounzip.utils import PY3, unicode_, itervalues, stderr, escape, \
+    normalize_path
 
 
 C_INITIAL = 0   # First process or don't know
@@ -37,13 +39,82 @@ C_EXEC = 2      # Replaced image with execve
 C_FORKEXEC = 3  # A fork then an exec, folded as one because all_forks==False
 
 
-class Process(CommonEqualityMixin):
+FORMAT_DOT = 0
+FORMAT_JSON = 1
+
+
+LVL_PKG_FILE = 0        # Show individual files in packages
+LVL_PKG_PACKAGE = 1     # Aggregate by package
+LVL_PKG_IGNORE = 2      # Ignore packages, treat them like any file
+LVL_PKG_DROP = 3        # Drop every file that comes from a package
+
+LVL_PROC_THREAD = 0     # Show every process and thread
+LVL_PROC_PROCESS = 1    # Only show processes, not threads
+LVL_PROC_RUN = 2        # Don't show individual processes, aggregate by run
+
+LVL_OTHER_ALL = 0       # Show every file, aggregate through directory list
+LVL_OTHER_IO = 1        # Only show input & output files
+LVL_OTHER_NO = 3        # Don't show other files
+
+
+class Run(object):
+    """Structure representing a whole run.
+    """
+    def __init__(self, nb):
+        self.nb = nb
+        self.processes = []
+
+    def dot(self, fp, level_processes):
+        assert self.processes
+        if level_processes == LVL_PROC_RUN:
+            fp.write('    run%d [label="%d: %s"];\n' % (
+                     self.nb, self.nb, self.processes[0].binary or "-"))
+        else:
+            for process in self.processes:
+                if level_processes == LVL_PROC_THREAD or not process.thread:
+                    process.dot(fp, level_processes)
+
+    def dot_endpoint(self, level_processes):
+        return 'run%d' % self.nb
+
+    def json(self, prog_map, level_processes):
+        assert self.processes
+        if level_processes == LVL_PROC_RUN:
+            json_process = self.processes[0].json()
+            for process in self.processes:
+                prog_map[process] = json_process
+            return [json_process]
+        else:
+            run = []
+            process_idx_map = {}
+            for process in self.processes:
+                if level_processes == LVL_PROC_THREAD or not process.thread:
+                    process_idx_map[process] = len(run)
+                    json_process = process.json(process_idx_map)
+                    prog_map[process] = json_process
+                    run.append(json_process)
+                else:
+                    p_process = process
+                    while p_process.thread:
+                        p_process = p_process.parent
+                    prog_map[process] = prog_map[p_process]
+            return run
+
+
+class Process(object):
     """Structure representing a process in the experiment.
     """
-    def __init__(self, pid, parent, timestamp, acted, binary, created):
+    _id_gen = 0
+
+    def __init__(self, pid, run, parent, timestamp, thread, acted, binary,
+                 created):
+        self.id = Process._id_gen
+        Process._id_gen += 1
         self.pid = pid
+        self.run = run
         self.parent = parent
         self.timestamp = timestamp
+        self.thread = thread
         # Whether that process has done something yet. If it execve()s and
         # hasn't done anything since it forked, no need for it to appear
         self.acted = acted
@@ -52,13 +123,145 @@ class Process(CommonEqualityMixin):
         # How was this process created, one of the C_* constants
         self.created = created
 
-    def __hash__(self):
-        return id(self)
+    def dot(self, fp, level_processes):
+        fp.write('    prog%d [label="%s (%d)"];\n' % (
+                 self.id, escape(unicode_(self.binary) or "-"), self.pid))
+        if self.parent is not None:
+            reason = ''
+            if self.created == C_FORK:
+                reason = "fork"
+            elif self.created == C_EXEC:
+                reason = "exec"
+            elif self.created == C_FORKEXEC:
+                reason = "fork+exec"
+            fp.write('    prog%d -> prog%d [label="%s"];\n' % (
+                     self.parent.id, self.id, reason))
+
+    def dot_endpoint(self, level_processes):
+        if level_processes == LVL_PROC_RUN:
+            return self.run.dot_endpoint(level_processes)
+        else:
+            prog = self
+            if level_processes == LVL_PROC_PROCESS:
+                while prog.thread:
+                    prog = prog.parent
+            return 'prog%d' % prog.id
+
+    def json(self, process_map):
+        name = "%d" % self.pid
+        long_name = "%s (%d)" % (PosixPath(self.binary).components[-1]
+                                 if self.binary else "-",
+                                 self.pid)
+        description = "%s\n%d" % (self.binary, self.pid)
+        if self.parent is not None:
+            if self.created == C_FORK:
+                reason = "fork"
+            elif self.created == C_EXEC:
+                reason = "exec"
+            elif self.created == C_FORKEXEC:
+                reason = "fork+exec"
+            else:
+                assert False
+            parent = [process_map[self.parent], reason]
+        else:
+            parent = None
+        return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
+                'long_name': long_name, 'description': description}
 
 
-def generate(target, configfile, database, all_forks=False):
-    """Main function for the graph subcommand.
+class Package(object):
+    """Structure representing a system package.
     """
+    def __init__(self, name, version=None):
+        self.id = None
+        self.name = name
+        self.version = version
+        self.files = set()
+
+    def dot(self, fp, level_pkgs):
+        assert self.id is not None
+        if not self.files:
+            return
+
+        if level_pkgs == LVL_PKG_PACKAGE:
+            fp.write('    "pkg %s" [label=' % escape(self.name))
+            if self.version:
+                fp.write('"%s %s"];\n' % (
+                         escape(self.name), escape(self.version)))
+            else:
+                fp.write('"%s"];\n' % escape(self.name))
+        elif level_pkgs == LVL_PKG_FILE:
+            fp.write('    subgraph cluster%d {\n        label=' % self.id)
+            if self.version:
+                fp.write('"%s %s";\n' % (
+                         escape(self.name), escape(self.version)))
+            else:
+                fp.write('"%s";\n' % escape(self.name))
+            for f in sorted(unicode_(f) for f in self.files):
+                fp.write('        "%s";\n' % escape(f))
+            fp.write('    }\n')
+
+    def dot_endpoint(self, f, level_pkgs):
+        if level_pkgs == LVL_PKG_PACKAGE:
+            return '"pkg %s"' % escape(self.name)
+        else:
+            return '"%s"' % escape(unicode_(f))
+
+    def json(self, level_pkgs):
+        if level_pkgs == LVL_PKG_PACKAGE:
+            raise UsageError("JSON output doesn't support --packages package")
+        elif level_pkgs == LVL_PKG_FILE:
+            files = sorted(unicode_(f) for f in self.files)
+        else:
+            assert False
+        return {'name': self.name, 'version': self.version or None,
+                'files': files}
+
+
+def parse_levels(level_pkgs, level_processes, level_other_files):
+    try:
+        level_pkgs = {'file': LVL_PKG_FILE,
+                      'files': LVL_PKG_FILE,
+                      'package': LVL_PKG_PACKAGE,
+                      'packages': LVL_PKG_PACKAGE,
+                      'ignore': LVL_PKG_IGNORE,
+                      'drop': LVL_PKG_DROP}[level_pkgs]
+    except KeyError:
+        logging.critical("Unknown level of detail for packages: '%s'",
+                         level_pkgs)
+        sys.exit(1)
+    try:
+        level_processes = {'thread': LVL_PROC_THREAD,
+                           'threads': LVL_PROC_THREAD,
+                           'process': LVL_PROC_PROCESS,
+                           'processes': LVL_PROC_PROCESS,
+                           'run': LVL_PROC_RUN,
+                           'runs': LVL_PROC_RUN}[level_processes]
+    except KeyError:
+        logging.critical("Unknown level of detail for processes: '%s'",
+                         level_processes)
+        sys.exit(1)
+    if level_other_files.startswith('depth:'):
+        file_depth = int(level_other_files[6:])
+        level_other_files = 'all'
+    else:
+        file_depth = None
+    try:
+        level_other_files = {'all': LVL_OTHER_ALL,
+                             'io': LVL_OTHER_IO,
+                             'inputoutput': LVL_OTHER_IO,
+                             'no': LVL_OTHER_NO,
+                             'none': LVL_OTHER_NO,
+                             'drop': LVL_OTHER_NO}[level_other_files]
+    except KeyError:
+        logging.critical("Unknown level of detail for other files: '%s'",
+                         level_other_files)
+        sys.exit(1)
+
+    return level_pkgs, level_processes, level_other_files, file_depth
+
+
+def read_events(database, all_forks):
     # In here, a file is any file on the filesystem. A binary is a file, that
     # gets executed. A process is a system-level task, identified by its pid
     # (pids don't get reused in the database).
@@ -69,16 +272,6 @@ def generate(target, configfile, database, all_forks=False):
     # doesn't do anything (new process but still old binary). If that program
     # doesn't do anything worth showing on the graph, it will be erased, unless
     # all_forks is True (--all-forks).
-
-    # Reads package ownership from the configuration
-    if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
-        sys.exit(1)
-    runs, packages, other_files = load_config(configfile, canonical=False)
-    packages = dict((f.path, pkg) for pkg in packages for f in pkg.files)
 
     if PY3:
         # On PY3, connect() only accepts unicode
@@ -96,7 +289,7 @@ def generate(target, configfile, database, all_forks=False):
     process_cursor = conn.cursor()
     process_rows = process_cursor.execute(
         '''
-        SELECT id, parent, timestamp
+        SELECT id, parent, timestamp, is_thread
         FROM processes
         ORDER BY id
         ''')
@@ -107,12 +300,12 @@ def generate(target, configfile, database, all_forks=False):
     file_cursor = conn.cursor()
     file_rows = file_cursor.execute(
         '''
-        SELECT name, timestamp, mode, process
+        SELECT name, timestamp, mode, process, is_directory
         FROM opened_files
         ORDER BY id
         ''')
     binaries = set()
-    files = OrderedSet()
+    files = set()
     edges = OrderedSet()
 
     # ... as well as executed files.
@@ -129,28 +322,35 @@ def generate(target, configfile, database, all_forks=False):
     rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
                        ((r[1], 'open', r) for r in file_rows),
                        ((r[1], 'exec', r) for r in exec_rows))
+    runs = []
+    run = None
     for ts, event_type, data in rows:
         if event_type == 'process':
-            r_id, r_parent, r_timestamp = data
+            r_id, r_parent, r_timestamp, r_thread = data
             if r_parent is not None:
                 parent = processes[r_parent]
                 binary = parent.binary
             else:
+                run = Run(len(runs))
+                runs.append(run)
                 parent = None
                 binary = None
-            p = Process(r_id,
-                        parent,
-                        r_timestamp,
-                        False,
-                        binary,
-                        C_INITIAL if r_parent is None else C_FORK)
-            processes[r_id] = p
-            all_programs.append(p)
+            process = Process(r_id,
+                              run,
+                              parent,
+                              r_timestamp,
+                              r_thread,
+                              False,
+                              binary,
+                              C_INITIAL if r_parent is None else C_FORK)
+            processes[r_id] = process
+            all_programs.append(process)
+            run.processes.append(process)
 
         elif event_type == 'open':
-            r_name, r_timestamp, r_mode, r_process = data
+            r_name, r_timestamp, r_mode, r_process, r_directory = data
             r_name = normalize_path(r_name)
-            if r_mode != FILE_WDIR:
+            if not (r_mode & FILE_WDIR or r_directory):
                 process = processes[r_process]
                 files.add(r_name)
                 edges.add((process, r_name, r_mode, None))
@@ -168,13 +368,16 @@ def generate(target, configfile, database, all_forks=False):
                 process.acted = True
             else:
                 process = Process(process.pid,
+                                  run,
                                   process,
                                   r_timestamp,
+                                  False,
                                   True,         # Hides exec only once
                                   r_name,
                                   C_EXEC)
                 all_programs.append(process)
                 processes[r_process] = process
+                run.processes.append(process)
             argv = tuple(r_argv.split('\0'))
             if not argv[-1]:
                 argv = argv[:-1]
@@ -183,101 +386,284 @@ def generate(target, configfile, database, all_forks=False):
 
     process_cursor.close()
     file_cursor.close()
+    exec_cursor.close()
     conn.close()
 
-    # Puts files in packages
-    logging.info("Organizes packages...")
-    package_files = {}
-    other_files = []
-    for f in files:
-        pkg = packages.get(f)
-        if pkg is not None:
-            package_files.setdefault((pkg.name, pkg.version), []).append(f)
-        else:
-            other_files.append(f)
+    return runs, files, edges
 
-    # Writes DOT file
+
+def format_argv(argv):
+    joined = ' '.join(argv)
+    if len(joined) < 50:
+        return joined
+    else:
+        return "%s ..." % argv[0]
+
+
+def generate(target, configfile, database, all_forks=False, graph_format='dot',
+             level_pkgs='file', level_processes='thread',
+             level_other_files='all',
+             regex_filters=None, regex_replaces=None, aggregates=None):
+    """Main function for the graph subcommand.
+    """
+    try:
+        graph_format = {'dot': FORMAT_DOT, 'DOT': FORMAT_DOT,
+                        'json': FORMAT_JSON, 'JSON': FORMAT_JSON}[graph_format]
+    except KeyError:
+        logging.critical("Unknown output format %r", graph_format)
+        sys.exit(1)
+
+    level_pkgs, level_processes, level_other_files, file_depth = \
+        parse_levels(level_pkgs, level_processes, level_other_files)
+
+    # Reads package ownership from the configuration
+    if not configfile.is_file():
+        logging.critical("Configuration file does not exist!\n"
+                         "Did you forget to run 'reprozip trace'?\n"
+                         "If not, you might want to use --dir to specify an "
+                         "alternate location.")
+        sys.exit(1)
+    config = load_config(configfile, canonical=False)
+    inputs_outputs = set(f.path
+                         for f in itervalues(config.inputs_outputs))
+
+    runs, files, edges = read_events(database, all_forks)
+
+    # Apply regexes
+    ignore = [lambda path, r=re.compile(p): r.search(path) is not None
+              for p in regex_filters or []]
+    replace = [lambda path, r=re.compile(p): r.sub(repl, path)
+               for p, repl in regex_replaces or []]
+
+    def filefilter(path):
+        pathuni = unicode_(path)
+        if any(f(pathuni) for f in ignore):
+            logging.debug("IGN %s", pathuni)
+            return None
+        if not (replace or aggregates):
+            return path
+        for fi in replace:
+            pathuni_ = fi(pathuni)
+            if pathuni_ != pathuni:
+                logging.debug("SUB %s -> %s", pathuni, pathuni_)
+            pathuni = pathuni_
+        for prefix in aggregates or []:
+            if pathuni.startswith(prefix):
+                logging.debug("AGG %s -> %s", pathuni, prefix)
+                pathuni = prefix
+                break
+        return PosixPath(pathuni)
+
+    files_new = set()
+    for fi in files:
+        fi = filefilter(fi)
+        if fi is not None:
+            files_new.add(fi)
+    files = files_new
+
+    edges_new = OrderedSet()
+    for prog, fi, mode, argv in edges:
+        fi = filefilter(fi)
+        if fi is not None:
+            edges_new.add((prog, fi, mode, argv))
+    edges = edges_new
+
+    # Puts files in packages
+    package_map = {}
+    if level_pkgs == LVL_PKG_IGNORE:
+        packages = []
+        other_files = files
+    elif level_pkgs == LVL_PKG_DROP:
+        packages = []
+        package_files = set(f.path
+                            for pkg in config.packages for f in pkg.files)
+        other_files = [f for f in files if f not in package_files]
+    else:
+        logging.info("Organizes packages...")
+        file2package = dict((f.path, pkg)
+                            for pkg in config.packages for f in pkg.files)
+        packages = {}
+        other_files = []
+        for fi in files:
+            pkg = file2package.get(fi)
+            if pkg is not None:
+                package = packages.get(pkg.name)
+                if package is None:
+                    package = Package(pkg.name, pkg.version)
+                    packages[pkg.name] = package
+                package.files.add(fi)
+                package_map[fi] = package
+            else:
+                other_files.append(fi)
+        packages = sorted(itervalues(packages), key=lambda pkg: pkg.name)
+        for i, pkg in enumerate(packages):
+            pkg.id = i
+
+    # Filter other files
+    if level_other_files == LVL_OTHER_ALL and file_depth is not None:
+        other_files = set(PosixPath(*f.components[:file_depth + 1])
+                          for f in other_files)
+        edges = OrderedSet((prog,
+                            f if f in package_map
+                            else PosixPath(*f.components[:file_depth + 1]),
+                            mode,
+                            argv)
+                           for prog, f, mode, argv in edges)
+    else:
+        if level_other_files == LVL_OTHER_IO:
+            other_files = set(f for f in other_files if f in inputs_outputs)
+            edges = [(prog, f, mode, argv)
+                     for prog, f, mode, argv in edges
+                     if f in package_map or f in other_files]
+        elif level_other_files == LVL_OTHER_NO:
+            other_files = set()
+            edges = [(prog, f, mode, argv)
+                     for prog, f, mode, argv in edges
+                     if f in package_map]
+
+    args = (target, runs, packages, other_files, package_map, edges,
+            inputs_outputs, level_pkgs, level_processes, level_other_files)
+    if graph_format == FORMAT_DOT:
+        graph_dot(*args)
+    elif graph_format == FORMAT_JSON:
+        graph_json(*args)
+    else:
+        assert False
+
+
+def graph_dot(target, runs, packages, other_files, package_map, edges,
+              inputs_outputs, level_pkgs, level_processes, level_other_files):
+    """Writes a GraphViz DOT file from the collected information.
+    """
     with target.open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('digraph G {\n    /* programs */\n    node [shape=box];\n')
+        fp.write('digraph G {\n    /* programs */\n'
+                 '    node [shape=box fontcolor=white '
+                 'fillcolor=black style=filled];\n')
+
         # Programs
         logging.info("Writing programs...")
-        for program in all_programs:
-            fp.write('    prog%d [label="%s (%d)"];\n' % (
-                     id(program), program.binary or "-", program.pid))
-            if program.parent is not None:
-                reason = ''
-                if program.created == C_FORK:
-                    reason = "fork"
-                elif program.created == C_EXEC:
-                    reason = "exec"
-                elif program.created == C_FORKEXEC:
-                    reason = "fork+exec"
-                fp.write('    prog%d -> prog%d [label="%s"];\n' % (
-                         id(program.parent), id(program), reason))
+        for run in runs:
+            run.dot(fp, level_processes)
 
-        fp.write('\n    node [shape=ellipse];\n\n    /* system packages */\n')
+        fp.write('\n'
+                 '    node [shape=ellipse fontcolor="#131C39" '
+                 'fillcolor="#C9D2ED"];\n')
 
-        # Files from packages
-        logging.info("Writing packages...")
-        for i, ((name, version), files) in enumerate(iteritems(package_files)):
-            fp.write('    subgraph cluster%d {\n        label=' % i)
-            if version:
-                fp.write('"%s %s";\n' % (escape(name), escape(version)))
-            else:
-                fp.write('"%s";\n' % escape(name))
-            for f in files:
-                fp.write('        "%s";\n' % escape(unicode_(f)))
-            fp.write('    }\n')
+        # Packages
+        if level_pkgs != LVL_PKG_IGNORE:
+            logging.info("Writing packages...")
+            fp.write('\n    /* system packages */\n')
+            for package in sorted(packages, key=lambda pkg: pkg.name):
+                package.dot(fp, level_pkgs)
 
         fp.write('\n    /* other files */\n')
 
         # Other files
         logging.info("Writing other files...")
-        for f in other_files:
-            fp.write('    "%s"\n' % escape(unicode_(f)))
+        for fi in sorted(other_files):
+            if fi in inputs_outputs:
+                fp.write('    "%s" [fillcolor="#A3B4E0"];\n' %
+                         escape(unicode_(fi)))
+            else:
+                fp.write('    "%s";\n' % escape(unicode_(fi)))
 
         fp.write('\n')
 
         # Edges
         logging.info("Connecting edges...")
-        for prog, f, mode, argv in edges:
+        for prog, fi, mode, argv in edges:
+            endp_prog = prog.dot_endpoint(level_processes)
+            if fi in package_map:
+                endp_file = package_map[fi].dot_endpoint(fi, level_processes)
+            else:
+                endp_file = '"%s"' % escape(unicode_(fi))
+
             if mode is None:
-                fp.write('    "%s" -> prog%d [color=blue, label="%s"];\n' % (
-                         escape(unicode_(f)),
-                         id(prog),
-                         escape(' '.join(argv))))
+                fp.write('    %s -> %s [style=bold, label="%s"];\n' % (
+                         endp_file,
+                         endp_prog,
+                         escape(format_argv(argv))))
             elif mode & FILE_WRITE:
-                fp.write('    prog%d -> "%s" [color=red];\n' % (
-                         id(prog), escape(unicode_(f))))
+                fp.write('    %s -> %s [color="#000088"];\n' % (
+                         endp_prog, endp_file))
             elif mode & FILE_READ:
-                fp.write('    "%s" -> prog%d [color=green];\n' % (
-                         escape(unicode_(f)), id(prog)))
+                fp.write('    %s -> %s [color="#8888CC"];\n' % (
+                         endp_file, endp_prog))
 
         fp.write('}\n')
+
+
+def graph_json(target, runs, packages, other_files, package_map, edges,
+               inputs_outputs, level_pkgs, level_processes, level_other_files):
+    """Writes a JSON file suitable for further processing.
+    """
+    # Packages
+    json_packages = [pkg.json(level_pkgs) for pkg in packages]
+
+    # Other files
+    json_other_files = [unicode_(fi) for fi in sorted(other_files)]
+
+    # Programs
+    prog_map = {}
+    json_runs = [run.json(prog_map, level_processes) for run in runs]
+
+    # Connect edges
+    for prog, f, mode, argv in edges:
+        what = unicode_(f)
+        if mode is None:
+            prog_map[prog]['reads'].append(what)
+            # TODO: argv?
+        elif mode & FILE_WRITE:
+            prog_map[prog]['writes'].append(what)
+        elif mode & FILE_READ:
+            prog_map[prog]['reads'].append(what)
+
+    json_other_files.sort()
+
+    if PY3:
+        fp = target.open('w', encoding='utf-8', newline='\n')
+    else:
+        fp = target.open('wb')
+    try:
+        json.dump({'packages': sorted(json_packages,
+                                      key=lambda p: p['name']),
+                   'other_files': json_other_files,
+                   'runs': json_runs},
+                  fp,
+                  ensure_ascii=False,
+                  indent=2,
+                  sort_keys=True)
+    finally:
+        fp.close()
 
 
 def graph(args):
     """graph subcommand.
 
     Reads in the trace sqlite3 database and writes out a graph in GraphViz DOT
-    format.
+    format or JSON.
     """
+    def call_generate(args, config, trace):
+        generate(Path(args.target[0]), config, trace, args.all_forks, args.format,
+                 args.packages, args.processes, args.otherfiles,
+                 args.regex_filter, args.regex_replace,
+                 args.aggregate)
+
     if args.pack is not None:
         rpz_pack = RPZPack(args.pack)
         with rpz_pack.with_config() as config:
             with rpz_pack.with_trace() as trace:
-                generate(Path(args.target[0]), config, trace)
+                call_generate(args, config, trace)
     else:
-        tracedir = Path(args.dir)
-        generate(Path(args.target[0]),
-                 tracedir / 'config.yml', tracedir / 'trace.sqlite3',
-                 args.all_forks)
+        call_generate(args,
+                      Path(args.dir) / 'config.yml',
+                      Path(args.dir) / 'trace.sqlite3')
 
 
 def disabled_bug13676(args):
     stderr.write("Error: your version of Python, %s, is not supported\n"
                  "Versions before 2.7.3 are affected by bug 13676 and will "
-                 "not work be able to\nread the trace "
+                 "not be able to read\nthe trace "
                  "database\n" % sys.version.split(' ', 1)[0])
     sys.exit(1)
 
@@ -297,6 +683,27 @@ def setup(parser, **kwargs):
     parser.add_argument('target', nargs=1, help="Destination DOT file")
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")
+    parser.add_argument('--packages', default='file',
+                        help="Level of detail for packages; 'file', "
+                        "'package', 'drop' or 'ignore' (default: 'file')")
+    parser.add_argument('--processes', default='thread',
+                        help="Level of detail for processes; 'thread', "
+                        "'process' or 'run' (default: 'thread')")
+    parser.add_argument('--otherfiles', default='all',
+                        help="Level of detail for non-package files; 'all', "
+                        "'io' or 'no' (default: 'all')")
+    parser.add_argument('--aggregate', action='append',
+                        help="Aggregate all files under this path")
+    parser.add_argument('--regex-filter', action='append',
+                        help="Glob patterns of files to ignore")
+    parser.add_argument('--regex-replace', action='append', nargs=2,
+                        help="Apply regular expression replacement to files")
+    parser.add_argument('--dot', action='store_const', dest='format',
+                        const='dot', default='dot',
+                        help="Set the output format to DOT (this is the "
+                        "default)")
+    parser.add_argument('--json', action='store_const', dest='format',
+                        const='json', help="Set the output format to JSON")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',
         help="where the database and configuration file are stored (default: "

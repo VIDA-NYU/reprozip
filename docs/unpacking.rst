@@ -101,14 +101,7 @@ This command is particularly useful if you want to replace an input file with yo
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
 
-ReproZip also allows users to generate a *provenance graph* related to the experiment execution. This graph shows the relationships between files, library dependencies, and binaries during the execution. To generate such a graph, the ``reprounzip graph`` command should be used::
-
-    $ reprounzip graph graph-file.dot package.rpz
-    $ dot -Tpng graph-file.dot -o image.png
-
-where `graph-file.dot` corresponds to the graph, outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph.
-
-..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
+While not actually geared toward re-execution, reprounzip bundles a 'graph' unpackers, that read a package's metadata to generate a *provenance graph* showing the processes of the original experiment and the files they access. See :ref:`graph` for details.
 
 ..  _unpack-unpackers:
 

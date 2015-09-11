@@ -22,6 +22,7 @@ Contents
     install
     packing
     unpacking
+    graph
     faq
     glossary
     developerguide
