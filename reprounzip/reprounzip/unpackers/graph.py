@@ -644,10 +644,9 @@ def graph(args):
     format or JSON.
     """
     def call_generate(args, config, trace):
-        generate(Path(args.target[0]), config, trace, args.all_forks, args.format,
-                 args.packages, args.processes, args.otherfiles,
-                 args.regex_filter, args.regex_replace,
-                 args.aggregate)
+        generate(Path(args.target[0]), config, trace, args.all_forks,
+                 args.format, args.packages, args.processes, args.otherfiles,
+                 args.regex_filter, args.regex_replace, args.aggregate)
 
     if args.pack is not None:
         rpz_pack = RPZPack(args.pack)
