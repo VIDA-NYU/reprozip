@@ -11,8 +11,7 @@ It dispatchs to plugins registered through pkg_resources as entry point
 ``reprounzip.unpackers``.
 """
 
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import division, print_function, unicode_literals
 
 import logging
 import pickle
