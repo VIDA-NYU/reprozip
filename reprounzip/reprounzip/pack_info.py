@@ -23,7 +23,7 @@ from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, shell_escape, metadata_read
-from reprounzip.utils import iteritems, itervalues, hsize
+from reprounzip.utils import iteritems, itervalues, unicode_, hsize
 
 
 def print_info(args):
@@ -202,10 +202,16 @@ def showfiles(args):
                     print("    %s (%s)" % (input_name, f.path))
                 else:
                     print("    %s" % input_name)
-                if assigned_input_files.get(input_name) is not None:
-                    assigned = assigned_input_files[input_name]
-                else:
+
+                assigned = assigned_input_files.get(input_name)
+                if assigned is None:
                     assigned = "(original)"
+                elif assigned is False:
+                    assigned = "(not created)"
+                elif assigned is True:
+                    assigned = "(generated)"
+                else:
+                    assert isinstance(assigned, (bytes, unicode_))
                 print("      %s" % assigned)
         else:
             print("Input files: none")

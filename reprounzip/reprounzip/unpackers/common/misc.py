@@ -23,7 +23,7 @@ import tarfile
 import reprounzip.common
 from reprounzip.common import RPZPack
 from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
-    join_root, copyfile
+    unicode_, join_root, copyfile
 
 
 COMPAT_OK = 0
@@ -147,10 +147,15 @@ class FileUploader(object):
         if not files:
             print("Input files:")
             for input_name in input_files:
-                if self.input_files.get(input_name) is not None:
-                    assigned = self.input_files[input_name]
-                else:
+                assigned = self.input_files.get(input_name)
+                if assigned is None:
                     assigned = "(original)"
+                elif assigned is False:
+                    assigned = "(not created)"
+                elif assigned is True:
+                    assigned = "(generated)"
+                else:
+                    assert isinstance(assigned, (bytes, unicode_))
                 print("    %s: %s" % (input_name, assigned))
             return
 
