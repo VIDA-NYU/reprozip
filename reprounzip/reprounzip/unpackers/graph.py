@@ -29,8 +29,8 @@ from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, UsageError
-from reprounzip.utils import PY3, unicode_, itervalues, stderr, escape, \
-    normalize_path
+from reprounzip.utils import PY3, unicode_, iteritems, itervalues, stderr, \
+    escape, normalize_path
 
 
 C_INITIAL = 0   # First process or don't know
@@ -424,8 +424,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                          "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
-    inputs_outputs = set(f.path
-                         for f in itervalues(config.inputs_outputs))
+    inputs_outputs = dict((f.path, n)
+                          for n, f in iteritems(config.inputs_outputs))
 
     runs, files, edges = read_events(database, all_forks)
 
@@ -562,8 +562,10 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         logging.info("Writing other files...")
         for fi in sorted(other_files):
             if fi in inputs_outputs:
-                fp.write('    "%s" [fillcolor="#A3B4E0"];\n' %
-                         escape(unicode_(fi)))
+                fp.write('    "%(path)s" [fillcolor="#A3B4E0", '
+                         'label="%(name)s\\n%(path)s"];\n' %
+                         {'path': escape(unicode_(fi)),
+                          'name': inputs_outputs[fi]})
             else:
                 fp.write('    "%s";\n' % escape(unicode_(fi)))
 

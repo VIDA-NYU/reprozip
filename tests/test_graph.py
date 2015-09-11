@@ -75,6 +75,10 @@ runs:
   workingdir: /user/dir
 
 inputs_outputs:
+- name: important
+  path: "/some/dir/one"
+  written_by_runs: [0]
+  read_by_runs: [1]
 
 packages:
 - name: pkg1
@@ -200,7 +204,7 @@ digraph G {
     "/bin/sh";
     "/some/dir/drive.py";
     "/some/dir/experiment";
-    "/some/dir/one";
+    "/some/dir/one" [fillcolor="#A3B4E0", label="important\\n/some/dir/one"];
     "/some/dir/report";
     "/some/dir/result";
     "/some/dir/thing";
@@ -322,7 +326,7 @@ digraph G {
     "/bin/sh";
     "/some/dir/drive.py";
     "/some/dir/experiment";
-    "/some/dir/one";
+    "/some/dir/one" [fillcolor="#A3B4E0", label="important\\n/some/dir/one"];
     "/some/dir/report";
     "/some/dir/result";
     "/some/dir/thing";
