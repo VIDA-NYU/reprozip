@@ -103,7 +103,9 @@ class Package(CommonEqualityMixin):
 # 0.4.1: no change
 # 0.5: no change
 # 0.6: no change
-# 0.7: moves input_files and output_files from run to global scope
+# 0.7:
+#     moves input_files and output_files from run to global scope
+#     adds processes.is_thread column to trace database
 # 0.8: adds 'id' field to run
 
 
@@ -266,7 +268,8 @@ def read_packages(packages, File=File, Package=Package):
 
 
 Config = optional_return_type(['runs', 'packages', 'other_files'],
-                              ['inputs_outputs', 'additional_patterns'])
+                              ['inputs_outputs', 'additional_patterns',
+                               'format_version'])
 
 
 class InputOutputFile(object):
@@ -403,7 +406,8 @@ def load_config(filename, canonical, File=File, Package=Package):
                          inputs_outputs,
                          pack_id=config.get('pack_id'))
 
-    kwargs = {'inputs_outputs': inputs_outputs}
+    kwargs = {'format_version': ver,
+              'inputs_outputs': inputs_outputs}
 
     if canonical:
         if 'additional_patterns' in config:
