@@ -17,6 +17,7 @@ See http://www.graphviz.org/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+from distutils.version import LooseVersion
 import heapq
 import json
 import logging
@@ -265,7 +266,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
     return level_pkgs, level_processes, level_other_files, file_depth
 
 
-def read_events(database, all_forks):
+def read_events(database, all_forks, has_thread_flag):
     # In here, a file is any file on the filesystem. A binary is a file, that
     # gets executed. A process is a system-level task, identified by its pid
     # (pids don't get reused in the database).
@@ -291,12 +292,19 @@ def read_events(database, all_forks):
 
     # Reads processes from the database
     process_cursor = conn.cursor()
-    process_rows = process_cursor.execute(
-        '''
+    if has_thread_flag:
+        sql = '''
         SELECT id, parent, timestamp, is_thread
         FROM processes
         ORDER BY id
-        ''')
+        '''
+    else:
+        sql = '''
+        SELECT id, parent, timestamp, 0 as is_thread
+        FROM processes
+        ORDER BY id
+        '''
+    process_rows = process_cursor.execute(sql)
     processes = {}
     all_programs = []
 
@@ -430,8 +438,10 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     config = load_config(configfile, canonical=False)
     inputs_outputs = dict((f.path, n)
                           for n, f in iteritems(config.inputs_outputs))
+    has_thread_flag = config.format_version >= LooseVersion('0.7')
 
-    runs, files, edges = read_events(database, all_forks)
+    runs, files, edges = read_events(database, all_forks,
+                                     has_thread_flag)
 
     # Label the runs
     if len(runs) != len(config.runs):
