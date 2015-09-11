@@ -632,29 +632,29 @@ def setup_logging(tag, verbosity):
     rootlogger.addHandler(handler)
 
     # File logger
-    dotrpz = Path('~/.reprozip').expand_user()
-    try:
-        if not dotrpz.is_dir():
-            dotrpz.mkdir()
-        filehandler = logging.handlers.RotatingFileHandler(str(dotrpz / 'log'),
-                                                           mode='a',
-                                                           delay=False,
-                                                           maxBytes=400000,
-                                                           backupCount=5)
-    except (IOError, OSError):
-        logger.warning("Couldn't create log file %s", dotrpz / 'log')
-    else:
-        filehandler.setFormatter(formatter)
-        filehandler.setLevel(file_level)
-        rootlogger.addHandler(filehandler)
+    if os.environ.get('REPROZIP_NO_LOGFILE', '').lower() in ('', 'false',
+                                                             '0', 'off'):
+        dotrpz = Path('~/.reprozip').expand_user()
+        try:
+            if not dotrpz.is_dir():
+                dotrpz.mkdir()
+            filehandler = logging.handlers.RotatingFileHandler(
+                str(dotrpz / 'log'), mode='a',
+                delay=False, maxBytes=400000, backupCount=5)
+        except (IOError, OSError):
+            logger.warning("Couldn't create log file %s", dotrpz / 'log')
+        else:
+            filehandler.setFormatter(formatter)
+            filehandler.setLevel(file_level)
+            rootlogger.addHandler(filehandler)
 
-        filehandler.emit(logging.root.makeRecord(
-            __name__.split('.', 1)[0],
-            logging.INFO,
-            "(log start)", 0,
-            "Log opened %s %s",
-            (datetime.now().strftime("%Y-%m-%d"), sys.argv),
-            None))
+            filehandler.emit(logging.root.makeRecord(
+                __name__.split('.', 1)[0],
+                logging.INFO,
+                "(log start)", 0,
+                "Log opened %s %s",
+                (datetime.now().strftime("%Y-%m-%d"), sys.argv),
+                None))
 
 
 _usage_report = None

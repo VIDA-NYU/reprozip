@@ -48,6 +48,9 @@ if __name__ == '__main__':
     # Disables usage reporting
     os.environ['REPROZIP_USAGE_STATS'] = 'off'
 
+    # Disable log file
+    os.environ['REPROZIP_NO_LOGFILE'] = 'on'
+
     setup_logging('TESTSUITE', 999)
 
     parser = argparse.ArgumentParser(description="reprozip tests")
