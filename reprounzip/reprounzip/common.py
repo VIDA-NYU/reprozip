@@ -25,7 +25,6 @@ import contextlib
 import copy
 from datetime import datetime
 from distutils.version import LooseVersion
-import functools
 import logging
 import logging.handlers
 import os
@@ -35,8 +34,8 @@ import usagestats
 import yaml
 
 from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
-    escape, CommonEqualityMixin, hsize, optional_return_type, join_root, \
-    copyfile
+    escape, CommonEqualityMixin, OrderingFromEqLtMixin, optional_return_type, \
+    hsize, join_root, copyfile
 
 
 FILE_READ = 0x01
@@ -270,8 +269,7 @@ Config = optional_return_type(['runs', 'packages', 'other_files'],
                               ['inputs_outputs', 'additional_patterns'])
 
 
-@functools.total_ordering
-class InputOutputFile(object):
+class InputOutputFile(OrderingFromEqLtMixin):
     def __init__(self, path, read_runs, write_runs):
         self.path = path
         self.read_runs = read_runs
