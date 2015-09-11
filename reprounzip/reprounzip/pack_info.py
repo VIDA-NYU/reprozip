@@ -131,11 +131,11 @@ def print_info(args):
 
     if inputs_outputs:
         if args.verbosity < 2:
-            print("Inputs/outputs files (%d) :%s" % (
-                  len(inputs_outputs), ", ".join(inputs_outputs)))
+            print("Inputs/outputs files (%d): %s" % (
+                  len(inputs_outputs), ", ".join(sorted(inputs_outputs))))
         else:
             print("Inputs/outputs files (%d):" % len(inputs_outputs))
-            for name, f in iteritems(inputs_outputs):
+            for name, f in sorted(iteritems(inputs_outputs)):
                 t = []
                 if f.read_runs:
                     t.append("in")
@@ -195,7 +195,7 @@ def showfiles(args):
 
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
-            for input_name, f in iteritems(config.inputs_outputs):
+            for input_name, f in sorted(iteritems(config.inputs_outputs)):
                 if not f.read_runs:
                     continue
                 if args.verbosity >= 2:
@@ -218,7 +218,7 @@ def showfiles(args):
 
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
-            for output_name, f in iteritems(config.inputs_outputs):
+            for output_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.write_runs:
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))
@@ -233,7 +233,7 @@ def showfiles(args):
 
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
-            for input_name, f in iteritems(config.inputs_outputs):
+            for input_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.read_runs:
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
@@ -244,7 +244,7 @@ def showfiles(args):
 
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
-            for output_name, f in iteritems(config.inputs_outputs):
+            for output_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.write_runs:
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))

@@ -25,6 +25,7 @@ import contextlib
 import copy
 from datetime import datetime
 from distutils.version import LooseVersion
+import functools
 import logging
 import logging.handlers
 import os
@@ -269,6 +270,7 @@ Config = optional_return_type(['runs', 'packages', 'other_files'],
                               ['inputs_outputs', 'additional_patterns'])
 
 
+@functools.total_ordering
 class InputOutputFile(object):
     def __init__(self, path, read_runs, write_runs):
         self.path = path
@@ -279,8 +281,8 @@ class InputOutputFile(object):
         return ((self.path, self.read_runs, self.write_runs) ==
                 (other.path, other.read_runs, other.write_runs))
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __lt__(self, other):
+        return self.path < other.path
 
     def __repr__(self):
         return "<InputOutputFile(path=%r, read_runs=%r, write_runs=%r)>" % (

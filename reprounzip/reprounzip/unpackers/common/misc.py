@@ -146,7 +146,7 @@ class FileUploader(object):
         # No argument: list all the input files and exit
         if not files:
             print("Input files:")
-            for input_name in input_files:
+            for input_name in sorted(input_files):
                 assigned = self.input_files.get(input_name)
                 if assigned is None:
                     assigned = "(original)"
