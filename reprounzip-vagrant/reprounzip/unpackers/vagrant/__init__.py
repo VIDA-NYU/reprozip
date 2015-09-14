@@ -91,6 +91,12 @@ def select_box(runs):
                 return 'debian', 'remram/debian-7-i386'
             else:  # architecture == 'x86_64'
                 return 'debian', 'remram/debian-7-amd64'
+        if (version == '9' or version.startswith('9.') or
+                version.startswith('stretch')):
+            if architecture == 'i686':
+                return 'debian', 'remram/debian-9-i386'
+            else:  # architecture == 'x86_64'
+                return 'debian', 'remram/debian-9-amd64'
         if (version != '8' and not version.startswith('8.') and
                 not version.startswith('jessie')):
             logging.warning("using Debian 8 'Jessie' instead of '%s'", version)
