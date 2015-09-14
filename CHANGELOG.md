@@ -6,6 +6,11 @@ Changelog
 
 Behavior change:
 * .rpz pack format changed (version 1 -> 2). Pack is now uncompressed, data is in a nested TGZ archive; allows faster retrieval of metadata (config & trace).
+* reprozip trace warnings are now info messages; won't show up without -v
+
+Features:
+* Reworked `reprounzip graph`: level of details, regex filters & replace, JSON output
+* Added *run* argument to `reprounzip showfiles`, to show inputs & outputs of a single run
 
 0.7.3 (???)
 -----------
