@@ -29,7 +29,7 @@ import sys
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, UsageError
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
 from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
     unicode_, escape, normalize_path
 
@@ -214,7 +214,8 @@ class Package(object):
 
     def json(self, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
-            raise UsageError("JSON output doesn't support --packages package")
+            logging.critical("JSON output doesn't support --packages package")
+            sys.exit(1)
         elif level_pkgs == LVL_PKG_FILE:
             files = sorted(unicode_(f) for f in self.files)
         else:
