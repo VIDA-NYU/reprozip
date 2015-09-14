@@ -9,14 +9,9 @@ Behavior change:
 * reprozip trace warnings are now info messages; won't show up without -v
 
 Features:
+* Runs in the configuration file now have an 'id' field, that will be shown by 'reprounzip info' and can be selected when running
 * Reworked `reprounzip graph`: level of details, regex filters & replace, JSON output
 * Added *run* argument to `reprounzip showfiles`, to show inputs & outputs of a single run
-
-0.7.3 (???)
------------
-
-Features:
-* Runs in the configuration file now have an 'id' field, that will be shown by 'reprounzip info' and can be selected when running
 
 0.7.2 (2015-08-24)
 ------------------
