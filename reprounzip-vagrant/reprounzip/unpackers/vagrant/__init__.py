@@ -115,8 +115,8 @@ def read_dict(path):
     return metadata_read(path, 'vagrant')
 
 
-def get_ssh_parameters(target):
-    """Reads the SSH parameters from ``vagrant ssh`` command output.
+def machine_setup(target):
+    """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
     try:
         out = check_output(['vagrant', 'ssh-config'],
@@ -423,7 +423,7 @@ def vagrant_run(args):
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
-    info = get_ssh_parameters(target)
+    info = machine_setup(target)
 
     signals.pre_run(target=target)
 
@@ -450,7 +450,7 @@ class SSHUploader(FileUploader):
     def prepare_upload(self, files):
         # Checks whether the VM is running
         try:
-            ssh_info = get_ssh_parameters(self.target)
+            ssh_info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
@@ -521,7 +521,7 @@ class SSHDownloader(FileDownloader):
     def prepare_download(self, files):
         # Checks whether the VM is running
         try:
-            info = get_ssh_parameters(self.target)
+            info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
