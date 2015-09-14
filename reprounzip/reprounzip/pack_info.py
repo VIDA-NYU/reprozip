@@ -14,6 +14,7 @@ It dispatchs to plugins registered through pkg_resources as entry point
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import argparse
 import logging
 import pickle
 import platform
@@ -23,7 +24,7 @@ import sys
 from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
-    COMPAT_NO, shell_escape
+    COMPAT_NO, UsageError, shell_escape
 from reprounzip.utils import iteritems, itervalues, hsize
 
 
@@ -179,6 +180,31 @@ def showfiles(args):
 
     Works both for a pack file and for an extracted directory.
     """
+    def parse_run(runs, s):
+        for i, run in enumerate(runs):
+            if run['id'] == s:
+                return i
+        else:
+            try:
+                r = int(s)
+            except ValueError:
+                logging.critical("Error: Unknown run %s", s)
+                raise UsageError
+            if r < 0 or r >= len(runs):
+                logging.critical("Error: Expected 0 <= run <= %d, got %d",
+                                 len(runs) - 1, r)
+                sys.exit(1)
+            return r
+
+    def file_filter(fio):
+        if file_filter.run is None:
+            return True
+        else:
+            return (file_filter.run in fio.read_runs or
+                    file_filter.run in fio.write_runs)
+
+    file_filter.run = None
+
     pack = Path(args.pack[0])
 
     if not pack.exists():
@@ -189,6 +215,11 @@ def showfiles(args):
         # Reads info from an unpacked directory
         config = load_config_file(pack / 'config.yml',
                                   canonical=True)
+
+        # Filter files by run
+        if args.run is not None:
+            file_filter.run = parse_run(config.runs, args.run)
+
         # The '.reprounzip' file is a pickled dictionary, it contains the name
         # of the files that replaced each input file (if upload was used)
         with pack.open('rb', '.reprounzip') as fp:
@@ -198,24 +229,23 @@ def showfiles(args):
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
             for input_name, f in iteritems(config.inputs_outputs):
-                if not f.read_runs:
-                    continue
-                if args.verbosity >= 2:
-                    print("    %s (%s)" % (input_name, f.path))
-                else:
-                    print("    %s" % input_name)
-                if assigned_input_files.get(input_name) is not None:
-                    assigned = assigned_input_files[input_name]
-                else:
-                    assigned = "(original)"
-                print("      %s" % assigned)
+                if f.read_runs and file_filter(f):
+                    if args.verbosity >= 2:
+                        print("    %s (%s)" % (input_name, f.path))
+                    else:
+                        print("    %s" % input_name)
+                    if assigned_input_files.get(input_name) is not None:
+                        assigned = assigned_input_files[input_name]
+                    else:
+                        assigned = "(original)"
+                    print("      %s" % assigned)
         else:
             print("Input files: none")
 
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
             for output_name, f in iteritems(config.inputs_outputs):
-                if f.write_runs:
+                if f.write_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))
                     else:
@@ -227,10 +257,14 @@ def showfiles(args):
         # Reads info from a pack file
         config = load_config(pack)
 
+        # Filter files by run
+        if args.run is not None:
+            file_filter.run = parse_run(config.runs, args.run)
+
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
             for input_name, f in iteritems(config.inputs_outputs):
-                if f.read_runs:
+                if f.read_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
                     else:
@@ -241,7 +275,7 @@ def showfiles(args):
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
             for output_name, f in iteritems(config.inputs_outputs):
-                if f.write_runs:
+                if f.write_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))
                     else:
@@ -263,4 +297,6 @@ def setup_showfiles(parser, **kwargs):
     """
     parser.add_argument('pack', nargs=1,
                         help="Pack or directory to read from")
+    parser.add_argument('run', nargs=argparse.OPTIONAL,
+                        help="Run whose input and output files will be listed")
     parser.set_defaults(func=showfiles)
