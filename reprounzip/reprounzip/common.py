@@ -34,8 +34,8 @@ import usagestats
 import yaml
 
 from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
-    escape, CommonEqualityMixin, hsize, optional_return_type, join_root, \
-    copyfile
+    escape, CommonEqualityMixin, OrderingFromEqLtMixin, optional_return_type, \
+    hsize, join_root, copyfile
 
 
 FILE_READ = 0x01
@@ -272,7 +272,7 @@ Config = optional_return_type(['runs', 'packages', 'other_files'],
                                'format_version'])
 
 
-class InputOutputFile(object):
+class InputOutputFile(OrderingFromEqLtMixin):
     def __init__(self, path, read_runs, write_runs):
         self.path = path
         self.read_runs = read_runs
@@ -282,8 +282,8 @@ class InputOutputFile(object):
         return ((self.path, self.read_runs, self.write_runs) ==
                 (other.path, other.read_runs, other.write_runs))
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __lt__(self, other):
+        return self.path < other.path
 
     def __repr__(self):
         return "<InputOutputFile(path=%r, read_runs=%r, write_runs=%r)>" % (

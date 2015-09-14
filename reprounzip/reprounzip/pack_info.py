@@ -16,7 +16,6 @@ from __future__ import absolute_import, division, print_function, \
 
 import argparse
 import logging
-import pickle
 import platform
 from rpaths import Path
 import sys
@@ -24,8 +23,8 @@ import sys
 from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
-    COMPAT_NO, UsageError, shell_escape
-from reprounzip.utils import iteritems, itervalues, hsize
+    COMPAT_NO, UsageError, shell_escape, metadata_read
+from reprounzip.utils import iteritems, itervalues, unicode_, hsize
 
 
 def print_info(args):
@@ -133,11 +132,11 @@ def print_info(args):
 
     if inputs_outputs:
         if args.verbosity < 2:
-            print("Inputs/outputs files (%d) :%s" % (
-                  len(inputs_outputs), ", ".join(inputs_outputs)))
+            print("Inputs/outputs files (%d): %s" % (
+                  len(inputs_outputs), ", ".join(sorted(inputs_outputs))))
         else:
             print("Inputs/outputs files (%d):" % len(inputs_outputs))
-            for name, f in iteritems(inputs_outputs):
+            for name, f in sorted(iteritems(inputs_outputs)):
                 t = []
                 if f.read_runs:
                     t.append("in")
@@ -222,29 +221,34 @@ def showfiles(args):
 
         # The '.reprounzip' file is a pickled dictionary, it contains the name
         # of the files that replaced each input file (if upload was used)
-        with pack.open('rb', '.reprounzip') as fp:
-            unpacked_info = pickle.load(fp)
+        unpacked_info = metadata_read(pack, None)
         assigned_input_files = unpacked_info.get('input_files', {})
 
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
-            for input_name, f in iteritems(config.inputs_outputs):
+            for input_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.read_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
                     else:
                         print("    %s" % input_name)
-                    if assigned_input_files.get(input_name) is not None:
-                        assigned = assigned_input_files[input_name]
-                    else:
+
+                    assigned = assigned_input_files.get(input_name)
+                    if assigned is None:
                         assigned = "(original)"
+                    elif assigned is False:
+                        assigned = "(not created)"
+                    elif assigned is True:
+                        assigned = "(generated)"
+                    else:
+                        assert isinstance(assigned, (bytes, unicode_))
                     print("      %s" % assigned)
         else:
             print("Input files: none")
 
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
-            for output_name, f in iteritems(config.inputs_outputs):
+            for output_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.write_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))
@@ -263,7 +267,7 @@ def showfiles(args):
 
         if any(f.read_runs for f in itervalues(config.inputs_outputs)):
             print("Input files:")
-            for input_name, f in iteritems(config.inputs_outputs):
+            for input_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.read_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
@@ -274,7 +278,7 @@ def showfiles(args):
 
         if any(f.write_runs for f in itervalues(config.inputs_outputs)):
             print("Output files:")
-            for output_name, f in iteritems(config.inputs_outputs):
+            for output_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.write_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))

@@ -18,7 +18,6 @@ from distutils.version import LooseVersion
 import logging
 import os
 import paramiko
-import pickle
 from rpaths import PosixPath, Path
 import scp
 import subprocess
@@ -27,9 +26,10 @@ import sys
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
-    UsageError, CantFindInstaller, composite_action, target_must_exist, \
+    CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs
+    FileUploader, FileDownloader, get_runs, metadata_read, metadata_write, \
+    metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -101,21 +101,12 @@ def select_box(runs):
             return 'debian', 'remram/debian-8-amd64'
 
 
-def write_dict(filename, dct):
-    to_write = {'unpacker': 'vagrant'}
-    to_write.update(dct)
-    with filename.open('wb') as fp:
-        pickle.dump(to_write, fp, 2)
+def write_dict(path, dct):
+    metadata_write(path, dct, 'vagrant')
 
 
-def read_dict(filename):
-    with filename.open('rb') as fp:
-        dct = pickle.load(fp)
-    if dct['unpacker'] != 'vagrant':
-        logging.critical("Wrong unpacker used: %s != vagrant" %
-                         dct['unpacker'])
-        raise UsageError
-    return dct
+def read_dict(path):
+    return metadata_read(path, 'vagrant')
 
 
 def get_ssh_parameters(target):
@@ -190,7 +181,8 @@ def vagrant_setup_create(args):
     rpz_pack.extract_config(target / 'config.yml')
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    runs, packages, other_files = config = load_config(target / 'config.yml',
+                                                       True)
 
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
@@ -331,7 +323,8 @@ mkdir -p /experimentroot/bin
         fp.write('end\n')
 
     # Meta-data for reprounzip
-    write_dict(target / '.reprounzip', {'use_chroot': use_chroot})
+    write_dict(target, metadata_initial_iofiles(config,
+                                                {'use_chroot': use_chroot}))
 
     signals.post_setup(target=target, pack=pack)
 
@@ -341,7 +334,7 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
+    read_dict(target)
 
     check_vagrant_version()
 
@@ -362,13 +355,15 @@ def vagrant_run(args):
     """Runs the experiment in the virtual machine.
     """
     target = Path(args.target[0])
-    use_chroot = read_dict(target / '.reprounzip').get('use_chroot', True)
+    unpacked_info = read_dict(target)
+    use_chroot = unpacked_info.get('use_chroot', True)
     cmdline = args.cmdline
 
     check_vagrant_version()
 
     # Loads config
-    runs, packages, other_files = load_config(target / 'config.yml', True)
+    config = load_config(target / 'config.yml', True)
+    runs = config.runs
 
     selected_runs = get_runs(runs, args.run, cmdline)
 
@@ -434,6 +429,10 @@ def vagrant_run(args):
                               x11.port_forward)
     stderr.write("\r\n*** Command finished, status: %d\r\n" % retcode)
 
+    # Update input file status
+    metadata_update_run(config, unpacked_info, selected_runs)
+    write_dict(target, unpacked_info)
+
     signals.post_run(target=target, retcode=retcode)
 
 
@@ -498,14 +497,14 @@ def vagrant_upload(args):
     """
     target = Path(args.target[0])
     files = args.file
-    unpacked_info = read_dict(target / '.reprounzip')
+    unpacked_info = read_dict(target)
     input_files = unpacked_info.setdefault('input_files', {})
     use_chroot = unpacked_info['use_chroot']
 
     try:
         SSHUploader(target, input_files, files, use_chroot)
     finally:
-        write_dict(target / '.reprounzip', unpacked_info)
+        write_dict(target, unpacked_info)
 
 
 class SSHDownloader(FileDownloader):
@@ -549,7 +548,7 @@ def vagrant_download(args):
     """
     target = Path(args.target[0])
     files = args.file
-    use_chroot = read_dict(target / '.reprounzip')['use_chroot']
+    use_chroot = read_dict(target)['use_chroot']
 
     SSHDownloader(target, files, use_chroot)
 
@@ -559,7 +558,7 @@ def vagrant_destroy_vm(args):
     """Destroys the VM through Vagrant.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
+    read_dict(target)
 
     retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
     if retcode != 0:
@@ -572,7 +571,7 @@ def vagrant_destroy_dir(args):
     """Destroys the directory.
     """
     target = Path(args.target[0])
-    read_dict(target / '.reprounzip')
+    read_dict(target)
 
     signals.pre_destroy(target=target)
     target.rmtree()
