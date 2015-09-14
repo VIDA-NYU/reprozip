@@ -19,7 +19,7 @@ setup(name='reprounzip-vagrant',
               'vagrant = reprounzip.unpackers.vagrant:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
-          'reprounzip>=0.7',
+          'reprounzip>=1.0.0',
           'rpaths>=0.8',
           'paramiko',
           'scp'],

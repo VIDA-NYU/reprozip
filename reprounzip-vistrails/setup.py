@@ -12,7 +12,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
-    'reprounzip>=0.7',
+    'reprounzip>=1.0.0',
     'rpaths>=0.8']
 if sys.version_info < (2, 7):
     req.append('argparse')
