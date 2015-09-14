@@ -165,7 +165,7 @@ other_files:
             with target.open('r', encoding='utf-8') as fp:
                 obj = json.load(fp)
             self.assertEqual(expected, obj)
-        except UsageError:
+        except SystemExit:
             if expected is not False:
                 raise
         finally:
