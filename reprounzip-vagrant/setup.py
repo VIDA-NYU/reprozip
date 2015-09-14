@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-vagrant',
-      version='0.7.2',
+      version='1.0.0',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.vagrant'],
       entry_points={
@@ -34,7 +34,7 @@ setup(name='reprounzip-vagrant',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'vagrant'],
       classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',

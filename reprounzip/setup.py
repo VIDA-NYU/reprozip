@@ -18,7 +18,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip',
-      version='0.7.2',
+      version='1.0.0',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
       entry_points={
@@ -46,7 +46,7 @@ setup(name='reprounzip',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu'],
       classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',

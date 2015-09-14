@@ -17,7 +17,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip-vistrails',
-      version='0.7',
+      version='1.0.0',
       packages=['reprounzip', 'reprounzip.plugins'],
       entry_points={
           'reprounzip.plugins': [
@@ -35,7 +35,7 @@ setup(name='reprounzip-vistrails',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'vistrails'],
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Topic :: Scientific/Engineering',
