@@ -33,7 +33,7 @@ pytracer = Extension('reprozip._pytracer',
                      sources=sources,
                      libraries=libraries)
 
-# Need to specify encoding for PY3, which has the worse unicode handling ever
+# Need to specify encoding for PY3, which has the worst unicode handling ever
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
