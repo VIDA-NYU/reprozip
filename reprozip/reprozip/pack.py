@@ -15,6 +15,7 @@ import itertools
 import logging
 import os
 from rpaths import Path
+import string
 import sys
 import tarfile
 import uuid
@@ -136,6 +137,17 @@ def pack(target, directory, sort_packages):
         canonical=False)
     additional_patterns = config.additional_patterns
     inputs_outputs = config.inputs_outputs
+
+    # Validate run ids
+    run_chars = ('0123456789_-@() .:%'
+                 'abcdefghijklmnopqrstuvwxyz'
+                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    for i, run in enumerate(runs):
+        if (any(c not in run_chars for c in run['id']) or
+                all(c in string.digits for c in run['id'])):
+            logging.critical("Illegal run id: %r (run number %d)",
+                             run['id'], i)
+            sys.exit(1)
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
     packages, other_files = canonicalize_config(
