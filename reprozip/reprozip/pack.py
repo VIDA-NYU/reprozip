@@ -156,11 +156,6 @@ def pack(target, directory, sort_packages):
     logging.info("Creating pack %s...", target)
     tar = tarfile.open(str(target), 'w:gz')
 
-    # Stores the original trace
-    trace = directory / 'trace.sqlite3'
-    if trace.is_file():
-        tar.add(str(trace), 'METADATA/trace.sqlite3')
-
     fd, tmp = Path.tempfile()
     os.close(fd)
     try:
@@ -207,6 +202,13 @@ def pack(target, directory, sort_packages):
         tar.add(str(manifest), 'METADATA/version')
     finally:
         manifest.remove()
+
+    # Stores the original trace
+    trace = directory / 'trace.sqlite3'
+    if not trace.is_file():
+        logging.critical("trace.sqlite3 is gone! Aborting")
+        sys.exit(1)
+    tar.add(str(trace), 'METADATA/trace.sqlite3')
 
     # Checks that input files are packed
     for name, f in iteritems(inputs_outputs):
