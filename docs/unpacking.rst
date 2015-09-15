@@ -94,6 +94,14 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
         rendered_image (/home/user/experiment/output.png)
         logfile (/home/user/experiment/log.txt)
 
+You can also filter the files for a specific run, if the package contains several::
+
+    $ reprounzip -v showfiles package.rpz preprocessing-step
+    Input files:
+        input_data (/home/user/experiment/input.bin)
+    Output files:
+        logfile (/home/user/experiment/log.txt)
+
 This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
 ..  _provenance-graph:
