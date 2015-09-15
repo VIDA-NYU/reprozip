@@ -10,6 +10,7 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
 install: .travis/install.sh
 script: .travis/test.sh
 after_success: .travis/finish.sh
