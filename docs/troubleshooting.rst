@@ -127,7 +127,7 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
 
 ------------
 
-:Issue: **"I see warnings from requests/urllib3 when running ReproZip."**
+:Issue: **"There are warnings from requests/urllib3 when running ReproZip."**
         ::
 
             /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/util/ssl_.py:79:
