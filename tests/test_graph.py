@@ -194,7 +194,7 @@ digraph G {
     subgraph cluster_run1 {
         label="run1";
         prog4 [label="/bin/sh (2)"];
-        prog5 [label="/usr/bin/python (3)"];
+        prog5 [label="/usr/bin/python (3)",fillcolor="#666666"];
         prog4 -> prog5 [label="fork+exec"];
         prog6 [label="/some/dir/report (2)"];
         prog4 -> prog6 [label="exec"];
@@ -332,7 +332,7 @@ digraph G {
     subgraph cluster_run1 {
         label="run1";
         prog4 [label="/bin/sh (2)"];
-        prog5 [label="/usr/bin/python (3)"];
+        prog5 [label="/usr/bin/python (3)",fillcolor="#666666"];
         prog4 -> prog5 [label="fork+exec"];
         prog6 [label="/some/dir/report (2)"];
         prog4 -> prog6 [label="exec"];

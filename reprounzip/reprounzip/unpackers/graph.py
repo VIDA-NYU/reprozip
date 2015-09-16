@@ -129,12 +129,17 @@ class Process(object):
         self.created = created
 
     def dot(self, fp, level_processes, indent=1):
-        fp.write('    ' * indent + 'prog%d [label="%s (%d)"];\n' % (
-                 self.id, escape(unicode_(self.binary) or "-"), self.pid))
+        thread_style = ',fillcolor="#666666"' if self.thread else ''
+        fp.write('    ' * indent + 'prog%d [label="%s (%d)"%s];\n' % (
+                 self.id, escape(unicode_(self.binary) or "-"),
+                 self.pid, thread_style))
         if self.parent is not None:
             reason = ''
             if self.created == C_FORK:
-                reason = "fork"
+                if self.thread:
+                    reason = "thread"
+                else:
+                    reason = "fork"
             elif self.created == C_EXEC:
                 reason = "exec"
             elif self.created == C_FORKEXEC:
