@@ -137,7 +137,7 @@ Please note that, although this unpacker is easy to use and does not require any
 
 ..  note:: ``reprounzip directory`` is automatically distributed with `reprounzip`.
 
-..  seealso:: :ref:`directory_error`
+..  seealso:: :ref:`Why does 'reprounzip directory' fail with "IOError"? <directory_error>`
 
 ..  _unpack-chroot:
 
@@ -304,7 +304,7 @@ where `<output-id>` is the output file to be copied (from ``showfiles``) and `<o
 
 Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination).
 
-..  seealso:: :ref:`moving-outputs`
+..  seealso:: :ref:`Why can’t 'reprounzip' get my output files after reproducing an experiment? <moving-outputs>`
 
 
 Further Considerations

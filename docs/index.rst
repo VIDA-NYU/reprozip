@@ -24,8 +24,9 @@ Contents
     unpacking
     graph
     faq
-    glossary
+    troubleshooting
     developerguide
+    glossary
 
 Links
 -----

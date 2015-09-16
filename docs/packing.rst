@@ -83,7 +83,7 @@ Note that you can prevent `reprozip` from identifying which files are input or o
 
 ..  note:: To visualize the dataflow of the experiment, pleaser refer to :ref:`graph`.
 
-..  seealso:: :ref:`file_id`
+..  seealso:: :ref:`Why doesn’t 'reprozip' identify my input/output file? <file_id>`
 
 The next section in the configuration file lists all the files to be packed. If the software dependencies were identified by the package manager of the system during the ``reprozip trace`` command, they will be organized in software packages and listed under ``packages``; otherwise, file dependencies will be listed under ``other_files``::
 
@@ -108,7 +108,7 @@ The attribute ``packfiles`` can be used to control whether a software package wi
 
     Note that if a software package is requested not to be included, the `reprounzip` component will try to install it from a package manager when unpacking the experiment. If the software version from the package manager is different from (and incompatible with) the one used by the experiment, the experiment may not be reproduced correctly.
 
-..  seealso:: :ref:`nosuchfile`
+..  seealso:: :ref:`Why does 'reprounzip run' fail with "no such file or directory" or similar? <nosuchfile>`
 
 Last, users may add file patterns under ``additional_patterns`` to include other files that they think it will be useful for a future reproduction. As an example, the following would add everything under ``/etc/apache2/`` and all the Python files of all users from LXC containers (contrived example)::
 
