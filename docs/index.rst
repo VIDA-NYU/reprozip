@@ -35,6 +35,5 @@ Links
 * Mailing lists:
 
   * `reprozip-users@vgc.poly.edu <http://vgc.poly.edu/mailman/listinfo/reprozip-users>`__ (users)
-  
+
   * `reprozip-dev@vgc.poly.edu <http://vgc.poly.edu/mailman/listinfo/reprozip-dev>`__ (developers)
-  

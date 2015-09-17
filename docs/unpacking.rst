@@ -182,7 +182,7 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
 
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
-    
+
 ..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`__).
 
 ..  _docker-plugin:
@@ -248,7 +248,7 @@ Removing the Experiment Directory
 The ``destroy`` command will unmount mounted paths, destroy virtual machines, free container images, and delete the experiment directory::
 
     $ reprounzip vagrant destroy <path>
-    
+
 Make sure you always use this command instead of simply deleting the directory manually.
 
 ..  _unpacker-input-output:

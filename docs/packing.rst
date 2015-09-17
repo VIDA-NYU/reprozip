@@ -21,7 +21,7 @@ where `<command-line>` is the command line. By running this command, *reprozip* 
 Multiple runs can also be traced and combined in a single package by using the flag ``--continue``, or ``-c``, for all the runs except the first one::
 
     $ reprozip trace --continue <command-line>
-    
+
 Note that the final package will be able to reproduce any of the runs, and files shared by multiple runs are only stored once.
 
 By default, if the operating system is Debian or Debian-based (e.g.: Ubuntu), *reprozip* will also try to automatically identify the distribution packages from which the files come, using the available `package manager <http://en.wikipedia.org/wiki/Dpkg>`__ of the system. This is useful to provide more detailed information about the dependencies, as well as to further help when reproducing the experiment. However, note that the ``trace`` command can take some time doing that after the experiment finishes, depending on the number of file dependencies that the experiment has. To disable this feature, users may use the flag ``--dont-identify-packages``::
@@ -57,7 +57,7 @@ The first part of the configuration file gives general information with respect 
       system: <system-kernel>
       uid: <user-id>
       workingdir: <working-directory>
-      
+
     # Run 1
     - id: ...
     ...
@@ -119,7 +119,7 @@ Last, users may add file patterns under ``additional_patterns`` to include other
 Note that users can always reset the configuration file to its initial state by running the following command::
 
     $ reprozip reset
-    
+
 ..  warning::
 
     When editing a configuration file, make sure your changes are as restrictive as possible, modifying only the necessary information. Removing important information and changing the structure of the file may cause issues while creating the package or unpacking the experiment.

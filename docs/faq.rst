@@ -37,7 +37,7 @@ you can trace either the `init` script::
 or the binary::
 
     reprozip trace /usr/bin/mysqld
-    
+
 Note that, if you choose to trace the binary, you need to figure out the right command line options to use.
 Also, make sure that systemd is not called, since ReproZip and systemd currently do not get along well.
 
@@ -56,7 +56,7 @@ ReproZip can trace a database server; however, because of the format it uses to 
 
     additional_patterns:
       - /var/lib/mysql/**
-      
+
 Also note that ReproZip does not currently save the state of the files. Therefore, if your experiment modifies a database, ReproZip will pack the already modified data (not the one before tracing the experiment execution).
 
 Can ReproZip pack interactive tools?
