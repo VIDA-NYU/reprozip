@@ -495,8 +495,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                    for s in output.split(b'\n'))
         # Run with different command-line
         output = check_output(sudo + rpuz + [
-                'chroot', 'run', 'echochroot',
-                '--cmdline', './exec_echo', 'changedexecechooutput'])
+            'chroot', 'run', 'echochroot',
+            '--cmdline', './exec_echo', 'changedexecechooutput'])
         assert output == b'changedexecechooutput\n'
     finally:
         check_call(sudo + rpuz + ['chroot', 'destroy', 'echochroot'])
@@ -564,9 +564,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         conn = sqlite3.connect(database.path)
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
-            '''
-            SELECT name FROM opened_files
-            ''')
+        '''
+        SELECT name FROM opened_files
+        ''')
     files = set(Path(r[0]) for r in rows)
     for n in ('dir1/file', 'dir2/file', 'dir2/brokensymlink', 'dir2/symlink'):
         if (Path.cwd() / n) not in files:

@@ -37,8 +37,8 @@ class Program(unittest.TestProgram):
     def createTests(self):
         if self.testNames is None:
             self.test = self.testLoader.discover(
-                    start_dir=os.path.dirname(os.path.abspath(__file__)),
-                    pattern='test_*.py')
+                start_dir=os.path.dirname(os.path.abspath(__file__)),
+                pattern='test_*.py')
         else:
             self.test = self.testLoader.loadTestsFromNames(self.testNames)
 
