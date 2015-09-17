@@ -11,7 +11,7 @@ To generate a *provenance graph* related to the experiment execution, the ``repr
 
 where `graphfile.dot` corresponds to the graph, and `mypackfile.rpz` corresponds to the experiment package.
 
-Alternatively, you can use this after running ``reprozip trace`` without creating a ``.rpz`` package by using::
+Alternatively, you can generate the graph after running ``reprozip trace`` without creating a ``.rpz`` package::
 
     $ reprounzip graph [-d tracedirectory] graphfile.dot
 
