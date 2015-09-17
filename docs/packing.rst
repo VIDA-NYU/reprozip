@@ -81,7 +81,7 @@ The next section brings information about input and output files, including thei
 
 Note that you can prevent `reprozip` from identifying which files are input or output by using the ``--dont-find-inputs-outputs`` flag in the ``reprozip trace`` command.
 
-Note that you can prevent `reprozip` from guessing which files are inputs or outputs using the ``--dont-find-inputs-outputs`` flag.
+..  note:: To visualize the dataflow of the experiment, pleaser refer to :ref:`graph`.
 
 ..  seealso:: :ref:`file_id`
 
