@@ -94,22 +94,26 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
         rendered_image (/home/user/experiment/output.png)
         logfile (/home/user/experiment/log.txt)
 
-You can also filter the files for a specific run, if the package contains several::
+If the package contains multiple runs, you can also filter files for a specific run::
 
     $ reprounzip -v showfiles package.rpz preprocessing-step
     Input files:
         input_data (/home/user/experiment/input.bin)
     Output files:
         logfile (/home/user/experiment/log.txt)
+        
+where `preprocessing-step` is the run id. To see the dataflow of the experiment, please refer to :ref:`graph`.
 
-This command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
+The ``reprounzip showfiles`` command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
 
 ..  _provenance-graph:
 
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
 
-While not actually geared toward re-execution, reprounzip bundles a 'graph' unpackers, that read a package's metadata to generate a *provenance graph* showing the processes of the original experiment and the files they access. See :ref:`graph` for details.
+ReproZip also allows users to generate a *provenance graph* related to the experiment execution by reading the metadata available in the ``.rpz`` package. This graph shows the experiment runs as well as the files and other dependencies they access during execution; this is particularly useful to visualize and understand the dataflow of the experiment.
+
+See :ref:`graph` for details.
 
 ..  _unpack-unpackers:
 

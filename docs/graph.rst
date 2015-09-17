@@ -1,81 +1,133 @@
 ..  _graph:
 
-reprounzip graph
-****************
-
-`reprounzip` comes with the *graph* unpackers. Instead of turning a .rpz pack into an executable directory, it reads the metadata and creates a graph that shows the processes of the original experiment and the files they access.
+Visualizing the Provenance Graph
+********************************
 
 ..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 
-The basic usage is either::
+To generate a *provenance graph* related to the experiment execution, the ``reprounzip graph`` command should be used::
 
-    reprounzip graph graphfile.dot mypackfile.rpz
+    $ reprounzip graph graphfile.dot mypackfile.rpz
 
-or, if you just ran `reprozip` and haven't created a pack yet::
+where `graphfile.dot` corresponds to the graph, and `mypackfile.rpz` corresponds to the experiment package.
 
-    reprounzip graph [-d tracedirectory] graphfile.dot
+Alternatively, you can use this after running ``reprozip trace`` without creating a ``.rpz`` package by using::
 
-The default output is a `Graphviz DOT file <http://www.graphviz.org/content/dot-language>`__ that you can turn into an image using for example::
+    $ reprounzip graph [-d tracedirectory] graphfile.dot
 
-    dot -Tpng graphfile.dot -o graph.png
+The graph is outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph::
 
-It is also possible to output a JSON file with ``--json``, which is easier to consume in other programs.
+    $ dot -Tpng graphfile.dot -o graph.png
 
-Options
-=======
+It is also possible to output a JSON file with the flag ``--json``.
 
-Because most experiments involve a huge number of file accesses, the graph command offers a lot of options to control what will be shown.
+Command-Line Options
+====================
 
-Note that all of the following options can be passed multiple times.
+Since an experiment may involve a significantly large number of file dependencies, ``reprounzip graph`` offers several command-line options to control what will be shown in the provenance graph, as described below. By default, it includes all information available, which is often unreadable (see :numref:`fig-toobig`).
 
-Filtering
-+++++++++
+Filtering Out Files
++++++++++++++++++++
 
-Files can be filtered out using a regular expression [#re]_ with ``--regex-filter``; for example:
+Files can be filtered out using a regular expression [#re]_ with the flag ``--regex-filter``. For example:
 
-* ``--regex-filter /~[^/]*$``` will filter out files whose name begin with a tilde
-* ``--regex-filter ^/usr/share`` will filter out /usr/share recursively
-* ``--regex-filter \.bin$`` will filter files with a .bin extension
+* ``--regex-filter /~[^/]*$``` will filter out files whose name begins with a tilde
+* ``--regex-filter ^/usr/share`` will filter out ``/usr/share`` recursively
+* ``--regex-filter \.bin$`` will filter out files with a ``.bin`` extension
 
-Mapping
-+++++++
+These flags can be passed multiple times.
 
-You can remap filenames using regular expressions [#re]_ with ``--regex-replace``. This can be useful either:
+Replacing Filenames
++++++++++++++++++++
 
-* to simplify the graph by making filenames shorter, or
-* to aggregate multiple files by mapping them to the same name, or
-* to fix programs for which the wrong access was logged or which is using some kind of cache, like Python's .pyc files
+Users can remap filenames using regular expressions [#re]_ with the flag ``--regex-replace``. This can be useful to:
+
+* simplify the graph by making filenames shorter,
+* aggregate multiple files to a single node by mapping them to the same name, or
+* fix programs that are using some type of cache or for which the wrong access was logged, such as Python's ``.pyc`` files.
 
 Example:
 
 * ``--regex-replace .pyc$ \.py`` will replace accesses to bytecode cache files (.pyc) to the original source (.py)
 * ``--regex-replace ^/dev(/.*)?$ /dev`` will aggregate all device files as a single path `/dev`
-* ``--regex-replace ^/home/vagrant/experiment/data/(.*)\.bin data:\1`` simplifies the paths to some data files
+* ``--regex-replace ^/home/vagrant/experiment/data/(.*)\.bin data:\1`` will simplify the paths to some data files
 
-``--aggregate`` is a shortcut allowing to map all files that begin with a prefix to that prefix, for instance ``--aggregate /usr/local`` will collapse all files under ``/usr/local`` as if there was a single path ``/usr/local`` that was used instead of them.
+The flag ``--aggregate`` is a shortcut allowing users to aggregate all files beginning with a given prefix. For instance, ``--aggregate /usr/somepath`` will collapse all files under ``/usr/somepath`` (this is equivalent to ``--regex-replace '^/usr/somepath' '/usr/somepath'``).
 
-Levels of detail
-++++++++++++++++
+Both flags can be passed multiple times.
 
-You can also control how each category of items should be detailed in the output.
+Controlling Levels of Detail
+++++++++++++++++++++++++++++
 
-For distribution packages:
+Users can control the levels of detail for each category of items in the provenance graph.
 
-* ``--packages file`` will show all the files belonging to each package, grouped under that package's name
-* ``--packages package`` will show the package as a single item, not detailing the individual files it contains
-* ``--packages drop`` will hide the packages entirely, removing all of their files from the output
-* ``--packages ignore`` will ignore the packages, treating their files as if they had not been detected as being part of a package
+Software Packages
+.................
 
-Note that regex filters and replacements are applied before this, so files that are remapped to a package file will show under that package name (for example, .pyc to .py).
+* ``--packages file`` will show all the files belonging to a package grouped under that package's name
+* ``--packages package`` will show the package as a single item, not detailing the individual files that it contains
+* ``--packages drop`` will entirely hide the packages, removing all their files from the graph
+* ``--packages ignore`` will ignore the package identification, handling their files as if they had not been detected as being part of a package
 
-For processes:
+Note that regex filters and replacements are applied beforehand, so files that are remapped to a package will be shown under that package name.
+
+Processes
+.........
 
 * ``--processes thread`` will show every process and thread
-* ``--processes process`` will show every process but hide threads
-* ``--processes run`` will show only one item for a whole run, as if it only used a single process
+* ``--processes process`` will show every process and hide threads
+* ``--processes run`` will show only one node for an experiment run, even if the run is composed by multiple processes and threads
 
-For the files that are not part of a package (or if ``--packages ignore`` is in use):
+Other Files
+...........
+
+For files that are not part of a software package, or if ``--packages ignore`` is being used:
 
 * ``--otherfiles all`` will show every file (unless filtered by ``--regex-filter``)
-* ``--otherfiles io`` will only show the input and output files, as designated by the configuration
-* ``--otherfiles no`` will not show these files at all
+* ``--otherfiles io`` will show only the input and output files, as identified in the configuration file
+* ``--otherfiles no`` will ignore all the files
+
+..  [#re] Anchoring regular expressions with ``^`` and ``$`` and escaping dots (``\.``) is recommended. For more information about regular expressions, please see `here <https://en.wikipedia.org/wiki/Regular_expression>`__.
+
+Common Recipes
+==============
+
+* Full provenance graph (likely to be unreadable for most experiments, due to the large amount of information to be presented)::
+
+    $ reprounzip graph graph.dot myexperiment.rpz
+
+.. _fig-toobig:
+
+..  figure:: figures/toobig.png
+    :width: 10in
+    :align: center
+    
+    Provenance graph showing all the information available (full graph). This represents the default configuration.
+
+* Mapping Python bytecode cache files to their corresponding source file (this may help attribute file accesses to software packages)::
+
+    $ reprounzip graph --regex-replace '\.pyc$' '\.py' graph.dot myexperiment.rpz
+
+* Dataflow of the experiment, showing the runs and their corresponding input and output files::
+
+    $ reprounzip graph --packages drop --otherfiles io --processes run graph.dot myexperiment.rpz
+
+.. _fig-digits-io:
+
+..  figure:: figures/digits-io.png
+    :width: 10in
+    :align: center
+    
+    Provenance graph showing input and output files for an experiment with 4 runs.
+
+* Provenance graph showing only processes and threads (no file accesses)::
+
+    $ reprounzip graph --packages drop --otherfiles drop --processes thread graph.dot myexperiment.rpz
+
+.. _fig-processes:
+
+..  figure:: figures/ache-processes.png
+    :width: 10in
+    :align: center
+    
+    Provenance graph showing only processes and threads.

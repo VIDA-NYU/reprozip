@@ -104,6 +104,9 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# If true, figures, tables and code-blocks are automatically numbered if they
+# have captions.
+numfig = True
 
 # -- Options for HTML output ----------------------------------------------
 
