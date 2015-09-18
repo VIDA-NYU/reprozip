@@ -109,7 +109,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
 ..  [#pycrypton2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
 
-..  seealso:: :ref:`compiler_mac`
+..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "unknown argument: -mno-fused-madd" on Mac OS X? <compiler_mac>`
 
 Installing *reprounzip*
 -----------------------
@@ -168,7 +168,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 ..  [#bug3] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#pycrypton3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__.
 
-..  seealso:: :ref:`pycrypto_windows`
+..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "Unable to find vcvarsall.bat" on Windows? <pycrypto_windows>`
 
 Installing *reprounzip*
 -----------------------
