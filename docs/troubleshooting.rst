@@ -3,7 +3,9 @@
 Troubleshooting
 ***************
 
-The best way to start solving an issue in ReproZip is probably to look at the log messages. These messages are not displayed by default when running ReproZip, but you can use the ``--verbose`` (or ``-v``) flag to display them. In addition, all the log messages are stored under ``$HOME/.reprozip/log``.
+The best way to start solving an issue in ReproZip is probably to look at the log messages. Some messages are not displayed by default when running ReproZip, but you can use the ``--verbose`` (or ``-v``) flag to display them. In addition, all the log messages are stored under ``$HOME/.reprozip/log``.
+
+Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter issues while using ReproZip.
 
 ------------
 
@@ -20,17 +22,17 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
 :Issue: **"None of my files are packed when tracing a daemon."**
 :Diagnosis: If you are starting the daemon via the `service` tool, it might be calling `init` over a client/server connection. In this situation, ReproZip will successfully pack the client, but anything the server (`init`) does will not be captured.
 :Solution: You can still trace the binary or a non-systemd `init` script directly. For example, instead of::
-           
+
                $ reprozip trace service mysql start
-           
+
            you can trace either the `init` script::
-           
+
                $ reprozip trace /etc/init.d/mysql start
-               
+
            or the binary::
-    
+
                $ reprozip trace /usr/bin/mysqld
-    
+
            Note that, if you choose to trace the binary, you need to figure out the right command line options to use.
            Also, make sure that systemd is not called, since ReproZip and systemd currently do not get along well.
 
@@ -58,7 +60,6 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
 :Diagnosis: This is an issue with the Apple LLVM compiler, which treats unrecognized command-line options as errors.
 :Solution: As a workaround, before installing `reprounzip-vagrant`, run the following::
 
-               $ sudo -s
                $ export CFLAGS="-Wno-error=unused-command-line-argument-hard-error-in-future"
 
            Then, re-install `reprounzip-vagrant`::
@@ -79,7 +80,7 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
 
 ..  _directory_error:
 
-:Issue: **"** `reprounzip directory` **fails with** ``IOError`` **."**
+:Issue: **"The experiment run with** `reprounzip directory` **fails to find a file that has been packed."**
 :Diagnosis: The `directory` unpacker does not provide any isolation from the filesystem: if the experiment being reproduced use absolute paths, these will point outside the experiment directory, and files may not be found.
 :Solution: Make sure that the experiment does not use any absolute paths: if only relative paths are used internally and in the command line, ``reprounzip directory`` should work. As an alternative, you can use other unpackers (e.g.: ``reprounzip chroot`` and ``reprounzip vagrant``) that work in the presence of hardcoded absolute paths.
 
@@ -117,10 +118,10 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
 :Issue: **"** ``reprounzip run`` **fails with** ``no such file or directory`` **or similar."**
 :Diagnosis: This error message may have different reasons, but it often means that a specific version of a library or a dynamic linker is missing:
 
-            1. If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment. 
+            1. If you are requesting `reprounzip` to install software using the package manager (by running ``reprounzip installpkgs``), it is possible that the software packages from the package manager are not compatible with the ones required by the experiment.
             2. If, while packing, the user chose not to include some packages, `reprounzip` will try to install the ones from the package manager, which may not be compatible.
             3. If you are using ``reprounzip vagrant`` or ``reprounzip docker``, ReproZip may be failing to detect the closest base system for unpacking the experiment.
-:Solution: 
+:Solution:
             1. Use the files inside the experiment package to ensure compatibility.
             2. Contact the author of the ReproZip package to ask for a new package with all software packages included.
             3. Try a different base system that you think it is closer to the original one by using the option ``--base-image`` when running these unpackers.
@@ -135,6 +136,6 @@ The best way to start solving an issue in ReproZip is probably to look at the lo
             prevents urllib3 from configuring SSL appropriately and may cause certain SSL
             connections to fail. For more information, see
             https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
-                
+
 :Diagnosis: Most Python versions are insecure, because they do not validate SSL certificates, thus generating these warnings.
 :Solution: If you are using Python 2.7.9 and later, you shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]``, which should bring in the missing components.
