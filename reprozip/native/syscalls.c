@@ -352,6 +352,65 @@ static int syscall_chdir(const char *name, struct Process *process,
  * in trace().
  */
 
+#define SHEBANG_MAX_LEN 128 /* = Linux's BINPRM_BUF_SIZE */
+
+static int record_shebangs(pid_t tid, const char *wd, const char *exec_target)
+{
+    char buffer[SHEBANG_MAX_LEN];
+    char target_buffer[SHEBANG_MAX_LEN];
+    int step;
+    for(step = 0; step < 4; ++step)
+    {
+        FILE *execd = fopen(exec_target, "rb");
+        size_t ret = 0;
+        if(execd != NULL)
+        {
+            ret = fread(buffer, 1, SHEBANG_MAX_LEN - 1, execd);
+            fclose(execd);
+        }
+        if(ret == 0)
+        {
+            log_error(tid, "couldn't open executed file %s", exec_target);
+            return 0;
+        }
+        if(buffer[0] != '#' || buffer[1] != '!')
+            return 0;
+        else
+        {
+            char *start = buffer + 2;
+            buffer[ret] = '\0';
+            while(*start == '\t' || *start == ' ')
+                ++start;
+            if(*start == '\n' || *start == '\0')
+            {
+                log_info(tid, "empty shebang in %s", exec_target);
+                return 0;
+            }
+            {
+                char *end = start;
+                while(*end != '\t' && *end != ' ' &&
+                      *end != '\n' && *end != '\0')
+                    ++end;
+                *end = '\0';
+            }
+            log_info(tid, "read shebang: %s -> %s", exec_target, start);
+            if(*start != '/')
+            {
+                char *pathname = abspath(wd, start);
+                if(db_add_file_open(tid, pathname, FILE_READ, 0) != 0)
+                    return -1;
+                free(pathname);
+            }
+            else
+                if(db_add_file_open(tid, start, FILE_READ, 0) != 0)
+                    return -1;
+            exec_target = strcpy(target_buffer, start);
+        }
+    }
+    log_error(tid, "reached maximum shebang depth");
+    return 0;
+}
+
 static int syscall_execve_in(const char *name, struct Process *process,
                              unsigned int udata)
 {
@@ -453,6 +512,12 @@ int syscall_execve_event(struct Process *process)
     if(verbosity >= 2)
         log_info(process->tid, "successfully exec'd %s",
                  execi->binary);
+
+    /* Follow shebangs */
+    if(record_shebangs(process->tid, process->threadgroup->wd,
+                       execi->binary) != 0)
+        return -1;
+
     if(trace_add_files_from_proc(process->identifier, process->tid,
                                  execi->binary) != 0)
         return -1;
