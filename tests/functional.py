@@ -633,8 +633,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     assert other_files == set(Path.cwd() / p
                               for p in ('a', 'b', 'c', 'd', 'e'))
-    assert opened == [Path.cwd() / 'c', Path.cwd() / 'e']
-    assert executed == [(Path.cwd() / 'a', './a\x001\x002\x00')]
+    if not bug13676:
+        assert opened == [Path.cwd() / 'c', Path.cwd() / 'e']
+        assert executed == [(Path.cwd() / 'a', './a\x001\x002\x00')]
 
     # ########################################
     # Test old packages
