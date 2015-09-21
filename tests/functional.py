@@ -579,6 +579,65 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                  Path(f))
 
     # ########################################
+    # Test shebang corner-cases
+    #
+
+    Path('a').symlink('b')
+    with Path('b').open('w') as fp:
+        fp.write('#!%s 0\nsome content\n' % (Path.cwd() / 'c'))
+    Path('b').chmod(0o744)
+    Path('c').symlink('d')
+    with Path('d').open('w') as fp:
+        fp.write('#!e')
+    Path('d').chmod(0o744)
+    with Path('e').open('w') as fp:
+        fp.write('#!/bin/echo')
+    Path('e').chmod(0o744)
+
+    # Trace
+    out = check_output(rpz + ['trace', '--dont-identify-packages',
+                              '-d', 'shebang-trace', './a', '1', '2'])
+    out = out.splitlines()[0]
+    assert out == ('e %s 0 ./a 1 2' % (Path.cwd() / 'c')).encode('ascii')
+
+    # Check config
+    with Path('shebang-trace/config.yml').open(encoding='utf-8') as fp:
+        config = yaml.safe_load(fp)
+    other_files = set(Path(f) for f in config['other_files']
+                      if f.startswith('%s/' % Path.cwd()))
+
+    # Check database
+    database = Path.cwd() / 'shebang-trace/trace.sqlite3'
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        '''
+        SELECT name FROM opened_files
+        ''')
+    opened = [Path(r[0]) for r in rows
+              if r[0].startswith('%s/' % Path.cwd())]
+    rows = conn.execute(
+        '''
+        SELECT name, argv FROM executed_files
+        ''')
+    executed = [(Path(r[0]), r[1]) for r in rows
+                if Path(r[0]).lies_under(Path.cwd())]
+
+    print("other_files: %r" % sorted(other_files))
+    print("opened: %r" % opened)
+    print("executed: %r" % executed)
+
+    assert other_files == set(Path.cwd() / p
+                              for p in ('a', 'b', 'c', 'd', 'e'))
+    if not bug13676:
+        assert opened == [Path.cwd() / 'c', Path.cwd() / 'e']
+        assert executed == [(Path.cwd() / 'a', './a\x001\x002\x00')]
+
+    # ########################################
     # Test old packages
     #
 
