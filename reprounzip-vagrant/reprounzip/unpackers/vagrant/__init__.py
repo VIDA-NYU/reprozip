@@ -152,9 +152,9 @@ def machine_setup(target, use_chroot):
     else:
         key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
     info = dict(hostname=vagrant_info.get('hostname', '127.0.0.1'),
-               port=int(vagrant_info.get('port', 2222)),
-               username=vagrant_info.get('user', 'vagrant'),
-               key_filename=key_file)
+                port=int(vagrant_info.get('port', 2222)),
+                username=vagrant_info.get('user', 'vagrant'),
+                key_filename=key_file)
     logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
                   info['username'], info['hostname'], info['port'],
                   info['key_filename'])
