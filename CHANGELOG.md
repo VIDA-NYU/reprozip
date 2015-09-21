@@ -8,6 +8,10 @@ Behavior change:
 * .rpz pack format changed (version 1 -> 2). Pack is now uncompressed, data is in a nested TGZ archive; allows faster retrieval of metadata (config & trace).
 * reprozip trace warnings are now info messages; won't show up without -v
 
+Bugfixes:
+* After restarting a Vagrant machine, /dev and /proc wouldn't be mounted anymore
+* Files or links referenced in a shebang could be missed by the tracer
+
 Features:
 * Runs in the configuration file now have an 'id' field, that will be shown by 'reprounzip info' and can be selected when running
 * Reworked `reprounzip graph`: level of details, regex filters & replace, JSON output
