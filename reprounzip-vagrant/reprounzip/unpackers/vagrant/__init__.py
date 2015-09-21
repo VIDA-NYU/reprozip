@@ -115,40 +115,65 @@ def read_dict(path):
     return metadata_read(path, 'vagrant')
 
 
-def machine_setup(target):
+def machine_setup(target, use_chroot):
     """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
+    just_started = False
     try:
         out = check_output(['vagrant', 'ssh-config'],
                            cwd=target.path,
                            stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
-        subprocess.check_call(['vagrant', 'up'],
-                              cwd=target.path)
+        logging.info("Calling 'vagrant up'...")
+        try:
+            retcode = subprocess.check_call(['vagrant', 'up'], cwd=target.path)
+        except OSError:
+            logging.critical("vagrant executable not found")
+            sys.exit(1)
+        else:
+            if retcode != 0:
+                logging.critical("vagrant up failed with code %d", retcode)
+                sys.exit(1)
+        just_started = True
         # Try again
         out = check_output(['vagrant', 'ssh-config'],
                            cwd=target.path)
 
-    info = {}
+    vagrant_info = {}
     for line in out.split(b'\n'):
         line = line.strip().split(b' ', 1)
         if len(line) != 2:
             continue
-        info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+        vagrant_info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
 
-    if 'identityfile' in info:
-        key_file = info['identityfile']
+    if 'identityfile' in vagrant_info:
+        key_file = vagrant_info['identityfile']
     else:
         key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
-    ret = dict(hostname=info.get('hostname', '127.0.0.1'),
-               port=int(info.get('port', 2222)),
-               username=info.get('user', 'vagrant'),
+    info = dict(hostname=vagrant_info.get('hostname', '127.0.0.1'),
+               port=int(vagrant_info.get('port', 2222)),
+               username=vagrant_info.get('user', 'vagrant'),
                key_filename=key_file)
     logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
-                  ret['username'], ret['hostname'], ret['port'],
-                  ret['key_filename'])
-    return ret
+                  info['username'], info['hostname'], info['port'],
+                  info['key_filename'])
+
+    if just_started and use_chroot:
+        # Mount directories
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(IgnoreMissingKey())
+        ssh.connect(**info)
+        chan = ssh.get_transport().open_session()
+        chan.exec_command(
+            '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+                'for i in dev proc; do '
+                'if ! grep "^/experimentroot/$i$" /proc/mounts; then '
+                'mount -o rbind /$i /experimentroot/$i; '
+                'fi; '
+                'done'))
+
+    return info
 
 
 def vagrant_setup_create(args):
@@ -245,9 +270,7 @@ def vagrant_setup_create(args):
             if mount_bind:
                 fp.write('\n'
                          'mkdir -p /experimentroot/dev\n'
-                         'mount -o rbind /dev /experimentroot/dev\n'
-                         'mkdir -p /experimentroot/proc\n'
-                         'mount -o rbind /proc /experimentroot/proc\n')
+                         'mkdir -p /experimentroot/proc\n')
 
             for pkg in packages:
                 fp.write('\n# Copies files from package %s\n' % pkg.name)
@@ -340,20 +363,11 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
-    read_dict(target)
+    use_chroot = read_dict(target).get('use_chroot', True)
 
     check_vagrant_version()
 
-    logging.info("Calling 'vagrant up'...")
-    try:
-        retcode = subprocess.call(['vagrant', 'up'], cwd=target.path)
-    except OSError:
-        logging.critical("vagrant executable not found")
-        sys.exit(1)
-    else:
-        if retcode != 0:
-            logging.critical("vagrant up failed with code %d", retcode)
-            sys.exit(1)
+    machine_setup(target, use_chroot)
 
 
 @target_must_exist
@@ -423,7 +437,7 @@ def vagrant_run(args):
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
-    info = machine_setup(target)
+    info = machine_setup(target, unpacked_info['use_chroot'])
 
     signals.pre_run(target=target)
 
@@ -450,7 +464,7 @@ class SSHUploader(FileUploader):
     def prepare_upload(self, files):
         # Checks whether the VM is running
         try:
-            ssh_info = machine_setup(self.target)
+            ssh_info = machine_setup(self.target, self.use_chroot)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
@@ -521,7 +535,7 @@ class SSHDownloader(FileDownloader):
     def prepare_download(self, files):
         # Checks whether the VM is running
         try:
-            info = machine_setup(self.target)
+            info = machine_setup(self.target, self.use_chroot)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
