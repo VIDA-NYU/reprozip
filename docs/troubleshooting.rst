@@ -113,6 +113,19 @@ Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter i
 
 ------------
 
+..  _vagrant-memory:
+
+:Issue: **"The experiment fails because of insufficient memory in Vagrant."**
+:Diagnosis: It is possible that the default amount of memory allocated to the VM is insufficient for the experiment. You can see a lot of different messages there, including:
+
+            * ``Out of memory``
+            * ``Could not allocate memory``
+            * ``Killed``
+
+:Solution: From VirtualBox, stop the machine and allocate more memory under `Settings > System > Motherboard > Memory`. When reprounzip-vistrails restarts the machine, it will have the amount you set up.
+
+------------
+
 ..  _nosuchfile:
 
 :Issue: **"** ``reprounzip run`` **fails with** ``no such file or directory`` **or similar."**
