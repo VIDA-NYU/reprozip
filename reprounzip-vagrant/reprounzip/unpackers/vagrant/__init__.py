@@ -118,7 +118,6 @@ def read_dict(path):
 def machine_setup(target, use_chroot):
     """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
-    just_started = False
     try:
         out = check_output(['vagrant', 'ssh-config'],
                            cwd=target.path,
@@ -135,7 +134,6 @@ def machine_setup(target, use_chroot):
             if retcode != 0:
                 logging.critical("vagrant up failed with code %d", retcode)
                 sys.exit(1)
-        just_started = True
         # Try again
         out = check_output(['vagrant', 'ssh-config'],
                            cwd=target.path)
@@ -159,7 +157,7 @@ def machine_setup(target, use_chroot):
                   info['username'], info['hostname'], info['port'],
                   info['key_filename'])
 
-    if just_started and use_chroot:
+    if use_chroot:
         # Mount directories
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnoreMissingKey())
@@ -172,6 +170,7 @@ def machine_setup(target, use_chroot):
                 'mount -o rbind /$i /experimentroot/$i; '
                 'fi; '
                 'done'))
+        ssh.close()
 
     return info
 
