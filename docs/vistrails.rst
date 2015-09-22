@@ -1,0 +1,4 @@
+..  _vistrails:
+
+VisTrails Plugin
+****************
