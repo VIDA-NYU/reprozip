@@ -187,7 +187,7 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
 
-..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-vagrant plugin <https://pypi.python.org/pypi/reprounzip-vagrant/>`__).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before use (see :ref:`install`).
 
 ..  _docker-plugin:
 
@@ -196,7 +196,7 @@ The `docker` Unpacker: Building a Docker Container
 
 ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`__ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
 
-..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before using (see `reprounzip-docker plugin <https://pypi.python.org/pypi/reprounzip-docker/>`__).
+..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before use (see :ref:`install`).
 
 ..  _unpacker-commands:
 
