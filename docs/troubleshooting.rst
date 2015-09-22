@@ -122,7 +122,7 @@ Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter i
             * ``Could not allocate memory``
             * ``Killed``
 
-:Solution: From VirtualBox, stop the machine and allocate more memory under `Settings > System > Motherboard > Memory`. When reprounzip-vistrails restarts the machine, it will have the amount you set up.
+:Solution: From VirtualBox, stop the machine and allocate more memory under `Settings > System > Motherboard > Memory`.
 
 ------------
 
