@@ -7,14 +7,14 @@ Can ReproZip pack a client-server scenario?
 ===========================================
 
 Yes! However, note that only tracing the client will not capture the full story: reproducibility is better achieved (and guaranteed) if the server is traced as well.
-Having said that, currently, ReproZip can only trace local servers: if in your experiment the server is remote (i.e., running in another machine), ReproZip cannot capture it. In this case, you can trace the client, and the experiment can only be reproduced if the remote server is still running at the moment of the reproduction.
+Having said that, currently, ReproZip can only trace local servers: if the server is remote (i.e., running in another machine), ReproZip cannot capture it. In this case, you can trace the client, and the experiment can only be reproduced if the remote server is still running at the moment of the reproduction.
 
 The easiest way to pack a local client-server experiment is to write a script that starts the server, runs your client(s), and then shuts down the server; ReproZip can then trace this script. See :ref:`Further Considerations When Packing <packing-further>` for more information.
 
 Can ReproZip pack a database?
 =============================
 
-ReproZip can trace a database server; however, because of the format it uses to store data (and also because different databases work differently), it might be hard for you to control exactly what data will be packed. You probably want to pack all the data from the databases/tables that your experiment uses, and not just the pages that were touched while tracing the execution. This can be done by inspecting the configuration file and adding the relevant patterns that cover the data, e.g.: for MySQL::
+ReproZip can trace a database server; however, because of the format it uses to store data (and also because different databases work differently), it might be hard for you to control exactly what data will be packed. You probably want to pack all the data from the databases/tables that your experiment uses and not just the pages that were touched while tracing the execution. This can be done by inspecting the configuration file and adding the relevant patterns that cover the data, e.g.: for MySQL::
 
     additional_patterns:
       - /var/lib/mysql/**
@@ -34,8 +34,8 @@ Can ReproZip pack graphical tools?
 ==================================
 
 Yes!
-On Linux, graphical display is handled by the X server, to which applications can connect as clients to display their windows and components, and to get user input.
-Most unpackers now support forwarding the X connection from the experiment to the X server running on the unpacking machine. Note that you will need a running X server to make this work, such as `Xming <http://sourceforge.net/projects/xming/>`__ for Windows or `XQuartz <http://xquartz.macosforge.org/>`__ for Mac OS X. If you are running Linux, chances are that an X server is already configured and running.
+On Linux, graphical display is handled by the X server. Applications can connect to it as clients to display their windows and components, and to get user input.
+Most unpackers now support forwarding the X connection from the experiment to the X server running on the unpacking machine. You will need a running X server to make this work, such as `Xming <http://sourceforge.net/projects/xming/>`__ for Windows or `XQuartz <http://xquartz.macosforge.org/>`__ for Mac OS X. If you are running Linux, chances are that an X server is already configured and running.
 
 X support is **not** enabled by default; to enable it, use the flag ``--enable-x11`` in the ``run`` command of your preferred unpacker.
 
@@ -57,4 +57,4 @@ For ``reprounzip chroot`` and ``reprounzip directory``, the filesystem is in the
 What if my experiment runs on a distributed environment?
 ========================================================
 
-ReproZip cannot trace across multiple machines. You could trace each component separately, but ReproZip has no support yet to setup these multiple machines in the right way from the multiple ``.rpz`` files. In particular, you will probably need to set up the same network for the components to talk to each other.
+ReproZip cannot trace across multiple machines. You could trace each component separately, but ReproZip cannot connect these multiple ``.rpz`` files to setup the multiple machines the right way. In particular, you will probably need to set up the same network for the components to talk to each other.
