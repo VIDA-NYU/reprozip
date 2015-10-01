@@ -306,12 +306,12 @@ Note that the ``upload`` command takes the file id on the right side of the colo
 
 ..  seealso:: :ref:`Why can’t 'reprounzip' get my output files after reproducing an experiment? <moving-outputs>`
 
-Running an experiment in VisTrails
-++++++++++++++++++++++++++++++++++
+Running the Experiment in VisTrails
++++++++++++++++++++++++++++++++++++
 
-If the experiment has multiple steps with meaningful input and output files, it becomes possible to edit its dataflow, inserting your own processes between and around these steps, even connecting multiple ReproZip'd experiments. Managing the full workflow of external commands and ``reprounzip upload/download`` calls can quickly become painful.
+In addition to reproducing the experiment, you may want to edit its dataflow by inserting your own processes between and around the experiment steps, or even by connecting multiple ReproZip'd experiments. However, manually managing the experiment workflow (with the help of ``reprounzip upload/download`` commands) can quickly become painful.
 
-To manage these workflows easily, `reprounzip` has been integrated in the VisTrails scientific workflow management system; see :ref:`vistrails` for more information.
+To allow users to easily manage these workflows, `reprounzip` provides a plugin for the `VisTrails <http://www.vistrails.org/>`__ scientific workflow management system, which has easy-to-use interfaces to run and modify a dataflow. See :ref:`vistrails` for more information.
 
 Further Considerations
 ======================

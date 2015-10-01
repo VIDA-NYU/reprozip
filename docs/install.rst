@@ -3,7 +3,7 @@
 Installation
 ************
 
-ReproZip is available as open source, released under the Revised BSD License. The tool is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine, and **reprounzip-docker**, which unpacks the experiment in a Docker container; more plugins may be developed in the future (and, of course, you are free to :ref:`roll your own <develop-plugins>`).
+ReproZip is available as open source, released under the Revised BSD License. The tool is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional components and plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine; **reprounzip-docker**, which unpacks the experiment in a Docker container; and **reprounzip-vistrails**, which creates a VisTrails workflow to reproduce the experiment. More plugins may be developed in the future (and, of course, you are free to :ref:`roll your own <develop-plugins>`).
 In our `website <http://vida-nyu.github.io/reprozip/>`__, you can find links to our PyPI packages and our `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__.
 
 In the following, you will find installation instructions for :ref:`linux`, :ref:`mac`, and :ref:`windows`. ReproZip is also available for the :ref:`conda` Python distribution.
@@ -22,30 +22,31 @@ Python 2.7.3 or greater is recommended to run ReproZip. Older versions should al
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+-----------------------------------------------+
-| Component / Plugin           | Required Software Packages                    |
-+==============================+===============================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_, |
-|                              | Python headers [#deb3]_,                      |
-|                              | a working C compiler                          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip*                 | None                                          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,        |
-|                              | a working C compiler [#pycrypton]_,           |
-|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,|
-|                              | `VirtualBox <https://www.virtualbox.org/>`__  |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-vistrails*       | None                                          |
-+------------------------------+-----------------------------------------------+
++------------------------------+------------------------------------------------+
+| Component / Plugin           | Required Software Packages                     |
++==============================+================================================+
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_,  |
+|                              | Python headers [#deb3]_,                       |
+|                              | a working C compiler                           |
++------------------------------+------------------------------------------------+
+| *reprounzip*                 | None                                           |
++------------------------------+------------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,         |
+|                              | a working C compiler [#pycrypton]_,            |
+|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,|
+|                              | `VirtualBox <https://www.virtualbox.org/>`__   |
++------------------------------+------------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__           |
++------------------------------+------------------------------------------------+
+| *reprounzip-vistrails*       | None [#vis1]_                                  |
++------------------------------+------------------------------------------------+
 
 ..  [#bug] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
 ..  [#deb2] On Debian and Debian-based, you can use ``sudo apt-get install libsqlite3-dev``.
 ..  [#deb3] On Debian and Debian-based, you can use ``sudo apt-get install python-dev``.
 ..  [#pycrypton] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
+..  [#vis1] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 Installing *reprozip*
 ---------------------
@@ -71,9 +72,9 @@ To update the software, use the flag ``-U``::
 
 The additional plugins for *reprounzip* can also be installed using the same command::
 
-    $ pip install reprounzip-docker reprounzip-vagrant
+    $ pip install reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 
-Alternatively, you can install *reprounzip* with all the available plugins using::
+Alternatively, you can install *reprounzip* with all the available components and plugins using::
 
     $ pip install reprounzip[all]
 
@@ -96,24 +97,25 @@ Python 2.7.3 or greater is recommended to run ReproZip. Older versions should al
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+-----------------------------------------------+
-| Component / Plugin           | Required Software Packages                    |
-+==============================+===============================================+
-| *reprounzip*                 | None                                          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#macn]_ [#pycrypton2]_,       |
-|                              | a working C compiler [#macn]_ [#pycrypton2]_, |
-|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,|
-|                              | `VirtualBox <https://www.virtualbox.org/>`__  |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
-+------------------------------+-----------------------------------------------+
-| *reprounzip-vistrails*       | None                                          |
-+------------------------------+-----------------------------------------------+
++------------------------------+------------------------------------------------+
+| Component / Plugin           | Required Software Packages                     |
++==============================+================================================+
+| *reprounzip*                 | None                                           |
++------------------------------+------------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#macn]_ [#pycrypton2]_,        |
+|                              | a working C compiler [#macn]_ [#pycrypton2]_,  |
+|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,|
+|                              | `VirtualBox <https://www.virtualbox.org/>`__   |
++------------------------------+------------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__           |
++------------------------------+------------------------------------------------+
+| *reprounzip-vistrails*       | None [#vis2]_                                  |
++------------------------------+------------------------------------------------+
 
 ..  [#bug2] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
 ..  [#pycrypton2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
+..  [#vis2] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 ..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "unknown argument: -mno-fused-madd" on Mac OS X? <compiler_mac>`
 
@@ -134,9 +136,9 @@ To update the software, use the flag ``-U``::
 
 The additional plugins for *reprounzip* can also be installed using the same command::
 
-    $ pip install reprounzip-docker reprounzip-vagrant
+    $ pip install reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 
-Alternatively, you can install *reprounzip* with all the available plugins using::
+Alternatively, you can install *reprounzip* with all the available components and plugins using::
 
     $ pip install reprounzip[all]
 
@@ -165,16 +167,17 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip*                 | None                                                                   |
 +------------------------------+------------------------------------------------------------------------+
 | *reprounzip-vagrant*         | `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__ [#pycrypton3]_,|
-|                              | `Vagrant 1.1+ <https://www.vagrantup.com/>`__,                         |
+|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,                        |
 |                              | `VirtualBox <https://www.virtualbox.org/>`__                           |
 +------------------------------+------------------------------------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__                                   |
 +------------------------------+------------------------------------------------------------------------+
-| *reprounzip-vistrails*       | None                                                                   |
+| *reprounzip-vistrails*       | None [#vis3]_                                                          |
 +------------------------------+------------------------------------------------------------------------+
 
 ..  [#bug3] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#pycrypton3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__.
+..  [#vis3] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 ..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "Unable to find vcvarsall.bat" on Windows? <pycrypto_windows>`
 
@@ -191,10 +194,9 @@ To update the software, use the flag ``-U``::
 
 The additional plugins for *reprounzip* can also be installed using the same command::
 
-    $ pip install reprounzip-vagrant
-    $ pip install reprounzip-docker
+    $ pip install reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 
-Alternatively, you can install *reprounzip* with all the available plugins using::
+Alternatively, you can install *reprounzip* with all the available components and plugins using::
 
     $ pip install reprounzip[all]
 
@@ -205,6 +207,6 @@ Anaconda
 
 *reprozip* and *reprounzip* can also be installed on the `Anaconda <https://store.continuum.io/cshop/anaconda>`__ Python distribution, from Binstar::
 
-    $ conda install -c https://conda.binstar.org/vida-nyu reprozip reprounzip reprounzip-docker reprounzip-vagrant
+    $ conda install -c https://conda.binstar.org/vida-nyu reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 
 Note, however, that *reprozip* is only available for Linux.
