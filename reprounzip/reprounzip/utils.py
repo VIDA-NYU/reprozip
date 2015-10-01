@@ -56,7 +56,6 @@ PY3 = sys.version_info[0] == 3
 
 
 if PY3:
-    from urllib.error import HTTPError, URLError
     from urllib.request import Request, urlopen
     izip = zip
     irange = range
@@ -68,7 +67,7 @@ if PY3:
     stdin_bytes = sys.stdin.buffer
     stdout, stderr = sys.stdout, sys.stderr
 else:
-    from urllib2 import Request, HTTPError, URLError, urlopen
+    from urllib2 import Request, urlopen
     izip = itertools.izip
     irange = xrange
     iteritems = dict.iteritems
@@ -449,24 +448,12 @@ def download_file(url, dest, cachename=None):
 
     cache.parent.mkdir(parents=True)
 
-    try:
-        response = urlopen(request, timeout=2 if cache.exists() else 10)
-    except URLError as e:
-        if cache.exists():
-            if isinstance(e, HTTPError) and e.code == 304:
-                logging.info("Download %s: cache is up to date", cachename)
-            else:
-                logging.warning("Download %s: error downloading %s: %s",
-                                cachename, url, e)
-            cache.copy(dest)
-            return
-        else:
-            raise
-
-    if response is None:
-        logging.info("Download %s: cache is up to date", cachename)
+    if cache.exists():
+        logging.info("Download %s: cache exists", cachename)
         cache.copy(dest)
         return
+    else:
+        response = urlopen(request, timeout=10)
 
     logging.info("Download %s: downloading %s", cachename, url)
     try:
