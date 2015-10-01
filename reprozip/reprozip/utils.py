@@ -450,7 +450,7 @@ def download_file(url, dest, cachename=None):
     cache.parent.mkdir(parents=True)
 
     try:
-        response = urlopen(request)
+        response = urlopen(request, timeout=2 if cache.exists() else 10)
     except URLError as e:
         if cache.exists():
             if isinstance(e, HTTPError) and e.code == 304:
