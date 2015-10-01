@@ -23,6 +23,7 @@ Contents
     packing
     unpacking
     graph
+    vistrails
     faq
     troubleshooting
     developerguide

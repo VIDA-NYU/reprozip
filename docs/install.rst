@@ -38,6 +38,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+-----------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
 +------------------------------+-----------------------------------------------+
+| *reprounzip-vistrails*       | None                                          |
++------------------------------+-----------------------------------------------+
 
 ..  [#bug] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
@@ -106,6 +108,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+-----------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__          |
 +------------------------------+-----------------------------------------------+
+| *reprounzip-vistrails*       | None                                          |
++------------------------------+-----------------------------------------------+
 
 ..  [#bug2] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
 ..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
@@ -165,6 +169,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 |                              | `VirtualBox <https://www.virtualbox.org/>`__                           |
 +------------------------------+------------------------------------------------------------------------+
 | *reprounzip-docker*          | `Docker <https://www.docker.com/>`__                                   |
++------------------------------+------------------------------------------------------------------------+
+| *reprounzip-vistrails*       | None                                                                   |
 +------------------------------+------------------------------------------------------------------------+
 
 ..  [#bug3] ``reprounzip graph`` will not work due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
