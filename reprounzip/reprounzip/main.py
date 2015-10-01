@@ -68,7 +68,7 @@ def usage_report(args):
     sys.exit(0)
 
 
-def main(setup_streams=True):
+def main():
     """Entry point when called on the command-line.
     """
     # Locale

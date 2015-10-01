@@ -93,7 +93,7 @@ class TestReprozip(unittest.TestCase):
                             ('reprozip -v -v testrun true', 0, 3)]:
                 sys.argv = a.split()
                 with self.assertRaises(SystemExit) as cm:
-                    reprozip.main.main(setup_streams=False)
+                    reprozip.main.main()
                 if isinstance(cm.exception, int):
                     # Python 2.6: cm.exception is an int (what!?)
                     self.assertEqual(cm.exception, c)
