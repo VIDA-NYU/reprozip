@@ -210,7 +210,7 @@ All the following commands need to state which unpacker is being used (i.e., ``r
 Setting Up an Experiment Directory
 ++++++++++++++++++++++++++++++++++
 
-..  note:: Most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
+..  note:: Some unpackers require an Internet connection during the ``setup`` command, to download some of the support software or the packages that were not packed. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
 
 To create the directory where the execution will take place, the ``setup`` command should be used::
 
