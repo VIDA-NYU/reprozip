@@ -345,6 +345,7 @@ def read_events(database, all_forks, has_thread_flag):
     for ts, event_type, data in rows:
         if event_type == 'process':
             r_id, r_parent, r_timestamp, r_thread = data
+            logging.debug("Process %d created (parent %r)", r_id, r_parent)
             if r_parent is not None:
                 parent = processes[r_parent]
                 binary = parent.binary
@@ -368,6 +369,7 @@ def read_events(database, all_forks, has_thread_flag):
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process, r_directory = data
             r_name = normalize_path(r_name)
+            logging.debug("File open: %s, process %d", r_name, r_process)
             if not (r_mode & FILE_WDIR or r_directory):
                 process = processes[r_process]
                 files.add(r_name)
@@ -376,6 +378,10 @@ def read_events(database, all_forks, has_thread_flag):
         elif event_type == 'exec':
             r_name, r_timestamp, r_process, r_argv = data
             r_name = normalize_path(r_name)
+            argv = tuple(r_argv.split('\0'))
+            if not argv[-1]:
+                argv = argv[:-1]
+            logging.debug("File exec: %s, process %d", r_name, r_process)
             process = processes[r_process]
             binaries.add(r_name)
             # Here we split this process in two "programs", unless the previous
@@ -396,9 +402,6 @@ def read_events(database, all_forks, has_thread_flag):
                 all_programs.append(process)
                 processes[r_process] = process
                 run.processes.append(process)
-            argv = tuple(r_argv.split('\0'))
-            if not argv[-1]:
-                argv = argv[:-1]
             files.add(r_name)
             edges.add((process, r_name, None, argv))
 

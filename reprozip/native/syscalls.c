@@ -354,8 +354,9 @@ static int syscall_chdir(const char *name, struct Process *process,
 
 #define SHEBANG_MAX_LEN 128 /* = Linux's BINPRM_BUF_SIZE */
 
-static int record_shebangs(pid_t tid, const char *wd, const char *exec_target)
+static int record_shebangs(struct Process *process, const char *exec_target)
 {
+    const char *wd = process->threadgroup->wd;
     char buffer[SHEBANG_MAX_LEN];
     char target_buffer[SHEBANG_MAX_LEN];
     int step;
@@ -370,7 +371,7 @@ static int record_shebangs(pid_t tid, const char *wd, const char *exec_target)
         }
         if(ret == 0)
         {
-            log_error(tid, "couldn't open executed file %s", exec_target);
+            log_error(process->tid, "couldn't open executed file %s", exec_target);
             return 0;
         }
         if(buffer[0] != '#' || buffer[1] != '!')
@@ -383,7 +384,7 @@ static int record_shebangs(pid_t tid, const char *wd, const char *exec_target)
                 ++start;
             if(*start == '\n' || *start == '\0')
             {
-                log_info(tid, "empty shebang in %s", exec_target);
+                log_info(process->tid, "empty shebang in %s", exec_target);
                 return 0;
             }
             {
@@ -393,21 +394,21 @@ static int record_shebangs(pid_t tid, const char *wd, const char *exec_target)
                     ++end;
                 *end = '\0';
             }
-            log_info(tid, "read shebang: %s -> %s", exec_target, start);
+            log_info(process->tid, "read shebang: %s -> %s", exec_target, start);
             if(*start != '/')
             {
                 char *pathname = abspath(wd, start);
-                if(db_add_file_open(tid, pathname, FILE_READ, 0) != 0)
+                if(db_add_file_open(process->identifier, pathname, FILE_READ, 0) != 0)
                     return -1;
                 free(pathname);
             }
             else
-                if(db_add_file_open(tid, start, FILE_READ, 0) != 0)
+                if(db_add_file_open(process->identifier, start, FILE_READ, 0) != 0)
                     return -1;
             exec_target = strcpy(target_buffer, start);
         }
     }
-    log_error(tid, "reached maximum shebang depth");
+    log_error(process->tid, "reached maximum shebang depth");
     return 0;
 }
 
@@ -514,8 +515,7 @@ int syscall_execve_event(struct Process *process)
                  execi->binary);
 
     /* Follow shebangs */
-    if(record_shebangs(process->tid, process->threadgroup->wd,
-                       execi->binary) != 0)
+    if(record_shebangs(process, execi->binary) != 0)
         return -1;
 
     if(trace_add_files_from_proc(process->identifier, process->tid,

@@ -16,7 +16,7 @@ SCRIPT
   end
 
   config.vm.define "x86_64" do |m|
-    m.vm.box = "ubuntu/trusty64"
+    m.vm.box = "remram/debian-8-amd64"
 
     m.vm.provision "shell",
       inline: <<SCRIPT

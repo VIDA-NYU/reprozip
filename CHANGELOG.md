@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.0.1 (???)
+-----------
+
+Bugfixes:
+* Files opened through a shebang were stored with a wrong process number.
+
 1.0.0 (2015-09-30)
 ------------------
 
