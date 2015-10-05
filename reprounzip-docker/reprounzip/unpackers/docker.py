@@ -342,7 +342,10 @@ def docker_run(args):
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
     # Get the local bridge IP
-    ip_str = get_iface_addr('docker0')
+    if args.x11:
+        ip_str = get_iface_addr('docker0')
+    else:
+        ip_str = None
 
     # X11 handler
     x11 = X11Handler(args.x11, ('internet', ip_str), args.x11_display)
