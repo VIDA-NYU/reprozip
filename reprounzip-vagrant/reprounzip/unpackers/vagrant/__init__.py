@@ -214,6 +214,15 @@ def vagrant_setup_create(args):
     runs, packages, other_files = config = load_config(target / 'config.yml',
                                                        True)
 
+    if not args.memory:
+        memory = None
+    else:
+        try:
+            memory = int(args.memory[-1])
+        except ValueError:
+            logging.critical("Invalid value for memory size: %r", args.memory)
+            sys.exit(1)
+
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
         box = args.base_image[0]
@@ -347,6 +356,12 @@ mkdir -p /experimentroot/bin
         fp.write('  config.vm.box = "%s"\n' % box)
         # Run the setup script on the virtual machine
         fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
+
+        # Memory size
+        if memory is not None:
+            fp.write('  config.vm.provider "virtualbox" do |v|\n'
+                     '    v.memory = %d\n'
+                     '  end\n' % memory)
 
         fp.write('end\n')
 
@@ -712,6 +727,9 @@ def setup(parser, **kwargs):
         opts.add_argument('--distribution', nargs=1,
                           help=("Distribution used in the Vagrant box (for "
                                 "package installer selection)"))
+        opts.add_argument('--memory', nargs=1,
+                          help="Amount of RAM to allocate to VM (megabytes, "
+                               "default: box default)")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)

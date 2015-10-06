@@ -287,7 +287,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                     'mkdir %(d)s; chmod 777 %(d)s' % {'d': tests / 'vagrant'}])
 
     # Unpack Vagrant-chroot
-    check_call(rpuz + ['vagrant', 'setup/create', '--use-chroot', 'simple.rpz',
+    check_call(rpuz + ['vagrant', 'setup/create', '--memory', '512',
+                       '--use-chroot', 'simple.rpz',
                        (tests / 'vagrant/simplevagrantchroot').path])
     print("\nVagrant project set up in simplevagrantchroot")
     try:
