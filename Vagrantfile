@@ -30,7 +30,6 @@ SCRIPT
   end
 
   config.vm.provider "virtualbox" do |v|
-    v.gui = true
     v.memory = 1024
   end
 end
