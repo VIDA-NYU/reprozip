@@ -8,6 +8,9 @@ Bugfixes:
 * Files opened through a shebang were stored with a wrong process number
 * Running with Docker on non-Linux machine didn't work (e.g. docker-machine); now only X11 doesn't work.
 
+Features:
+* `--memory` option for `reprounzip vagrant setup`, to set the VM's RAM.
+
 1.0.0 (2015-09-30)
 ------------------
 
