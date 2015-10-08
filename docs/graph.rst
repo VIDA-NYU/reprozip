@@ -24,7 +24,7 @@ It is also possible to output a JSON file with the flag ``--json``.
 Command-Line Options
 ====================
 
-Since an experiment may involve a significantly large number of file dependencies, ``reprounzip graph`` offers several command-line options to control what will be shown in the provenance graph, as described below. By default, it includes all information available, which is often unreadable (see :numref:`fig-toobig`).
+Since an experiment may involve a significantly large number of file dependencies, ``reprounzip graph`` offers several command-line options to control what will be shown in the provenance graph, as described below. By default it includes all information available, which is often unreadable (see :numref:`fig-toobig`).
 
 Filtering Out Files
 +++++++++++++++++++
@@ -40,7 +40,7 @@ These flags can be passed multiple times.
 Replacing Filenames
 +++++++++++++++++++
 
-Users can remap filenames using regular expressions [#re]_ with the flag ``--regex-replace``. This can be useful to:
+Users can remap filenames using regular expressions [#re]_ with the flag ``--regex-replace``. This can be used to:
 
 * simplify the graph by making filenames shorter,
 * aggregate multiple files to a single node by mapping them to the same name, or

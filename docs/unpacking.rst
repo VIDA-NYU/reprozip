@@ -120,7 +120,7 @@ See :ref:`graph` for details.
 Unpackers
 =========
 
-From the same ``.rpz`` package, `reprounzip` allows users to set up the experiment for reproduction in several ways by the use of different `unpackers`. Unpackers are plugins that have general interface and commands, but that can also provide their own command-line syntax and options. Thanks to the decoupling between packing and unpacking steps, ``.rpz`` files from older versions of ReproZip can be used with new unpackers.
+From the same ``.rpz`` package, `reprounzip` allows users to set up the experiment for reproduction in several ways by the use of different `unpackers`. Unpackers are plugins that have general interface and commands, but can also provide their own command-line syntax and options. Thanks to the decoupling between packing and unpacking steps, ``.rpz`` files from older versions of ReproZip can be used with new unpackers.
 
 The `reprounzip` tool comes with three unpackers that are only compatible with Linux (``reprounzip directory``, ``reprounzip chroot``, and ``reprounzip installpkgs``). Additional unpackers, such as ``reprounzip vagrant`` and ``reprounzip docker``, can be installed separately. Next, each unpacker is described in more details; for more information on how to use an unpacker, please refer to :ref:`unpacker-commands`.
 
@@ -210,6 +210,8 @@ All the following commands need to state which unpacker is being used (i.e., ``r
 Setting Up an Experiment Directory
 ++++++++++++++++++++++++++++++++++
 
+..  note:: Some unpackers require an Internet connection during the ``setup`` command, to download some of the support software or the packages that were not packed. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
+
 To create the directory where the execution will take place, the ``setup`` command should be used::
 
     $ reprounzip vagrant setup <package> <path>
@@ -219,8 +221,6 @@ where `<path>` is the directory where the experiment will be unpacked, i.e., the
 Note that, once this is done, you should only remove `<path>` with the `destroy` command described below: deleting this directory manually might leave files behind, or even damage your system through bound filesystems.
 
 The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
-
-..  note:: Most unpackers assume an Internet connection for the ``setup`` command and will be downloading required software from the Internet. Make sure that you have an Internet connection, and that there is no firewall blocking the access.
 
 Reproducing the Experiment
 ++++++++++++++++++++++++++
