@@ -194,7 +194,7 @@ class Package(object):
             return
 
         if level_pkgs == LVL_PKG_PACKAGE:
-            fp.write('    "pkg %s" [label=' % escape(self.name))
+            fp.write('    "pkg %s" [shape=box,label=' % escape(self.name))
             if self.version:
                 fp.write('"%s %s"];\n' % (
                          escape(self.name), escape(self.version)))

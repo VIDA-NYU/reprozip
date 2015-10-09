@@ -341,9 +341,9 @@ digraph G {
     node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
 
     /* system packages */
-    "pkg pkg1" [label="pkg1 1.0"];
-    "pkg pkg2" [label="pkg2 1.0"];
-    "pkg python" [label="python 2.7"];
+    "pkg pkg1" [shape=box,label="pkg1 1.0"];
+    "pkg pkg2" [shape=box,label="pkg2 1.0"];
+    "pkg python" [shape=box,label="python 2.7"];
 
     /* other files */
     "/bin/sh";
