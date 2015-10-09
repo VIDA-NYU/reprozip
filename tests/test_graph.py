@@ -356,19 +356,19 @@ digraph G {
     "/some/dir/two";
 
     "/bin/sh" -> prog0 [style=bold, label="sh script_1"];
-    "/usr/share/1_one.py" -> prog0 [color="#8888CC"];
+    "pkg pkg1" -> prog0 [color="#8888CC"];
     prog0 -> "/some/dir/one" [color="#000088"];
-    "/usr/bin/python" -> prog1 [style=bold, label="python drive.py"];
+    "pkg python" -> prog1 [style=bold, label="python drive.py"];
     "/some/dir/drive.py" -> prog1 [color="#8888CC"];
     "/some/dir/one" -> prog1 [color="#8888CC"];
-    "/etc/2_two.cfg" -> prog1 [color="#8888CC"];
+    "pkg pkg2" -> prog1 [color="#8888CC"];
     "/some/dir/experiment" -> prog2 [style=bold, label="experiment"];
-    "/usr/lib/2_one.so" -> prog2 [color="#8888CC"];
+    "pkg pkg2" -> prog2 [color="#8888CC"];
     prog2 -> "/some/dir/two" [color="#000088"];
-    "/usr/bin/wc" -> prog3 [style=bold, label="wc out.txt"];
+    "pkg pkg1" -> prog3 [style=bold, label="wc out.txt"];
     "/some/dir/two" -> prog3 [color="#8888CC"];
     "/bin/sh" -> prog4 [style=bold, label="sh script_2"];
-    "/usr/bin/python" -> prog5 [style=bold, label="python -"];
+    "pkg python" -> prog5 [style=bold, label="python -"];
     "/some/dir/one" -> prog5 [color="#8888CC"];
     prog5 -> "/some/dir/thing" [color="#000088"];
     "/some/dir/report" -> prog6 [style=bold, label="./report -v"];
