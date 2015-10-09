@@ -599,12 +599,18 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
 
         # Edges
         logging.info("Connecting edges...")
+        done_edges = set()
         for prog, fi, mode, argv in edges:
             endp_prog = prog.dot_endpoint(level_processes)
             if fi in package_map:
                 if level_pkgs == LVL_PKG_DROP:
                     continue
                 endp_file = package_map[fi].dot_endpoint(fi, level_pkgs)
+                e = endp_prog, endp_file
+                if e in done_edges:
+                    continue
+                else:
+                    done_edges.add(e)
             else:
                 endp_file = '"%s"' % escape(unicode_(fi))
 
