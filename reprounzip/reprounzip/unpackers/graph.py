@@ -504,11 +504,6 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     if level_pkgs == LVL_PKG_IGNORE:
         packages = []
         other_files = files
-    elif level_pkgs == LVL_PKG_DROP:
-        packages = []
-        package_files = set(f.path
-                            for pkg in config.packages for f in pkg.files)
-        other_files = [f for f in files if f not in package_files]
     else:
         logging.info("Organizes packages...")
         file2package = dict((f.path, pkg)
@@ -581,7 +576,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
                  'fillcolor="#C9D2ED"];\n')
 
         # Packages
-        if level_pkgs != LVL_PKG_IGNORE:
+        if level_pkgs not in (LVL_PKG_IGNORE, LVL_PKG_DROP):
             logging.info("Writing packages...")
             fp.write('\n    /* system packages */\n')
             for package in sorted(packages, key=lambda pkg: pkg.name):
@@ -607,6 +602,8 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         for prog, fi, mode, argv in edges:
             endp_prog = prog.dot_endpoint(level_processes)
             if fi in package_map:
+                if level_pkgs == LVL_PKG_DROP:
+                    continue
                 endp_file = package_map[fi].dot_endpoint(fi, level_pkgs)
             else:
                 endp_file = '"%s"' % escape(unicode_(fi))
