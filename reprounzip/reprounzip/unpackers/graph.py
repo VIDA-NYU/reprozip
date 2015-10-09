@@ -607,7 +607,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         for prog, fi, mode, argv in edges:
             endp_prog = prog.dot_endpoint(level_processes)
             if fi in package_map:
-                endp_file = package_map[fi].dot_endpoint(fi, level_processes)
+                endp_file = package_map[fi].dot_endpoint(fi, level_pkgs)
             else:
                 endp_file = '"%s"' % escape(unicode_(fi))
 
