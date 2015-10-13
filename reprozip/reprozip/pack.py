@@ -214,7 +214,7 @@ def pack(target, directory, sort_packages):
     for name, f in iteritems(inputs_outputs):
         if f.read_runs and not Path(f.path).exists():
             logging.warning("File is designated as input (name %s) but is not "
-                            "to be packed: %s" % (name, f.path))
+                            "to be packed: %s", name, f.path)
 
     # Generates a unique identifier for the pack (for usage reports purposes)
     pack_id = str(uuid.uuid4())

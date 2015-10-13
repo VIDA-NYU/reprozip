@@ -415,8 +415,8 @@ def metadata_read(path, type_):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
-        logging.critical("Wrong unpacker used: %s != %s" % (dct['unpacker'],
-                                                            type_))
+        logging.critical("Wrong unpacker used: %s != %s",
+                         dct['unpacker'], type_)
         raise UsageError
     return dct
 

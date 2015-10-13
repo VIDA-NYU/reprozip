@@ -104,7 +104,7 @@ def flatten(n, l):
     >>> list(flatten(2, l))
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     """
-    for i in irange(n):
+    for _ in irange(n):
         l = itertools.chain.from_iterable(l)
     return l
 

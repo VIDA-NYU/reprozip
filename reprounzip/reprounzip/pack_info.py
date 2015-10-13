@@ -182,17 +182,16 @@ def showfiles(args):
         for i, run in enumerate(runs):
             if run['id'] == s:
                 return i
-        else:
-            try:
-                r = int(s)
-            except ValueError:
-                logging.critical("Error: Unknown run %s", s)
-                raise UsageError
-            if r < 0 or r >= len(runs):
-                logging.critical("Error: Expected 0 <= run <= %d, got %d",
-                                 len(runs) - 1, r)
-                sys.exit(1)
-            return r
+        try:
+            r = int(s)
+        except ValueError:
+            logging.critical("Error: Unknown run %s", s)
+            raise UsageError
+        if r < 0 or r >= len(runs):
+            logging.critical("Error: Expected 0 <= run <= %d, got %d",
+                             len(runs) - 1, r)
+            sys.exit(1)
+        return r
 
     def file_filter(fio):
         if file_filter.run is None:

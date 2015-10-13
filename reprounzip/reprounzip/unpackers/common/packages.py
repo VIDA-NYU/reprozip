@@ -11,7 +11,7 @@ import logging
 import platform
 import subprocess
 
-from reprounzip.unpackers.common import UsageError
+from reprounzip.unpackers.common.misc import UsageError
 from reprounzip.utils import itervalues
 
 

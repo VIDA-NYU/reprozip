@@ -620,8 +620,7 @@ def _executable_in_path(executable):
             fullpath = os.path.join(path, executable) + ext
             if os.path.isfile(fullpath):
                 return True
-    else:
-        return False
+    return False
 
 
 def check_vagrant_version():
