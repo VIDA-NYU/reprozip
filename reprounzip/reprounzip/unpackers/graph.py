@@ -606,7 +606,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
                 if level_pkgs == LVL_PKG_DROP:
                     continue
                 endp_file = package_map[fi].dot_endpoint(fi, level_pkgs)
-                e = endp_prog, endp_file
+                e = endp_prog, endp_file, mode
                 if e in done_edges:
                     continue
                 else:
