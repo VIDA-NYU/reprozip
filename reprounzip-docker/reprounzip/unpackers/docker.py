@@ -374,8 +374,9 @@ def docker_run(args):
             if (docker_host != local_ip and docker_host != 'localhost' and
                     not docker_host.startswith('127.') and
                     not docker_host.startswith('192.168.99.')):
-                ssh_cmdline = ' '.join('-R%(p)d:127.0.0.1:%(p)d' % {'p': port}
-                                       for port, connector in x11.port_forward)
+                ssh_cmdline = ' '.join(
+                    '-R*:%(p)d:127.0.0.1:%(p)d' % {'p': port}
+                    for port, connector in x11.port_forward)
                 logging.warning(
                     "You requested X11 forwarding but the Docker container "
                     "appears to be running remotely. It is probable that it "
