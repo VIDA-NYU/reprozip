@@ -326,6 +326,9 @@ def get_local_addr(iface='docker0'):
                 return m.group(1).decode('ascii')
 
 
+_dockerhost_re = re.compile(r'^tcp://([0-9.]+):[0-9]+$')
+
+
 @target_must_exist
 def docker_run(args):
     """Runs the experiment in the container.
@@ -353,13 +356,35 @@ def docker_run(args):
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
-    if args.x11:
-        ip_str = get_local_addr()
-    else:
-        ip_str = None
-
     # X11 handler
-    x11 = X11Handler(args.x11, ('internet', ip_str), args.x11_display)
+    if args.x11:
+        local_ip = get_local_addr()
+
+        docker_host = local_ip
+        if os.environ.get('DOCKER_HOST'):
+            m = _dockerhost_re.match(os.environ['DOCKER_HOST'])
+            if m is not None:
+                docker_host = m.group(1)
+
+        if args.tunneled_x11:
+            x11 = X11Handler(True, ('internet', docker_host), args.x11_display)
+        else:
+            x11 = X11Handler(True, ('internet', local_ip), args.x11_display)
+
+            if (docker_host != local_ip and docker_host != 'localhost' and
+                    not docker_host.startswith('127.') and
+                    not docker_host.startswith('192.168.99.')):
+                ssh_cmdline = ' '.join('-R%(p)d:127.0.0.1:%(p)d' % {'p': port}
+                                       for port, connector in x11.port_forward)
+                logging.warning(
+                    "You requested X11 forwarding but the Docker container "
+                    "appears to be running remotely. It is probable that it "
+                    "won't be able to connect to the local display. Creating "
+                    "a remote SSH tunnel and running with --tunneled-x11 "
+                    "might help (%s).",
+                    ssh_cmdline)
+    else:
+        x11 = X11Handler(False, ('local', hostname), args.x11_display)
 
     cmds = []
     for run_number in selected_runs:
@@ -728,12 +753,18 @@ def setup(parser, **kwargs):
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
-                            help=("Enable X11 support (needs an X server on "
-                                  "the host)"))
+                            help="Enable X11 support (needs an X server on "
+                                 "the host)")
     parser_run.add_argument('--x11-display', dest='x11_display',
-                            help=("Display number to use on the experiment "
-                                  "side (change the host display with the "
-                                  "DISPLAY environment variable)"))
+                            help="Display number to use on the experiment "
+                                 "side (change the host display with the "
+                                 "DISPLAY environment variable)")
+    parser_run.add_argument(
+        '--tunneled-x11', dest='tunneled_x11',
+        action='store_true', default=False,
+        help="Connect X11 to local machine from Docker container instead of "
+             "trying to connect to this one (useful if the Docker machine has "
+             "an X server or if a tunnel is used to access this one)")
     parser_run.set_defaults(func=docker_run)
 
     # download
