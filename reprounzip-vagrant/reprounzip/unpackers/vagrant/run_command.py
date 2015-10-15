@@ -101,13 +101,14 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
     :param interactive: whether to connect local input to the remote process
     :type interactive: bool
     :param cmd: command-line to run on the server
-    :type cmd: basestring
+    :type cmd: str
     :param request_pty: whether to request a PTY from the SSH server
     :type request_pty: bool
     :param forwarded_ports: ports to forward back to us; iterable of pairs
     ``(port_number, connector)`` where `port_number` is the remote port number
     and `connector` is the connector object used to build the connected socket
     to forward to on this side
+    :type forwarded_ports: collections.Iterable[(int, object)]
     """
     if interactive:
         ssh_exe = find_ssh_executable()
