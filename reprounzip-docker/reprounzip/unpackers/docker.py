@@ -17,11 +17,13 @@ from itertools import chain
 import json
 import logging
 import os
+import paramiko
 import re
 from rpaths import Path, PosixPath
 import socket
 import subprocess
 import sys
+import threading
 
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
@@ -31,7 +33,8 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     FileUploader, FileDownloader, get_runs, interruptible_call, \
     metadata_read, metadata_write, metadata_initial_iofiles, \
     metadata_update_run
-from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
+from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder, \
+    BaseForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     check_output, download_file
 
@@ -326,6 +329,121 @@ def get_local_addr(iface='docker0'):
                 return m.group(1).decode('ascii')
 
 
+_dockerhost_re = re.compile(r'^tcp://([0-9.]+):[0-9]+$')
+
+
+def get_docker_machine():
+    """Gets the location of the Docker daemon.
+
+    :rtype: list[dict]
+    """
+    # Ask docker-machine
+    try:
+        machine = check_output(['docker-machine', 'active'])
+        logging.info("Detected Docker machine '%s'", machine)
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    else:
+        ip = check_output(['docker-machine', 'ip', machine]).decode('ascii')
+        info = json.loads(check_output(
+            ['docker-machine', 'inspect', machine]).decode('ascii'))
+
+        # Try port 22 first, then 'SSHPort'
+        # FIXME https://github.com/docker/machine/issues/1981
+        addresses = [{'hostname': ip, 'port': 22}]
+        try:
+            port = int(info['Driver']['SSHPort'])
+        except KeyError:
+            pass
+        else:
+            addresses.append({'hostname': ip, 'port': port})
+
+        common = {'username': info['Driver']['SSHUser']}
+        keyfile = Path(info['StorePath']) / 'id_rsa'
+        if keyfile.exists():
+            common['key_filename'] = unicode_(keyfile)
+        for dct in addresses:
+            dct.update(common)
+
+        return addresses
+
+    # Use $DOCKER_HOST
+    if os.environ.get('DOCKER_HOST'):
+        m = _dockerhost_re.match(os.environ['DOCKER_HOST'])
+        if m is not None:
+            address = m.group(1)
+            logging.info("Detected Docker host '%s'", address)
+            # TODO: username?
+            return [{'hostname': address, 'port': 22}]
+
+    # Ok, the Docker daemon is on the local machine
+    return []
+
+
+class SSHForwarder(BaseForwarder):
+    """Gets a remote port from paramiko and forwards to the given connector.
+
+    The `connector` is a function which takes the address of remote process
+    connecting on the port on the SSH server, and gives out a socket object
+    that is the second endpoint of the tunnel. The socket object must provide
+    ``recv()``, ``sendall()`` and ``close()``.
+    """
+    def __init__(self, ssh_transport, remote_port, connector):
+        BaseForwarder.__init__(self, connector)
+        ssh_transport.request_port_forward('', remote_port,
+                                           self._new_connection)
+
+    class _ChannelWrapper(object):
+        def __init__(self, channel):
+            self.channel = channel
+
+        def sendall(self, data):
+            return self.channel.send(data)
+
+        def recv(self, data):
+            return self.channel.recv(data)
+
+        def close(self):
+            self.channel.close()
+
+    def _new_connection(self, channel, src_addr, dest_addr):
+        # Wraps the channel as a socket-like object that _forward() can use
+        socklike = self._ChannelWrapper(channel)
+        t = threading.Thread(target=self._forward,
+                             args=(socklike, src_addr))
+        t.setDaemon(True)
+        t.start()
+
+
+class SSHTunnel(object):
+    """SSH connection forwarding remote ports to local connectors.
+    """
+    def __init__(self, ssh_info, forwarded_ports):
+        """Constructor.
+
+        :param ssh_info: dict with `hostname`, `port`, `username`,
+        `key_filename`, passed directly to paramiko.
+        :type ssh_info: dict
+        :param forwarded_ports: ports to forward back to us; iterable of pairs
+        ``(port_number, connector)`` where `port_number` is the remote port
+        number and `connector` is the connector object used to build the
+        connected socket to forward to on this side
+        :type forwarded_ports: collections.Iterable[(int, object)]
+        """
+        record_usage(docker_ssh_tunnel=True)
+
+        # Connect to the machine
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.RejectPolicy())
+        ssh.connect(**ssh_info)
+
+        # Start forwarding
+        self._forwarders = []
+        for remote_port, connector in forwarded_ports:
+            self._forwarders.append(
+                SSHForwarder(ssh.get_transport(), remote_port, connector))
+
+
 @target_must_exist
 def docker_run(args):
     """Runs the experiment in the container.
@@ -354,12 +472,42 @@ def docker_run(args):
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
     if args.x11:
-        ip_str = get_local_addr()
-    else:
-        ip_str = None
+        # Figure out a way for the container to connect to the local machine
+        machine = get_docker_machine()
+        if machine:
+            # Docker is running on a remote machine
+            x11 = X11Handler(True, ('local', hostname), args.x11_display)
 
-    # X11 handler
-    x11 = X11Handler(args.x11, ('internet', ip_str), args.x11_display)
+            for conn_info in machine:
+                try:
+                    # locals() circumvents "variable unused" warning
+                    locals()['ssh_tunnel'] = \
+                        SSHTunnel(conn_info, x11.port_forward)
+                    break
+                except (socket.error, paramiko.SSHException):
+                    pass
+            else:
+                logging.error("Couldn't SSH into %s, connecting to X11 "
+                              "directly from the container, this might not "
+                              "work",
+                              machine[0][0])
+                machine = []
+
+        if not machine:
+            # Docker is running on the local machine
+            if args.local_address:
+                ip_str = args.local_address[0]
+            else:
+                ip_str = get_local_addr()
+                logging.info("Guessed local address: %s", ip_str)
+            x11 = X11Handler(args.x11, ('internet', ip_str), args.x11_display)
+
+            # Creates forwarders
+            forwarders = []
+            for port, connector in x11.port_forward:
+                forwarders.append(LocalForwarder(connector, port))
+    else:
+        x11 = X11Handler(False, ('local', hostname), args.x11_display)
 
     cmds = []
     for run_number in selected_runs:
@@ -386,11 +534,6 @@ def docker_run(args):
     cmds = ' && '.join(cmds)
 
     signals.pre_run(target=target)
-
-    # Creates forwarders
-    forwarders = []
-    for port, connector in x11.port_forward:
-        forwarders.append(LocalForwarder(connector, port))
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
