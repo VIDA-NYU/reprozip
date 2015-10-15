@@ -19,6 +19,7 @@ import logging
 import os
 import re
 from rpaths import Path, PosixPath
+import socket
 import subprocess
 import sys
 
@@ -297,21 +298,32 @@ def docker_reset(args):
 _addr_re = re.compile(br'inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
 
 
-def get_iface_addr(iface):
-    """Gets the local IP address of a named network interface.
+def get_local_addr(iface='docker0'):
+    """Gets the local IP address of the local machine.
 
     Returns an IPv4 address as a unicode object, in digits-and-dots format.
 
-    >>> get_iface_addr('lo')
+    >>> get_local_addr('lo')
     '127.0.0.1'
+    >>> get_local_addr()
+    '172.17.42.1'
     """
-    p = subprocess.Popen(['/bin/ip', 'addr', 'show', iface],
-                         stdout=subprocess.PIPE)
-    out, err = p.communicate()
-    for line in out.splitlines():
-        m = _addr_re.search(line)
-        if m is not None:
-            return m.group(1).decode('ascii')
+    try:
+        try:
+            out = check_output(['/bin/ip', 'addr', 'show', iface])
+        except subprocess.CalledProcessError:
+            logging.info(
+                "No interface '%s', querying any interface for an IP...",
+                iface)
+            out = check_output(['/bin/ip', 'addr', 'show'])
+    except (OSError, subprocess.CalledProcessError):
+        # This is probably going to return '127.0.0.1', and that is bad
+        return socket.gethostbyname(socket.gethostname())
+    else:
+        for line in reversed(out.splitlines()):
+            m = _addr_re.search(line)
+            if m is not None:
+                return m.group(1).decode('ascii')
 
 
 @target_must_exist
@@ -341,9 +353,8 @@ def docker_run(args):
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
-    # Get the local bridge IP
     if args.x11:
-        ip_str = get_iface_addr('docker0')
+        ip_str = get_local_addr()
     else:
         ip_str = None
 
