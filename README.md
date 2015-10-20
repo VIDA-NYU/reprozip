@@ -148,7 +148,7 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 [puzd]: https://pypi.python.org/pypi/reprounzip-docker
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
 [fc]: http://vgc.poly.edu/~fchirigati/
-[rr]: https://www.linkedin.com/profile/view?id=98448601
+[rr]: http://remram.fr/
 [jf]: http://vgc.poly.edu/~juliana/
 [ds]: http://cs.nyu.edu/shasha/
 [nyu]: http://engineering.nyu.edu/
