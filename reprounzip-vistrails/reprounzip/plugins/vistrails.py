@@ -43,6 +43,7 @@ class IdScope(object):
         self._ids = {'add': 0,
                      'module': 0,
                      'location': 0,
+                     'annotation': 0,
                      'function': 0,
                      'parameter': 0,
                      'connection': 0,
@@ -60,6 +61,7 @@ class IdScope(object):
     add = _add('add')
     module = _add('module')
     location = _add('location')
+    annotation = _add('annotation')
     function = _add('function')
     parameter = _add('parameter')
     connection = _add('connection')
@@ -95,7 +97,7 @@ class Workflow(object):
             '  </action>\n'
             '</vistrail>\n')
 
-    def add_module(self, sig, version):
+    def add_module(self, sig, version, desc=None):
         mod_id = self._ids.module()
         name, pkg = split_sig(sig)
         self._file.write(
@@ -113,6 +115,15 @@ class Workflow(object):
             '    </add>\n'.format(
                 add_id=self._ids.add(), mod_id=mod_id,
                 loc_id=self._ids.location(), y=self._mod_y))
+        if desc is not None:
+            self._file.write(
+                '    <add id="{add_id}" objectId="{ann_id}" parentObjId="'
+                '{mod_id}" parentObjType="module" what="annotation">\n'
+                '      <annotation id="{ann_id}" key="__desc__" value="{text}"'
+                ' />\n'
+                '    </add>\n'.format(
+                    add_id=self._ids.add(), mod_id=mod_id,
+                    ann_id=self._ids.annotation(), text=escape_xml(desc)))
         self._mod_y -= 100
         return mod_id
 
@@ -229,7 +240,8 @@ def do_vistrails(target, pack=None, **kwargs):
                                         (('output', p) for p in outputs))
 
                 # Run module
-                r = wf.add_module('%s:Run' % rpz_id, rpz_version)
+                r = wf.add_module('%s:Run' % rpz_id, rpz_version,
+                                  desc=run.get('id', 'run%d' % i))
                 wf.add_function(r, 'cmdline', [
                                 (string_sig,
                                  ' '.join(shell_escape(arg)
