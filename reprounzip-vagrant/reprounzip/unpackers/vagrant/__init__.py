@@ -143,7 +143,12 @@ def machine_setup(target, use_chroot):
         line = line.strip().split(b' ', 1)
         if len(line) != 2:
             continue
-        vagrant_info[line[0].decode('utf-8').lower()] = line[1].decode('utf-8')
+        value = line[1].decode('utf-8')
+        if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+            # Vagrant should really be escaping special characters here, but
+            # it's not -- https://github.com/mitchellh/vagrant/issues/6428
+            value = value[1:-1]
+        vagrant_info[line[0].decode('utf-8').lower()] = value
 
     if 'identityfile' in vagrant_info:
         key_file = vagrant_info['identityfile']
