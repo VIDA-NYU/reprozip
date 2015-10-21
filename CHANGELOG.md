@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.2 (???)
+-----------
+
+Bugfixes:
+* You can now use X11 forwarding even with a remote Docker daemon
+* reprounzip-vagrant now works in paths containing spaces
+
 1.0.1 (2015-10-12)
 ------------------
 
