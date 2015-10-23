@@ -1,0 +1,12 @@
+#!/bin/sh
+
+DIRECTORY=/tmp/ipython-reprozip
+ORIGINAL_PYTHON="/home/remram/pkgs/ipython/bin/python2"
+
+if [ ! -d "${DIRECTORY}" ]; then
+    mkdir "${DIRECTORY}"
+fi
+
+DIR="${DIRECTORY}/$(date +"%Y-%m-%d_%H:%M:%S")"
+
+/home/remram/Documents/programming/_venv/reprozip27/bin/reprozip trace --dir "${DIR}" "$@"
