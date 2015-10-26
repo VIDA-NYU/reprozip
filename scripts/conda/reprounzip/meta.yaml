@@ -27,6 +27,10 @@ requirements:
   build:
     - python
     - setuptools
+    - pyyaml
+    - requests
+    - rpaths >=0.8
+    - usagestats >=0.3
 
   run:
     - python
