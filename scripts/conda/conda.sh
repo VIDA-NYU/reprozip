@@ -29,9 +29,9 @@ else
 fi
 
 sedi(){
-    TEMPFILE=$(mktemp /tmp/rpz_conda_XXXXXXXX)
-    sed "$1" "$2" > $TEMPFILE
-    mv $TEMPFILE "$2"
+    TEMPFILE="$(mktemp /tmp/rpz_conda_XXXXXXXX)"
+    sed "$1" "$2" > "$TEMPFILE"
+    mv "$TEMPFILE" "$2"
 }
 
 absolutepathname(){
@@ -41,37 +41,37 @@ absolutepathname(){
 }
 
 for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
-    TEMP_DIR=$(mktemp -d /tmp/rpz_conda_XXXXXXXX)
+    TEMP_DIR="$(mktemp -d /tmp/rpz_conda_XXXXXXXX)"
 
     cd "$TOPLEVEL/$pkgname"
 
     # Builds source distribution
-    if ! python setup.py sdist --dist-dir $TEMP_DIR; then
-        rm -Rf $TEMP_DIR
+    if ! python setup.py sdist --dist-dir "$TEMP_DIR"; then
+        rm -Rf "$TEMP_DIR"
         exit 1
     fi
 
     # Creates symlink
     TEMP_FILE="$(echo $TEMP_DIR/*)"
-    ln -s "$TEMP_FILE" $TEMP_DIR/$pkgname.tar.gz
+    ln -s "$TEMP_FILE" "$TEMP_DIR/$pkgname.tar.gz"
 
     # Copies conda recipe
-    cp -r $TOPLEVEL/scripts/conda/$pkgname $TEMP_DIR/$pkgname
+    cp -r "$TOPLEVEL/scripts/conda/$pkgname" "$TEMP_DIR/$pkgname"
 
     # Changes version in recipe
     VERSION_ESCAPED="$(echo "$VERSION" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
-    sedi "s/_REPLACE_version_REPLACE_/$VERSION_ESCAPED/g" $TEMP_DIR/$pkgname/meta.yaml
+    sedi "s/_REPLACE_version_REPLACE_/$VERSION_ESCAPED/g" "$TEMP_DIR/$pkgname/meta.yaml"
 
     # Changes URL
     URL_ESCAPED="$(echo "file://$TEMP_DIR/$pkgname.tar.gz" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
-    sedi "s/_REPLACE_url_REPLACE_/$URL_ESCAPED/g" $TEMP_DIR/$pkgname/meta.yaml
+    sedi "s/_REPLACE_url_REPLACE_/$URL_ESCAPED/g" "$TEMP_DIR/$pkgname/meta.yaml"
 
     # Builds Conda package
-    cd $TEMP_DIR
-    OUTPUT_PKG="$(conda build --output $pkgname)"
+    cd "$TEMP_DIR"
+    OUTPUT_PKG="$(conda build --output "$pkgname")"
     OUTPUT_PKG="$(absolutepathname "$OUTPUT_PKG")"
-    if ! conda build $pkgname; then
-        rm -Rf $TEMP_DIR
+    if ! conda build "$pkgname"; then
+        rm -Rf "$TEMP_DIR"
         rm -f "$ANACONDA_CACHE"
         exit 1
     fi
@@ -81,7 +81,7 @@ for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounz
     cp "$OUTPUT_PKG" "$DEST_DIR/"
 
     # Removes temporary directory
-    rm -Rf $TEMP_DIR
+    rm -Rf "$TEMP_DIR"
 done
 
 # Clears Conda cache
