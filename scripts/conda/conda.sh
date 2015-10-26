@@ -67,6 +67,9 @@ for PYTHONVER in 2.7 3.5; do
         URL_ESCAPED="$(echo "file://$TEMP_DIR/$PKGNAME.tar.gz" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
         sedi "s/_REPLACE_url_REPLACE_/$URL_ESCAPED/g" "$TEMP_DIR/$PKGNAME/meta.yaml"
 
+        # Change build string
+        sedi "s/_REPLACE_buildstr_REPLACE_/py$PYTHONVER/g" "$TEMP_DIR/$PKGNAME/meta.yaml"
+
         # Builds Conda package
         cd "$TEMP_DIR"
         OUTPUT_PKG="$(conda build --python "$PYTHONVER" --output "$PKGNAME")"
