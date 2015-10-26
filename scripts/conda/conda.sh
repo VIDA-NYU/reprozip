@@ -40,10 +40,10 @@ absolutepathname(){
     echo "$(pwd)/$(basename "$1")"
 }
 
-for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
+for PKGNAME in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
     TEMP_DIR="$(mktemp -d /tmp/rpz_conda_XXXXXXXX)"
 
-    cd "$TOPLEVEL/$pkgname"
+    cd "$TOPLEVEL/$PKGNAME"
 
     # Builds source distribution
     if ! python setup.py sdist --dist-dir "$TEMP_DIR"; then
@@ -53,31 +53,31 @@ for pkgname in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounz
 
     # Creates symlink
     TEMP_FILE="$(echo $TEMP_DIR/*)"
-    ln -s "$TEMP_FILE" "$TEMP_DIR/$pkgname.tar.gz"
+    ln -s "$TEMP_FILE" "$TEMP_DIR/$PKGNAME.tar.gz"
 
     # Copies conda recipe
-    cp -r "$TOPLEVEL/scripts/conda/$pkgname" "$TEMP_DIR/$pkgname"
+    cp -r "$TOPLEVEL/scripts/conda/$PKGNAME" "$TEMP_DIR/$PKGNAME"
 
     # Changes version in recipe
     VERSION_ESCAPED="$(echo "$VERSION" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
-    sedi "s/_REPLACE_version_REPLACE_/$VERSION_ESCAPED/g" "$TEMP_DIR/$pkgname/meta.yaml"
+    sedi "s/_REPLACE_version_REPLACE_/$VERSION_ESCAPED/g" "$TEMP_DIR/$PKGNAME/meta.yaml"
 
     # Changes URL
-    URL_ESCAPED="$(echo "file://$TEMP_DIR/$pkgname.tar.gz" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
-    sedi "s/_REPLACE_url_REPLACE_/$URL_ESCAPED/g" "$TEMP_DIR/$pkgname/meta.yaml"
+    URL_ESCAPED="$(echo "file://$TEMP_DIR/$PKGNAME.tar.gz" | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')"
+    sedi "s/_REPLACE_url_REPLACE_/$URL_ESCAPED/g" "$TEMP_DIR/$PKGNAME/meta.yaml"
 
     # Builds Conda package
     cd "$TEMP_DIR"
-    OUTPUT_PKG="$(conda build --output "$pkgname")"
+    OUTPUT_PKG="$(conda build --output "$PKGNAME")"
     OUTPUT_PKG="$(absolutepathname "$OUTPUT_PKG")"
-    if ! conda build "$pkgname"; then
+    if ! conda build "$PKGNAME"; then
         rm -Rf "$TEMP_DIR"
         rm -f "$ANACONDA_CACHE"
         exit 1
     fi
 
     # Copies result out
-    cd "$TOPLEVEL/$pkgname"
+    cd "$TOPLEVEL/$PKGNAME"
     cp "$OUTPUT_PKG" "$DEST_DIR/"
 
     # Removes temporary directory
