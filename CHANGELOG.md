@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.2 (???)
------------
+1.0.2 (2015-10-26)
+------------------
 
 Bugfixes:
 * You can now use X11 forwarding even with a remote Docker daemon
