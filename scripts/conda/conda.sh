@@ -44,7 +44,8 @@ for PYTHONVER in 2.7 3.5; do
     for PKGNAME in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
         TEMP_DIR="$(mktemp -d /tmp/rr_conda_XXXXXXXX)"
 
-        cd "$TOPLEVEL/$PKGNAME"
+        PKGDIR="$TOPLEVEL/$PKGNAME"
+        cd "$PKGDIR"
 
         # Builds source distribution
         if ! python setup.py sdist --dist-dir "$TEMP_DIR"; then
@@ -81,7 +82,7 @@ for PYTHONVER in 2.7 3.5; do
         fi
 
         # Copies result out
-        cd "$TOPLEVEL/$PKGNAME"
+        cd "$PKGDIR"
         cp "$OUTPUT_PKG" "$DEST_DIR/"
 
         # Removes temporary directory
