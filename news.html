@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+
+    <title>ReproZip - News</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- Docs extras -->
+    <link href="css/docs.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/theme.css" rel="stylesheet">
+
+    <style type="text/css" rel="stylesheet">
+/* Sample code areas */
+@media(min-width:768px) {
+    .codesample-left {
+        width: 75%;
+        margin: 2em auto 1em 0;
+    }
+    .codesample-right {
+        float: left;
+        width: 75%;
+        padding-left: 1em;
+    }
+    .codesample-arrow {
+        float: left;
+        width: 25%;
+        background-image: url(arrow.png);
+        background-size: 100%;
+        background-repeat: no-repeat;
+        height: 320px;
+    }
+    .codesample-bottom:after {
+        visibility: hidden;
+        display: block;
+        content: " ";
+        clear: both;
+        height: 0;
+    }
+}
+/* Sample titles */
+.code-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #959595;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-left: 2em;
+    line-height: 2em;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Footer */
+body > .container {
+    padding-bottom: 65px;
+}
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #f5f5f5;
+    padding: 10px 0;
+}
+.footer p {
+    margin: 0;
+    color: #777;
+    text-align: center;
+}
+    </style>
+
+  </head>
+
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html#">ReproZip</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html#">About</a></li>
+            <li class="dropdown active">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#news">What's New</a></li>
+                    <li><a href="#presentations">Presentations</a></li>
+                    <li><a href="#publications">Publications</a></li>
+                    <li><a href="#posters">Posters</a></li>
+                </ul>
+            </li>
+            <li><a href="http://reprozip.readthedocs.org/" target="_blank">Documentation</a></li>
+            <li><a href="https://github.com/ViDA-NYU/reprozip" target="_blank">GitHub Project</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="https://pypi.python.org/pypi/reprozip" target="_blank">reprozip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip" target="_blank">reprounzip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-docker" target="_blank">reprounzip-docker</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" target="_blank">reprounzip-vagrant</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" target="_blank">reprounzip-vistrails</a></li>
+              </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.2/reprounzip-1.0.2-setup.exe" target="_blank">Windows</a></li>
+                    <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.2/reprounzip-1.0.2.pkg" target="_blank">Mac OS X</a></li>
+                    <li><a href="https://anaconda.org/ViDA-NYU" target="_blank">Anaconda</a></li>
+                </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container" role="main">
+
+
+<div class="page-header" id="news">
+  <h2>What's New</h2>
+</div>
+
+<ul>
+    <li>ReproZip v1.0.2 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.2" target="_blank">released</a>.</li>
+    <li>ReproZip is the recommended tool for the Reproducibility Section of the <a href="http://www.journals.elsevier.com/information-systems/" target="_blank">Information Systems Journal, Elsevier</a>.</li>
+    <li>ReproZip is the recommended tool for the <a href="http://db-reproducibility.seas.harvard.edu/" target="_blank">ACM SIGMOD 2015 Reproducibility Review</a>.</li>
+</ul>
+
+<div class="page-header" id="presentations">
+    <h2>Presentations</h2>
+</div>
+
+<h4>2015</h4>
+
+<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-tutorial-columbia.pdf" target="_blank">Achieving Reproducibility with ReproZip</a></i><br/>
+CS Colloquium/Tutorial, Columbia University<br/>
+Presented by Fernando Chirigati and R&eacute;mi Rampin<br/>
+New York City, NY, October 2015
+
+<br/><br/>
+
+<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-berkeley.pdf" target="_blank">Facilitating Reproducibility After the Fact</a></i><br/>
+BIDS Reproducibility Conference, University of California, Berkeley<br/>
+Presented by Fernando Chirigati<br/>
+Berkeley, CA, May 2015
+
+<br/><br/>
+
+<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-uw.pdf" target="_blank">Facilitating Reproducibility After the Fact</a></i><br/>
+Reproducibility Seminar, University of Washington<br/>
+Presented by Fernando Chirigati
+[<a href="https://panopto.uw.edu/Panopto/Pages/Viewer.aspx?id=2b52fcef-65ed-7649-ad8e-7b4d07dbc341" target="_blank">video (ReproZip)</a>]<br/>
+Seattle, WA, May 2015
+
+<br/><br/></p>
+
+<h4>2013</h4>
+
+<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/BTPDF2-2013.pdf" target="_blank">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+Beyond the PDF 2 Conference - Visions for the Future Session<br/>
+Presented by Fernando Chirigati<br/>
+Amsterdam, Netherlands, March 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/><br/>
+
+<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/chirigati-tapp2013.pdf" target="_blank">ReproZip: Using Provenance to Support Computational Reproducibility</a></i><br/>
+The 5th USENIX conference on Theory and Practice of Provenance (TaPP)<br/>
+Presented by Juliana Freire
+[<a href="https://www.usenix.org/conference/tapp13/technical-sessions/presentation/chirigati" target="_blank">video</a>]<br/>
+Lombard, IL, April 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/><br/>
+
+<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-WorkshopReproducibleScience.pdf" target="_blank">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+Workshop on Software Infrastructure for Reproducibility in Science<br/>
+Presented by Fernando Chirigati<br/>
+Brooklyn, NY, May 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/><br/></p>
+
+<h4>2012</h4>
+
+<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-ICERM.pdf" target="_blank">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+ICERM Workshop on Reproducibility in Computational and Experimental Mathematics - Lightning Talk<br/>
+Presented by Fernando Chirigati<br/>
+Providence, RI, December 2012
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/></p>
+
+<div class="page-header" id="publications">
+    <h2>Publications</h2>
+</div>
+
+<h4>2013</h4>
+
+<p><i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-sigmod2013.pdf" target="_blank">Packing Experiments for Sharing and Publication</a></i>,
+F. Chirigati, D. Shasha, and J. Freire.
+In Proceedings of the 2013 International Conference on Management of Data (SIGMOD), pp. 977-980, 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/><br/>
+
+<i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-tapp2013.pdf" target="_blank">ReproZip: Using Provenance to Support Computational Reproducibility</a></i>,
+F. Chirigati, D. Shasha, and J. Freire.
+In Proceedings of the 5th USENIX conference on Theory and Practice of Provenance (TaPP), 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/></p>
+
+<div class="page-header" id="posters">
+    <h2>Posters</h2>
+</div>
+
+<h4>2013</h4>
+
+<p><i><a href="http://bigdata.poly.edu/~fchirigati/posters/chirigati-sigmod2013.pdf" target="_blank">Packing Experiments for Sharing and Publication</a></i>,
+F. Chirigati, D. Shasha, and J. Freire.
+In the 2013 International Conference on Management of Data (SIGMOD), 2013
+<br/>
+<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank">deprecated version</a>.</i></b>
+
+<br/></p>
+
+    </div> <!-- /container -->
+
+<footer class="footer">
+  <div class="container">
+    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
+    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
+  </div>
+</footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <!--<script src="js/docs.min.js"></script>-->
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="js/ie10-viewport-bug-workaround.js"></script>
+  </body>
+</html>
