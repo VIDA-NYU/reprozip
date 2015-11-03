@@ -27,7 +27,7 @@ from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
 
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 
 unpackers = {}

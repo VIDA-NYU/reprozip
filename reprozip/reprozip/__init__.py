@@ -2,4 +2,4 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'

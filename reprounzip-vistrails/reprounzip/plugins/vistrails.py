@@ -29,7 +29,7 @@ from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import iteritems
 
 
-__version__ = '0.7'
+__version__ = '1.0.3'
 
 
 def escape_xml(s):
