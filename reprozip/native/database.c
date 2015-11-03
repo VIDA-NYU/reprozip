@@ -93,6 +93,7 @@ int db_init(const char *filename)
             "    run_id INTEGER NOT NULL,"
             "    parent INTEGER,"
             "    timestamp INTEGER NOT NULL,"
+            "    exit_timestamp INTEGER,"
             "    is_thread BOOLEAN NOT NULL,"
             "    exitcode INTEGER"
             "    );",
@@ -159,7 +160,7 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "UPDATE processes SET exitcode=?"
+                "UPDATE processes SET exitcode=?, exit_timestamp=?"
                 "WHERE id=?";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_set_exitcode, NULL));
     }
@@ -259,7 +260,8 @@ int db_add_first_process(unsigned int *id, const char *working_dir)
 int db_add_exit(unsigned int id, int exitcode)
 {
     check(sqlite3_bind_int(stmt_set_exitcode, 1, exitcode));
-    check(sqlite3_bind_int(stmt_set_exitcode, 2, id));
+    check(sqlite3_bind_int64(stmt_set_exitcode, 2, gettime()));
+    check(sqlite3_bind_int(stmt_set_exitcode, 3, id));
 
     if(sqlite3_step(stmt_set_exitcode) != SQLITE_DONE)
         goto sqlerror;

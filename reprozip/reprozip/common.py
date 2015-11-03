@@ -110,7 +110,7 @@ class Package(CommonEqualityMixin):
 # 0.8: adds 'id' field to run
 # 1.0: no change, ReproZip 1.0 actually uses format 0.8
 # 1.1:
-#     TODO
+#     adds processes.exit_timestamp
 
 
 class RPZPack(object):
