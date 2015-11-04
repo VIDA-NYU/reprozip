@@ -1,6 +1,7 @@
 ; This needs:
 ;   Default installation of Python 2.7 in C:\Python2.7
 ;   python27.dll in C:\Python2.7 (might be in Windows\system[32])
+;     make sure python27.dll is 32bit
 ;   PyCrypto installed in Python installation
 ;   ssh.exe and DLLs in input\ssh
 ;   make sure to generate reprounzip.exe with setuptools (not distutils),
