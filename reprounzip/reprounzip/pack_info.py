@@ -40,6 +40,7 @@ def print_info(args):
     pack_files = 0
     pack_dirs = 0
     pack_symlinks = 0
+    pack_hardlinks = 0
     pack_others = 0
     rpz_pack = RPZPack(pack)
     for m in rpz_pack.list_data():
@@ -51,6 +52,8 @@ def print_info(args):
             pack_dirs += 1
         elif m.issym():
             pack_symlinks += 1
+        elif hasattr(m, 'islnk') and m.islnk():
+            pack_hardlinks += 1
         else:
             pack_others += 1
     rpz_pack.close()
@@ -95,7 +98,10 @@ def print_info(args):
     if args.verbosity >= 3:
         print("    Files: %d" % pack_files)
         print("    Directories: %d" % pack_dirs)
-        print("    Symbolic links: %d" % pack_symlinks)
+        if pack_symlinks:
+            print("    Symbolic links: %d" % pack_symlinks)
+        if pack_hardlinks:
+            print("    Hard links: %d" % pack_hardlinks)
     if pack_others:
         print("    Unknown (what!?): %d" % pack_others)
     print("\n----- Metadata -----")
