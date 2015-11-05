@@ -83,6 +83,12 @@ body > .container {
     color: #777;
     text-align: center;
 }
+
+/* iframe */
+iframe {
+    margin: 0 auto;
+    display: block;
+}
     </style>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -220,9 +226,13 @@ result: -17.814</span></code></pre></div>
 
 <p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
 
-<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="http://en.wikipedia.org/wiki/Dependency_hell">dependency hell</a>.</p>
+<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="http://en.wikipedia.org/wiki/Dependency_hell" target="_blank">dependency hell</a>.</p>
 
-<p><a href="http://reprozip.readthedocs.org/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
+<p><a href="http://reprozip.readthedocs.org/" target="_blank">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
+
+<p>The following video shows how to use ReproZip to make your experiment reproducible. The example used in the video is based on a <a href="http://scikit-learn.org/stable/auto_examples/plot_digits_classification.html" target="_blank">tutorial</a> from the scikit-learn Python library and is available for download <a href="http://bigdata.poly.edu/~fchirigati/others/example.zip" target="_blank">here</a>.</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
 
 <div class="page-header" id="references">
   <h2>Feedback</h2>
@@ -238,18 +248,18 @@ result: -17.814</span></code></pre></div>
         
 <p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
 <ul>
-  <li><a href="http://vgc.poly.edu/~fchirigati/">Fernando Chirigati</a></li>
-  <li><a href="http://remram.fr/">R&eacute;mi Rampin</a></li>
-  <li><a href="http://vgc.poly.edu/~juliana/">Juliana Freire</a></li>
-  <li><a href="http://cs.nyu.edu/shasha/">Dennis Shasha</a></li>
+  <li><a href="http://bigdata.poly.edu/~fchirigati/" target="_blank">Fernando Chirigati</a></li>
+  <li><a href="http://remram.fr/" target="_blank">R&eacute;mi Rampin</a></li>
+  <li><a href="http://bigdata.poly.edu/~juliana/" target="_blank">Juliana Freire</a></li>
+  <li><a href="http://cs.nyu.edu/shasha/" target="_blank">Dennis Shasha</a></li>
 </ul>
 
     </div> <!-- /container -->
 
 <footer class="footer">
   <div class="container">
-    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
-    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
+    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/" target="_blank">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
+    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt" target="_blank">BSD</a>.</p>
   </div>
 </footer>
 
