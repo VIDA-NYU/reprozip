@@ -146,7 +146,10 @@ class RPZPack(object):
     def remove_data_prefix(self, path):
         if not isinstance(path, PosixPath):
             path = PosixPath(path)
-        return path.__class__(*path.components[1:])
+        components = path.components[1:]
+        if not components:
+            return path.__class__('/')
+        return path.__class__(*components)
 
     def open_config(self):
         """Gets the configuration file.
