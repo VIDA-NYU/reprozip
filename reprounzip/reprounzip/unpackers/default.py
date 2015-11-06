@@ -125,7 +125,6 @@ def directory_create(args):
 
     target.mkdir()
     root = (target / 'root').absolute()
-    root.mkdir()
 
     # Checks packages
     missing_files = False
@@ -144,35 +143,40 @@ def directory_create(args):
         logging.error("Some packages are missing, you should probably install "
                       "them.\nUse 'reprounzip installpkgs -h' for help")
 
-    # Unpacks files
-    members = rpz_pack.list_data()
-    for m in members:
-        # Remove 'DATA/' prefix
-        m.name = str(rpz_pack.remove_data_prefix(m.name))
-        # Makes symlink targets relative
-        if m.issym():
-            linkname = PosixPath(m.linkname)
-            if linkname.is_absolute:
-                m.linkname = join_root(root, PosixPath(m.linkname)).path
-    logging.info("Extracting files...")
-    rpz_pack.extract_data(root, members)
-    rpz_pack.close()
+    root.mkdir()
+    try:
+        # Unpacks files
+        members = rpz_pack.list_data()
+        for m in members:
+            # Remove 'DATA/' prefix
+            m.name = str(rpz_pack.remove_data_prefix(m.name))
+            # Makes symlink targets relative
+            if m.issym():
+                linkname = PosixPath(m.linkname)
+                if linkname.is_absolute:
+                    m.linkname = join_root(root, PosixPath(m.linkname)).path
+        logging.info("Extracting files...")
+        rpz_pack.extract_data(root, members)
+        rpz_pack.close()
 
-    # Original input files, so upload can restore them
-    input_files = [f.path for f in itervalues(config.inputs_outputs)
-                   if f.read_runs]
-    if input_files:
-        logging.info("Packing up original input files...")
-        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
-        for ifile in input_files:
-            inputtar.add(str(join_root(root, ifile)),
-                         str(ifile))
-        inputtar.close()
+        # Original input files, so upload can restore them
+        input_files = [f.path for f in itervalues(config.inputs_outputs)
+                       if f.read_runs]
+        if input_files:
+            logging.info("Packing up original input files...")
+            inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
+            for ifile in input_files:
+                inputtar.add(str(join_root(root, ifile)),
+                             str(ifile))
+            inputtar.close()
 
-    # Meta-data for reprounzip
-    metadata_write(target, metadata_initial_iofiles(config), 'directory')
+        # Meta-data for reprounzip
+        metadata_write(target, metadata_initial_iofiles(config), 'directory')
 
-    signals.post_setup(target=target, pack=pack)
+        signals.post_setup(target=target, pack=pack)
+    except Exception:
+        rmtree_fixed(root)
+        raise
 
 
 @target_must_exist
