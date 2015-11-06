@@ -390,89 +390,93 @@ def chroot_create(args):
 
     target.mkdir()
     root = (target / 'root').absolute()
+
     root.mkdir()
+    try:
+        # Checks that everything was packed
+        packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
+        if packages_not_packed:
+            record_usage(chroot_missing_pkgs=True)
+            logging.warning("According to configuration, some files were left "
+                            "out because they belong to the following "
+                            "packages:%s\nWill copy files from HOST SYSTEM",
+                            ''.join('\n    %s' % pkg
+                                    for pkg in packages_not_packed))
+            missing_files = False
+            for pkg in packages_not_packed:
+                for f in pkg.files:
+                    path = Path(f.path)
+                    if not path.exists():
+                        logging.error(
+                            "Missing file %s (from package %s) on host, "
+                            "experiment will probably miss it",
+                            path, pkg.name)
+                        missing_files = True
+                        continue
+                    dest = join_root(root, path)
+                    dest.parent.mkdir(parents=True)
+                    if path.is_link():
+                        dest.symlink(path.read_link())
+                    else:
+                        path.copy(dest)
+                    if restore_owner:
+                        stat = path.stat()
+                        dest.chown(stat.st_uid, stat.st_gid)
+            if missing_files:
+                record_usage(chroot_mising_files=True)
 
-    # Checks that everything was packed
-    packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
-    if packages_not_packed:
-        record_usage(chroot_missing_pkgs=True)
-        logging.warning("According to configuration, some files were left out "
-                        "because they belong to the following packages:%s"
-                        "\nWill copy files from HOST SYSTEM",
-                        ''.join('\n    %s' % pkg
-                                for pkg in packages_not_packed))
-        missing_files = False
-        for pkg in packages_not_packed:
-            for f in pkg.files:
-                path = Path(f.path)
-                if not path.exists():
-                    logging.error(
-                        "Missing file %s (from package %s) on host, "
-                        "experiment will probably miss it",
-                        path, pkg.name)
-                    missing_files = True
-                    continue
-                dest = join_root(root, path)
-                dest.parent.mkdir(parents=True)
-                if path.is_link():
-                    dest.symlink(path.read_link())
-                else:
-                    path.copy(dest)
-                if restore_owner:
-                    stat = path.stat()
-                    dest.chown(stat.st_uid, stat.st_gid)
-        if missing_files:
-            record_usage(chroot_mising_files=True)
-
-    # Unpacks files
-    members = rpz_pack.list_data()
-    for m in members:
-        # Remove 'DATA/' prefix
-        m.name = str(rpz_pack.remove_data_prefix(m.name))
-    if not restore_owner:
-        uid = os.getuid()
-        gid = os.getgid()
+        # Unpacks files
+        members = rpz_pack.list_data()
         for m in members:
-            m.uid = uid
-            m.gid = gid
-    logging.info("Extracting files...")
-    rpz_pack.extract_data(root, members)
-    rpz_pack.close()
+            # Remove 'DATA/' prefix
+            m.name = str(rpz_pack.remove_data_prefix(m.name))
+        if not restore_owner:
+            uid = os.getuid()
+            gid = os.getgid()
+            for m in members:
+                m.uid = uid
+                m.gid = gid
+        logging.info("Extracting files...")
+        rpz_pack.extract_data(root, members)
+        rpz_pack.close()
 
-    # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
-    sh_path = join_root(root, Path('/bin/sh'))
-    env_path = join_root(root, Path('/usr/bin/env'))
-    if not sh_path.lexists() or not env_path.lexists():
-        logging.info("Setting up busybox...")
-        busybox_path = join_root(root, Path('/bin/busybox'))
-        busybox_path.parent.mkdir(parents=True)
-        with make_dir_writable(join_root(root, Path('/bin'))):
-            download_file(busybox_url(config.runs[0]['architecture']),
-                          busybox_path,
-                          'busybox-%s' % config.runs[0]['architecture'])
-            busybox_path.chmod(0o755)
-            if not sh_path.lexists():
-                sh_path.parent.mkdir(parents=True)
-                sh_path.symlink('/bin/busybox')
-            if not env_path.lexists():
-                env_path.parent.mkdir(parents=True)
-                env_path.symlink('/bin/busybox')
+        # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
+        sh_path = join_root(root, Path('/bin/sh'))
+        env_path = join_root(root, Path('/usr/bin/env'))
+        if not sh_path.lexists() or not env_path.lexists():
+            logging.info("Setting up busybox...")
+            busybox_path = join_root(root, Path('/bin/busybox'))
+            busybox_path.parent.mkdir(parents=True)
+            with make_dir_writable(join_root(root, Path('/bin'))):
+                download_file(busybox_url(config.runs[0]['architecture']),
+                              busybox_path,
+                              'busybox-%s' % config.runs[0]['architecture'])
+                busybox_path.chmod(0o755)
+                if not sh_path.lexists():
+                    sh_path.parent.mkdir(parents=True)
+                    sh_path.symlink('/bin/busybox')
+                if not env_path.lexists():
+                    env_path.parent.mkdir(parents=True)
+                    env_path.symlink('/bin/busybox')
 
-    # Original input files, so upload can restore them
-    input_files = [f.path for f in itervalues(config.inputs_outputs)
-                   if f.read_runs]
-    if input_files:
-        logging.info("Packing up original input files...")
-        inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
-        for ifile in input_files:
-            inputtar.add(str(join_root(root, ifile)),
-                         str(ifile))
-        inputtar.close()
+        # Original input files, so upload can restore them
+        input_files = [f.path for f in itervalues(config.inputs_outputs)
+                       if f.read_runs]
+        if input_files:
+            logging.info("Packing up original input files...")
+            inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
+            for ifile in input_files:
+                inputtar.add(str(join_root(root, ifile)),
+                             str(ifile))
+            inputtar.close()
 
-    # Meta-data for reprounzip
-    metadata_write(target, metadata_initial_iofiles(config), 'chroot')
+        # Meta-data for reprounzip
+        metadata_write(target, metadata_initial_iofiles(config), 'chroot')
 
-    signals.post_setup(target=target, pack=pack)
+        signals.post_setup(target=target, pack=pack)
+    except Exception:
+        rmtree_fixed(root)
+        raise
 
 
 @target_must_exist
