@@ -835,8 +835,9 @@ def setup_directory(parser, **kwargs):
 def chroot_setup(args):
     """Does both create and mount depending on --bind-magic-dirs.
     """
+    do_mount = should_mount_magic_dirs(args.bind_magic_dirs)
     chroot_create(args)
-    if should_mount_magic_dirs(args.bind_magic_dirs):
+    if do_mount:
         chroot_mount(args)
 
 
