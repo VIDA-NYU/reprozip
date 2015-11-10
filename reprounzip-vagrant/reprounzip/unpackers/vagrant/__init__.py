@@ -261,80 +261,83 @@ def vagrant_setup_create(args):
 
     target.mkdir(parents=True)
 
-    # Writes setup script
-    logging.info("Writing setup script %s...", target / 'setup.sh')
-    with (target / 'setup.sh').open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('#!/bin/sh\n\nset -e\n\n')
-        if packages:
-            # Updates package sources
-            fp.write(installer.update_script())
-            fp.write('\n')
-            # Installs necessary packages
-            fp.write(installer.install_script(packages))
-            fp.write('\n')
-            # TODO : Compare package versions (painful because of sh)
+    try:
+        # Writes setup script
+        logging.info("Writing setup script %s...", target / 'setup.sh')
+        with (target / 'setup.sh').open('w', encoding='utf-8',
+                                        newline='\n') as fp:
+            fp.write('#!/bin/sh\n\nset -e\n\n')
+            if packages:
+                # Updates package sources
+                fp.write(installer.update_script())
+                fp.write('\n')
+                # Installs necessary packages
+                fp.write(installer.install_script(packages))
+                fp.write('\n')
+                # TODO : Compare package versions (painful because of sh)
 
-        # Untar
-        if use_chroot:
-            fp.write('\n'
-                     'mkdir /experimentroot; cd /experimentroot\n')
-            fp.write('tar zpxf /vagrant/data.tgz '
-                     '--numeric-owner --strip=1 %s\n' % rpz_pack.data_prefix)
-            if mount_bind:
+            # Untar
+            if use_chroot:
                 fp.write('\n'
-                         'mkdir -p /experimentroot/dev\n'
-                         'mkdir -p /experimentroot/proc\n')
+                         'mkdir /experimentroot; cd /experimentroot\n')
+                fp.write('tar zpxf /vagrant/data.tgz --numeric-owner '
+                         '--strip=1 %s\n' % rpz_pack.data_prefix)
+                if mount_bind:
+                    fp.write('\n'
+                             'mkdir -p /experimentroot/dev\n'
+                             'mkdir -p /experimentroot/proc\n')
 
-            for pkg in packages:
-                fp.write('\n# Copies files from package %s\n' % pkg.name)
-                for f in pkg.files:
-                    f = f.path
-                    dest = join_root(PosixPath('/experimentroot'), f)
-                    fp.write('mkdir -p %s\n' %
-                             shell_escape(unicode_(f.parent)))
-                    fp.write('cp -L %s %s\n' % (
-                             shell_escape(unicode_(f)),
-                             shell_escape(unicode_(dest))))
-        else:
-            fp.write('\ncd /\n')
-            paths = set()
-            pathlist = []
-            # Adds intermediate directories, and checks for existence in the
-            # tar
-            for f in other_files:
-                path = PosixPath('/')
-                for c in rpz_pack.remove_data_prefix(f.path).components:
-                    path = path / c
-                    if path in paths:
-                        continue
-                    paths.add(path)
-                    try:
-                        rpz_pack.get_data(path)
-                    except KeyError:
-                        logging.info("Missing file %s", path)
-                    else:
-                        pathlist.append(path)
-            # FIXME : for some reason we need reversed() here, I'm not sure
-            # why. Need to read more of tar's docs.
-            # TAR bug: --no-overwrite-dir removes --keep-old-files
-            # TAR bug: there is no way to make --keep-old-files not report an
-            # error if an existing file is encountered. --skip-old-files was
-            # introduced too recently. Instead, we just ignore the exit status
-            with (target / 'rpz-files.list').open('wb') as lfp:
-                for p in reversed(pathlist):
-                    lfp.write(join_root(rpz_pack.data_prefix, p).path)
-                    lfp.write(b'\0')
-            fp.write('tar zpxf /vagrant/data.tgz --keep-old-files '
-                     '--numeric-owner --strip=1 '
-                     '--null -T /vagrant/rpz-files.list || /bin/true\n')
+                for pkg in packages:
+                    fp.write('\n# Copies files from package %s\n' % pkg.name)
+                    for f in pkg.files:
+                        f = f.path
+                        dest = join_root(PosixPath('/experimentroot'), f)
+                        fp.write('mkdir -p %s\n' %
+                                 shell_escape(unicode_(f.parent)))
+                        fp.write('cp -L %s %s\n' % (
+                                 shell_escape(unicode_(f)),
+                                 shell_escape(unicode_(dest))))
+            else:
+                fp.write('\ncd /\n')
+                paths = set()
+                pathlist = []
+                # Adds intermediate directories, and checks for existence in
+                # the tar
+                for f in other_files:
+                    path = PosixPath('/')
+                    for c in rpz_pack.remove_data_prefix(f.path).components:
+                        path = path / c
+                        if path in paths:
+                            continue
+                        paths.add(path)
+                        try:
+                            rpz_pack.get_data(path)
+                        except KeyError:
+                            logging.info("Missing file %s", path)
+                        else:
+                            pathlist.append(path)
+                # FIXME : for some reason we need reversed() here, I'm not sure
+                # why. Need to read more of tar's docs.
+                # TAR bug: --no-overwrite-dir removes --keep-old-files
+                # TAR bug: there is no way to make --keep-old-files not report
+                # an error if an existing file is encountered. --skip-old-files
+                # was introduced too recently. Instead, we just ignore the exit
+                # status
+                with (target / 'rpz-files.list').open('wb') as lfp:
+                    for p in reversed(pathlist):
+                        lfp.write(join_root(rpz_pack.data_prefix, p).path)
+                        lfp.write(b'\0')
+                fp.write('tar zpxf /vagrant/data.tgz --keep-old-files '
+                         '--numeric-owner --strip=1 '
+                         '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
-        # Copies busybox
-        if use_chroot:
-            arch = runs[0]['architecture']
-            download_file(busybox_url(arch),
-                          target / 'busybox',
-                          'busybox-%s' % arch)
-            fp.write(r'''
+            # Copies busybox
+            if use_chroot:
+                arch = runs[0]['architecture']
+                download_file(busybox_url(arch),
+                              target / 'busybox',
+                              'busybox-%s' % arch)
+                fp.write(r'''
 cp /vagrant/busybox /experimentroot/busybox
 chmod +x /experimentroot/busybox
 mkdir -p /experimentroot/bin
@@ -342,39 +345,44 @@ mkdir -p /experimentroot/bin
     ln -s /busybox /experimentroot/bin/sh
 ''')
 
-    # Copies pack
-    logging.info("Copying pack file...")
-    rpz_pack.copy_data_tar(target / 'data.tgz')
+        # Copies pack
+        logging.info("Copying pack file...")
+        rpz_pack.copy_data_tar(target / 'data.tgz')
 
-    rpz_pack.close()
+        rpz_pack.close()
 
-    # Writes Vagrant file
-    logging.info("Writing %s...", target / 'Vagrantfile')
-    with (target / 'Vagrantfile').open('w', encoding='utf-8',
-                                       newline='\n') as fp:
-        # Vagrant header and version
-        fp.write('# -*- mode: ruby -*-\n'
-                 '# vi: set ft=ruby\n\n'
-                 'VAGRANTFILE_API_VERSION = "2"\n\n'
-                 'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
-        # Selects which box to install
-        fp.write('  config.vm.box = "%s"\n' % box)
-        # Run the setup script on the virtual machine
-        fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
+        # Writes Vagrant file
+        logging.info("Writing %s...", target / 'Vagrantfile')
+        with (target / 'Vagrantfile').open('w', encoding='utf-8',
+                                           newline='\n') as fp:
+            # Vagrant header and version
+            fp.write(
+                '# -*- mode: ruby -*-\n'
+                '# vi: set ft=ruby\n\n'
+                'VAGRANTFILE_API_VERSION = "2"\n\n'
+                'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
+            # Selects which box to install
+            fp.write('  config.vm.box = "%s"\n' % box)
+            # Run the setup script on the virtual machine
+            fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
 
-        # Memory size
-        if memory is not None:
-            fp.write('  config.vm.provider "virtualbox" do |v|\n'
-                     '    v.memory = %d\n'
-                     '  end\n' % memory)
+            # Memory size
+            if memory is not None:
+                fp.write('  config.vm.provider "virtualbox" do |v|\n'
+                         '    v.memory = %d\n'
+                         '  end\n' % memory)
 
-        fp.write('end\n')
+            fp.write('end\n')
 
-    # Meta-data for reprounzip
-    write_dict(target, metadata_initial_iofiles(config,
-                                                {'use_chroot': use_chroot}))
+        # Meta-data for reprounzip
+        write_dict(target,
+                   metadata_initial_iofiles(config,
+                                            {'use_chroot': use_chroot}))
 
-    signals.post_setup(target=target, pack=pack)
+        signals.post_setup(target=target, pack=pack)
+    except Exception:
+        target.rmtree(ignore_errors=True)
+        raise
 
 
 @target_must_exist
