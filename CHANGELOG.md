@@ -7,6 +7,9 @@ Changelog
 Bugfixes:
 * You could get a traceback with some unpackers (not Vagrant) on some packages that explicitely pack the / directory
 
+Features:
+* Remove setup directory if setup fails, so you can run setup again without gettin `target directory exists`
+
 1.0.2 (2015-10-26)
 ------------------
 
