@@ -114,6 +114,19 @@ def read_dict(path):
     return metadata_read(path, 'docker')
 
 
+def docker_setup(args):
+    """Does both create and build.
+
+    Removes the directory if building fails.
+    """
+    docker_setup_create(args)
+    try:
+        docker_setup_build(args)
+    except:
+        Path(args.target[0]).rmtree(ignore_errors=True)
+        raise
+
+
 def docker_setup_create(args):
     """Sets up the experiment to be run in a Docker-built container.
     """
@@ -125,116 +138,122 @@ def docker_setup_create(args):
 
     signals.pre_setup(target=target, pack=pack)
 
-    # Unpacks configuration file
-    rpz_pack = RPZPack(pack)
-    rpz_pack.extract_config(target / 'config.yml')
+    target.mkdir()
 
-    # Loads config
-    runs, packages, other_files = config = load_config(target / 'config.yml',
-                                                       True)
+    try:
+        # Unpacks configuration file
+        rpz_pack = RPZPack(pack)
+        rpz_pack.extract_config(target / 'config.yml')
 
-    if args.base_image:
-        record_usage(docker_explicit_base=True)
-        base_image = args.base_image[0]
-        if args.distribution:
-            target_distribution = args.distribution[0]
+        # Loads config
+        runs, packages, other_files = config = load_config(
+            target / 'config.yml', True)
+
+        if args.base_image:
+            record_usage(docker_explicit_base=True)
+            base_image = args.base_image[0]
+            if args.distribution:
+                target_distribution = args.distribution[0]
+            else:
+                target_distribution = None
         else:
-            target_distribution = None
-    else:
-        target_distribution, base_image = select_image(runs)
-    logging.info("Using base image %s", base_image)
-    logging.debug("Distribution: %s", target_distribution or "unknown")
+            target_distribution, base_image = select_image(runs)
+        logging.info("Using base image %s", base_image)
+        logging.debug("Distribution: %s", target_distribution or "unknown")
 
-    target.mkdir(parents=True)
-    rpz_pack.copy_data_tar(target / 'data.tgz')
+        rpz_pack.copy_data_tar(target / 'data.tgz')
 
-    arch = runs[0]['architecture']
+        arch = runs[0]['architecture']
 
-    # Writes Dockerfile
-    logging.info("Writing %s...", target / 'Dockerfile')
-    with (target / 'Dockerfile').open('w',
-                                      encoding='utf-8', newline='\n') as fp:
-        fp.write('FROM %s\n\n' % base_image)
+        # Writes Dockerfile
+        logging.info("Writing %s...", target / 'Dockerfile')
+        with (target / 'Dockerfile').open('w', encoding='utf-8',
+                                          newline='\n') as fp:
+            fp.write('FROM %s\n\n' % base_image)
 
-        # Installs busybox
-        download_file(busybox_url(arch),
-                      target / 'busybox',
-                      'busybox-%s' % arch)
-        fp.write('COPY busybox /busybox\n')
+            # Installs busybox
+            download_file(busybox_url(arch),
+                          target / 'busybox',
+                          'busybox-%s' % arch)
+            fp.write('COPY busybox /busybox\n')
 
-        # Installs rpzsudo
-        download_file(sudo_url(arch),
-                      target / 'rpzsudo',
-                      'rpzsudo-%s' % arch)
-        fp.write('COPY rpzsudo /rpzsudo\n\n')
+            # Installs rpzsudo
+            download_file(sudo_url(arch),
+                          target / 'rpzsudo',
+                          'rpzsudo-%s' % arch)
+            fp.write('COPY rpzsudo /rpzsudo\n\n')
 
-        fp.write('COPY data.tgz /reprozip_data.tgz\n\n')
-        fp.write('COPY rpz-files.list /rpz-files.list\n')
-        fp.write('RUN \\\n'
-                 '    chmod +x /busybox /rpzsudo && \\\n')
+            fp.write('COPY data.tgz /reprozip_data.tgz\n\n')
+            fp.write('COPY rpz-files.list /rpz-files.list\n')
+            fp.write('RUN \\\n'
+                     '    chmod +x /busybox /rpzsudo && \\\n')
 
-        if args.install_pkgs:
-            # Install every package through package manager
-            missing_packages = []
-        else:
-            # Only install packages that were not packed
-            missing_packages = [pkg for pkg in packages if pkg.packfiles]
-            packages = [pkg for pkg in packages if not pkg.packfiles]
-        if packages:
-            record_usage(docker_install_pkgs=True)
-            try:
-                installer = select_installer(pack, runs, target_distribution)
-            except CantFindInstaller as e:
-                logging.error("Need to install %d packages but couldn't "
-                              "select a package installer: %s",
-                              len(packages), e)
-                sys.exit(1)
-            # Updates package sources
-            fp.write('    %s && \\\n' % installer.update_script())
-            # Installs necessary packages
-            fp.write('    %s && \\\n' % installer.install_script(packages))
-            logging.info("Dockerfile will install the %d software packages "
-                         "that were not packed", len(packages))
-        else:
-            record_usage(docker_install_pkgs=False)
-
-        # Untar
-        paths = set()
-        pathlist = []
-        # Adds intermediate directories, and checks for existence in the tar
-        missing_files = chain.from_iterable(pkg.files
-                                            for pkg in missing_packages)
-        for f in chain(other_files, missing_files):
-            path = PosixPath('/')
-            for c in rpz_pack.remove_data_prefix(f.path).components:
-                path = path / c
-                if path in paths:
-                    continue
-                paths.add(path)
+            if args.install_pkgs:
+                # Install every package through package manager
+                missing_packages = []
+            else:
+                # Only install packages that were not packed
+                missing_packages = [pkg for pkg in packages if pkg.packfiles]
+                packages = [pkg for pkg in packages if not pkg.packfiles]
+            if packages:
+                record_usage(docker_install_pkgs=True)
                 try:
-                    rpz_pack.get_data(path)
-                except KeyError:
-                    logging.info("Missing file %s", path)
-                else:
-                    pathlist.append(path)
-        rpz_pack.close()
-        # FIXME : for some reason we need reversed() here, I'm not sure why.
-        # Need to read more of tar's docs.
-        # TAR bug: --no-overwrite-dir removes --keep-old-files
-        with (target / 'rpz-files.list').open('wb') as lfp:
-            for p in reversed(pathlist):
-                lfp.write(join_root(rpz_pack.data_prefix, p).path)
-                lfp.write(b'\0')
-        fp.write('    cd / && '
-                 '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
-                 '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                 '/busybox echo "TAR reports errors, this might or might '
-                 'not prevent the execution to run")\n')
+                    installer = select_installer(pack, runs,
+                                                 target_distribution)
+                except CantFindInstaller as e:
+                    logging.error("Need to install %d packages but couldn't "
+                                  "select a package installer: %s",
+                                  len(packages), e)
+                    sys.exit(1)
+                # Updates package sources
+                fp.write('    %s && \\\n' % installer.update_script())
+                # Installs necessary packages
+                fp.write('    %s && \\\n' % installer.install_script(packages))
+                logging.info("Dockerfile will install the %d software "
+                             "packages that were not packed", len(packages))
+            else:
+                record_usage(docker_install_pkgs=False)
 
-    # Meta-data for reprounzip
-    write_dict(target, metadata_initial_iofiles(config))
+            # Untar
+            paths = set()
+            pathlist = []
+            # Add intermediate directories, and check for existence in the tar
+            missing_files = chain.from_iterable(pkg.files
+                                                for pkg in missing_packages)
+            for f in chain(other_files, missing_files):
+                path = PosixPath('/')
+                for c in rpz_pack.remove_data_prefix(f.path).components:
+                    path = path / c
+                    if path in paths:
+                        continue
+                    paths.add(path)
+                    try:
+                        rpz_pack.get_data(path)
+                    except KeyError:
+                        logging.info("Missing file %s", path)
+                    else:
+                        pathlist.append(path)
+            rpz_pack.close()
+            # FIXME : for some reason we need reversed() here, I'm not sure why
+            # Need to read more of tar's docs.
+            # TAR bug: --no-overwrite-dir removes --keep-old-files
+            with (target / 'rpz-files.list').open('wb') as lfp:
+                for p in reversed(pathlist):
+                    lfp.write(join_root(rpz_pack.data_prefix, p).path)
+                    lfp.write(b'\0')
+            fp.write('    cd / && '
+                     '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
+                     '--numeric-owner --strip=1 --null -T /rpz-files.list || '
+                     '/busybox echo "TAR reports errors, this might or might '
+                     'not prevent the execution to run")\n')
 
-    signals.post_setup(target=target, pack=pack)
+        # Meta-data for reprounzip
+        write_dict(target, metadata_initial_iofiles(config))
+
+        signals.post_setup(target=target, pack=pack)
+    except Exception:
+        target.rmtree(ignore_errors=True)
+        raise
 
 
 @target_must_exist
@@ -731,8 +750,7 @@ def setup(parser, **kwargs):
     parser_setup = subparsers.add_parser('setup')
     add_opt_setup(parser_setup)
     add_opt_general(parser_setup)
-    parser_setup.set_defaults(func=composite_action(docker_setup_create,
-                                                    docker_setup_build))
+    parser_setup.set_defaults(func=docker_setup)
 
     # reset
     parser_reset = subparsers.add_parser('reset')
