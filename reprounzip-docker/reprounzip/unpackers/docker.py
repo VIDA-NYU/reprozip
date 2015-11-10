@@ -28,9 +28,9 @@ from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
-    FileUploader, FileDownloader, get_runs, interruptible_call, \
-    metadata_read, metadata_write, metadata_initial_iofiles, \
-    metadata_update_run
+    FileUploader, FileDownloader, get_runs, add_environment_options, \
+    fixup_environment, interruptible_call, metadata_read, metadata_write, \
+    metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     check_output, download_file
@@ -412,6 +412,7 @@ def docker_run(args):
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/busybox env -i '
         environ = x11.fix_env(run['environ'])
+        environ = fixup_environment(environ, args)
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
         cmd += ' '
@@ -784,6 +785,7 @@ def setup(parser, **kwargs):
         help="Connect X11 to local machine from Docker container instead of "
              "trying to connect to this one (useful if the Docker machine has "
              "an X server or if a tunnel is used to access this one)")
+    add_environment_options(parser_run)
     parser_run.set_defaults(func=docker_run)
 
     # download

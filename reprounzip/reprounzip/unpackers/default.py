@@ -33,8 +33,9 @@ from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     COMPAT_OK, COMPAT_NO, CantFindInstaller, target_must_exist, shell_escape, \
     load_config, select_installer, busybox_url, join_root, FileUploader, \
-    FileDownloader, get_runs, interruptible_call, metadata_read, \
-    metadata_write, metadata_initial_iofiles, metadata_update_run
+    FileDownloader, get_runs, add_environment_options, fixup_environment, \
+    interruptible_call, metadata_read, metadata_write, \
+    metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
@@ -219,6 +220,7 @@ def directory_run(args):
                                Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
         environ = run['environ']
+        environ = fixup_environment(environ, args)
         if args.x11:
             if 'DISPLAY' in os.environ:
                 environ['DISPLAY'] = os.environ['DISPLAY']
@@ -526,6 +528,7 @@ def chroot_run(args):
         cmd = 'cd %s && ' % shell_escape(run['workingdir'])
         cmd += '/usr/bin/env -i '
         environ = x11.fix_env(run['environ'])
+        environ = fixup_environment(environ, args)
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
         cmd += ' '
@@ -823,6 +826,7 @@ def setup_directory(parser, **kwargs):
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
                             help="Enable X11 support (needs an X server)")
+    add_environment_options(parser_run)
     parser_run.set_defaults(func=directory_run)
 
     # download
@@ -940,6 +944,7 @@ def setup_chroot(parser, **kwargs):
                             help=("Display number to use on the experiment "
                                   "side (change the host display with the "
                                   "DISPLAY environment variable)"))
+    add_environment_options(parser_run)
     parser_run.set_defaults(func=chroot_run)
 
     # download

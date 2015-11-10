@@ -15,7 +15,8 @@ from reprounzip.unpackers.common.misc import UsageError, \
     COMPAT_OK, COMPAT_NO, COMPAT_MAYBE, \
     composite_action, target_must_exist, unique_names, \
     make_unique_name, shell_escape, load_config, busybox_url, sudo_url, \
-    FileUploader, FileDownloader, get_runs, interruptible_call, \
+    FileUploader, FileDownloader, get_runs, add_environment_options, \
+    fixup_environment, interruptible_call, \
     metadata_read, metadata_write, metadata_initial_iofiles, \
     metadata_update_run
 from reprounzip.unpackers.common.packages import THIS_DISTRIBUTION, \
@@ -29,5 +30,6 @@ __all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
            'make_unique_name', 'shell_escape', 'load_config', 'busybox_url',
            'sudo_url',
            'join_root', 'FileUploader', 'FileDownloader', 'get_runs',
+           'add_environment_options', 'fixup_environment',
            'interruptible_call', 'metadata_read', 'metadata_write',
            'metadata_initial_iofiles', 'metadata_update_run']

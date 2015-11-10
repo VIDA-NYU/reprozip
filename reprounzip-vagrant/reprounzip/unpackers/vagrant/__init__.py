@@ -28,7 +28,8 @@ from reprounzip import signals
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
-    FileUploader, FileDownloader, get_runs, metadata_read, metadata_write, \
+    FileUploader, FileDownloader, get_runs, add_environment_options, \
+    fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
@@ -428,6 +429,7 @@ def vagrant_run(args):
         else:
             cmd += '/usr/bin/env -i '
         environ = x11.fix_env(run['environ'])
+        environ = fixup_environment(environ, args)
         cmd += ' '.join('%s=%s' % (k, shell_escape(v))
                         for k, v in iteritems(environ))
         cmd += ' '
@@ -786,6 +788,7 @@ def setup(parser, **kwargs):
                             help=("Display number to use on the experiment "
                                   "side (change the host display with the "
                                   "DISPLAY environment variable)"))
+    add_environment_options(parser_run)
     parser_run.set_defaults(func=vagrant_run)
 
     # download

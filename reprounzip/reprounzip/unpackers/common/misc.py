@@ -373,6 +373,36 @@ def get_runs(runs, selected_runs, cmdline):
     return run_list
 
 
+def add_environment_options(parser):
+    parser.add_argument('--pass-env', action='append', default=[],
+                        help="Environment variable to pass through from the "
+                             "host (value from the original machine will be "
+                             "overridden; can be passed multiple times)")
+    parser.add_argument('--set-env', action='append', default=[],
+                        help="Environment variable to set (value from the "
+                             "original machine will be ignored; can be passed "
+                             "multiple times)")
+
+
+def fixup_environment(environ, args):
+    if not (args.pass_env or args.set_env):
+        return environ
+    environ = dict(environ)
+
+    for var in args.pass_env:
+        if var in os.environ:
+            environ[var] = os.environ[var]
+
+    for var in args.set_env:
+        if '=' in var:
+            var, value = var.split('=', 1)
+            environ[var] = value
+        else:
+            environ.pop(var, None)
+
+    return environ
+
+
 def interruptible_call(*args, **kwargs):
     assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
     proc = [None]
