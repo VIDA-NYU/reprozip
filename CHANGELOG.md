@@ -9,6 +9,7 @@ Bugfixes:
 
 Features:
 * Remove setup directory if setup fails, so you can run setup again without gettin `target directory exists`
+* Add `--set-env` and `--pass-env` to run
 
 1.0.2 (2015-10-26)
 ------------------
