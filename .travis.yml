@@ -1,4 +1,5 @@
 sudo: required
+dist: trusty
 services:
   - docker
 language: python
@@ -16,9 +17,11 @@ script: .travis/test.sh
 after_success: .travis/finish.sh
 matrix:
   include:
-    - python: "2.7"
+    - dist: trusty
+      python: "2.7"
       env: TEST_MODE=checks
-    - python: "2.7"
+    - dist: trusty
+      python: "2.7"
       env: TEST_MODE=coverage
   exclude:
     # This is already tested by coverage
