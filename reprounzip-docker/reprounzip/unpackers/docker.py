@@ -413,7 +413,7 @@ def docker_run(args):
         cmd += '/busybox env -i '
         environ = x11.fix_env(run['environ'])
         environ = fixup_environment(environ, args)
-        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+        cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
                         for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]

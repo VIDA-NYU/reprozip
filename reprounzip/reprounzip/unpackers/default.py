@@ -226,7 +226,7 @@ def directory_run(args):
                 environ['DISPLAY'] = os.environ['DISPLAY']
             if 'XAUTHORITY' in os.environ:
                 environ['XAUTHORITY'] = os.environ['XAUTHORITY']
-        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+        cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
                         for k, v in iteritems(environ)
                         if k != 'PATH')
         cmd += ' '
@@ -529,7 +529,7 @@ def chroot_run(args):
         cmd += '/usr/bin/env -i '
         environ = x11.fix_env(run['environ'])
         environ = fixup_environment(environ, args)
-        cmd += ' '.join('%s=%s' % (k, shell_escape(v))
+        cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
                         for k, v in iteritems(environ))
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
