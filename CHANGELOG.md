@@ -6,6 +6,7 @@ Changelog
 
 Bugfixes:
 * You could get a traceback with some unpackers (not Vagrant) on some packages that explicitely pack the / directory
+* Some environment variables prevented running, such as bash exported functions.
 
 Features:
 * Remove setup directory if setup fails, so you can run setup again without gettin `target directory exists`
