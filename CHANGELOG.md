@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.3 (???)
------------
+1.0.3 (2015-12-02)
+------------------
 
 Bugfixes:
 * You could get a traceback with some unpackers (not Vagrant) on some packages that explicitely pack the / directory
