@@ -14,6 +14,7 @@ import itertools
 import os
 import pickle
 import random
+import re
 from rpaths import PosixPath, Path
 import signal
 import subprocess
@@ -389,8 +390,9 @@ def fixup_environment(environ, args):
         return environ
     environ = dict(environ)
 
-    for var in args.pass_env:
-        if var in os.environ:
+    regexes = [re.compile(pattern + '$') for pattern in args.pass_env]
+    for var in os.environ:
+        if any(regex.match(var) for regex in regexes):
             environ[var] = os.environ[var]
 
     for var in args.set_env:
