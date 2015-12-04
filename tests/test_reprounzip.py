@@ -4,11 +4,13 @@
 
 from __future__ import print_function, unicode_literals
 
+import os
 import sys
 import unittest
 import warnings
 
 from reprounzip.signals import Signal
+import reprounzip.unpackers.common
 
 
 class TestSignals(unittest.TestCase):
@@ -113,3 +115,73 @@ class TestArgs(unittest.TestCase):
             sys.argv = old_argv
         (reprounzip.unpackers.default.chroot_run,
          reprounzip.main.setup_logging) = old_funcs
+
+
+class TestCommon(unittest.TestCase):
+    def test_env(self):
+        """Tests fixing environment variables"""
+        outer_env = {
+            'OUTONLY': 'outvalue',
+            'COMMON': 'commonvalueout',
+            'SHARED': 'sharedvalue',
+            'EMPTY': '',
+        }
+        inner_env = {
+            'INONLY': 'invalue',
+            'COMMON': 'commonvaluein',
+            'SHARED': 'sharedvalue',
+        }
+
+        class FakeArgs(object):
+            def __init__(self, pass_env, set_env):
+                self.pass_env = pass_env
+                self.set_env = set_env
+
+        old_environ, os.environ = os.environ, outer_env
+        try:
+            self.assertEqual(
+                reprounzip.unpackers.common.fixup_environment(
+                    inner_env,
+                    FakeArgs([], [])),
+                {
+                    'INONLY': 'invalue',
+                    'COMMON': 'commonvaluein',
+                    'SHARED': 'sharedvalue',
+                })
+
+            self.assertEqual(
+                reprounzip.unpackers.common.fixup_environment(
+                    inner_env,
+                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
+                {
+                    'INONLY': 'invalue',
+                    'OUTONLY': 'outvalue',
+                    'COMMON': 'commonvalueout',
+                    'SHARED': 'sharedvalue',
+                    'EMPTY': '',
+                })
+
+            self.assertEqual(
+                reprounzip.unpackers.common.fixup_environment(
+                    inner_env,
+                    FakeArgs(['OUTONLY'],
+                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
+                {
+                    'OUTONLY': 'outvalue',
+                    'COMMON': '',
+                    'SHARED': 'surprise',
+                })
+
+            self.assertEqual(
+                reprounzip.unpackers.common.fixup_environment(
+                    inner_env,
+                    FakeArgs(['.*Y$'], [])),
+                {
+                    'INONLY': 'invalue',
+                    'OUTONLY': 'outvalue',
+                    'COMMON': 'commonvaluein',
+                    'SHARED': 'sharedvalue',
+                    'EMPTY': '',
+                })
+        finally:
+            os.environ = old_environ
