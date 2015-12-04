@@ -246,9 +246,9 @@ If the experiment involves running a GUI tool, the graphical interface can be en
 
 which will forward the X connection from the experiment to the X server running on your machine. In this case, make sure you have a running X server.
 
-Note that in some situations, you might want to pass specific environment variables to the experiment, for example to set execution limits or parameters (such as OpenMPI information). To that effect, you can use the ``--pass-env VARNAME`` option to pass a variable from the current machine, overriding the value from the original packing machine. You can also set a variable to any value using ``--set-env VARNAME=value``. For example::
+Note that in some situations, you might want to pass specific environment variables to the experiment, for example to set execution limits or parameters (such as OpenMPI information). To that effect, you can use the ``--pass-env VARNAME`` option to pass variables from the current machine, overriding the value from the original packing machine (`VARNAME` can be a regex). You can also set a variable to any value using ``--set-env VARNAME=value``. For example::
 
-    $ reprounzip vagrant run unpacked-experiment --pass-env DATA_SERVER_ADDRESS --pass-env LANG --set-env DATA_SERVER_LOGIN=remi
+    $ reprounzip vagrant run unpacked-experiment --pass-env 'OMPI_.*' --pass-env LANG --set-env DATA_SERVER_ADDRESS=localhost
 
 Removing the Experiment Directory
 +++++++++++++++++++++++++++++++++
