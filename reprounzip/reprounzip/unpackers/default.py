@@ -893,8 +893,8 @@ def setup_chroot(parser, **kwargs):
                           help="Restore files' owner/group when extracting")
         opts.add_argument('--dont-preserve-owner', action='store_false',
                           dest='restore_owner', default=None,
-                          help=("Don't restore files' owner/group when "
-                                "extracting, use current users"))
+                          help="Don't restore files' owner/group when "
+                               "extracting, use current users")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
@@ -938,12 +938,12 @@ def setup_chroot(parser, **kwargs):
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
-                            help=("Enable X11 support (needs an X server on "
-                                  "the host)"))
+                            help="Enable X11 support (needs an X server on "
+                                 "the host)")
     parser_run.add_argument('--x11-display', dest='x11_display',
-                            help=("Display number to use on the experiment "
-                                  "side (change the host display with the "
-                                  "DISPLAY environment variable)"))
+                            help="Display number to use on the experiment "
+                                 "side (change the host display with the "
+                                 "DISPLAY environment variable)")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=chroot_run)
 

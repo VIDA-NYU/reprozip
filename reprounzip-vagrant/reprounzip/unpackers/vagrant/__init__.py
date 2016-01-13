@@ -727,8 +727,8 @@ def setup(parser, **kwargs):
         opts.add_argument(
             '--dont-use-chroot', action='store_false', dest='use_chroot',
             default=True,
-            help=("Don't prefer original files nor use chroot in the virtual "
-                  "machine"))
+            help="Don't prefer original files nor use chroot in the virtual "
+                 "machine")
         opts.add_argument(
             '--no-use-chroot', action='store_false', dest='use_chroot',
             default=True, help=argparse.SUPPRESS)
@@ -739,8 +739,8 @@ def setup(parser, **kwargs):
             "--dont-use-chroot is set)")
         opts.add_argument('--base-image', nargs=1, help="Vagrant box to use")
         opts.add_argument('--distribution', nargs=1,
-                          help=("Distribution used in the Vagrant box (for "
-                                "package installer selection)"))
+                          help="Distribution used in the Vagrant box (for "
+                               "package installer selection)")
         opts.add_argument('--memory', nargs=1,
                           help="Amount of RAM to allocate to VM (megabytes, "
                                "default: box default)")
@@ -774,20 +774,20 @@ def setup(parser, **kwargs):
     add_opt_general(parser_run)
     parser_run.add_argument('run', default=None, nargs='?')
     parser_run.add_argument('--no-stdin', action='store_true', default=False,
-                            help=("Don't connect program's input stream to "
-                                  "this terminal"))
+                            help="Don't connect program's input stream to "
+                                 "this terminal")
     parser_run.add_argument('--no-pty', action='store_true', default=False,
                             help="Don't request a PTY from the SSH server")
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
-                            help=("Enable X11 support (needs an X server on "
-                                  "the host)"))
+                            help="Enable X11 support (needs an X server on "
+                                 "the host)")
     parser_run.add_argument('--x11-display', dest='x11_display',
-                            help=("Display number to use on the experiment "
-                                  "side (change the host display with the "
-                                  "DISPLAY environment variable)"))
+                            help="Display number to use on the experiment "
+                                 "side (change the host display with the "
+                                 "DISPLAY environment variable)")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=vagrant_run)
 

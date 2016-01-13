@@ -726,16 +726,16 @@ def setup(parser, **kwargs):
         opts.add_argument('pack', nargs=1, help="Pack to extract")
         opts.add_argument('--base-image', nargs=1, help="Base image to use")
         opts.add_argument('--distribution', nargs=1,
-                          help=("Distribution used in the base image (for "
-                                "package installer selection)"))
+                          help="Distribution used in the base image (for "
+                               "package installer selection)")
         opts.add_argument('--install-pkgs', action='store_true',
                           default=False,
-                          help=("Install packages rather than extracting "
-                                "them from RPZ file"))
+                          help="Install packages rather than extracting "
+                               "them from RPZ file")
         opts.add_argument('--unpack-pkgs', action='store_false',
                           default=False,
-                          help=("Extract packed packages rather than "
-                                "installing them"))
+                          help="Extract packed packages rather than "
+                               "installing them")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
