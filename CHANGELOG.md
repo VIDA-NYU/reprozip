@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.0.4 (???)
+-----------
+
+Features:
+* Add `--docker-option` to pass raw options to Docker
+
 1.0.3 (2015-12-02)
 ------------------
 

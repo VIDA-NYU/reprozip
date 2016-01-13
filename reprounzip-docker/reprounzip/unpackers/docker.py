@@ -270,7 +270,8 @@ def docker_setup_build(args):
 
     logging.info("Calling 'docker build'...")
     try:
-        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+        retcode = subprocess.call(['docker', 'build', '-t'] +
+                                  args.docker_option + [image, '.'],
                                   cwd=target.path)
     except OSError:
         logging.critical("docker executable not found")
@@ -442,8 +443,9 @@ def docker_run(args):
     logging.info("Starting container %s", container.decode('ascii'))
     retcode = interruptible_call(['docker', 'run', b'--name=' + container,
                                   '-h', hostname,
-                                  '-i', '-t', image,
-                                  '/busybox', 'sh', '-c', cmds])
+                                  '-i', '-t'] +
+                                 args.docker_option +
+                                 [image, '/busybox', 'sh', '-c', cmds])
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
@@ -737,6 +739,13 @@ def setup(parser, **kwargs):
                           help="Extract packed packages rather than "
                                "installing them")
 
+    # --docker-option
+    def add_raw_docker_option(opts):
+        opts.add_argument('--docker-option', action='append',
+                          default=[],
+                          help="Argument passed to Docker directly; may be "
+                               "specified multiple times")
+
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
     add_opt_general(parser_setup_create)
@@ -745,12 +754,14 @@ def setup(parser, **kwargs):
     # setup/build
     parser_setup_build = subparsers.add_parser('setup/build')
     add_opt_general(parser_setup_build)
+    add_raw_docker_option(parser_setup_build)
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
     parser_setup = subparsers.add_parser('setup')
     add_opt_setup(parser_setup)
     add_opt_general(parser_setup)
+    add_raw_docker_option(parser_setup)
     parser_setup.set_defaults(func=docker_setup)
 
     # reset
@@ -785,6 +796,7 @@ def setup(parser, **kwargs):
         help="Connect X11 to local machine from Docker container instead of "
              "trying to connect to this one (useful if the Docker machine has "
              "an X server or if a tunnel is used to access this one)")
+    add_raw_docker_option(parser_run)
     add_environment_options(parser_run)
     parser_run.set_defaults(func=docker_run)
 
