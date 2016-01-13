@@ -27,10 +27,10 @@ if top_level not in sys.path:
 sys.path.append(start_dir)
 
 
-from reprounzip.common import setup_logging
-from reprounzip.signals import SignalWarning
+from reprounzip.common import setup_logging     # noqa
+from reprounzip.signals import SignalWarning    # noqa
 
-from tests.functional import functional_tests
+from tests.functional import functional_tests   # noqa
 
 
 class Program(unittest.TestProgram):
