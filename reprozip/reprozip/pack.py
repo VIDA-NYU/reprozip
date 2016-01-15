@@ -93,12 +93,6 @@ class PackBuilder(object):
         self.tar = tarfile.open(str(filename), 'w:gz')
         self.seen = set()
 
-    def add(self, name, arcname, *args, **kwargs):
-        from rpaths import PosixPath
-        assert isinstance(name, PosixPath)
-        assert isinstance(arcname, PosixPath)
-        self.tar.add(str(name), str(arcname), *args, **kwargs)
-
     def add_data(self, filename):
         if filename in self.seen:
             return
