@@ -579,21 +579,44 @@ class SSHDownloader(FileDownloader):
                              "it running?")
             sys.exit(1)
 
-        # Connect with scp
+        # Connect with SSH
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(IgnoreMissingKey())
         self.ssh.connect(**info)
-        self.client_scp = scp.SCPClient(self.ssh.get_transport())
 
     def download(self, remote_path, local_path):
         if self.use_chroot:
             remote_path = join_root(PosixPath('/experimentroot'), remote_path)
+
+        temp = make_unique_name(b'reprozip_output_')
+        rtemp = PosixPath('/vagrant') / temp
+        ltemp = self.target / temp
+
+        # Copy file to shared folder
+        logging.info("Copying file to shared folder...")
+        chan = self.ssh.get_transport().open_session()
+        cp_cmd = '/bin/cp %s %s' % (
+            shell_escape(remote_path.path),
+            shell_escape(rtemp.path))
+        chown_cmd = '/bin/chown vagrant %s' % shell_escape(rtemp.path)
+        chmod_cmd = '/bin/chmod 644 %s' % shell_escape(rtemp.path)
+        chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+            ' && '.join((cp_cmd, chown_cmd, chmod_cmd))))
+        if chan.recv_exit_status() != 0:
+            logging.critical("Couldn't copy file in virtual machine")
+            try:
+                ltemp.remove()
+            except OSError:
+                pass
+            sys.exit(1)
+
+        # Move file to final destination
         try:
-            self.client_scp.get(remote_path.path, local_path.path,
-                                recursive=False)
-        except scp.SCPException as e:
+            ltemp.rename(ltemp, local_path)
+        except OSError as e:
             logging.critical("Couldn't download output file: %s\n%s",
                              remote_path, str(e))
+            ltemp.remove()
             sys.exit(1)
 
     def finalize(self):
