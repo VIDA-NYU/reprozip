@@ -530,7 +530,7 @@ class SSHUploader(FileUploader):
             shell_escape(rtemp.path),
             shell_escape(remote_path.path))
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                          ';'.join((chown_cmd, chmod_cmd, mv_cmd))))
+                          ' && '.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
             logging.critical("Couldn't move file in virtual machine")
             sys.exit(1)

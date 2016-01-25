@@ -90,7 +90,7 @@ safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def shell_escape(s):
-    """Given bl"a, returns "bl\\"a".
+    r"""Given bl"a, returns "bl\\"a".
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
