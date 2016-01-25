@@ -19,7 +19,6 @@ import logging
 import os
 import paramiko
 from rpaths import PosixPath, Path
-import scp
 import subprocess
 import sys
 
@@ -612,7 +611,7 @@ class SSHDownloader(FileDownloader):
 
         # Move file to final destination
         try:
-            ltemp.rename(ltemp, local_path)
+            ltemp.rename(local_path)
         except OSError as e:
             logging.critical("Couldn't download output file: %s\n%s",
                              remote_path, str(e))

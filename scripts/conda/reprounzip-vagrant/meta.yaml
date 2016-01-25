@@ -31,7 +31,6 @@ requirements:
     - reprounzip >=1.0.3
     - rpaths >=0.8
     - paramiko
-    - scp
 
 test:
   # Python imports
