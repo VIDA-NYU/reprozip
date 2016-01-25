@@ -502,11 +502,10 @@ class SSHUploader(FileUploader):
                              "it running?")
             sys.exit(1)
 
-        # Connect with scp
+        # Connect with SSH
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(IgnoreMissingKey())
         self.ssh.connect(**ssh_info)
-        self.client_scp = scp.SCPClient(self.ssh.get_transport())
 
     def upload_file(self, local_path, input_path):
         if self.use_chroot:
@@ -515,10 +514,13 @@ class SSHUploader(FileUploader):
         else:
             remote_path = input_path
 
-        # Upload to a temporary file first
-        logging.info("Uploading file via SCP...")
-        rtemp = PosixPath(make_unique_name(b'/tmp/reprozip_input_'))
-        self.client_scp.put(local_path.path, rtemp.path, recursive=False)
+        temp = make_unique_name(b'reprozip_input_')
+        ltemp = self.target / temp
+        rtemp = PosixPath('/vagrant') / temp
+
+        # Copy file to shared folder
+        logging.info("Copying file to shared folder...")
+        local_path.copyfile(ltemp)
 
         # Move it
         logging.info("Moving file into place...")
@@ -536,6 +538,10 @@ class SSHUploader(FileUploader):
                           ' && '.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
             logging.critical("Couldn't move file in virtual machine")
+            try:
+                ltemp.remove()
+            except OSError:
+                pass
             sys.exit(1)
         chan.close()
 
