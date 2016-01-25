@@ -11,8 +11,11 @@ import copy
 import functools
 import logging
 import itertools
+try:
+    import simplejson as json
+except ImportError:
+    import json
 import os
-import pickle
 import random
 import re
 from rpaths import PosixPath, Path
@@ -429,7 +432,7 @@ def metadata_read(path, type_):
     """Read the unpacker-specific metadata from an unpacked directory.
 
     :param path: The unpacked directory; `.reprounzip` will be appended to get
-    the name of the pickle file.
+    the name of the JSON file.
     :param type_: The name of the unpacker, to check for consistency.
 
     Unpackers need to store some specific information, along with the status of
@@ -444,8 +447,8 @@ def metadata_read(path, type_):
     """
     filename = path / '.reprounzip'
 
-    with filename.open('rb') as fp:
-        dct = pickle.load(fp)
+    with filename.open('r', encoding='utf-8') as fp:
+        dct = json.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
         logging.critical("Wrong unpacker used: %s != %s",
                          dct['unpacker'], type_)
@@ -457,17 +460,18 @@ def metadata_write(path, dct, type_):
     """Write the unpacker-specific metadata in an unpacked directory.
 
     :param path: The unpacked directory; `.reprounzip` will be appended to get
-    the name of the pickle file.
-    :param type_: The name of the unpacker, that is written to the pickle file
+    the name of the JSON file.
+    :param type_: The name of the unpacker, that is written to the JSON file
     under the key 'unpacker'.
-    :param dct: The dictionary with the info to write to the file.
+    :param dct: The dictionary with the info to write to the file. It must be
+    serializable to JSON (in particular, use unicode and not bytestrings).
     """
     filename = path / '.reprounzip'
 
     to_write = {'unpacker': type_}
     to_write.update(dct)
-    with filename.open('wb') as fp:
-        pickle.dump(to_write, fp, 2)
+    with filename.open('w', encoding='utf-8') as fp:
+        json.dump(to_write, fp)
 
 
 def metadata_initial_iofiles(config, dct=None):
@@ -503,6 +507,7 @@ def metadata_initial_iofiles(config, dct=None):
         f = f.path
         path2iofile.pop(f, None)
 
+    # TODO: paths?
     dct['input_files'] = dict((n, False) for n in itervalues(path2iofile))
 
     return dct
