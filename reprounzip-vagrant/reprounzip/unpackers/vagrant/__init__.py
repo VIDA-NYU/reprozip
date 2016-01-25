@@ -391,7 +391,7 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
-    use_chroot = read_dict(target).get('use_chroot', True)
+    use_chroot = read_dict(target)['use_chroot']
 
     check_vagrant_version()
 
@@ -404,7 +404,7 @@ def vagrant_run(args):
     """
     target = Path(args.target[0])
     unpacked_info = read_dict(target)
-    use_chroot = unpacked_info.get('use_chroot', True)
+    use_chroot = unpacked_info['use_chroot']
     cmdline = args.cmdline
 
     check_vagrant_version()
