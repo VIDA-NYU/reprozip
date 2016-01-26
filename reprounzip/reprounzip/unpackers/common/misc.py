@@ -260,8 +260,6 @@ class FileDownloader(object):
                 print("    %s" % output_name)
             return
 
-        self.prepare_download(files)
-
         # Parse the name[:path] syntax
         resolved_files = []
         for filespec in files:
@@ -276,6 +274,8 @@ class FileDownloader(object):
                 sys.exit(1)
             local_path = Path(local_path) if local_path else None
             resolved_files.append((output_name, local_path))
+
+        self.prepare_download(resolved_files)
 
         try:
             # Download files
