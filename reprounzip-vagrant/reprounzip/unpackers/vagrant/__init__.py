@@ -176,6 +176,9 @@ def machine_setup(target, use_chroot):
                 'mount -o rbind /$i /experimentroot/$i; '
                 'fi; '
                 'done'))
+        if chan.recv_exit_status() != 0:
+            logging.critical("Couldn't mount directories in chroot")
+            sys.exit(1)
         ssh.close()
 
     return info
