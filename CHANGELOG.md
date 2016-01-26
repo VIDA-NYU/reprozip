@@ -7,6 +7,7 @@ Changelog
 Features:
 * Add `--docker-option` to pass raw options to Docker
 * Allow `download <name>`, shortcut for `download <name>:./<name>` (downloads to current directory, keep name)
+* Add `--input` and `--output` to showfiles
 
 1.0.3 (2015-12-02)
 ------------------
