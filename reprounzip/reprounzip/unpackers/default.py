@@ -833,7 +833,7 @@ def setup_directory(parser, **kwargs):
     parser_download = subparsers.add_parser('download')
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
-                                 help="<output_file_name>:<path>")
+                                 help="<output_file_name>[:<path>]")
     parser_download.set_defaults(func=download, type='directory')
 
     # destroy
@@ -951,7 +951,7 @@ def setup_chroot(parser, **kwargs):
     parser_download = subparsers.add_parser('download')
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
-                                 help="<output_file_name>:<path>")
+                                 help="<output_file_name>[:<path>]")
     parser_download.set_defaults(func=download, type='chroot')
 
     # destroy/unmount

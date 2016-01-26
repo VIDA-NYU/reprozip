@@ -262,16 +262,24 @@ class FileDownloader(object):
 
         self.prepare_download(files)
 
+        # Parse the name[:path] syntax
+        resolved_files = []
+        for filespec in files:
+            filespec_split = filespec.split(':', 1)
+            if len(filespec_split) == 1:
+                output_name = local_path = filespec
+            elif len(filespec_split) == 2:
+                output_name, local_path = filespec_split
+            else:
+                logging.critical("Invalid file specification: %r",
+                                 filespec)
+                sys.exit(1)
+            local_path = Path(local_path) if local_path else None
+            resolved_files.append((output_name, local_path))
+
         try:
             # Download files
-            for filespec in files:
-                filespec_split = filespec.split(':', 1)
-                if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r",
-                                     filespec)
-                    sys.exit(1)
-                output_name, local_path = filespec_split
-
+            for output_name, local_path in resolved_files:
                 try:
                     remote_path = output_files[output_name]
                 except KeyError:
@@ -279,10 +287,10 @@ class FileDownloader(object):
                     sys.exit(1)
 
                 logging.debug("Downloading file %s", remote_path)
-                if not local_path:
+                if local_path is None:
                     self.download_and_print(remote_path)
                 else:
-                    self.download(remote_path, Path(local_path))
+                    self.download(remote_path, local_path)
         finally:
             self.finalize()
 
