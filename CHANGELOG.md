@@ -4,6 +4,9 @@ Changelog
 1.0.4 (???)
 -----------
 
+Bugfixes:
+* Fixes file download not using cache if URL is HTTPS
+
 Features:
 * Add `--docker-option` to pass raw options to Docker
 
