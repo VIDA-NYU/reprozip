@@ -311,13 +311,13 @@ def run_from_vistrails():
 
     def cmd(lst, add=None):
         if add:
-            logging.info("cmd: %s %s", ' '.join(lst), add)
+            logging.info("cmd: %s %s", ' '.join(rpuz + lst), add)
             string = ' '.join(shell_escape(a) for a in (rpuz + lst))
             string += ' ' + add
             subprocess.check_call(string, shell=True,
                                   cwd=args.directory)
         else:
-            logging.info("cmd: %s", ' '.join(lst))
+            logging.info("cmd: %s", ' '.join(rpuz + lst))
             subprocess.check_call(rpuz + lst,
                                   cwd=args.directory)
 
