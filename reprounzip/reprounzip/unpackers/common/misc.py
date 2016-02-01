@@ -357,7 +357,7 @@ def get_runs(runs, selected_runs, cmdline):
                 last = parse_run(run_item[sep + 1:])
             else:
                 last = len(runs) - 1
-            if last <= first:
+            if last < first:
                 logging.critical("Error: Last run number should be greater "
                                  "than the first")
                 sys.exit(1)
