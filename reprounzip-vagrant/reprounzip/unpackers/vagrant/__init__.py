@@ -560,9 +560,9 @@ def vagrant_upload(args):
 
 
 class SSHDownloader(FileDownloader):
-    def __init__(self, target, files, use_chroot):
+    def __init__(self, target, files, use_chroot, all_=False):
         self.use_chroot = use_chroot
-        FileDownloader.__init__(self, target, files)
+        FileDownloader.__init__(self, target, files, all_=all_)
 
     def prepare_download(self, files):
         # Checks whether the VM is running
@@ -602,7 +602,7 @@ def vagrant_download(args):
     files = args.file
     use_chroot = read_dict(target)['use_chroot']
 
-    SSHDownloader(target, files, use_chroot)
+    SSHDownloader(target, files, use_chroot, all_=args.all)
 
 
 @target_must_exist
@@ -799,6 +799,9 @@ def setup(parser, **kwargs):
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>[:<path>]")
+    parser_download.add_argument('--all', action='store_true',
+                                 help="Download all output files to the "
+                                      "current directory")
     parser_download.set_defaults(func=vagrant_download)
 
     # destroy/vm

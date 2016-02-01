@@ -7,6 +7,7 @@ Changelog
 Features:
 * Add `--docker-option` to pass raw options to Docker
 * Allow `download <name>`, shortcut for `download <name>:./<name>` (downloads to current directory, keep name)
+* Allow `download --all`
 * Add `--input` and `--output` to showfiles
 * You can use `run -` to run every run, now even if there is only one run
 

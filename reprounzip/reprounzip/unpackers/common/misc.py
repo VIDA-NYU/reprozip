@@ -242,11 +242,11 @@ class FileUploader(object):
 class FileDownloader(object):
     """Common logic for 'download' commands.
     """
-    def __init__(self, target, files):
+    def __init__(self, target, files, all_=False):
         self.target = target
-        self.run(files)
+        self.run(files, all_)
 
-    def run(self, files):
+    def run(self, files, all_):
         reprounzip.common.record_usage(download_files=len(files))
         output_files = dict(
             (n, f.path)
@@ -254,7 +254,7 @@ class FileDownloader(object):
             if f.write_runs)
 
         # No argument: list all the output files and exit
-        if not files:
+        if not (all_ or files):
             print("Output files:")
             for output_name in output_files:
                 print("    %s" % output_name)
@@ -262,6 +262,7 @@ class FileDownloader(object):
 
         # Parse the name[:path] syntax
         resolved_files = []
+        all_files = set(output_files)
         for filespec in files:
             filespec_split = filespec.split(':', 1)
             if len(filespec_split) == 1:
@@ -273,7 +274,13 @@ class FileDownloader(object):
                                  filespec)
                 sys.exit(1)
             local_path = Path(local_path) if local_path else None
+            all_files.discard(output_name)
             resolved_files.append((output_name, local_path))
+
+        # If all_ is set, add all the files that weren't explicitely named
+        if all_:
+            for output_name in all_files:
+                resolved_files.append((output_name, Path(output_name)))
 
         self.prepare_download(resolved_files)
 

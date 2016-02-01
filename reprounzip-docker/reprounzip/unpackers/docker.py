@@ -578,9 +578,9 @@ def docker_upload(args):
 
 
 class ContainerDownloader(FileDownloader):
-    def __init__(self, target, files, image):
+    def __init__(self, target, files, image, all_=False):
         self.image = image
-        FileDownloader.__init__(self, target, files)
+        FileDownloader.__init__(self, target, files, all_=all_)
 
     def prepare_download(self, files):
         # Create a container from the image
@@ -627,7 +627,7 @@ def docker_download(args):
     image = unpacked_info['current_image']
     logging.debug("Downloading from image %s", image.decode('ascii'))
 
-    ContainerDownloader(target, files, image)
+    ContainerDownloader(target, files, image, all_=args.all)
 
 
 @target_must_exist
@@ -805,6 +805,9 @@ def setup(parser, **kwargs):
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
                                  help="<output_file_name>[:<path>]")
+    parser_download.add_argument('--all', action='store_true',
+                                 help="Download all output files to the "
+                                      "current directory")
     parser_download.set_defaults(func=docker_download)
 
     # destroy/docker
