@@ -325,16 +325,30 @@ class FileDownloader(object):
         pass
 
 
-def get_runs(runs, selected_runs, cmdline):
+def get_runs(runs, selected_runs, cmdline=None, all_=False):
     """Selects which run(s) to execute based on parts of the command-line.
 
     Will return an iterable of run numbers. Might also fail loudly or exit
     after printing the original command-line.
+
+    :param runs: The list of runs, from the configuration.
+    :param selected_runs: The string selection from the user, straight from the
+    command-line.
+    :param cmdline: The command-line entered by the user, straight from the
+    command-line. Only used to display the selected runs' command-lines if it
+    is empty.
+    :param all_: Select all runs.
     """
     name_map = dict((r['id'], i) for i, r in enumerate(runs) if 'id' in r)
     run_list = []
 
-    if selected_runs is None:
+    if all_ and selected_runs:
+        logging.critical("You selected runs and passed --all at the same "
+                         "time, this doesn't make sense")
+        sys.exit(1)
+    elif all_:
+        selected_runs = '-'
+    elif selected_runs is None:
         if len(runs) == 1:
             selected_runs = '0'
         else:

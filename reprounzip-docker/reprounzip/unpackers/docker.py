@@ -361,7 +361,7 @@ def docker_run(args):
     config = load_config(target / 'config.yml', True)
     runs = config.runs
 
-    selected_runs = get_runs(runs, args.run, cmdline)
+    selected_runs = get_runs(runs, args.run, cmdline, all_=args.all)
 
     # Get current image name
     if 'current_image' in unpacked_info:
@@ -797,6 +797,8 @@ def setup(parser, **kwargs):
              "trying to connect to this one (useful if the Docker machine has "
              "an X server or if a tunnel is used to access this one)")
     add_raw_docker_option(parser_run)
+    parser_run.add_argument('--all', action='store_true',
+                            help="Select every run")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=docker_run)
 

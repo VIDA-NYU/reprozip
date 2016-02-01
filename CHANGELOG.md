@@ -10,6 +10,7 @@ Features:
 * Allow `download --all`
 * Add `--input` and `--output` to showfiles
 * You can use `run -` to run every run, now even if there is only one run
+* Add `run --all` to run every run (like `run -`)
 
 1.0.3 (2015-12-02)
 ------------------

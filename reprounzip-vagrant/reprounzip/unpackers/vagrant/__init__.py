@@ -416,7 +416,7 @@ def vagrant_run(args):
     config = load_config(target / 'config.yml', True)
     runs = config.runs
 
-    selected_runs = get_runs(runs, args.run, cmdline)
+    selected_runs = get_runs(runs, args.run, cmdline, all_=args.all)
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
@@ -791,6 +791,8 @@ def setup(parser, **kwargs):
                             help="Display number to use on the experiment "
                                  "side (change the host display with the "
                                  "DISPLAY environment variable)")
+    parser_run.add_argument('--all', action='store_true',
+                            help="Select every run")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=vagrant_run)
 

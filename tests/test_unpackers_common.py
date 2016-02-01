@@ -36,39 +36,43 @@ class TestMisc(unittest.TestCase):
                            {'id': 'three'}, {}]
             runs = get_runs(
                 config_runs[:nruns],
-                arg, None)
+                *arg)
         except (SystemExit, UsageError):
             self.fail("get_runs(<4 runs>, %r) raised" % arg)
         self.assertEqual(list(runs), expected)
 
     def do_fail(self, arg):
         self.assertRaises((SystemExit, UsageError),
-                          get_runs, [{}, {}, {}, {}], arg, None)
+                          get_runs, [{}, {}, {}, {}], *arg)
 
     def test_get_runs(self):
         """Tests get_runs(), parsing runs from the command-line."""
         print("<<<<< get_runs tests for reprounzip (disregard parse errors)",
               file=sys.stderr)
         try:
-            self.do_fail('')
-            self.do_fail('a-')
-            self.do_fail('1-k')
-            self.do_ok('-', [0, 1, 2, 3])
-            self.do_ok('-', [0], nruns=1)
-            self.do_ok('1-', [1, 2, 3])
-            self.do_ok('-2', [0, 1, 2])
-            self.do_ok('1-2', [1, 2])
-            self.do_ok('0-2', [0, 1, 2])
-            self.do_ok('1-3', [1, 2, 3])
-            self.do_ok('1-1', [1])
-            self.do_fail('2-1')
-            self.do_fail('0-8')
-            self.do_fail('0-4')
-            self.do_ok('0-3', [0, 1, 2, 3])
-            self.do_ok('one', [0])
-            self.do_ok('two-heh', [1]),
-            self.do_ok('one,three', [0, 2])
-            self.do_ok('1,three', [1, 2])
-            self.do_ok('2-3,two-heh', [2, 3, 1])
+            self.do_fail([''])
+            self.do_fail(['a-'])
+            self.do_fail(['1-k'])
+            self.do_ok(['-'], [0, 1, 2, 3])
+            self.do_ok(['-'], [0], nruns=1)
+            self.do_ok(['1-'], [1, 2, 3])
+            self.do_ok(['-2'], [0, 1, 2])
+            self.do_ok(['1-2'], [1, 2])
+            self.do_ok(['0-2'], [0, 1, 2])
+            self.do_ok(['1-3'], [1, 2, 3])
+            self.do_ok(['1-1'], [1])
+            self.do_fail(['2-1'])
+            self.do_fail(['0-8'])
+            self.do_fail(['0-4'])
+            self.do_ok(['0-3'], [0, 1, 2, 3])
+            self.do_ok(['one'], [0])
+            self.do_ok(['two-heh'], [1]),
+            self.do_ok(['one,three'], [0, 2])
+            self.do_ok(['1,three'], [1, 2])
+            self.do_ok(['2-3,two-heh'], [2, 3, 1])
+
+            self.do_ok(['', None, True], [0, 1, 2, 3])
+            self.do_ok(['', None, True], [0], nruns=1)
+            self.do_fail(['1-2', None, True])
         finally:
             print(">>>>> get_runs tests", file=sys.stderr)

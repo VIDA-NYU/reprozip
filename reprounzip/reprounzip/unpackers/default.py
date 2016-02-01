@@ -192,7 +192,7 @@ def directory_run(args):
     config = load_config_file(target / 'config.yml', True)
     runs = config.runs
 
-    selected_runs = get_runs(runs, args.run, cmdline)
+    selected_runs = get_runs(runs, args.run, cmdline, all_=args.all)
 
     root = (target / 'root').absolute()
 
@@ -514,7 +514,7 @@ def chroot_run(args):
     config = load_config_file(target / 'config.yml', True)
     runs = config.runs
 
-    selected_runs = get_runs(runs, args.run, cmdline)
+    selected_runs = get_runs(runs, args.run, cmdline, all_=args.all)
 
     root = target / 'root'
 
@@ -826,6 +826,8 @@ def setup_directory(parser, **kwargs):
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
                             help="Enable X11 support (needs an X server)")
+    parser_run.add_argument('--all', action='store_true',
+                            help="Select every run")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=directory_run)
 
@@ -947,6 +949,8 @@ def setup_chroot(parser, **kwargs):
                             help="Display number to use on the experiment "
                                  "side (change the host display with the "
                                  "DISPLAY environment variable)")
+    parser_run.add_argument('--all', action='store_true',
+                            help="Select every run")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=chroot_run)
 
