@@ -30,10 +30,12 @@ class TestCommon(unittest.TestCase):
 
 
 class TestMisc(unittest.TestCase):
-    def do_ok(self, arg, expected):
+    def do_ok(self, arg, expected, nruns=4):
         try:
+            config_runs = [{'id': 'one'}, {'id': 'two-heh'},
+                           {'id': 'three'}, {}]
             runs = get_runs(
-                [{'id': 'one'}, {'id': 'two-heh'}, {'id': 'three'}, {}],
+                config_runs[:nruns],
                 arg, None)
         except (SystemExit, UsageError):
             self.fail("get_runs(<4 runs>, %r) raised" % arg)
@@ -52,12 +54,13 @@ class TestMisc(unittest.TestCase):
             self.do_fail('a-')
             self.do_fail('1-k')
             self.do_ok('-', [0, 1, 2, 3])
+            self.do_ok('-', [0], nruns=1)
             self.do_ok('1-', [1, 2, 3])
             self.do_ok('-2', [0, 1, 2])
             self.do_ok('1-2', [1, 2])
             self.do_ok('0-2', [0, 1, 2])
             self.do_ok('1-3', [1, 2, 3])
-            self.do_fail('1-1')
+            self.do_ok('1-1', [1])
             self.do_fail('2-1')
             self.do_fail('0-8')
             self.do_fail('0-4')
