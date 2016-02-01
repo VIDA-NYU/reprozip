@@ -207,6 +207,6 @@ Anaconda
 
 *reprozip* and *reprounzip* can also be installed on the `Anaconda <https://store.continuum.io/cshop/anaconda>`__ Python distribution, from Binstar::
 
-    $ conda install -c https://conda.binstar.org/vida-nyu reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails
+    $ conda install --channel vida-nyu reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 
 Note, however, that *reprozip* is only available for Linux.
