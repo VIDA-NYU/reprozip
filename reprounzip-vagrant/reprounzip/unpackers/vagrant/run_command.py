@@ -121,6 +121,8 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
                 '-t' if request_pty else '-T',  # Force allocation of PTY
                 '-o', 'StrictHostKeyChecking=no',  # Silently accept host keys
                 '-o', 'UserKnownHostsFile=/dev/null',  # Don't store host keys
+                '-o', 'LogLevel=FATAL',  # Hide messages
+                '-o', 'PasswordAuthentication=no',  # Login using key
                 '-i', ssh_info['key_filename'],
                 '-p', '%d' % ssh_info['port']]
         for remote_port, connector in forwarded_ports:
