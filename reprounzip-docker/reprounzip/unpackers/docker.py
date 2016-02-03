@@ -81,6 +81,8 @@ def select_image(runs):
             return 'ubuntu', 'ubuntu:14.10'
         elif version == '15.04':
             return 'ubuntu', 'ubuntu:15.04'
+        elif version == '16.04':
+            return 'ubuntu', 'ubuntu:16.04'
         else:
             if version != '15.10':
                 logging.warning("using Ubuntu 15.10 'Wily' instead of '%s'",
@@ -100,6 +102,9 @@ def select_image(runs):
         elif (version == '7' or version.startswith('7.') or
                 version.startswith('wheezy')):
             return 'debian', 'debian:wheezy'
+        elif (version == '9' or version.startswith('9.') or
+                version.startswith('stretch')):
+            return 'debian', 'debian:stretch'
         else:
             if (version != '8' and not version.startswith('8.') and
                     not version.startswith('jessie')):
