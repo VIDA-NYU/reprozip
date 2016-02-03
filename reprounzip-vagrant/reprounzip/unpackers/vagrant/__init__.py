@@ -71,13 +71,18 @@ def select_box(runs):
                 return 'ubuntu', 'ubuntu/trusty32'
             else:  # architecture == 'x86_64'
                 return 'ubuntu', 'ubuntu/trusty64'
-        if version != '15.04':
-            logging.warning("using Ubuntu 15.04 'Vivid' instead of '%s'",
+        if version == '15.04':
+            if architecture == 'i686':
+                return 'ubuntu', 'ubuntu/vivid32'
+            else:  # architecture == 'x86_64':
+                return 'ubuntu', 'ubuntu/vivid64'
+        if version != '15.10':
+            logging.warning("using Ubuntu 15.10 'Wily' instead of '%s'",
                             version)
         if architecture == 'i686':
-            return 'ubuntu', 'ubuntu/vivid32'
+            return 'ubuntu', 'ubuntu/wily32'
         else:  # architecture == 'x86_64':
-            return 'ubuntu', 'ubuntu/vivid64'
+            return 'ubuntu', 'ubuntu/wily64'
 
     # Debian
     else:
