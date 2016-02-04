@@ -41,7 +41,7 @@ X support is **not** enabled by default; to enable it, use the flag ``--enable-x
 
 ..  warning::
 
-    While displaying a UI through the X protocol works fine, applications using direct rendering (DRI) to access dedicated graphic hardware might not be reproducible: the libGL library packed with the experiment is often specific to your driver, and therefore the reproducing machine would need to be using the exact same hardware and driver.
+    While displaying a UI through the X protocol works fine, applications using direct rendering (DRI) to access dedicated graphic hardware might not be reproducible: the libGL library packed with the experiment is often specific to the driver of the original machine, and therefore the machine where the experiment is being reproduced would need to use the exact same hardware and driver.
 
     Please refrain from requiring direct rendering in applications that you intend to pack with ReproZip.
 
