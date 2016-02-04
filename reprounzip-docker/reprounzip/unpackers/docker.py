@@ -742,9 +742,8 @@ def setup(parser, **kwargs):
                           help="Install packages rather than extracting "
                                "them from RPZ file")
         opts.add_argument('--unpack-pkgs', action='store_false',
-                          default=False,
-                          help="Extract packed packages rather than "
-                               "installing them")
+                          default=False, dest='install_pkgs',
+                          help=argparse.SUPPRESS)
 
     # --docker-option
     def add_raw_docker_option(opts):
