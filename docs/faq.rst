@@ -39,6 +39,12 @@ Most unpackers now support forwarding the X connection from the experiment to th
 
 X support is **not** enabled by default; to enable it, use the flag ``--enable-x11`` in the ``run`` command of your preferred unpacker.
 
+..  warning::
+
+    While displaying a UI through the X protocol works fine, applications using direct rendering (DRI) to access dedicated graphic hardware might not be reproducible: the libGL library packed with the experiment is often specific to your driver, and therefore the reproducing machine would need to be using the exact same hardware and driver.
+
+    Please refrain from requiring direct rendering in applications that you intend to pack with ReproZip.
+
 How can I access the generated system or virtual machine directly?
 ==================================================================
 
