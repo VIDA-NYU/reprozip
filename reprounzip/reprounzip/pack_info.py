@@ -201,12 +201,15 @@ def showfiles(args):
 
     def file_filter(fio):
         if file_filter.run is None:
-            return True
+            return ((file_filter.input and fio.read_runs) or
+                    (file_filter.output and fio.write_runs))
         else:
-            return (file_filter.run in fio.read_runs or
-                    file_filter.run in fio.write_runs)
+            return ((file_filter.input and file_filter.run in fio.read_runs) or
+                    (file_filter.output and file_filter.run in fio.write_runs))
 
     file_filter.run = None
+    file_filter.input = bool(args.input)
+    file_filter.output = bool(args.output)
 
     pack = Path(args.pack[0])
 
@@ -307,4 +310,8 @@ def setup_showfiles(parser, **kwargs):
                         help="Pack or directory to read from")
     parser.add_argument('run', nargs=argparse.OPTIONAL,
                         help="Run whose input and output files will be listed")
+    parser.add_argument('--input', action='store_true',
+                        help="Only show input files")
+    parser.add_argument('--output', action='store_true',
+                        help="Only show output files")
     parser.set_defaults(func=showfiles)

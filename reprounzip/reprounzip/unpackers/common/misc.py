@@ -242,11 +242,11 @@ class FileUploader(object):
 class FileDownloader(object):
     """Common logic for 'download' commands.
     """
-    def __init__(self, target, files):
+    def __init__(self, target, files, all_=False):
         self.target = target
-        self.run(files)
+        self.run(files, all_)
 
-    def run(self, files):
+    def run(self, files, all_):
         reprounzip.common.record_usage(download_files=len(files))
         output_files = dict(
             (n, f.path)
@@ -254,24 +254,39 @@ class FileDownloader(object):
             if f.write_runs)
 
         # No argument: list all the output files and exit
-        if not files:
+        if not (all_ or files):
             print("Output files:")
             for output_name in output_files:
                 print("    %s" % output_name)
             return
 
-        self.prepare_download(files)
+        # Parse the name[:path] syntax
+        resolved_files = []
+        all_files = set(output_files)
+        for filespec in files:
+            filespec_split = filespec.split(':', 1)
+            if len(filespec_split) == 1:
+                output_name = local_path = filespec
+            elif len(filespec_split) == 2:
+                output_name, local_path = filespec_split
+            else:
+                logging.critical("Invalid file specification: %r",
+                                 filespec)
+                sys.exit(1)
+            local_path = Path(local_path) if local_path else None
+            all_files.discard(output_name)
+            resolved_files.append((output_name, local_path))
+
+        # If all_ is set, add all the files that weren't explicitely named
+        if all_:
+            for output_name in all_files:
+                resolved_files.append((output_name, Path(output_name)))
+
+        self.prepare_download(resolved_files)
 
         try:
             # Download files
-            for filespec in files:
-                filespec_split = filespec.split(':', 1)
-                if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r",
-                                     filespec)
-                    sys.exit(1)
-                output_name, local_path = filespec_split
-
+            for output_name, local_path in resolved_files:
                 try:
                     remote_path = output_files[output_name]
                 except KeyError:
@@ -279,10 +294,10 @@ class FileDownloader(object):
                     sys.exit(1)
 
                 logging.debug("Downloading file %s", remote_path)
-                if not local_path:
+                if local_path is None:
                     self.download_and_print(remote_path)
                 else:
-                    self.download(remote_path, Path(local_path))
+                    self.download(remote_path, local_path)
         finally:
             self.finalize()
 
@@ -319,14 +334,6 @@ def get_runs(runs, selected_runs, cmdline):
     name_map = dict((r['id'], i) for i, r in enumerate(runs) if 'id' in r)
     run_list = []
 
-    if selected_runs is None:
-        if len(runs) == 1:
-            selected_runs = '0'
-        else:
-            logging.critical("There are several runs in this pack -- you have "
-                             "to choose which one to use")
-            sys.exit(1)
-
     def parse_run(s):
         try:
             r = int(s)
@@ -339,29 +346,32 @@ def get_runs(runs, selected_runs, cmdline):
             sys.exit(1)
         return r
 
-    for run_item in selected_runs.split(','):
-        run_item = run_item.strip()
-        if run_item in name_map:
-            run_list.append(name_map[run_item])
-            continue
+    if selected_runs is None:
+        run_list = list(irange(len(runs)))
+    else:
+        for run_item in selected_runs.split(','):
+            run_item = run_item.strip()
+            if run_item in name_map:
+                run_list.append(name_map[run_item])
+                continue
 
-        sep = run_item.find('-')
-        if sep == -1:
-            run_list.append(parse_run(run_item))
-        else:
-            if sep > 0:
-                first = parse_run(run_item[:sep])
+            sep = run_item.find('-')
+            if sep == -1:
+                run_list.append(parse_run(run_item))
             else:
-                first = 0
-            if sep + 1 < len(run_item):
-                last = parse_run(run_item[sep + 1:])
-            else:
-                last = len(runs) - 1
-            if last < first:
-                logging.critical("Error: Last run number should be greater "
-                                 "than the first")
-                sys.exit(1)
-            run_list.extend(irange(first, last + 1))
+                if sep > 0:
+                    first = parse_run(run_item[:sep])
+                else:
+                    first = 0
+                if sep + 1 < len(run_item):
+                    last = parse_run(run_item[sep + 1:])
+                else:
+                    last = len(runs) - 1
+                if last < first:
+                    logging.critical("Error: Last run number should be "
+                                     "greater than the first")
+                    sys.exit(1)
+                run_list.extend(irange(first, last + 1))
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:

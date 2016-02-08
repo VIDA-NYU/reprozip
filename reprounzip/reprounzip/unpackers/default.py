@@ -686,9 +686,9 @@ def upload(args):
 
 
 class LocalDownloader(FileDownloader):
-    def __init__(self, target, files, type_):
+    def __init__(self, target, files, type_, all_=False):
         self.type = type_
-        FileDownloader.__init__(self, target, files)
+        FileDownloader.__init__(self, target, files, all_=all_)
 
     def prepare_download(self, files):
         self.root = (self.target / 'root').absolute()
@@ -724,7 +724,7 @@ def download(args):
     files = args.file
     metadata_read(target, args.type)
 
-    LocalDownloader(target, files, args.type)
+    LocalDownloader(target, files, args.type, all_=args.all)
 
 
 def test_same_pkgmngr(pack, config, **kwargs):
@@ -834,7 +834,10 @@ def setup_directory(parser, **kwargs):
     parser_download = subparsers.add_parser('download')
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
-                                 help="<output_file_name>:<path>")
+                                 help="<output_file_name>[:<path>]")
+    parser_download.add_argument('--all', action='store_true',
+                                 help="Download all output files to the "
+                                      "current directory")
     parser_download.set_defaults(func=download, type='directory')
 
     # destroy
@@ -952,7 +955,10 @@ def setup_chroot(parser, **kwargs):
     parser_download = subparsers.add_parser('download')
     add_opt_general(parser_download)
     parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
-                                 help="<output_file_name>:<path>")
+                                 help="<output_file_name>[:<path>]")
+    parser_download.add_argument('--all', action='store_true',
+                                 help="Download all output files to the "
+                                      "current directory")
     parser_download.set_defaults(func=download, type='chroot')
 
     # destroy/unmount

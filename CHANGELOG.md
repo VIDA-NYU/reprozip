@@ -10,7 +10,10 @@ Bugfixes:
 
 Features:
 * Add `--docker-option` to pass raw options to Docker
-* You can use `run -` to run every run, now even if there is only one run
+* You can use `run` or `run -` to run every run, regardless of their number
+* Allow `download <name>`, shortcut for `download <name>:./<name>` (downloads to current directory, keep name)
+* Allow `download --all`
+* Add `--input` and `--output` to showfiles
 
 1.0.3 (2015-12-02)
 ------------------
