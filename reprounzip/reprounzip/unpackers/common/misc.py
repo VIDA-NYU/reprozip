@@ -334,14 +334,6 @@ def get_runs(runs, selected_runs, cmdline):
     name_map = dict((r['id'], i) for i, r in enumerate(runs) if 'id' in r)
     run_list = []
 
-    if selected_runs is None:
-        if len(runs) == 1:
-            selected_runs = '0'
-        else:
-            logging.critical("There are several runs in this pack -- you have "
-                             "to choose which one to use")
-            sys.exit(1)
-
     def parse_run(s):
         try:
             r = int(s)
@@ -354,29 +346,32 @@ def get_runs(runs, selected_runs, cmdline):
             sys.exit(1)
         return r
 
-    for run_item in selected_runs.split(','):
-        run_item = run_item.strip()
-        if run_item in name_map:
-            run_list.append(name_map[run_item])
-            continue
+    if selected_runs is None:
+        run_list = list(irange(len(runs)))
+    else:
+        for run_item in selected_runs.split(','):
+            run_item = run_item.strip()
+            if run_item in name_map:
+                run_list.append(name_map[run_item])
+                continue
 
-        sep = run_item.find('-')
-        if sep == -1:
-            run_list.append(parse_run(run_item))
-        else:
-            if sep > 0:
-                first = parse_run(run_item[:sep])
+            sep = run_item.find('-')
+            if sep == -1:
+                run_list.append(parse_run(run_item))
             else:
-                first = 0
-            if sep + 1 < len(run_item):
-                last = parse_run(run_item[sep + 1:])
-            else:
-                last = len(runs) - 1
-            if last < first:
-                logging.critical("Error: Last run number should be greater "
-                                 "than the first")
-                sys.exit(1)
-            run_list.extend(irange(first, last + 1))
+                if sep > 0:
+                    first = parse_run(run_item[:sep])
+                else:
+                    first = 0
+                if sep + 1 < len(run_item):
+                    last = parse_run(run_item[sep + 1:])
+                else:
+                    last = len(runs) - 1
+                if last < first:
+                    logging.critical("Error: Last run number should be "
+                                     "greater than the first")
+                    sys.exit(1)
+                run_list.extend(irange(first, last + 1))
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
