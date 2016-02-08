@@ -50,6 +50,7 @@ class TestMisc(unittest.TestCase):
         print("<<<<< get_runs tests for reprounzip (disregard parse errors)",
               file=sys.stderr)
         try:
+            self.do_fail(None)
             self.do_fail('')
             self.do_fail('a-')
             self.do_fail('1-k')
