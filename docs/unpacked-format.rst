@@ -32,7 +32,29 @@ When running `run`, the unpacker sets ``LD_LIBRARY_PATH`` and ``PATH`` to point 
 `chroot` unpacker
 =================
 
-TODO
+The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (storing whether magic directories are mounted, see below), and a tarball ``inputs.tar.gz`` which contains the original files that are input files (for restauration using ``upload :<input-id>``).
+
+A directory called ``root`` contains all the packaged files in their original path. Symbolic links are not rewritten. If a file is listed in the pack's configuration but wasn't packed (``pack_files`` was set to false for a software package), it is copied from the host (if it doesn't exist on the host, a warning is shown when unpacking). File ownership is also restored.
+
+Unless ``--dont-bind-magic-dirs`` is specified when unpacking, the special directories ``/dev``, ``/dev/pts``, and ``/proc`` are mounted with ``mount -o bind`` from the host.
+
+If ``/bin/sh`` or ``/usr/bin/env`` weren't both packed, a static build of busybox is downloaded and put in ``/bin/busybox``, and the missing binaries are created as symbolic links pointing to busybox.
+
+::
+
+    unpacked-directory/
+        .reprounzip
+        config.yml
+        inputs.tar.gz
+        root/
+            dev/
+            dev/pts/
+            proc/
+            ...
+
+Should you require a shell inside the experiment environment, you can use::
+
+    chroot root/ /bin/sh
 
 ..  _unpacked-vagrant:
 
