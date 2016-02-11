@@ -12,7 +12,20 @@ Note that future versions of unpackers might work in a different way. No attempt
 `directory` unpacker
 ====================
 
-TODO
+The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip``, and a tarball ``inputs.tar.gz`` which contains the original files that are input files (for restauration using ``upload :<input-id>``).
+
+A directory called ``root`` contains all the packaged files in their original path, with symbolic links to absolute paths rewritten to prepend the path to ``root``.
+
+::
+
+    unpacked-directory/
+        .reprounzip
+        config.yml
+        inputs.tar.gz
+        root/
+            ...
+
+When running `run`, the unpacker sets ``LD_LIBRARY_PATH`` and ``PATH`` to point inside ``root``, and optionally ``DISPLAY`` and ``XAUTHORITY`` to the host's.
 
 ..  _unpacked-chroot:
 
