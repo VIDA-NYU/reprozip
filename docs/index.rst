@@ -25,6 +25,7 @@ Contents
     graph
     vistrails
     faq
+    unpacked-format
     troubleshooting
     developerguide
     glossary
