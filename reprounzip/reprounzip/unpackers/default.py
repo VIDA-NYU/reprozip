@@ -167,8 +167,9 @@ def directory_create(args):
             logging.info("Packing up original input files...")
             inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
             for ifile in input_files:
-                inputtar.add(str(join_root(root, ifile)),
-                             str(ifile))
+                filename = join_root(root, ifile)
+                if filename.exists():
+                    inputtar.add(str(filename), str(ifile))
             inputtar.close()
 
         # Meta-data for reprounzip

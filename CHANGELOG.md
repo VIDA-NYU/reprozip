@@ -6,7 +6,7 @@ Changelog
 
 Bugfixes:
 * Fixes file download not using cache if URL is HTTPS
-* Fixes unpacking with chroot for some multi-step packages
+* Fixes unpacking with directory or chroot for some multi-step packages
 
 Features:
 * Add `--docker-option` to pass raw options to Docker
