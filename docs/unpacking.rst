@@ -235,10 +235,16 @@ which will execute the experiment inside the experiment directory. Users may als
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
-If the package contains multiple `runs` (separate commands that were packed together), you need to provide the id of the run to be reproduced::
+If the package contains multiple `runs` (separate commands that were packed together), you can provide the id of the run to be reproduced::
 
     $ reprounzip vagrant run <path> <run-id>
     $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
+
+For example::
+
+    $ reprounzip vagrant run unpacked-experiment 0-1,3  # First, second and fourth runs
+    $ reprounzip vagrant run unpacked-experiment 2-  # Third run and up
+    $ reprounzip vagrant run unpacked-experiment compile,test  # Run named 'compile' then 'test'
 
 If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
 
@@ -288,13 +294,12 @@ where `<input-path>` is the new file's path and `<input-id>` is the input file t
 
 Running the ``showfiles`` command shows what the input files are currently set to::
 
-    $ reprounzip showfiles <path>
+    $ reprounzip showfiles <path> --input
     Input files:
         program_config
             (original)
         ipython_config
             C:\Users\Remi\Documents\ipython-config
-    ...
 
 In this example, the input `program_config` has not been changed (the one bundled in the ``.rpz`` file will be used), while the input `ipython_config` has been replaced.
 
@@ -302,11 +307,17 @@ After running the experiment, all the generated output files will be located und
 
     $ reprounzip vagrant download <path> <output-id>:<output-path>
 
-where `<output-id>` is the output file to be copied (from ``showfiles``) and `<output-path>` is the desired destination of the file. If no destination is specified, the file will be printed to stdout::
+where `<output-id>` is the output file to be copied (from ``showfiles``) and `<output-path>` is the desired destination of the file. If an empty destination is specified, the file will be printed to stdout::
 
     $ reprounzip vagrant download <path> <output-id>:
 
-Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination).
+You can also omit the colon ``:`` altogether to download to the file's name in the currect directory::
+
+    $ reprounzip vagrant download <path> <output-id>
+
+or even use ``--all`` to download every output file to the current directory under their names.
+
+Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination). Both commands move  data from left to right.
 
 ..  seealso:: :ref:`Why can’t 'reprounzip' get my output files after reproducing an experiment? <moving-outputs>`
 
