@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ReproZip'
-copyright = u'2014-2015, New York University'
+copyright = u'2014-2016, New York University'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
