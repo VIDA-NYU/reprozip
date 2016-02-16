@@ -85,4 +85,12 @@ Please be aware of whether ``--use-chroot`` is in use (then ``/experimentroot`` 
 `docker` unpacker
 =================
 
-TODO
+The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (containing the name of the images built by the unpacker, see below), the DATA part of the ``.rpz`` file as ``data.tgz`` used to populate the Docker container, a file ``rpz-files.list`` with the list of files to unpack that is passed to ``tar -T``, and a ``Dockerfile`` used to build the original image.
+
+Static builds of busybox and rpzsudo are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``.
+
+Note that the docker command connects to a Docker daemon over a socket and that state will be changed there. The daemon might or might not be local; in particular docker-machine might be used (which allows `reprounzip-docker` to be used on non-Linux machines), and the daemon might be in a virtual machine, on another host or in the cloud. `reprounzip-docker` will keep the environment variables set when calling Docker, notably ``DOCKER_HOST``, so you can just set them before running the unpacker.
+
+Images and containers built by the unpacker are given a random name with the prefixes ``reprounzip_image_`` and ``reprounzip_run_`` respectively; they are cleaned up when the `destroy` command is invoked. There are two images that `reprounzip-docker` keeps track of (in the ``.reprounzip`` pickle file): the initial image, the one built by ``setup/build`` by calling ``docker build``, and the "current" image (initially the same as the initial image), which has been affected by a number of ``run`` and ``upload`` calls. Running the ``reset`` command returns to the initial image without having to rebuild. After each ``run`` invocation, the container is committed to a new "current" image so that state is kept.
+
+Uploading files to the environment is done by running a simple Dockerfile that builds a new image; downloading files is done via the ``docker cp`` command.
