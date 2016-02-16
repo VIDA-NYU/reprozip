@@ -61,7 +61,24 @@ Should you require a shell inside the experiment environment, you can use::
 `vagrant` unpacker
 ==================
 
-TODO
+The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (containing whether a chroot is used, see below), the DATA part of the ``.rpz`` file as ``data.tgz`` used to populate the VM when it gets created, a setup script ``setup.sh``, a file ``rpz-files.list`` with the list of files to unpack that is passed to ``tar -T``, and a ``Vagrantfile``. Once ``vagrant up`` has been run by the ``setup/start`` step, a ``.vagrant`` subdirectory exists, whose content is managed by Vagrant (and appears to vary between platforms).
+
+Note that Vagrant drives VirtualBox or a similar virtualization software to run the VM. These will maintain state outside of the experiment folder, and should you need to reconfigure or otherwise interact with the VM, you should do it from that software's UI. The VM is usually named like the experiment directory with a suffix.
+
+There are two modes for the virtual machine:
+
+* The default, ``--use-chroot``, creates a chroot environment inside the virtual machine at ``/experimentroot``. This allows us to unpack very different file system hierarchies without breaking the base system of the VM (in particular, SSH needs to keep working for the VM to be usable). In this mode, the packages that were not packed (``pack_files`` set to false) are installed in the VM and their required files are copied to the ``/experimentroot`` hierarchy. The software packages that were packed are simply copied over without any interaction with the VM's system.
+* If ``--dont-use-chroot`` is passed, no chroot environment is created. The files from software packages are never copied from the ``.rpz``, they get installed from the package manager. The other files are simply unpacked in the VM system, possibly overwriting files. If the systems are different enough, things will probably not work, but as long as reprounzip-vagrant manages to find a VM image with the same operating system, we can expect reproduction to be work reliably.
+
+In ``--use-chroot`` mode, a static build of busybox is downloaded and put in ``/experimentroot/busybox``, and if ``/bin/sh`` wasn't packed, it is created as a symbolic link pointing to busybox.
+
+Uploading and downloading files from the environment is done via the shared directory ``/vagrant`` which is the experiment directory mounted in the VM by Vagrant.
+
+Should you require a shell inside the experiment environment, you can use::
+
+    vagrant ssh
+
+Please be aware of whether ``--use-chroot`` is in use (then ``/experimentroot`` exists and this is where the experiment's files are).
 
 ..  _unpacked-docker:
 
