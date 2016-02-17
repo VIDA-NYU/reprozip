@@ -9,6 +9,19 @@ This page describes in more details how the unpackers operate.
 
 ..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*.
 
+..  _unpacked-common:
+
+Files common to every unpacker
+==============================
+
+The unpacked directory usually contains the original configuration file as ``config.yml``. In fact, the VisTrails integration relies on it.
+
+A file ``.reprounzip`` also marks the directory as an unpacked experiment. It is a Python pickle file containing a dictionary with a bunch of info:
+
+* ``unpacker`` maps to the unpacker's name (the one used to register the entry_point, which is also the subcommand for reprounzip)
+* ``input_files`` is used by the uploader/downloader machinery to keep the state of the input files inside the experiment, as they get replaced by the user or overwritten by runs
+* More information specific to the unpacker, as described in the next sections.
+
 ..  _unpacked-directory:
 
 The `directory` Unpacker
