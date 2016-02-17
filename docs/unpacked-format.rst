@@ -81,6 +81,17 @@ The experiment directory contains:
 
 Once ``vagrant up`` has been run by the ``setup/start`` command, a ``.vagrant`` subdirectory is created, and its content is managed by Vagrant (and appears to vary among different platforms).
 
+::
+
+    unpacked-directory/
+        .reprounzip
+        config.yml
+        data.tgz
+        busybox
+        Vagrantfile
+        setup.sh
+        rpz-files.list
+
 Note that Vagrant drives VirtualBox or a similar virtualization software to run the VM. These will maintain state outside of the experiment directory. If you need to reconfigure or otherwise interact with the VM, you should do it from that virtualization software (e.g.: VirtualBox). The VM is named as the experiment directory with an additional suffix.
 
 There are two modes for the virtual machine, controlled through command-line flags:
@@ -112,6 +123,17 @@ The experiment directory contains:
 * A ``Dockerfile``, which is used to build the original image.
 
 Static builds of `busybox <https://busybox.net/>`__ and `rpzsudo <https://github.com/remram44/static-sudo/blob/master/rpzsudo.c>`__ are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``, respectively.
+
+::
+
+    unpacked-directory/
+        .reprounzip
+        config.yml
+        data.tgz
+        busybox
+        rpzsudo
+        Dockerfile
+        rpz-files.list
 
 Note that the ``docker`` command connects to a Docker daemon over a socket and that state will be changed there. The daemon might not be local; in particular, ``docker-machine`` might be used, which allows `reprounzip-docker` to be used on non-Linux machines, and the daemon might be in a virtual machine, on another host, or in the cloud. The `docker` unpacker will keep the environment variables set when calling Docker, notably ``DOCKER_HOST``, so these can be set accordingly before running the unpacker.
 
