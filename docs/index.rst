@@ -22,11 +22,11 @@ Contents
     install
     packing
     unpacking
-    unpacked-format
     graph
     vistrails
     faq
     troubleshooting
+    unpacked-format
     developerguide
     glossary
 
