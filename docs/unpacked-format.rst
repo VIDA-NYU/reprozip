@@ -1,20 +1,25 @@
 ..  _unpacked-format:
 
-Internal format of unpacked experiments
-***************************************
+Structure of Unpacked Experiments
+*********************************
 
-While *reprounzip* is designed to allow users to reproduce an experiment without having to master the tool used to run it (e.g. vagrant, docker): the unpacker drives it automatically. However, in some situations it might be useful to go behind the scenes and interact with the unpacked experiment directly. This page describes how the various unpackers operate.
+While *reprounzip* is designed to allow users to reproduce an experiment without having to master the tool used to run it (e.g.: `Vagrant <https://www.vagrantup.com/>`__ and `Docker <https://www.docker.com/>`__), in some situations it might be useful to go behind the scenes and interact with the unpacked experiments directly.
 
-Note that future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*.
+This page describes in more details how the unpackers operate.
+
+..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*.
 
 ..  _unpacked-directory:
 
-`directory` unpacker
-====================
+The `directory` Unpacker
+========================
 
-The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip``, and a tarball ``inputs.tar.gz`` which contains the original files that are input files (for restauration using ``upload :<input-id>``).
+The experiment directory contains:
 
-A directory called ``root`` contains all the packaged files in their original path, with symbolic links to absolute paths rewritten to prepend the path to ``root``.
+* The original configuration file ``config.yml``.
+* The pickle file ``.reprounzip``.
+* The tarball ``inputs.tar.gz``, which contains the original files that were identifies as input files. This tarball is used for file restoration using ``upload :<input-id>`` (see :ref:`unpacker-input-output`).
+* A directory called ``root``, which contains all the packaged files in their original path, with symbolic links to absolute paths rewritten to prepend the path to ``root``.
 
 ::
 
@@ -25,20 +30,19 @@ A directory called ``root`` contains all the packaged files in their original pa
         root/
             ...
 
-When running `run`, the unpacker sets ``LD_LIBRARY_PATH`` and ``PATH`` to point inside ``root``, and optionally ``DISPLAY`` and ``XAUTHORITY`` to the host's.
+When running the ``run`` command, the unpacker sets ``LD_LIBRARY_PATH`` and ``PATH`` to point inside ``root``, and optionally ``DISPLAY`` and ``XAUTHORITY`` to the host's ones.
 
 ..  _unpacked-chroot:
 
-`chroot` unpacker
-=================
+The `chroot` Unpacker
+=====================
 
-The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (storing whether magic directories are mounted, see below), and a tarball ``inputs.tar.gz`` which contains the original files that are input files (for restauration using ``upload :<input-id>``).
+The experiment directory contains:
 
-A directory called ``root`` contains all the packaged files in their original path. Symbolic links are not rewritten. If a file is listed in the pack's configuration but wasn't packed (``pack_files`` was set to false for a software package), it is copied from the host (if it doesn't exist on the host, a warning is shown when unpacking). File ownership is also restored.
-
-Unless ``--dont-bind-magic-dirs`` is specified when unpacking, the special directories ``/dev``, ``/dev/pts``, and ``/proc`` are mounted with ``mount -o bind`` from the host.
-
-If ``/bin/sh`` or ``/usr/bin/env`` weren't both packed, a static build of busybox is downloaded and put in ``/bin/busybox``, and the missing binaries are created as symbolic links pointing to busybox.
+* The original configuration file ``config.yml``.
+* The pickle file ``.reprounzip``, which stores whether magic directories are mounted, as explained below.
+* The tarball ``inputs.tar.gz``, which contains the original files that were identifies as input files. This tarball is used for file restoration using ``upload :<input-id>`` (see :ref:`unpacker-input-output`).
+* A directory called ``root``, which contains all the packaged files in their original path, with no symbolic links rewritten and file ownership restored.
 
 ::
 
@@ -52,45 +56,65 @@ If ``/bin/sh`` or ``/usr/bin/env`` weren't both packed, a static build of busybo
             proc/
             ...
 
+If a file is listed in the configuration file but wasn't packed (i.e.: ``pack_files`` was set to ``false`` for a software package), such file is copied from the host; if this file does not exist on the host, a warning is shown when unpacking.
+
+Unless ``--dont-bind-magic-dirs`` is specified when unpacking, the special directories ``/dev``, ``/dev/pts``, and ``/proc`` are mounted with ``mount -o bind`` from the host.
+Also, if ``/bin/sh`` or ``/usr/bin/env`` weren't both packed, a static build of `busybox <https://busybox.net/>`__ is downloaded and put under ``/bin/busybox``, and the missing binaries are created as symbolic links pointing to busybox.
+
 Should you require a shell inside the experiment environment, you can use::
 
     chroot root/ /bin/sh
 
 ..  _unpacked-vagrant:
 
-`vagrant` unpacker
-==================
+The `vagrant` Unpacker
+======================
 
-The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (containing whether a chroot is used, see below), the DATA part of the ``.rpz`` file as ``data.tgz`` used to populate the VM when it gets created, a setup script ``setup.sh``, a file ``rpz-files.list`` with the list of files to unpack that is passed to ``tar -T``, and a ``Vagrantfile``. Once ``vagrant up`` has been run by the ``setup/start`` step, a ``.vagrant`` subdirectory exists, whose content is managed by Vagrant (and appears to vary between platforms).
+The experiment directory contains:
 
-Note that Vagrant drives VirtualBox or a similar virtualization software to run the VM. These will maintain state outside of the experiment folder, and should you need to reconfigure or otherwise interact with the VM, you should do it from that software's UI. The VM is usually named like the experiment directory with a suffix.
+* The original configuration file ``config.yml``.
+* The pickle file ``.reprounzip``, which stores whether a chroot is used, as explained below.
+* The tarball ``data.tgz``, which is part of the ``.rpz`` file and used to populate the virtual machine (VM) when it gets created.
+* The setup script ``setup.sh``.
+* The file ``rpz-files.list``, which contains the list of files to unpack. This list is passed to ``tar -T`` while unpacking.
+* A ``Vagrantfile``, which is used to build the VM.
 
-There are two modes for the virtual machine:
+Once ``vagrant up`` has been run by the ``setup/start`` command, a ``.vagrant`` subdirectory is created, and its content is managed by Vagrant (and appears to vary among different platforms).
 
-* The default, ``--use-chroot``, creates a chroot environment inside the virtual machine at ``/experimentroot``. This allows us to unpack very different file system hierarchies without breaking the base system of the VM (in particular, SSH needs to keep working for the VM to be usable). In this mode, the packages that were not packed (``pack_files`` set to false) are installed in the VM and their required files are copied to the ``/experimentroot`` hierarchy. The software packages that were packed are simply copied over without any interaction with the VM's system.
-* If ``--dont-use-chroot`` is passed, no chroot environment is created. The files from software packages are never copied from the ``.rpz``, they get installed from the package manager. The other files are simply unpacked in the VM system, possibly overwriting files. If the systems are different enough, things will probably not work, but as long as reprounzip-vagrant manages to find a VM image with the same operating system, we can expect reproduction to be work reliably.
+Note that Vagrant drives VirtualBox or a similar virtualization software to run the VM. These will maintain state outside of the experiment directory. If you need to reconfigure or otherwise interact with the VM, you should do it from that virtualization software (e.g.: VirtualBox). The VM is named as the experiment directory with an additional suffix.
 
-In ``--use-chroot`` mode, a static build of busybox is downloaded and put in ``/experimentroot/busybox``, and if ``/bin/sh`` wasn't packed, it is created as a symbolic link pointing to busybox.
+There are two modes for the virtual machine, controlled through command-line flags:
 
-Uploading and downloading files from the environment is done via the shared directory ``/vagrant`` which is the experiment directory mounted in the VM by Vagrant.
+* The default mode, ``--use-chroot``, creates a chroot environment inside the VM at ``/experimentroot``. This allows ReproZip to unpack very different file system hierarchies without breaking the base system of the VM (in particular, ``ssh`` needs to keep working for the VM to be usable). In this mode, software packages that were not packed (i.e.: ``pack_files`` was set to ``false``) are installed in the VM and their required files are copied to the ``/experimentroot`` hierarchy. The software packages that were packed are simply copied over without any interaction with the VM's system.
+* If ``--dont-use-chroot`` is used, no chroot environment is created. Files from software packages are never copied from the ``.rpz`` file; instead, they get installed from the package manager. Other files are simply unpacked in the VM system, possibly overwriting existing files. As long as *reprounzip-vagrant* manages to find a VM image with the same operating system as the original one, reproduction is expected to work reliably.
+
+In the ``--use-chroot`` mode, a static build of `busybox <https://busybox.net/>`__ is downloaded and put under ``/experimentroot/busybox``, and if ``/bin/sh`` wasn't packed, it is created as a symbolic link pointing to busybox.
+
+Uploading and downloading files from the environment is done via the shared directory ``/vagrant``, which is the experiment directory mounted in the VM by Vagrant.
 
 Should you require a shell inside the experiment environment, you can use::
 
     vagrant ssh
 
-Please be aware of whether ``--use-chroot`` is in use (then ``/experimentroot`` exists and this is where the experiment's files are).
+Please be aware of whether ``--use-chroot`` is in use when accessing the experiment environment: in this case, the experiment's files are located under ``/experimentroot``.
 
 ..  _unpacked-docker:
 
-`docker` unpacker
-=================
+The `docker` Unpacker
+=====================
 
-The experiment directory contains the original configuration file ``config.yml``, the pickle file ``.reprounzip`` (containing the name of the images built by the unpacker, see below), the DATA part of the ``.rpz`` file as ``data.tgz`` used to populate the Docker container, a file ``rpz-files.list`` with the list of files to unpack that is passed to ``tar -T``, and a ``Dockerfile`` used to build the original image.
+The experiment directory contains:
 
-Static builds of busybox and rpzsudo are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``.
+* The original configuration file ``config.yml``.
+* The pickle file ``.reprounzip``, which stores the name of the images built by the unpacker, as explained below.
+*  The tarball ``data.tgz``, which is part of the ``.rpz`` file and used to populate the Docker container.
+* The file ``rpz-files.list``, which contains the list of files to unpack. This list is passed to ``tar -T`` while unpacking.
+* A ``Dockerfile``, which is used to build the original image.
 
-Note that the docker command connects to a Docker daemon over a socket and that state will be changed there. The daemon might or might not be local; in particular docker-machine might be used (which allows `reprounzip-docker` to be used on non-Linux machines), and the daemon might be in a virtual machine, on another host or in the cloud. `reprounzip-docker` will keep the environment variables set when calling Docker, notably ``DOCKER_HOST``, so you can just set them before running the unpacker.
+Static builds of `busybox <https://busybox.net/>`__ and `rpzsudo <https://github.com/remram44/static-sudo/blob/master/rpzsudo.c>`__ are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``, respectively.
 
-Images and containers built by the unpacker are given a random name with the prefixes ``reprounzip_image_`` and ``reprounzip_run_`` respectively; they are cleaned up when the `destroy` command is invoked. There are two images that `reprounzip-docker` keeps track of (in the ``.reprounzip`` pickle file): the initial image, the one built by ``setup/build`` by calling ``docker build``, and the "current" image (initially the same as the initial image), which has been affected by a number of ``run`` and ``upload`` calls. Running the ``reset`` command returns to the initial image without having to rebuild. After each ``run`` invocation, the container is committed to a new "current" image so that state is kept.
+Note that the ``docker`` command connects to a Docker daemon over a socket and that state will be changed there. The daemon might not be local; in particular, ``docker-machine`` might be used, which allows `reprounzip-docker` to be used on non-Linux machines, and the daemon might be in a virtual machine, on another host, or in the cloud. The `docker` unpacker will keep the environment variables set when calling Docker, notably ``DOCKER_HOST``, so these can be set accordingly before running the unpacker.
 
-Uploading files to the environment is done by running a simple Dockerfile that builds a new image; downloading files is done via the ``docker cp`` command.
+Images and containers built by the unpacker are given a random name with the prefixes ``reprounzip_image_`` and ``reprounzip_run_``, respectively; they are cleaned up when the ``destroy`` command is invoked. There are two images of which `reprounzip-docker` keeps track in the ``.reprounzip`` pickle file: the initial image, i.e., the one built by ``setup/build`` by calling ``docker build``, and the current image (initially the same as the initial image), which has been affected by a number of ``run`` and ``upload`` calls. Running the ``reset`` command returns to the initial image without having to rebuild. After each ``run`` invocation, the container is committed to a new current image so that state is kept.
+
+Uploading files to the environment is done by running a simple Dockerfile that builds a new image. Downloading files is done via the ``docker cp`` command.
