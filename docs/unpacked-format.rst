@@ -7,20 +7,20 @@ While *reprounzip* is designed to allow users to reproduce an experiment without
 
 This page describes in more details how the unpackers operate.
 
-..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*.
+..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*. Packages will always be compatible though.
 
 ..  _unpacked-common:
 
-Files common to every unpacker
-==============================
+Common Files across Unpackers
+=============================
 
-The unpacked directory usually contains the original configuration file as ``config.yml``. In fact, the VisTrails integration relies on it.
+The unpacked directory contains the original configuration file as ``config.yml``. In fact, the VisTrails integration relies on it.
 
-A file ``.reprounzip`` also marks the directory as an unpacked experiment. It is a Python pickle file containing a dictionary with a bunch of info:
+A file named ``.reprounzip`` also marks the directory as an unpacked experiment. This is a Python pickle file containing a dictionary with various types of information:
 
-* ``unpacker`` maps to the unpacker's name (the one used to register the entry_point, which is also the subcommand for reprounzip)
-* ``input_files`` is used by the uploader/downloader machinery to keep the state of the input files inside the experiment, as they get replaced by the user or overwritten by runs
-* More information specific to the unpacker, as described in the next sections.
+* ``unpacker`` maps to the unpacker's name.
+* ``input_files`` is used by the uploader/downloader machinery to keep the state of the input files inside the experiment, as they may be replaced by the user or overwritten by runs.
+* Other information specific to the unpacker, as described next.
 
 ..  _unpacked-directory:
 
@@ -92,8 +92,6 @@ The experiment directory contains:
 * The file ``rpz-files.list``, which contains the list of files to unpack. This list is passed to ``tar -T`` while unpacking.
 * A ``Vagrantfile``, which is used to build the VM.
 
-Once ``vagrant up`` has been run by the ``setup/start`` command, a ``.vagrant`` subdirectory is created, and its content is managed by Vagrant (and appears to vary among different platforms).
-
 ::
 
     unpacked-directory/
@@ -104,6 +102,8 @@ Once ``vagrant up`` has been run by the ``setup/start`` command, a ``.vagrant`` 
         Vagrantfile
         setup.sh
         rpz-files.list
+
+Once ``vagrant up`` has been run by the ``setup/start`` command, a ``.vagrant`` subdirectory is created, and its content is managed by Vagrant (and appears to vary among different platforms).
 
 Note that Vagrant drives VirtualBox or a similar virtualization software to run the VM. These will maintain state outside of the experiment directory. If you need to reconfigure or otherwise interact with the VM, you should do it from that virtualization software (e.g.: VirtualBox). The VM is named as the experiment directory with an additional suffix.
 
@@ -135,8 +135,6 @@ The experiment directory contains:
 * The file ``rpz-files.list``, which contains the list of files to unpack. This list is passed to ``tar -T`` while unpacking.
 * A ``Dockerfile``, which is used to build the original image.
 
-Static builds of `busybox <https://busybox.net/>`__ and `rpzsudo <https://github.com/remram44/static-sudo/blob/master/rpzsudo.c>`__ are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``, respectively.
-
 ::
 
     unpacked-directory/
@@ -147,6 +145,8 @@ Static builds of `busybox <https://busybox.net/>`__ and `rpzsudo <https://github
         rpzsudo
         Dockerfile
         rpz-files.list
+
+Static builds of `busybox <https://busybox.net/>`__ and `rpzsudo <https://github.com/remram44/static-sudo/blob/master/rpzsudo.c>`__ are always downloaded and put into the Docker image as ``/busybox`` and ``/rpzsudo``, respectively.
 
 Note that the ``docker`` command connects to a Docker daemon over a socket and that state will be changed there. The daemon might not be local; in particular, ``docker-machine`` might be used, which allows `reprounzip-docker` to be used on non-Linux machines, and the daemon might be in a virtual machine, on another host, or in the cloud. The `docker` unpacker will keep the environment variables set when calling Docker, notably ``DOCKER_HOST``, so these can be set accordingly before running the unpacker.
 
