@@ -207,6 +207,8 @@ Once you have chosen (and installed) an unpacker for your machine, you can use i
 
 All the following commands need to state which unpacker is being used (i.e., ``reprounzip directory`` for the `directory` unpacker, ``reprounzip chroot`` for the `chroot` unpacker, ``reprounzip vagrant`` for the `vagrant` unpacker, and ``reprounzip docker`` for the `docker` unpacker). For the purpose of this documentation, we will use the `vagrant` unpacker; to use a different one, just replace ``vagrant`` in the following with the unpacker of your interest.
 
+..  seealso:: :ref:`unpacked-format` provides further detailed information on unpackers.
+
 Setting Up an Experiment Directory
 ++++++++++++++++++++++++++++++++++
 
@@ -242,9 +244,9 @@ If the package contains multiple `runs` (separate commands that were packed toge
 
 For example::
 
-    $ reprounzip vagrant run unpacked-experiment 0-1,3  # First, second and fourth runs
+    $ reprounzip vagrant run unpacked-experiment 0-1,3  # First, second, and fourth runs
     $ reprounzip vagrant run unpacked-experiment 2-  # Third run and up
-    $ reprounzip vagrant run unpacked-experiment compile,test  # Run named 'compile' then 'test'
+    $ reprounzip vagrant run unpacked-experiment compile,test  # Runs named 'compile' and 'test', in this order
 
 If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
 
