@@ -237,7 +237,7 @@ which will execute the experiment inside the experiment directory. Users may als
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
-If the package contains multiple `runs` (separate commands that were packed together), you can provide the id of the run to be reproduced::
+If the package contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run to be reproduced::
 
     $ reprounzip vagrant run <path> <run-id>
     $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
@@ -313,11 +313,11 @@ where `<output-id>` is the output file to be copied (from ``showfiles``) and `<o
 
     $ reprounzip vagrant download <path> <output-id>:
 
-You can also omit the colon ``:`` altogether to download to the file's name in the currect directory::
+You can also omit the colon ``:`` altogether to download the file to the currect directory under its original name::
 
     $ reprounzip vagrant download <path> <output-id>
 
-or even use ``--all`` to download every output file to the current directory under their names.
+or even use ``--all`` to download every output file to the current directory under their original names.
 
 Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination). Both commands move  data from left to right.
 
