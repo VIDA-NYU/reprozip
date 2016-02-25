@@ -237,7 +237,7 @@ which will execute the experiment inside the experiment directory. Users may als
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
-If the package contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run to be reproduced::
+If the package contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run or runs to be used::
 
     $ reprounzip vagrant run <path> <run-id>
     $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
@@ -313,7 +313,7 @@ where `<output-id>` is the output file to be copied (from ``showfiles``) and `<o
 
     $ reprounzip vagrant download <path> <output-id>:
 
-You can also omit the colon ``:`` altogether to download the file to the currect directory under its original name::
+You can also omit the colon ``:`` altogether to download the file to the current directory under its original name::
 
     $ reprounzip vagrant download <path> <output-id>
 
