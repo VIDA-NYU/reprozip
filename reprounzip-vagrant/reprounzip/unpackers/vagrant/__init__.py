@@ -639,6 +639,18 @@ def vagrant_download(args):
 
 
 @target_must_exist
+def vagrant_suspend(args):
+    """Suspends the VM through Vagrant, without destroying it.
+    """
+    target = Path(args.target[0])
+
+    retcode = subprocess.call(['vagrant', 'suspend'], cwd=target.path)
+    if retcode != 0:
+        logging.critical("vagrant suspend failed with code %d, ignoring...",
+                         retcode)
+
+
+@target_must_exist
 def vagrant_destroy_vm(args):
     """Destroys the VM through Vagrant.
     """
@@ -836,6 +848,10 @@ def setup(parser, **kwargs):
                                  help="Download all output files to the "
                                       "current directory")
     parser_download.set_defaults(func=vagrant_download)
+
+    parser_suspend = subparsers.add_parser('suspend')
+    add_opt_general(parser_suspend)
+    parser_suspend.set_defaults(func=vagrant_suspend)
 
     # destroy/vm
     parser_destroy_vm = subparsers.add_parser('destroy/vm')
