@@ -124,6 +124,8 @@ Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter i
 
 :Solution: From VirtualBox, stop the machine and allocate more memory under `Settings > System > Motherboard > Memory`.
 
+           You can also use the ``--memory`` option when you run ``reprounzip vagrant setup`` to specify the amount of memory (in megabytes) at that time.
+
 ------------
 
 ..  _nosuchfile:
