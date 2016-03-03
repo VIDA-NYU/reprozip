@@ -657,6 +657,8 @@ def record_usage_package(runs, packages, other_files,
                          pack_id=None):
     """Records the info on some pack file into the current usage report.
     """
+    if _usage_report is None:
+        return
     for run in runs:
         record_usage(argv0=run['argv'][0])
     record_usage(pack_id=pack_id or '',
