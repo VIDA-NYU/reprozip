@@ -199,17 +199,18 @@ def showfiles(args):
             sys.exit(1)
         return r
 
+    show_inputs = args.input or not args.output
+    show_outputs = args.output or not args.input
+
     def file_filter(fio):
         if file_filter.run is None:
-            return ((file_filter.input and fio.read_runs) or
-                    (file_filter.output and fio.write_runs))
+            return ((show_inputs and fio.read_runs) or
+                    (show_outputs and fio.write_runs))
         else:
-            return ((file_filter.input and file_filter.run in fio.read_runs) or
-                    (file_filter.output and file_filter.run in fio.write_runs))
+            return ((show_inputs and file_filter.run in fio.read_runs) or
+                    (show_outputs and file_filter.run in fio.write_runs))
 
     file_filter.run = None
-    file_filter.input = bool(args.input)
-    file_filter.output = bool(args.output)
 
     pack = Path(args.pack[0])
 
@@ -231,10 +232,13 @@ def showfiles(args):
         unpacked_info = metadata_read(pack, None)
         assigned_input_files = unpacked_info.get('input_files', {})
 
-        if any(f.read_runs for f in itervalues(config.inputs_outputs)):
-            print("Input files:")
+        if show_inputs:
+            shown = False
             for input_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.read_runs and file_filter(f):
+                    if not shown:
+                        print("Input files:")
+                        shown = True
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
                     else:
@@ -250,19 +254,22 @@ def showfiles(args):
                     else:
                         assert isinstance(assigned, (bytes, unicode_))
                     print("      %s" % assigned)
-        else:
-            print("Input files: none")
+            if not shown:
+                print("Input files: none")
 
-        if any(f.write_runs for f in itervalues(config.inputs_outputs)):
-            print("Output files:")
+        if show_outputs:
+            shown = False
             for output_name, f in sorted(iteritems(config.inputs_outputs)):
                 if f.write_runs and file_filter(f):
+                    if not shown:
+                        print("Output files:")
+                        shown = True
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))
                     else:
                         print("    %s" % output_name)
-        else:
-            print("Output files: none")
+            if not shown:
+                print("Output files: none")
 
     else:  # pack.is_file()
         # Reads info from a pack file
