@@ -94,7 +94,7 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
         rendered_image (/home/user/experiment/output.png)
         logfile (/home/user/experiment/log.txt)
 
-If the package contains multiple runs, you can also filter files for a specific run::
+You can use the ``--input`` or ``--output`` flags to show only files that are inputs or outputs. If the package contains multiple runs, you can also filter files for a specific run::
 
     $ reprounzip -v showfiles package.rpz preprocessing-step
     Input files:
@@ -105,6 +105,9 @@ If the package contains multiple runs, you can also filter files for a specific 
 where `preprocessing-step` is the run id. To see the dataflow of the experiment, please refer to :ref:`graph`.
 
 The ``reprounzip showfiles`` command is particularly useful if you want to replace an input file with your own, or to get and save an output file for further examination. Please refer to :ref:`unpacker-input-output` for more information.
+
+..  versionadded:: 1.0.4
+    The ``--input`` and ``--output`` flags.
 
 ..  _provenance-graph:
 
@@ -187,7 +190,15 @@ In addition to the commands listed in :ref:`unpacker-commands`, you can use ``su
     $ reprounzip vagrant suspend <path>
     $ reprounzip vagrant setup/start <path>
 
+The ``setup`` command also takes a ``--memory`` argument to explicitely select how many megabytes of RAM to allocate to the virtual machine.
+
 ..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before use (see :ref:`install`).
+
+..  versionadded:: 1.0.1
+    The ``--memory`` option.
+
+..  versionadded:: 1.0.4
+    The ``suspend`` command.
 
 ..  _docker-plugin:
 
@@ -195,6 +206,12 @@ The `docker` Unpacker: Building a Docker Container
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ReproZip can also extract and reproduce experiments as `Docker <https://www.docker.com/>`__ containers. The *docker* unpacker (``reprounzip docker``) is responsible for such integration and it assumes that Docker is already installed in the current environment.
+
+You can pass arguments to the ``docker(1)`` program by using the ``--docker-option`` option to the ``setup`` or ``run`` commands.
+
+Thanks to Docker's image layers feature, you can easily go back to the initial image after having run commands in the environment or replaced input files. To do that, use the ``reset`` command::
+
+    $ reprounzip docker reset <path>
 
 ..  note:: This unpacker is **not** distributed with `reprounzip`; it is a separate package that should be installed before use (see :ref:`install`).
 
@@ -258,6 +275,9 @@ Note that in some situations, you might want to pass specific environment variab
 
     $ reprounzip vagrant run unpacked-experiment --pass-env 'OMPI_.*' --pass-env LANG --set-env DATA_SERVER_ADDRESS=localhost
 
+..  versionadded:: 1.0.3
+    The ``--pass-env`` and ``-set-env`` options.
+
 Removing the Experiment Directory
 +++++++++++++++++++++++++++++++++
 
@@ -320,6 +340,9 @@ You can also omit the colon ``:`` altogether to download the file to the current
 or even use ``--all`` to download every output file to the current directory under their original names.
 
 Note that the ``upload`` command takes the file id on the right side of the colon (meaning that the path is the origin, and the id is the destination), while the ``download`` command takes it on the left side (meaning that the id is the origin, and the path is the destination). Both commands move  data from left to right.
+
+..  versionadded:: 1.0.4
+    Allow ``download <output-id>`` (no explicit destination), and add ``--all``.
 
 ..  seealso:: :ref:`Why can’t 'reprounzip' get my output files after reproducing an experiment? <moving-outputs>`
 
