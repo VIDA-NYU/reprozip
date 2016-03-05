@@ -117,7 +117,8 @@ def load_config(pack):
 def busybox_url(arch):
     """Gets the correct URL for the busybox binary given the architecture.
     """
-    return 'http://www.busybox.net/downloads/binaries/latest/busybox-%s' % arch
+    return ('https://www.busybox.net/downloads/binaries/latest/busybox-%s' %
+            arch)
 
 
 def sudo_url(arch):
