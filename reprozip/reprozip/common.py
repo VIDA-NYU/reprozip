@@ -608,12 +608,7 @@ def setup_usage_report(name, version):
     """
     global _usage_report
 
-    # Unpack CA certificate
-    fd, certificate_file = Path.tempfile(prefix='rpz_stats_ca_', suffix='.pem')
-    with certificate_file.open('wb') as fp:
-        fp.write(usage_report_ca)
-    os.close(fd)
-    atexit.register(os.remove, certificate_file.path)
+    certificate_file = get_reprozip_ca_certificate()
 
     _usage_report = usagestats.Stats(
         '~/.reprozip/usage_stats',
@@ -682,6 +677,17 @@ def submit_usage_report(**kwargs):
                          usagestats.OPERATING_SYSTEM,
                          usagestats.SESSION_TIME,
                          usagestats.PYTHON_VERSION)
+
+
+def get_reprozip_ca_certificate():
+    """Gets the ReproZip CA certificate filename.
+    """
+    fd, certificate_file = Path.tempfile(prefix='rpz_stats_ca_', suffix='.pem')
+    with certificate_file.open('wb') as fp:
+        fp.write(usage_report_ca)
+    os.close(fd)
+    atexit.register(os.remove, certificate_file.path)
+    return certificate_file
 
 
 usage_report_ca = b'''\
