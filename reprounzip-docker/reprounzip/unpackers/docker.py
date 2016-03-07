@@ -25,6 +25,7 @@ import sys
 
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
+from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
@@ -65,52 +66,39 @@ def select_image(runs):
                                                  architecture))
 
     if architecture == 'i686':
-        logging.info("wanted architecture was i686, but we'll use x86_64 with "
+        logging.info("Wanted architecture was i686, but we'll use x86_64 with "
                      "Docker")
     elif architecture != 'x86_64':
         logging.error("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
-    # Ubuntu
-    if distribution == 'ubuntu':
-        if version == '12.04':
-            return 'ubuntu', 'ubuntu:12.04'
-        elif version == '14.04':
-            return 'ubuntu', 'ubuntu:14.04'
-        elif version == '14.10':
-            return 'ubuntu', 'ubuntu:14.10'
-        elif version == '15.04':
-            return 'ubuntu', 'ubuntu:15.04'
-        elif version == '16.04':
-            return 'ubuntu', 'ubuntu:16.04'
-        else:
-            if version != '15.10':
-                logging.warning("using Ubuntu 15.10 'Wily' instead of '%s'",
-                                version)
-            return 'ubuntu', 'ubuntu:15.10'
+    def find_distribution(parameter, distribution, version):
+        images = parameter['images']
+        default = parameter['default']
 
-    # Debian
-    else:
-        if distribution != 'debian':
-            logging.warning("unsupported distribution %s, using Debian",
-                            distribution)
-            version = '8'
+        for distrib_name, distrib in iteritems(images):
+            if distribution == distrib_name is not None:
+                result = find_version(distrib, version)
+                if result is not None:
+                    return result
+        distrib = images[default]
+        logging.warning("Unsupported distribution '%s', using %s",
+                        distribution, default)
+        return find_version(distrib, None)
 
-        if (version == '6' or version.startswith('6.') or
-                version.startswith('squeeze')):
-            return 'debian', 'debian:squeeze'
-        elif (version == '7' or version.startswith('7.') or
-                version.startswith('wheezy')):
-            return 'debian', 'debian:wheezy'
-        elif (version == '9' or version.startswith('9.') or
-                version.startswith('stretch')):
-            return 'debian', 'debian:stretch'
-        else:
-            if (version != '8' and not version.startswith('8.') and
-                    not version.startswith('jessie')):
-                logging.warning("using Debian 8 'Jessie' instead of '%s'",
-                                version)
-            return 'debian', 'debian:jessie'
+    def find_version(distrib, version):
+        if version is not None:
+            for image in distrib['versions']:
+                if re.match(image['version'], version) is not None:
+                    return image['distribution'], image['image']
+        image = distrib['default']
+        if version is not None:
+            logging.warning("Using %s instead of '%s'",
+                            image['name'], version)
+        return image['distribution'], image['image']
+
+    return find_distribution(get_parameter('docker_images'),
+                             distribution, version)
 
 
 def write_dict(path, dct):
