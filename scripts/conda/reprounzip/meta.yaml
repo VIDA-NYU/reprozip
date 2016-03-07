@@ -32,6 +32,7 @@ requirements:
     - python
     - setuptools  # for pkg_resources
     - pyyaml
+    - requests
     - rpaths >=0.8
     - usagestats >=0.3
 
