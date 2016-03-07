@@ -9,6 +9,7 @@ import unittest
 
 from reprounzip import parameters
 from reprounzip.unpackers.docker import select_image
+from reprounzip.unpackers.vagrant import select_box
 
 
 class TestSelection(unittest.TestCase):
@@ -41,3 +42,20 @@ class TestSelection(unittest.TestCase):
                          ('debian', 'debian:jessie'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'debian:jessie'))
+
+    def test_vagrant(self):
+        def get(architecture, distribution, version):
+            return select_box([{'architecture': architecture,
+                                'distribution': (distribution, version)}])
+
+        self.assertEqual(get('i686', 'Ubuntu', '14.04'),
+                         ('ubuntu', 'ubuntu/trusty32'))
+        self.assertEqual(get('x86_64', 'Ubuntu', '12.04'),
+                         ('ubuntu', 'hashicorp/precise64'))
+        self.assertEqual(get('i686', 'Ubuntu', '1.1'),
+                         ('ubuntu', 'ubuntu/wily32'))
+        self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
+        self.assertEqual(get('x86_64', 'Fedora', '12'),
+                         ('debian', 'remram/debian-8-amd64'))
+        self.assertEqual(get('x86_64', 'Debian', '1'),
+                         ('debian', 'remram/debian-8-amd64'))
