@@ -18,12 +18,14 @@ from distutils.version import LooseVersion
 import logging
 import os
 import paramiko
+import re
 from rpaths import PosixPath, Path
 import subprocess
 import sys
 
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
+from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
@@ -58,58 +60,42 @@ def select_box(runs):
         logging.critical("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
-    # Ubuntu
-    if distribution == 'ubuntu':
-        if version == '12.04':
-            if architecture == 'i686':
-                return 'ubuntu', 'hashicorp/precise32'
-            else:  # architecture == 'x86_64'
-                return 'ubuntu', 'hashicorp/precise64'
-        if version == '14.04':
-            if architecture == 'i686':
-                return 'ubuntu', 'ubuntu/trusty32'
-            else:  # architecture == 'x86_64'
-                return 'ubuntu', 'ubuntu/trusty64'
-        if version == '15.04':
-            if architecture == 'i686':
-                return 'ubuntu', 'ubuntu/vivid32'
-            else:  # architecture == 'x86_64':
-                return 'ubuntu', 'ubuntu/vivid64'
-        if version != '15.10':
-            logging.warning("using Ubuntu 15.10 'Wily' instead of '%s'",
-                            version)
-        if architecture == 'i686':
-            return 'ubuntu', 'ubuntu/wily32'
-        else:  # architecture == 'x86_64':
-            return 'ubuntu', 'ubuntu/wily64'
+    def find_distribution(parameter, distribution, version, architecture):
+        boxes = parameter['boxes']
+        default = parameter['default']
 
-    # Debian
-    else:
-        if distribution != 'debian':
-            logging.warning("unsupported distribution %s, using Debian",
-                            distribution)
-            version = '8'
+        for distrib_name, distrib in iteritems(boxes):
+            if distribution == distrib_name is not None:
+                result = find_version(distrib, version, architecture)
+                if result is not None:
+                    return result
+        distrib = boxes[default]
+        logging.warning("Unsupported distribution '%s', using %s",
+                        distribution, default)
+        return find_version(distrib, None, architecture)
 
-        if (version == '7' or version.startswith('7.') or
-                version.startswith('wheezy')):
-            if architecture == 'i686':
-                return 'debian', 'remram/debian-7-i386'
-            else:  # architecture == 'x86_64'
-                return 'debian', 'remram/debian-7-amd64'
-        if (version == '9' or version.startswith('9.') or
-                version.startswith('stretch')):
-            if architecture == 'i686':
-                return 'debian', 'remram/debian-9-i386'
-            else:  # architecture == 'x86_64'
-                return 'debian', 'remram/debian-9-amd64'
-        if (version != '8' and not version.startswith('8.') and
-                not version.startswith('jessie')):
-            logging.warning("using Debian 8 'Jessie' instead of '%s'", version)
+    def find_version(distrib, version, architecture):
+        if version is not None:
+            for box in distrib['versions']:
+                if re.match(box['version'], version) is not None:
+                    result = box['architectures'].get(architecture)
+                    if result is not None:
+                        return box['distribution'], result
+        box = distrib['default']
+        if version is not None:
+            logging.warning("Using %s instead of '%s'",
+                            box['name'], version)
+        result = box['architectures'].get(architecture)
+        if result is not None:
+            return box['distribution'], result
 
-        if architecture == 'i686':
-            return 'debian', 'remram/debian-8-i386'
-        else:  # architecture == 'x86_64':
-            return 'debian', 'remram/debian-8-amd64'
+    result = find_distribution(get_parameter('vagrant_boxes'),
+                               distribution, version, architecture)
+    if result is None:
+        logging.critical("Error: couldn't find a base box for required "
+                         "architecture")
+        sys.exit(1)
+    return result
 
 
 def write_dict(path, dct):
