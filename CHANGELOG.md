@@ -15,6 +15,7 @@ Features:
 * Allow `download --all`
 * Add `--input` and `--output` to showfiles
 * Implement `vagrant suspend` command
+* Do file downloads with [requests](http://python-requests.org/)
 
 1.0.3 (2015-12-02)
 ------------------
