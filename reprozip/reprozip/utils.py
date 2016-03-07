@@ -463,11 +463,6 @@ def download_file(url, dest, cachename=None):
         else:
             raise
 
-    if response is None:
-        logging.info("Download %s: cache is up to date", cachename)
-        cache.copy(dest)
-        return
-
     logging.info("Download %s: downloading %s", cachename, url)
     try:
         with cache.open('wb') as f:
