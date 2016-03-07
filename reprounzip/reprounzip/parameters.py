@@ -17,7 +17,9 @@ from __future__ import division, print_function, unicode_literals
 
 import json
 import logging
-from rpaths import Path
+
+from reprounzip.common import get_reprozip_ca_certificate
+from reprounzip.utils import download_file
 
 
 parameters = None
@@ -30,7 +32,29 @@ def update_parameters():
     if parameters is not None:
         return
 
-    # TODO
+    try:
+        from reprounzip.main import __version__ as version
+        filename = download_file(
+            'https://reprozip-stats.poly.edu/parameters/%s' % version, None,
+            cachename='parameters.json',
+            ssl_verify=get_reprozip_ca_certificate().path)
+    except Exception:
+        logging.info("Can't download parameters.json, using bundled "
+                     "parameters")
+    else:
+        try:
+            with filename.open() as fp:
+                parameters = json.load(fp)
+            return
+        except ValueError:
+            logging.info("Downloaded parameters.json doesn't load, using "
+                         "bundled parameters")
+            try:
+                filename.remove()
+            except OSError:
+                pass
+
+    parameters = json.loads(bundled_parameters)
 
 
 def get_parameter(section):
@@ -40,14 +64,6 @@ def get_parameter(section):
 
     if parameters is None:
         update_parameters()
-        try:
-            fp = (Path('~/.reprozip').expand_user() / 'parameters.json').open()
-        except IOError:
-            logging.info("No parameters.json file, using bundled parameters")
-            parameters = json.loads(bundled_parameters)
-        else:
-            parameters = json.load(fp)
-            fp.close()
 
     return parameters.get(section, None)
 
