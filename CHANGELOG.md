@@ -4,6 +4,9 @@ Changelog
 1.0.4 (???)
 -----------
 
+Behavior changes:
+* reprounzip will no longer run on Python 2.6
+
 Bugfixes:
 * Fixes file download not using cache if URL is HTTPS
 * Fixes unpacking with directory or chroot for some multi-step packages
