@@ -13,7 +13,8 @@ with io.open('README.rst', encoding='utf-8') as fp:
 req = [
     'PyYAML',
     'rpaths>=0.8',
-    'usagestats>=0.3']
+    'usagestats>=0.3',
+    'requests']
 setup(name='reprounzip',
       version='1.0.3',
       packages=['reprounzip', 'reprounzip.unpackers',

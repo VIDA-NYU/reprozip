@@ -23,6 +23,7 @@ import locale
 import logging
 import operator
 import os
+import requests
 from rpaths import Path, PosixPath
 import stat
 import subprocess
@@ -56,8 +57,6 @@ PY3 = sys.version_info[0] == 3
 
 
 if PY3:
-    from urllib.error import HTTPError
-    from urllib.request import Request, urlopen
     izip = zip
     irange = range
     iteritems = dict.items
@@ -68,7 +67,6 @@ if PY3:
     stdin_bytes = sys.stdin.buffer
     stdout, stderr = sys.stdout, sys.stderr
 else:
-    from urllib2 import Request, HTTPError, urlopen
     izip = itertools.izip
     irange = xrange
     iteritems = dict.iteritems
@@ -405,7 +403,7 @@ def download_file(url, dest, cachename=None):
     if cachename is None:
         cachename = dest.components[-1]
 
-    request = Request(url)
+    headers = {}
 
     if 'XDG_CACHE_HOME' in os.environ:
         cache = Path(os.environ['XDG_CACHE_HOME'])
@@ -414,15 +412,22 @@ def download_file(url, dest, cachename=None):
     cache = cache / 'reprozip' / cachename
     if cache.exists():
         mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
-        request.add_header('If-Modified-Since', mtime)
+        headers['If-Modified-Since'] = mtime
 
     cache.parent.mkdir(parents=True)
 
     try:
-        response = urlopen(request, timeout=2 if cache.exists() else 10)
-    except Exception as e:
+        response = requests.get(url, headers=headers,
+                                timeout=2 if cache.exists() else 10,
+                                stream=True)
+        response.raise_for_status()
+        if response.status_code == 304:
+            raise requests.HTTPError(
+                '304 File is up to date, no data returned',
+                response=response)
+    except requests.RequestException as e:
         if cache.exists():
-            if isinstance(e, HTTPError) and e.code == 304:
+            if e.response and e.response.status_code == 304:
                 logging.info("Download %s: cache is up to date", cachename)
             else:
                 logging.warning("Download %s: error downloading %s: %s",
@@ -435,7 +440,8 @@ def download_file(url, dest, cachename=None):
     logging.info("Download %s: downloading %s", cachename, url)
     try:
         with cache.open('wb') as f:
-            copyfile(response, f)
+            for chunk in response.iter_content(4096):
+                f.write(chunk)
         response.close()
     except Exception as e:  # pragma: no cover
         try:
