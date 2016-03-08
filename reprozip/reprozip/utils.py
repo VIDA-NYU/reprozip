@@ -392,7 +392,7 @@ def copyfile(source, destination, CHUNK_SIZE=4096):
             break
 
 
-def download_file(url, dest, cachename=None):
+def download_file(url, dest, cachename=None, ssl_verify=None):
     """Downloads a file using a local cache.
 
     If the file cannot be downloaded or if it wasn't modified, the cached
@@ -401,6 +401,8 @@ def download_file(url, dest, cachename=None):
     The cache lives in ``~/.cache/reprozip/``.
     """
     if cachename is None:
+        if dest is None:
+            raise ValueError("One of 'dest' or 'cachename' must be specified")
         cachename = dest.components[-1]
 
     headers = {}
@@ -419,7 +421,7 @@ def download_file(url, dest, cachename=None):
     try:
         response = requests.get(url, headers=headers,
                                 timeout=2 if cache.exists() else 10,
-                                stream=True)
+                                stream=True, verify=ssl_verify)
         response.raise_for_status()
         if response.status_code == 304:
             raise requests.HTTPError(
@@ -432,8 +434,11 @@ def download_file(url, dest, cachename=None):
             else:
                 logging.warning("Download %s: error downloading %s: %s",
                                 cachename, url, e)
-            cache.copy(dest)
-            return
+            if dest is not None:
+                cache.copy(dest)
+                return dest
+            else:
+                return cache
         else:
             raise
 
@@ -451,4 +456,8 @@ def download_file(url, dest, cachename=None):
         raise e
     logging.info("Downloaded %s successfully", cachename)
 
-    cache.copy(dest)
+    if dest is not None:
+        cache.copy(dest)
+        return dest
+    else:
+        return cache

@@ -23,6 +23,7 @@ import tarfile
 
 import reprounzip.common
 from reprounzip.common import RPZPack
+from reprounzip.parameters import get_parameter
 from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
     unicode_, join_root, copyfile
 
@@ -117,15 +118,13 @@ def load_config(pack):
 def busybox_url(arch):
     """Gets the correct URL for the busybox binary given the architecture.
     """
-    return ('https://www.busybox.net/downloads/binaries/latest/busybox-%s' %
-            arch)
+    return get_parameter('busybox_url')[arch]
 
 
 def sudo_url(arch):
     """Gets the correct URL for the rpzsudo binary given the architecture.
     """
-    return ('https://github.com/remram44/static-sudo'
-            '/releases/download/current/rpzsudo-%s' % arch)
+    return get_parameter('rpzsudo_url')[arch]
 
 
 class FileUploader(object):
