@@ -9,13 +9,8 @@ import locale
 import logging
 import os
 import sys
+import unittest
 import warnings
-
-try:
-    import unittest2 as unittest
-    sys.modules['unittest'] = unittest
-except ImportError:
-    import unittest
 
 
 top_level = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -82,11 +77,6 @@ if __name__ == '__main__':
     successful = True
     if unittests:
         logging.info("Running unit tests")
-        if not hasattr(unittest, 'skipIf'):
-            logging.info("This testsuite will not work with pre-2.7 "
-                         "unittest. If running Python 2.6, you'll need to "
-                         "install the 'unittest2' package.")
-            sys.exit(1)
         prog = Program(argv=['tests'] + args.arg, exit=False)
         successful = prog.result.wasSuccessful()
     if functests:
