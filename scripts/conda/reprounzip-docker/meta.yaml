@@ -25,12 +25,12 @@ requirements:
   build:
     - python
     - setuptools
-    - reprounzip >=1.0.3
+    - reprounzip >=1.0.4
     - rpaths >=0.8
 
   run:
     - python
-    - reprounzip >=1.0.3
+    - reprounzip >=1.0.4
     - rpaths >=0.8
 
 test:
