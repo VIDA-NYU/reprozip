@@ -19,6 +19,7 @@ Features:
 * Add `--input` and `--output` to showfiles
 * Implement `vagrant suspend` command
 * Do file downloads with [requests](http://python-requests.org/)
+* Download a parameter file to update URLs and image names without waiting for the next ReproZip version
 
 1.0.3 (2015-12-02)
 ------------------
