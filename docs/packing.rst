@@ -39,6 +39,8 @@ The configuration file, which can be found in ``.reprozip-trace/config.yml``, co
 
 It is very likely that you won't need to modify this file, as the automatically-generated one should be sufficient to create a working package. However, in some cases, you may want to edit it prior to the creation of the package to add or remove files used by your experiment. This can be particularly useful, for instance, to remove big files that can be obtained elsewhere when reproducing the experiment, to keep the size of package small, and also to remove sensitive information that the experiment may use. The configuration file can also be used to edit the main command line, to add or remove environment variables, and to edit information regarding input/output files.
 
+..  _packing-config-general:
+
 The first part of the configuration file gives general information with respect to the experiment and its runs, including command lines, environment variables, working directory, and machine information. Also, each run has a unique identifier (given by ``id``) that is consistently used for packing and unpacking purposes::
 
     # Run info
@@ -64,6 +66,8 @@ The first part of the configuration file gives general information with respect 
 
 If necessary, users may change command line parameters by editing ``argv``, and add or remove environment variables by editing ``environ``. Users may also give a more meaningful and user-friendly identifier for a run by changing ``id``. Other attributes should not be changed in general.
 
+..  _packing-config-inputoutput:
+
 The next section brings information about input and output files, including their original paths and which runs read and/or wrote them. These are the files that `reprozip` identified as the main input or result of the experiment, which `reprounzip` will later be able to replace and extract from the experiment when reproducing it. You may add, remove, or edit these files in case `reprozip` fails in recognizing any important information, as well as give meaningful names to them by editing ``name``::
 
     # Inputs are files that are only read by a run; reprounzip can replace these
@@ -84,6 +88,8 @@ Note that you can prevent `reprozip` from identifying which files are input or o
 ..  note:: To visualize the dataflow of the experiment, pleaser refer to :ref:`graph`.
 
 ..  seealso:: :ref:`Why doesn’t 'reprozip' identify my input/output file? <file_id>`
+
+..  _packing-config-files:
 
 The next section in the configuration file lists all the files to be packed. If the software dependencies were identified by the package manager of the system during the ``reprozip trace`` command, they will be organized in software packages and listed under ``packages``; otherwise, file dependencies will be listed under ``other_files``::
 
@@ -109,6 +115,8 @@ The attribute ``packfiles`` can be used to control whether a software package wi
     Note that if a software package is requested not to be included, the `reprounzip` component will try to install it from a package manager when unpacking the experiment. If the software version from the package manager is different from (and incompatible with) the one used by the experiment, the experiment may not be reproduced correctly.
 
 ..  seealso:: :ref:`Why does 'reprounzip run' fail with "no such file or directory" or similar? <nosuchfile>`
+
+..  _packing-config-patterns:
 
 Last, users may add file patterns under ``additional_patterns`` to include other files that they think it will be useful for a future reproduction. As an example, the following would add everything under ``/etc/apache2/`` and all the Python files of all users from LXC containers (contrived example)::
 
