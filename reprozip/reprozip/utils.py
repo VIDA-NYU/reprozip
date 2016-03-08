@@ -148,25 +148,6 @@ class CommonEqualityMixin(object):
         return not self.__eq__(other)
 
 
-class OrderingFromEqLtMixin(object):
-    """Provide implementations of comparison methods from __eq__ and __lt__.
-
-    Kind of like functools.total_ordering, which is not available on
-    Python 2.6.
-    """
-    def __le__(self, other):
-        return self.__lt__(other) or self.__eq__(other)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __gt__(self, other):
-        return not self.__le__(other)
-
-    def __ge__(self, other):
-        return not self.__lt__(other)
-
-
 def optional_return_type(req_args, other_args):
     """Sort of namedtuple but with name-only fields.
 
@@ -398,20 +379,8 @@ def rmtree_fixed(path):
     path.rmdir()
 
 
-def check_output(*popenargs, **kwargs):
-    """Runs a command and returns its output, raising on non-zero exit code.
-    """
-    if 'stdout' in kwargs:
-        raise ValueError("stdout argument not allowed")
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    out, err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get('args')
-        if cmd is None:
-            cmd = [popenargs[0]]
-        raise subprocess.CalledProcessError(retcode, cmd)
-    return out
+# Compatibility with ReproZip <= 1.0.3
+check_output = subprocess.check_output
 
 
 def copyfile(source, destination, CHUNK_SIZE=4096):

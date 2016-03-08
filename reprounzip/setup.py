@@ -1,7 +1,6 @@
 import io
 import os
 from setuptools import setup
-import sys
 
 
 # pip workaround
@@ -15,8 +14,6 @@ req = [
     'PyYAML',
     'rpaths>=0.8',
     'usagestats>=0.3']
-if sys.version_info < (2, 7):
-    req.append('argparse')
 setup(name='reprounzip',
       version='1.0.3',
       packages=['reprounzip', 'reprounzip.unpackers',

@@ -33,8 +33,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
 from reprounzip.unpackers.common.x11 import X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
-from reprounzip.utils import unicode_, iteritems, stderr, check_output, \
-    download_file
+from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
 def rb_escape(s):
@@ -124,9 +123,9 @@ def machine_setup(target, use_chroot):
     """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
     try:
-        out = check_output(['vagrant', 'ssh-config'],
-                           cwd=target.path,
-                           stderr=subprocess.PIPE)
+        out = subprocess.check_output(['vagrant', 'ssh-config'],
+                                      cwd=target.path,
+                                      stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
         logging.info("Calling 'vagrant up'...")
@@ -140,8 +139,8 @@ def machine_setup(target, use_chroot):
                 logging.critical("vagrant up failed with code %d", retcode)
                 sys.exit(1)
         # Try again
-        out = check_output(['vagrant', 'ssh-config'],
-                           cwd=target.path)
+        out = subprocess.check_output(['vagrant', 'ssh-config'],
+                                      cwd=target.path)
 
     vagrant_info = {}
     for line in out.split(b'\n'):
@@ -688,7 +687,7 @@ def _executable_in_path(executable):
 
 def check_vagrant_version():
     try:
-        out = check_output(['vagrant', '--version'])
+        out = subprocess.check_output(['vagrant', '--version'])
     except (subprocess.CalledProcessError, OSError):
         logging.error("Couldn't run vagrant")
         sys.exit(1)
@@ -710,7 +709,7 @@ def test_has_vagrant(pack, **kwargs):
         return COMPAT_MAYBE, "vagrant not found in PATH"
 
     try:
-        out = check_output(['vagrant', '--version'])
+        out = subprocess.check_output(['vagrant', '--version'])
     except subprocess.CalledProcessError:
         return COMPAT_NO, ("vagrant was found in PATH but doesn't seem to "
                            "work properly")

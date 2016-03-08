@@ -33,7 +33,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
-    check_output, download_file
+    download_file
 
 
 # How this all works:
@@ -337,12 +337,12 @@ def get_local_addr(iface='docker0'):
     """
     try:
         try:
-            out = check_output(['/bin/ip', 'addr', 'show', iface])
+            out = subprocess.check_output(['/bin/ip', 'addr', 'show', iface])
         except subprocess.CalledProcessError:
             logging.info(
                 "No interface '%s', querying any interface for an IP...",
                 iface)
-            out = check_output(['/bin/ip', 'addr', 'show'])
+            out = subprocess.check_output(['/bin/ip', 'addr', 'show'])
     except (OSError, subprocess.CalledProcessError):
         # This is probably going to return '127.0.0.1', and that is bad
         return socket.gethostbyname(socket.gethostname())
@@ -459,7 +459,7 @@ def docker_run(args):
         sys.exit(1)
 
     # Get exit status from "docker inspect"
-    out = check_output(['docker', 'inspect', container])
+    out = subprocess.check_output(['docker', 'inspect', container])
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
