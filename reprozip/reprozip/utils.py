@@ -379,20 +379,8 @@ def rmtree_fixed(path):
     path.rmdir()
 
 
-def check_output(*popenargs, **kwargs):
-    """Runs a command and returns its output, raising on non-zero exit code.
-    """
-    if 'stdout' in kwargs:
-        raise ValueError("stdout argument not allowed")
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    out, err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get('args')
-        if cmd is None:
-            cmd = [popenargs[0]]
-        raise subprocess.CalledProcessError(retcode, cmd)
-    return out
+# Compatibility with ReproZip <= 1.0.3
+check_output = subprocess.check_output
 
 
 def copyfile(source, destination, CHUNK_SIZE=4096):
