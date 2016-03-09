@@ -17,6 +17,7 @@ from __future__ import division, print_function, unicode_literals
 
 import json
 import logging
+import os
 
 from reprounzip.common import get_reprozip_ca_certificate
 from reprounzip.utils import download_file
@@ -32,27 +33,30 @@ def update_parameters():
     if parameters is not None:
         return
 
-    try:
-        from reprounzip.main import __version__ as version
-        filename = download_file(
-            'https://reprozip-stats.poly.edu/parameters/%s' % version, None,
-            cachename='parameters.json',
-            ssl_verify=get_reprozip_ca_certificate().path)
-    except Exception:
-        logging.info("Can't download parameters.json, using bundled "
-                     "parameters")
-    else:
+    if os.environ.get('REPROZIP_PARAMETERS') not in (None, '', '1', 'on',
+                                                     'enabled', 'yes', 'true'):
         try:
-            with filename.open() as fp:
-                parameters = json.load(fp)
-            return
-        except ValueError:
-            logging.info("Downloaded parameters.json doesn't load, using "
-                         "bundled parameters")
+            from reprounzip.main import __version__ as version
+            filename = download_file(
+                'https://reprozip-stats.poly.edu/parameters/%s' % version,
+                None,
+                cachename='parameters.json',
+                ssl_verify=get_reprozip_ca_certificate().path)
+        except Exception:
+            logging.info("Can't download parameters.json, using bundled "
+                         "parameters")
+        else:
             try:
-                filename.remove()
-            except OSError:
-                pass
+                with filename.open() as fp:
+                    parameters = json.load(fp)
+                return
+            except ValueError:
+                logging.info("Downloaded parameters.json doesn't load, using "
+                             "bundled parameters")
+                try:
+                    filename.remove()
+                except OSError:
+                    pass
 
     parameters = json.loads(bundled_parameters)
 
