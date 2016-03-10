@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.4 (???)
------------
+1.0.4 (2016-03-10)
+------------------
 
 Behavior changes:
 * reprounzip will no longer run on Python 2.6
