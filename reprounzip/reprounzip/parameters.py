@@ -33,12 +33,18 @@ def update_parameters():
     if parameters is not None:
         return
 
-    if os.environ.get('REPROZIP_PARAMETERS') not in (None, '', '1', 'on',
-                                                     'enabled', 'yes', 'true'):
+    url = 'https://reprozip-stats.poly.edu/parameters/'
+    env_var = os.environ.get('REPROZIP_PARAMETERS')
+    if env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true'):
+        # This is only used for testing
+        # Note that this still expects the ReproZip CA
+        if env_var and (env_var.startswith('http://') or
+                        env_var.startswith('https://')):
+            url = env_var
         try:
             from reprounzip.main import __version__ as version
             filename = download_file(
-                'https://reprozip-stats.poly.edu/parameters/%s' % version,
+                '%s%s' % (url, version),
                 None,
                 cachename='parameters.json',
                 ssl_verify=get_reprozip_ca_certificate().path)
