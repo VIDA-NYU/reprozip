@@ -25,9 +25,6 @@ requirements:
   build:
     - python
     - setuptools
-    - reprounzip >=1.0.4
-    - rpaths >=0.8
-    - paramiko
 
   run:
     - python
