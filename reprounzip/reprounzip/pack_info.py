@@ -122,7 +122,7 @@ def print_info(args):
         print("Distribution: %s (current: %s)" % (
               meta_distribution, current_distribution or "(not Linux)"))
         print("Runs (%d):" % len(runs))
-        for i, run in enumerate(runs):
+        for run in runs:
             cmdline = ' '.join(shell_escape(a) for a in run['argv'])
             if len(runs) == 1 and run['id'] == "run0":
                 print("    %s" % cmdline)

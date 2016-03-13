@@ -70,8 +70,6 @@ def update_parameters():
 def get_parameter(section):
     """Get a parameter from the downloaded or default parameter file.
     """
-    global parameters
-
     if parameters is None:
         update_parameters()
 
