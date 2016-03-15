@@ -310,35 +310,49 @@ def docker_reset(args):
         write_dict(target, unpacked_info)
 
 
-_addr_re = re.compile(br'inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+_addr_re = re.compile(br'^(?:[a-z]+://)?([[0-9a-zA-Z_.-]+)(?::[0-9]+)?$')
 
 
-def get_local_addr(iface='docker0'):
+def get_local_addr():
     """Gets the local IP address of the local machine.
 
-    Returns an IPv4 address as a unicode object, in digits-and-dots format.
+    This finds the address used to connect to the Docker host by establishing a
+    network connection to it and reading the local address of the socket.
 
-    >>> get_local_addr('lo')
-    '127.0.0.1'
+    Returns an IP address as a unicode object, in digits-and-dots format.
+
     >>> get_local_addr()
     '172.17.42.1'
     """
-    try:
-        try:
-            out = subprocess.check_output(['/bin/ip', 'addr', 'show', iface])
-        except subprocess.CalledProcessError:
-            logging.info(
-                "No interface '%s', querying any interface for an IP...",
-                iface)
-            out = subprocess.check_output(['/bin/ip', 'addr', 'show'])
-    except (OSError, subprocess.CalledProcessError):
-        # This is probably going to return '127.0.0.1', and that is bad
-        return socket.gethostbyname(socket.gethostname())
-    else:
-        for line in reversed(out.splitlines()):
-            m = _addr_re.search(line)
-            if m is not None:
-                return m.group(1).decode('ascii')
+    # Find hostname or IP address in DOCKER_HOST
+    if 'DOCKER_HOST' in os.environ:
+        m = _addr_re.match(os.environ['DOCKER_HOST'])
+        if m is not None:
+            ip = m.group(1)
+
+            try:
+                addresses = socket.getaddrinfo(ip, 9, socket.AF_UNSPEC,
+                                               socket.SOCK_STREAM)
+            except socket.gaierror:
+                pass
+            else:
+                for address in addresses:
+                    sock = None
+                    try:
+                        af, socktype, proto, canonname, sa = address
+                        sock = socket.socket(af, socktype, proto)
+                        sock.settimeout(1)
+                        sock.connect(sa)
+                        sock.close()
+                    except socket.error:
+                        pass
+                    if sock is not None:
+                        addr = sock.getsockname()[0]
+                        if isinstance(addr, bytes):
+                            addr = addr.decode('ascii')
+                        return addr
+
+    return '127.0.0.1'
 
 
 _dockerhost_re = re.compile(r'^tcp://([0-9.]+):[0-9]+$')
