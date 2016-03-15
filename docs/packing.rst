@@ -175,7 +175,7 @@ When reproducing an experiment that communicates with a server, the experiment w
 * execute the experiment, and
 * stop the server,
 
-and use *reprozip* to trace the script execution, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction. Alternatively, users can trace each run individually and include them all in the same package, but since one may reproduce individual runs, this does not ensure that the server will be alive when reproducing the experiment.
+and use *reprozip* to trace the script execution, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
 
 Excluding Sensitive and Third-Party Information
 +++++++++++++++++++++++++++++++++++++++++++++++
