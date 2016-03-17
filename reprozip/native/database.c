@@ -153,14 +153,14 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO processes(run_id, parent, timestamp, is_thread)"
+                "INSERT INTO processes(run_id, parent, timestamp, is_thread) "
                 "VALUES(?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
     }
 
     {
         const char *sql = ""
-                "UPDATE processes SET exitcode=?, exit_timestamp=?"
+                "UPDATE processes SET exitcode=?, exit_timestamp=? "
                 "WHERE id=?";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_set_exitcode, NULL));
     }
@@ -168,7 +168,7 @@ int db_init(const char *filename)
     {
         const char *sql = ""
                 "INSERT INTO opened_files(run_id, name, timestamp, "
-                "        mode, is_directory, process)"
+                "        mode, is_directory, process) "
                 "VALUES(?, ?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
@@ -176,7 +176,7 @@ int db_init(const char *filename)
     {
         const char *sql = ""
                 "INSERT INTO executed_files(run_id, name, timestamp, process, "
-                "        argv, envp, workingdir)"
+                "        argv, envp, workingdir) "
                 "VALUES(?, ?, ?, ?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
     }
