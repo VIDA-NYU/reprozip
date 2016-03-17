@@ -449,7 +449,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
     return 0;
 }
 
-int syscall_execve_event(struct Process *process)
+int syscall_execve_event(struct Process *process, int cpu_time)
 {
     struct Process *exec_process = process;
     struct ExecveInfo *execi = exec_process->execve_info;
@@ -485,7 +485,7 @@ int syscall_execve_event(struct Process *process)
         execi = exec_process->execve_info;
 
         /* The process that called execve() disappears without any trace */
-        if(db_add_exit(exec_process->identifier, 0) != 0)
+        if(db_add_exit(exec_process->identifier, 0, cpu_time) != 0)
             return -1;
         if(verbosity >= 3)
             log_debug(exec_process->tid,

@@ -7,6 +7,8 @@
 
 #include <sys/ptrace.h>
 #include <sys/reg.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/user.h>
@@ -331,10 +333,21 @@ static int trace(pid_t first_proc, int *first_exit_code)
     {
         int status;
         pid_t tid;
+        int cpu_time;
         struct Process *process;
 
         /* Wait for a process */
+#if NO_WAIT3
         tid = waitpid(-1, &status, __WALL);
+        cpu_time = -1;
+#else
+        {
+            struct rusage res;
+            tid = wait3(&status, __WALL, &res);
+            cpu_time = (res.ru_utime.tv_sec * 1000 +
+                        res.ru_utime.tv_usec / 1000);
+        }
+#endif
         if(tid == -1)
         {
             /* LCOV_EXCL_START : internal error: waitpid() won't fail unless we
@@ -358,7 +371,8 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process = trace_find_process(tid);
             if(process != NULL)
             {
-                if(db_add_exit(process->identifier, exitcode) != 0)
+                if(db_add_exit(process->identifier, exitcode,
+                               cpu_time) != 0)
                     return -1;
                 trace_free_process(process);
             }
@@ -523,7 +537,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     log_debug(tid,
                              "got EVENT_EXEC, an execve() was successful and "
                              "will return soon");
-                    if(syscall_execve_event(process) != 0)
+                    if(syscall_execve_event(process, cpu_time) != 0)
                         return -1;
                 }
                 else if( (event == PTRACE_EVENT_FORK)

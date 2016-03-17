@@ -111,6 +111,7 @@ class Package(CommonEqualityMixin):
 # 1.0: no change, ReproZip 1.0 actually uses format 0.8
 # 1.1:
 #     adds processes.exit_timestamp
+#     adds processes.cpu_time
 
 
 class RPZPack(object):
