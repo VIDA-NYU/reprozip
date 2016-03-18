@@ -371,16 +371,20 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process = trace_find_process(tid);
             if(process != NULL)
             {
+                int cpu_time_val = -1;
+                if(process->tid == process->threadgroup->tgid)
+                    cpu_time_val = cpu_time;
                 if(db_add_exit(process->identifier, exitcode,
-                               cpu_time) != 0)
+                               cpu_time_val) != 0)
                     return -1;
                 trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
-                log_info(tid, "process exited (%s %d), %d processes remain",
+                log_info(tid, "process exited (%s %d), CPU time %.2f, "
+                         "%d processes remain",
                          (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
-                         (unsigned int)nprocs);
+                         cpu_time * 0.001f, (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
@@ -537,7 +541,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     log_debug(tid,
                              "got EVENT_EXEC, an execve() was successful and "
                              "will return soon");
-                    if(syscall_execve_event(process, cpu_time) != 0)
+                    if(syscall_execve_event(process) != 0)
                         return -1;
                 }
                 else if( (event == PTRACE_EVENT_FORK)
