@@ -58,15 +58,18 @@ def print_db(database):
     cur = conn.cursor()
     processes = cur.execute(
         '''
-        SELECT id, parent, timestamp, exit_timestamp, exitcode
+        SELECT id, parent, timestamp, exit_timestamp, exitcode, cpu_time
         FROM processes;
         ''')
     print("\nProcesses:")
-    header = "+------+--------+-------+------------------+------------------+"
+    header = ("+------+--------+-------+------------------+------------------+"
+              "----------+")
     print(header)
-    print("|  id  | parent |  exit |     timestamp    |  exit timestamp  |")
+    print("|  id  | parent |  exit |     timestamp    |  exit timestamp  |"
+          " cpu time |")
     print(header)
-    for r_id, r_parent, r_timestamp, r_endtime, r_exit in processes:
+    for (r_id, r_parent, r_timestamp, r_endtime,
+            r_exit, r_cpu_time) in processes:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
@@ -78,8 +81,12 @@ def print_db(database):
             f_exit = "    {0: <2d} ".format(r_exit)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_endtime = "{0: 17d} ".format(r_endtime)
+        if r_cpu_time >= 0:
+            f_cputime = "{0: 9.2f} ".format(r_cpu_time * 0.001)
+        else:
+            f_cputime = "          "
         print('|'.join(('', f_id, f_parent, f_exit,
-                        f_timestamp, f_endtime, '')))
+                        f_timestamp, f_endtime, f_cputime, '')))
         print(header)
     cur.close()
 
