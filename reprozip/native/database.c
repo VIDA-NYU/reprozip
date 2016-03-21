@@ -11,7 +11,7 @@
 #include "log.h"
 
 #define count(x) (sizeof((x))/sizeof(*(x)))
-#define check(r) if((r) != SQLITE_OK) { goto sqlerror; }
+#define check(r) do { if((r) != SQLITE_OK) { goto sqlerror; } } while(0)
 
 static sqlite3_uint64 gettime(void)
 {
@@ -47,7 +47,7 @@ int db_init(const char *filename)
     check(sqlite3_open(filename, &db));
     log_debug(0, "database file opened: %s", filename);
 
-    check(sqlite3_exec(db, "BEGIN IMMEDIATE;", NULL, NULL, NULL))
+    check(sqlite3_exec(db, "BEGIN IMMEDIATE;", NULL, NULL, NULL));
 
     {
         int ret;
