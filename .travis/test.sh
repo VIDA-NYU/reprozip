@@ -19,7 +19,7 @@ in
         diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
         find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
-            T=$(file -bi "$i")
+            T=$(file -b --mime "$i")
             if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
                 echo "$i is not ASCII"
                 exit 1
