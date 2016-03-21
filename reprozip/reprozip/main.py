@@ -141,6 +141,28 @@ def print_db(database):
         print(header)
     cur.close()
 
+    cur = conn.cursor()
+    connections = cur.execute(
+        '''
+        SELECT DISTINCT inbound, family, protocol, address
+        FROM connections
+        ORDER BY inbound, family, timestamp;
+        ''')
+    header_shown = -1
+    current_family = None
+    for r_inbound, r_family, r_protocol, r_address in connections:
+        if header_shown < r_inbound:
+            if r_inbound:
+                print("\nIncoming connections:")
+            else:
+                print("\nRemote connections:")
+            header_shown = r_inbound
+            current_family = None
+        if current_family != r_family:
+            print("    %s" % r_family)
+            current_family = r_family
+        print("        %s" % r_address)
+
     conn.close()
 
 
