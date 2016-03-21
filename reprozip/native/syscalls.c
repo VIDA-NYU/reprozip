@@ -70,9 +70,10 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
 }
 
 
-static const char *print_sockaddr(void *address, socklen_t addrlen)
+static void record_connection(struct Process *process, int inbound,
+                              void *address, socklen_t addrlen)
 {
-    static char buffer[512];
+    char buffer[512];
     const short family = ((struct sockaddr*)address)->sa_family;
     if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
     {
@@ -80,6 +81,7 @@ static const char *print_sockaddr(void *address, socklen_t addrlen)
         snprintf(buffer, 512, "%s:%d",
                 inet_ntoa(address_->sin_addr),
                 ntohs(address_->sin_port));
+        db_add_connection(process->identifier, inbound, "INET", NULL, buffer);
     }
     else if(family == AF_INET6
           && addrlen >= sizeof(struct sockaddr_in6))
@@ -88,10 +90,19 @@ static const char *print_sockaddr(void *address, socklen_t addrlen)
         char buf[50];
         inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
         snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
+        db_add_connection(process->identifier, inbound, "INET6", NULL, buffer);
     }
     else
+    {
+        char family_str[32];
+        snprintf(family_str, 32, "unknown sa_family=%d", family);
+        db_add_connection(process->identifier, inbound, family_str, NULL,
+                          NULL);
         snprintf(buffer, 512, "<unknown destination, sa_family=%d>", family);
-    return buffer;
+    }
+    log_info(process->tid, "process %s %s",
+             inbound?"accepted a connection from":"connected to",
+             buffer);
 }
 
 
@@ -485,7 +496,7 @@ int syscall_execve_event(struct Process *process)
         execi = exec_process->execve_info;
 
         /* The process that called execve() disappears without any trace */
-        if(db_add_exit(exec_process->identifier, 0) != 0)
+        if(db_add_exit(exec_process->identifier, 0, -1) != 0)
             return -1;
         if(verbosity >= 3)
             log_debug(exec_process->tid,
@@ -656,8 +667,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
  * Network connections
  */
 
-static int handle_accept(struct Process *process,
-                         void *arg1, void *arg2)
+static int handle_accept(struct Process *process, void *arg1, void *arg2)
 {
     socklen_t addrlen;
     tracee_read(process->tid, (void*)&addrlen, arg2, sizeof(addrlen));
@@ -665,8 +675,7 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_info(process->tid, "process accepted a connection from %s",
-                 print_sockaddr(address, addrlen));
+        record_connection(process, 1, address, addrlen);
         free(address);
     }
     return 0;
@@ -679,8 +688,7 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_info(process->tid, "process connected to %s",
-                 print_sockaddr(address, addrlen));
+        record_connection(process, 0, address, addrlen);
         free(address);
     }
     return 0;

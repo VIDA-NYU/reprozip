@@ -58,15 +58,18 @@ def print_db(database):
     cur = conn.cursor()
     processes = cur.execute(
         '''
-        SELECT id, parent, timestamp, exitcode
+        SELECT id, parent, timestamp, exit_timestamp, exitcode, cpu_time
         FROM processes;
         ''')
     print("\nProcesses:")
-    header = "+------+--------+-------+------------------+"
+    header = ("+------+--------+-------+------------------+------------------+"
+              "----------+")
     print(header)
-    print("|  id  | parent |  exit |     timestamp    |")
+    print("|  id  | parent |  exit |     timestamp    |  exit timestamp  |"
+          " cpu time |")
     print(header)
-    for r_id, r_parent, r_timestamp, r_exit in processes:
+    for (r_id, r_parent, r_timestamp, r_endtime,
+            r_exit, r_cpu_time) in processes:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
@@ -77,7 +80,13 @@ def print_db(database):
         else:
             f_exit = "    {0: <2d} ".format(r_exit)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
-        print('|'.join(('', f_id, f_parent, f_exit, f_timestamp, '')))
+        f_endtime = "{0: 17d} ".format(r_endtime)
+        if r_cpu_time >= 0:
+            f_cputime = "{0: 9.2f} ".format(r_cpu_time * 0.001)
+        else:
+            f_cputime = "          "
+        print('|'.join(('', f_id, f_parent, f_exit,
+                        f_timestamp, f_endtime, f_cputime, '')))
         print(header)
     cur.close()
 
@@ -131,6 +140,28 @@ def print_db(database):
         print('|'.join(('', f_id, f_timestamp, f_proc, f_mode, f_name, '')))
         print(header)
     cur.close()
+
+    cur = conn.cursor()
+    connections = cur.execute(
+        '''
+        SELECT DISTINCT inbound, family, protocol, address
+        FROM connections
+        ORDER BY inbound, family, timestamp;
+        ''')
+    header_shown = -1
+    current_family = None
+    for r_inbound, r_family, r_protocol, r_address in connections:
+        if header_shown < r_inbound:
+            if r_inbound:
+                print("\nIncoming connections:")
+            else:
+                print("\nRemote connections:")
+            header_shown = r_inbound
+            current_family = None
+        if current_family != r_family:
+            print("    %s" % r_family)
+            current_family = r_family
+        print("        %s" % r_address)
 
     conn.close()
 

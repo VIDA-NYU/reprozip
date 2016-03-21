@@ -134,6 +134,8 @@ def print_info(args):
                     print("        signal: %d" % run['signal'])
                 else:
                     print("        exitcode: %d" % run['exitcode'])
+                if run.get('walltime') is not None:
+                    print("        walltime: %s" % run['walltime'])
 
     if inputs_outputs:
         if args.verbosity < 2:

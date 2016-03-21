@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.1.0 (???)
+-----------
+
+Behavior change:
+* .rpz config format changed (version 0.8 -> 1.1)
+
+Features:
+* Configuration file contains the walltime taken by each run
+
 1.0.4 (2016-03-10)
 ------------------
 

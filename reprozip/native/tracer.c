@@ -7,6 +7,8 @@
 
 #include <sys/ptrace.h>
 #include <sys/reg.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/user.h>
@@ -331,10 +333,21 @@ static int trace(pid_t first_proc, int *first_exit_code)
     {
         int status;
         pid_t tid;
+        int cpu_time;
         struct Process *process;
 
         /* Wait for a process */
+#if NO_WAIT3
         tid = waitpid(-1, &status, __WALL);
+        cpu_time = -1;
+#else
+        {
+            struct rusage res;
+            tid = wait3(&status, __WALL, &res);
+            cpu_time = (res.ru_utime.tv_sec * 1000 +
+                        res.ru_utime.tv_usec / 1000);
+        }
+#endif
         if(tid == -1)
         {
             /* LCOV_EXCL_START : internal error: waitpid() won't fail unless we
@@ -358,15 +371,20 @@ static int trace(pid_t first_proc, int *first_exit_code)
             process = trace_find_process(tid);
             if(process != NULL)
             {
-                if(db_add_exit(process->identifier, exitcode) != 0)
+                int cpu_time_val = -1;
+                if(process->tid == process->threadgroup->tgid)
+                    cpu_time_val = cpu_time;
+                if(db_add_exit(process->identifier, exitcode,
+                               cpu_time_val) != 0)
                     return -1;
                 trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
             if(verbosity >= 2)
-                log_info(tid, "process exited (%s %d), %d processes remain",
+                log_info(tid, "process exited (%s %d), CPU time %.2f, "
+                         "%d processes remain",
                          (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
-                         (unsigned int)nprocs);
+                         cpu_time * 0.001f, (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
