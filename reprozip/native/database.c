@@ -37,6 +37,7 @@ static sqlite3_stmt *stmt_insert_process;
 static sqlite3_stmt *stmt_set_exitcode;
 static sqlite3_stmt *stmt_insert_file;
 static sqlite3_stmt *stmt_insert_exec;
+static sqlite3_stmt *stmt_insert_connection;
 
 static int run_id = -1;
 
@@ -67,12 +68,14 @@ int db_init(const char *filename)
                 found |= 0x02;
             else if(strcmp("executed_files", colname) == 0)
                 found |= 0x04;
+            else if(strcmp("connections", colname) == 0)
+                found |= 0x08;
             else
                 goto wrongschema;
         }
         if(found == 0x00)
             tables_exist = 0;
-        else if(found == 0x07)
+        else if(found == 0x0F)
             tables_exist = 1;
         else
         {
@@ -120,6 +123,17 @@ int db_init(const char *filename)
             "    workingdir TEXT NOT NULL"
             "    );",
             "CREATE INDEX exec_proc_idx ON executed_files(process);",
+            "CREATE TABLE connections("
+            "    id INTEGER NOT NULL PRIMARY KEY,"
+            "    run_id INTEGER NOT NULL,"
+            "    timestamp INTEGER NOT NULL,"
+            "    process INTEGER NOT NULL,"
+            "    inbound INTEGER NOT NULL,"
+            "    family TEXT NULL,"
+            "    protocol TEXT NULL,"
+            "    address TEXT NULL"
+            "    );",
+            "CREATE INDEX connections_proc_idx ON connections(process);",
         };
         size_t i;
         for(i = 0; i < count(sql); ++i)
@@ -183,6 +197,14 @@ int db_init(const char *filename)
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
     }
 
+    {
+        const char *sql = ""
+                "INSERT INTO connections(run_id, timestamp, process, "
+                "        inbound, family, protocol, address) "
+                "VALUES(?, ?, ?, ?, ?, ?, ?)";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_connection, NULL));
+    }
+
     return 0;
 
 sqlerror:
@@ -206,6 +228,7 @@ int db_close(int rollback)
     check(sqlite3_finalize(stmt_set_exitcode));
     check(sqlite3_finalize(stmt_insert_file));
     check(sqlite3_finalize(stmt_insert_exec));
+    check(sqlite3_finalize(stmt_insert_connection));
     check(sqlite3_close(db));
     run_id = -1;
     return 0;
@@ -366,6 +389,42 @@ int db_add_exec(unsigned int process, const char *binary,
 sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
     log_critical(0, "sqlite3 error inserting exec: %s", sqlite3_errmsg(db));
+    return -1;
+    /* LCOV_EXCL_END */
+}
+
+int db_add_connection(unsigned int process, int inbound, const char *family,
+                      const char *protocol, const char *address)
+{
+    check(sqlite3_bind_int(stmt_insert_connection, 1, run_id));
+    check(sqlite3_bind_int64(stmt_insert_connection, 2, gettime()));
+    check(sqlite3_bind_int(stmt_insert_connection, 3, process));
+    check(sqlite3_bind_int(stmt_insert_connection, 4, inbound?1:0));
+    if(family == NULL)
+        check(sqlite3_bind_null(stmt_insert_connection, 5));
+    else
+        check(sqlite3_bind_text(stmt_insert_connection, 5, family,
+                                -1, SQLITE_TRANSIENT));
+    if(protocol == NULL)
+        check(sqlite3_bind_null(stmt_insert_connection, 6));
+    else
+        check(sqlite3_bind_text(stmt_insert_connection, 6, protocol,
+                                -1, SQLITE_TRANSIENT));
+    if(address == NULL)
+        check(sqlite3_bind_null(stmt_insert_connection, 7));
+    else
+        check(sqlite3_bind_text(stmt_insert_connection, 7, address,
+                                -1, SQLITE_TRANSIENT));
+
+    if(sqlite3_step(stmt_insert_connection) != SQLITE_DONE)
+        goto sqlerror;
+    sqlite3_reset(stmt_insert_connection);
+    return 0;
+
+sqlerror:
+    /* LCOV_EXCL_START : Insertions shouldn't fail */
+    log_critical(0, "sqlite3 error inserting network connection: %s",
+                 sqlite3_errmsg(db));
     return -1;
     /* LCOV_EXCL_END */
 }

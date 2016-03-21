@@ -19,5 +19,7 @@ int db_add_file_open(unsigned int process,
 int db_add_exec(unsigned int process, const char *binary,
                 const char *const *argv, const char *const *envp,
                 const char *workingdir);
+int db_add_connection(unsigned int process, int inbound, const char *family,
+                      const char *protocol, const char *address);
 
 #endif
