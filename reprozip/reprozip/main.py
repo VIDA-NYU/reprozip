@@ -149,7 +149,7 @@ def print_db(database):
         ORDER BY inbound, family, timestamp;
         ''')
     header_shown = -1
-    current_family = None
+    current_family = current_protocol = None
     for r_inbound, r_family, r_protocol, r_address in connections:
         if header_shown < r_inbound:
             if r_inbound:
@@ -161,6 +161,10 @@ def print_db(database):
         if current_family != r_family:
             print("    %s" % r_family)
             current_family = r_family
+            current_protocol = None
+        if current_protocol != r_protocol:
+            print("      %s" % r_protocol)
+            current_protocol = r_protocol
         print("        %s" % r_address)
 
     conn.close()
