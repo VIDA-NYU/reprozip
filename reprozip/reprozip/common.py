@@ -579,10 +579,11 @@ def setup_logging(tag, verbosity):
     handler.setLevel(console_level)
     handler.setFormatter(formatter)
 
-    # Set up logger
-    logger = logging.root
-    logger.setLevel(min_level)
-    logger.addHandler(handler)
+    # Set up loggers
+    loggers = [logging.getLogger('reprozip'), logging.getLogger('reprounzip')]
+    for logger in loggers:
+        logger.setLevel(min_level)
+        logger.addHandler(handler)
 
     # File logger
     dotrpz = Path('~/.reprozip').expand_user()
@@ -599,7 +600,8 @@ def setup_logging(tag, verbosity):
     else:
         filehandler.setFormatter(formatter)
         filehandler.setLevel(file_level)
-        logger.addHandler(filehandler)
+        for logger in loggers:
+            logger.addHandler(filehandler)
 
 
 _usage_report = None
