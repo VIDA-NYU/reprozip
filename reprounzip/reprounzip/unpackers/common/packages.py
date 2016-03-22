@@ -51,7 +51,7 @@ class AptInstaller(object):
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
             logger.error("Error: some packages could not be installed:%s",
-                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
+                         ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
 
@@ -107,7 +107,7 @@ class YumInstaller(object):
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
             logger.error("Error: some packages could not be installed:%s",
-                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
+                         ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
 
@@ -159,8 +159,8 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
         logger.warning("Installing on %s but pack was generated on %s",
-                        target_distribution.capitalize(),
-                        orig_distribution.capitalize())
+                       target_distribution.capitalize(),
+                       orig_distribution.capitalize())
     elif target_distribution is None:
         raise CantFindInstaller("Target distribution is unknown; try using "
                                 "--distribution")

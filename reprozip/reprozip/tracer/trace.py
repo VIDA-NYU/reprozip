@@ -234,8 +234,8 @@ def get_files(conn):
             "final version of the file; reproducible experiments shouldn't "
             "change their input files")
         logger.info("Paths:\n%s",
-                     ", ".join(unicode_(fi.path)
-                               for fi in read_then_written_files))
+                    ", ".join(unicode_(fi.path)
+                              for fi in read_then_written_files))
 
     files = set(
         fi
@@ -345,7 +345,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     if c != 0:
         if c & 0x0100:
             logger.warning("Program appears to have been terminated by "
-                            "signal %d", c & 0xFF)
+                           "signal %d", c & 0xFF)
         else:
             logger.warning("Program exited with non-zero code %d", c)
     logger.info("Program completed")

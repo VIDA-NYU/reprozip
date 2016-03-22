@@ -89,7 +89,7 @@ def installpkgs(args):
                 logger.warning("package %s was not installed", pkg.name)
             else:
                 logger.warning("version %s of %s was installed, instead of "
-                                "%s", real, pkg.name, req)
+                               "%s", real, pkg.name, req)
         if r != 0:
             logger.critical("Installer exited with %d", r)
             sys.exit(r)
@@ -146,7 +146,7 @@ def directory_create(args):
     if missing_files:
         record_usage(directory_missing_pkgs=True)
         logger.error("Some packages are missing, you should probably install "
-                      "them.\nUse 'reprounzip installpkgs -h' for help")
+                     "them.\nUse 'reprounzip installpkgs -h' for help")
 
     root.mkdir()
     try:
@@ -267,7 +267,7 @@ def directory_run(args):
                         rewritten = True
             if rewritten:
                 logger.warning("Rewrote command-line as: %s",
-                                ' '.join(shell_escape(a) for a in argv))
+                               ' '.join(shell_escape(a) for a in argv))
         else:
             argv = cmdline
         cmd += ' '.join(shell_escape(a) for a in argv)
@@ -304,12 +304,12 @@ def should_restore_owner(param):
         if param is True:
             # Restoring the owner was explicitely requested
             logger.critical("Not running as root, cannot restore files' "
-                             "owner/group as requested")
+                            "owner/group as requested")
             sys.exit(1)
         elif param is None:
             # Nothing was requested
             logger.warning("Not running as root, won't restore files' "
-                            "owner/group")
+                           "owner/group")
             ret = False
         else:
             # If False: skip warning
@@ -318,7 +318,7 @@ def should_restore_owner(param):
         if param is None:
             # Nothing was requested
             logger.info("Running as root, we will restore files' "
-                         "owner/group")
+                        "owner/group")
             ret = True
         elif param is True:
             ret = True
@@ -336,7 +336,7 @@ def should_mount_magic_dirs(param):
         if param is True:
             # Restoring the owner was explicitely requested
             logger.critical("Not running as root, cannot mount /dev and "
-                             "/proc")
+                            "/proc")
             sys.exit(1)
         elif param is None:
             # Nothing was requested
@@ -405,10 +405,10 @@ def chroot_create(args):
         if packages_not_packed:
             record_usage(chroot_missing_pkgs=True)
             logger.warning("According to configuration, some files were left "
-                            "out because they belong to the following "
-                            "packages:%s\nWill copy files from HOST SYSTEM",
-                            ''.join('\n    %s' % pkg
-                                    for pkg in packages_not_packed))
+                           "out because they belong to the following "
+                           "packages:%s\nWill copy files from HOST SYSTEM",
+                           ''.join('\n    %s' % pkg
+                                   for pkg in packages_not_packed))
             missing_files = False
             for pkg in packages_not_packed:
                 for f in pkg.files:
@@ -517,8 +517,8 @@ def chroot_mount(args):
     metadata_write(target, unpacked_info, 'chroot')
 
     logger.warning("The host's /dev and /proc have been mounted into the "
-                    "chroot. Do NOT remove the unpacked directory with "
-                    "rm -rf, it WILL WIPE the host's /dev directory.")
+                   "chroot. Do NOT remove the unpacked directory with "
+                   "rm -rf, it WILL WIPE the host's /dev directory.")
 
 
 @target_must_exist
@@ -717,7 +717,7 @@ class LocalDownloader(FileDownloader):
         # Output to stdout
         if not remote_path.exists():
             logger.critical("Can't get output file (doesn't exist): %s",
-                             remote_path)
+                            remote_path)
             return False
         with remote_path.open('rb') as fp:
             copyfile(fp, stdout_bytes)
@@ -729,7 +729,7 @@ class LocalDownloader(FileDownloader):
         # Copy
         if not remote_path.exists():
             logger.critical("Can't get output file (doesn't exist): %s",
-                             remote_path)
+                            remote_path)
             return False
         remote_path.copyfile(local_path)
         remote_path.copymode(local_path)

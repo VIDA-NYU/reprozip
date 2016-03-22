@@ -291,12 +291,12 @@ def run_from_vistrails():
             cli_version = int(sys.argv[1])
         except ValueError:
             logger.info("Compatibility mode: reprounzip-vistrails didn't get "
-                         "a version number")
+                        "a version number")
     if cli_version != 1:
         logger.critical("Unknown interface version %d; you are probably "
-                         "using a version of reprounzip-vistrails too old for "
-                         "your VisTrails package. Consider upgrading.",
-                         cli_version)
+                        "using a version of reprounzip-vistrails too old for "
+                        "your VisTrails package. Consider upgrading.",
+                        cli_version)
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -330,7 +330,7 @@ def run_from_vistrails():
                                   cwd=args.directory)
 
     logger.info("reprounzip-vistrails calling reprounzip; dir=%s",
-                 args.directory)
+                args.directory)
 
     # Parses input files from the command-line
     upload_command = []

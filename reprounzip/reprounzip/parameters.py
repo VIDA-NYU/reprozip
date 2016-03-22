@@ -57,14 +57,14 @@ def update_parameters():
             ssl_verify=get_reprozip_ca_certificate().path)
     except Exception:
         logger.info("Can't download parameters.json, using bundled "
-                     "parameters")
+                    "parameters")
     else:
         try:
             with filename.open() as fp:
                 parameters = json.load(fp)
         except ValueError:
             logger.info("Downloaded parameters.json doesn't load, using "
-                         "bundled parameters")
+                        "bundled parameters")
             try:
                 filename.remove()
             except OSError:
@@ -75,7 +75,7 @@ def update_parameters():
                 return
             else:
                 logger.info("parameters.json has incompatible version %s, "
-                             "using bundled parameters", ver)
+                            "using bundled parameters", ver)
 
     parameters = json.loads(bundled_parameters)
 

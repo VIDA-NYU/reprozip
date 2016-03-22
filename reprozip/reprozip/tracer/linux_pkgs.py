@@ -82,9 +82,9 @@ class PkgManager(object):
                          if pkg.files}
 
         logger.info("%d packages with %d files, and %d other files",
-                     len(self.packages),
-                     nb_pkg_files,
-                     len(self.unknown_files))
+                    len(self.packages),
+                    nb_pkg_files,
+                    len(self.unknown_files))
 
     def _filter(self, f):
         # Special files
@@ -158,9 +158,9 @@ class DpkgManager(PkgManager):
             nb_pkg_files += 1
 
         logger.info("%d packages with %d files, and %d other files",
-                     len(self.packages),
-                     nb_pkg_files,
-                     len(self.unknown_files))
+                    len(self.packages),
+                    nb_pkg_files,
+                    len(self.unknown_files))
 
     def _get_packages_for_file(self, filename):
         # This method is no longer used for dpkg: instead of querying each file
@@ -248,6 +248,6 @@ def identify_packages(files):
     begin = time.time()
     manager.search_for_files(files)
     logger.debug("Assigning files to packages took %f seconds",
-                  (time.time() - begin))
+                 (time.time() - begin))
 
     return manager.unknown_files, listvalues(manager.packages)

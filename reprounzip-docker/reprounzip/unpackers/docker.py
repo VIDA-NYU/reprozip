@@ -70,7 +70,7 @@ def select_image(runs):
 
     if architecture == 'i686':
         logger.info("Wanted architecture was i686, but we'll use x86_64 with "
-                     "Docker")
+                    "Docker")
     elif architecture != 'x86_64':
         logger.error("Error: unsupported architecture %s", architecture)
         sys.exit(1)
@@ -86,7 +86,7 @@ def select_image(runs):
                     return result
         distrib = images[default]
         logger.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
+                       distribution, default)
         return find_version(distrib, None)
 
     def find_version(distrib, version):
@@ -97,7 +97,7 @@ def select_image(runs):
         image = distrib['default']
         if version is not None:
             logger.warning("Using %s instead of '%s'",
-                            image['name'], version)
+                           image['name'], version)
         return image['distribution'], image['image']
 
     return find_distribution(get_parameter('docker_images'),
@@ -200,8 +200,8 @@ def docker_setup_create(args):
                                                  target_distribution)
                 except CantFindInstaller as e:
                     logger.error("Need to install %d packages but couldn't "
-                                  "select a package installer: %s",
-                                  len(packages), e)
+                                 "select a package installer: %s",
+                                 len(packages), e)
                     sys.exit(1)
                 # Updates package sources
                 update_script = installer.update_script()
@@ -210,7 +210,7 @@ def docker_setup_create(args):
                 # Installs necessary packages
                 fp.write('    %s && \\\n' % installer.install_script(packages))
                 logger.info("Dockerfile will install the %d software "
-                             "packages that were not packed", len(packages))
+                            "packages that were not packed", len(packages))
             else:
                 record_usage(docker_install_pkgs=False)
 
@@ -324,13 +324,13 @@ def docker_reset(args):
 
     if image == initial:
         logger.warning("Image is already in the initial state, nothing to "
-                        "reset")
+                       "reset")
     else:
         logger.info("Removing image %s", image.decode('ascii'))
         retcode = subprocess.call(args.docker_cmd.split() + ['rmi', image])
         if retcode != 0:
             logger.warning("Can't remove previous image, docker returned %d",
-                            retcode)
+                           retcode)
         unpacked_info['current_image'] = initial
         write_dict(target, unpacked_info)
 
@@ -500,7 +500,7 @@ def docker_run(args):
 
     if args.detach:
         logger.info("Start container %s (detached)",
-                     container.decode('ascii'))
+                    container.decode('ascii'))
         retcode = interruptible_call(args.docker_cmd.split() +
                                      ['run', b'--name=' + container,
                                       '-h', hostname,
@@ -537,14 +537,14 @@ def docker_run(args):
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
         logger.error("Invalid container state after execution:\n%s",
-                      json.dumps(outjson[0]["State"]))
+                     json.dumps(outjson[0]["State"]))
     retcode = outjson[0]["State"]["ExitCode"]
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Commit to create new image
     new_image = make_unique_name(b'reprounzip_image_')
     logger.info("Committing container %s to image %s",
-                 container.decode('ascii'), new_image.decode('ascii'))
+                container.decode('ascii'), new_image.decode('ascii'))
     subprocess.check_call(args.docker_cmd.split() +
                           ['commit', container, new_image])
 
@@ -635,12 +635,12 @@ class ContainerUploader(FileUploader):
             logger.info("New image created: %s", image.decode('ascii'))
             if from_image != self.unpacked_info['initial_image']:
                 logger.info("Untagging previous image %s",
-                             from_image.decode('ascii'))
+                            from_image.decode('ascii'))
                 retcode = subprocess.call(self.docker_cmd +
                                           ['rmi', from_image])
                 if retcode != 0:
                     logger.warning("Can't remove previous image, docker "
-                                    "returned %d", retcode)
+                                   "returned %d", retcode)
             self.unpacked_info['current_image'] = image
             write_dict(self.target, self.unpacked_info)
 
@@ -700,7 +700,7 @@ class ContainerDownloader(FileDownloader):
         retcode = subprocess.call(self.docker_cmd + ['rm', self.container])
         if retcode != 0:
             logger.warning("Can't remove temporary container, docker "
-                            "returned %d", retcode)
+                           "returned %d", retcode)
 
 
 @target_must_exist

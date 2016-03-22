@@ -174,7 +174,7 @@ class FileUploader(object):
                 filespec_split = filespec.rsplit(':', 1)
                 if len(filespec_split) != 2:
                     logger.critical("Invalid file specification: %r",
-                                     filespec)
+                                    filespec)
                     sys.exit(1)
                 local_path, input_name = filespec_split
 
@@ -197,15 +197,15 @@ class FileUploader(object):
                     if local_path is None:
                         temp.remove()
                         logger.warning("No original packed, can't restore "
-                                        "input file %s", input_name)
+                                       "input file %s", input_name)
                         continue
                 else:
                     local_path = Path(local_path)
                     logger.debug("Uploading file %s to %s",
-                                  local_path, input_path)
+                                 local_path, input_path)
                     if not local_path.exists():
                         logger.critical("Local file %s doesn't exist",
-                                         local_path)
+                                        local_path)
                         sys.exit(1)
 
                 self.upload_file(local_path, input_path)
@@ -276,7 +276,7 @@ class FileDownloader(object):
                 output_name, local_path = filespec_split
             else:
                 logger.critical("Invalid file specification: %r",
-                                 filespec)
+                                filespec)
                 sys.exit(1)
             local_path = Path(local_path) if local_path else None
             all_files.discard(output_name)
@@ -360,7 +360,7 @@ def get_runs(runs, selected_runs, cmdline):
             raise UsageError
         if r < 0 or r >= len(runs):
             logger.critical("Error: Expected 0 <= run <= %d, got %d",
-                             len(runs) - 1, r)
+                            len(runs) - 1, r)
             sys.exit(1)
         return r
 
@@ -387,7 +387,7 @@ def get_runs(runs, selected_runs, cmdline):
                     last = len(runs) - 1
                 if last < first:
                     logger.critical("Error: Last run number should be "
-                                     "greater than the first")
+                                    "greater than the first")
                     sys.exit(1)
                 run_list.extend(irange(first, last + 1))
 
@@ -492,7 +492,7 @@ def interruptible_call(cmd, **kwargs):
             else:
                 if hasattr(sys.stdin, 'isatty') and not sys.stdin.isatty():
                     logger.info("We need a tty and we are not attached to "
-                                 "one. Opening pty...")
+                                "one. Opening pty...")
                     if kwargs.pop('shell', False):
                         if not isinstance(cmd, (str, unicode_)):
                             raise TypeError("shell=True but cmd is not a "
@@ -527,14 +527,14 @@ def metadata_read(path, type_):
 
     if not filename.exists():
         logger.critical("Required metadata missing, did you point this "
-                         "command at the directory you created using the "
-                         "'setup' command?")
+                        "command at the directory you created using the "
+                        "'setup' command?")
         raise UsageError
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
         logger.critical("Wrong unpacker used: %s != %s",
-                         dct['unpacker'], type_)
+                        dct['unpacker'], type_)
         raise UsageError
     return dct
 

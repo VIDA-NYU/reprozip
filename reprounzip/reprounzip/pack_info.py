@@ -261,7 +261,7 @@ def showfiles(args):
             raise UsageError
         if r < 0 or r >= len(runs):
             logger.critical("Error: Expected 0 <= run <= %d, got %d",
-                             len(runs) - 1, r)
+                            len(runs) - 1, r)
             sys.exit(1)
         return r
 

@@ -62,7 +62,7 @@ class RPZKernelManager(IOLoopKernelManager):
 
         if connection_file is None:
             logger.critical("The notebook didn't pass a connection file to "
-                             "the kernel")
+                            "the kernel")
             sys.exit(1)
 
         with process_connection_file(connection_file) as (fixed_file, ports):

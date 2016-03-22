@@ -463,7 +463,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
                 logger.info("Download %s: cache is up to date", cachename)
             else:
                 logger.warning("Download %s: error downloading %s: %s",
-                                cachename, url, e)
+                               cachename, url, e)
             if dest is not None:
                 cache.copy(dest)
                 return dest

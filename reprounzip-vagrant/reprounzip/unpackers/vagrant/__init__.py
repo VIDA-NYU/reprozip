@@ -66,7 +66,7 @@ def select_box(runs, gui=False):
                     return result
         distrib = boxes[default]
         logger.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
+                       distribution, default)
         return find_version(distrib, None, architecture)
 
     def find_version(distrib, version, architecture):
@@ -79,7 +79,7 @@ def select_box(runs, gui=False):
         box = distrib['default']
         if version is not None:
             logger.warning("Using %s instead of '%s'",
-                            box['name'], version)
+                           box['name'], version)
         result = box['architectures'].get(architecture)
         if result is not None:
             return box['distribution'], result
@@ -95,7 +95,7 @@ def select_box(runs, gui=False):
                                distribution, version, architecture)
     if result is None:
         logger.critical("Error: couldn't find a base box for required "
-                         "architecture")
+                        "architecture")
         sys.exit(1)
     return result
 
@@ -152,8 +152,8 @@ def machine_setup(target):
                 username=vagrant_info.get('user', 'vagrant'),
                 key_filename=key_file)
     logger.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
-                  info['username'], info['hostname'], info['port'],
-                  info['key_filename'])
+                 info['username'], info['hostname'], info['port'],
+                 info['key_filename'])
 
     unpacked_info = read_dict(target)
     use_chroot = unpacked_info['use_chroot']
@@ -264,17 +264,17 @@ def vagrant_setup_create(args):
         if packages:
             record_usage(vagrant_install_pkgs=True)
             logger.info("Some packages were not packed, so we'll install and "
-                         "copy their files\n"
-                         "Packages that are missing:\n%s",
-                         ' '.join(pkg.name for pkg in packages))
+                        "copy their files\n"
+                        "Packages that are missing:\n%s",
+                        ' '.join(pkg.name for pkg in packages))
 
     if packages:
         try:
             installer = select_installer(pack, runs, target_distribution)
         except CantFindInstaller as e:
             logger.error("Need to install %d packages but couldn't select a "
-                          "package installer: %s",
-                          len(packages), e)
+                         "package installer: %s",
+                         len(packages), e)
 
     target.mkdir(parents=True)
 
@@ -499,12 +499,12 @@ def vagrant_run(args):
 
         write_vagrantfile(target, unpacked_info)
         logger.info("Some requested ports are not yet forwarded, running "
-                     "'vagrant reload'")
+                    "'vagrant reload'")
         retcode = subprocess.call(['vagrant', 'reload', '--no-provision'],
                                   cwd=target.path)
         if retcode != 0:
             logger.critical("vagrant reload failed with code %d, aborting",
-                             retcode)
+                            retcode)
             sys.exit(1)
         write_dict(target, unpacked_info)
 
@@ -590,7 +590,7 @@ class SSHUploader(FileUploader):
             ssh_info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logger.critical("Failed to get the status of the machine -- is "
-                             "it running?")
+                            "it running?")
             sys.exit(1)
 
         # Connect with SSH
@@ -667,7 +667,7 @@ class SSHDownloader(FileDownloader):
             info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logger.critical("Failed to get the status of the machine -- is "
-                             "it running?")
+                            "it running?")
             sys.exit(1)
 
         # Connect with SSH
@@ -706,7 +706,7 @@ class SSHDownloader(FileDownloader):
             ltemp.rename(local_path)
         except OSError as e:
             logger.critical("Couldn't download output file: %s\n%s",
-                             remote_path, str(e))
+                            remote_path, str(e))
             ltemp.remove()
             return False
         return True
@@ -735,7 +735,7 @@ def vagrant_suspend(args):
     retcode = subprocess.call(['vagrant', 'suspend'], cwd=target.path)
     if retcode != 0:
         logger.critical("vagrant suspend failed with code %d, ignoring...",
-                         retcode)
+                        retcode)
 
 
 @target_must_exist
@@ -748,7 +748,7 @@ def vagrant_destroy_vm(args):
     retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
     if retcode != 0:
         logger.critical("vagrant destroy failed with code %d, ignoring...",
-                         retcode)
+                        retcode)
 
 
 @target_must_exist
@@ -784,7 +784,7 @@ def check_vagrant_version():
     if out[0] == 'vagrant':
         if LooseVersion(out[1]) < LooseVersion('1.1'):
             logger.error("Vagrant >=1.1 is required; detected version: %s",
-                          out[1])
+                         out[1])
             sys.exit(1)
     else:
         logger.error("Vagrant >=1.1 is required")

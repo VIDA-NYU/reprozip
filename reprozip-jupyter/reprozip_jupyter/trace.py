@@ -68,7 +68,7 @@ class RPZKernelManager(KernelManager):
         cmd = self.rpz_options.trace_command_line(kernel_cmd)
 
         logger.info("Kernel requested, connection file: %s",
-                     self.connection_file)
+                    self.connection_file)
         logger.info("Executing: %r", cmd)
         return launch_kernel(cmd, **kw)
 

@@ -347,8 +347,8 @@ def load_iofiles(config, runs):
             if files[name].path != path:
                 old_name, name = name, uniquenames(name)
                 logger.warning("File name appears multiple times: %s\n"
-                                "Using name %s instead",
-                                old_name, name)
+                               "Using name %s instead",
+                               old_name, name)
         else:
             uniquenames.insert(name)
         if path in paths:
@@ -356,8 +356,8 @@ def load_iofiles(config, runs):
                 logger.warning("File appears multiple times: %s", name)
             else:
                 logger.warning("Two files have the same path (but different "
-                                "names): %s, %s\nUsing name %s",
-                                name, paths[path], paths[path])
+                               "names): %s, %s\nUsing name %s",
+                               name, paths[path], paths[path])
                 name = paths[path]
             files[name].read_runs.update(readers)
             files[name].write_runs.update(writers)
@@ -401,7 +401,7 @@ def load_config(filename, canonical, File=File, Package=Package):
                                 'input_files', 'output_files'])
     if unknown_keys:
         logger.warning("Unrecognized sections in configuration: %s",
-                        ', '.join(unknown_keys))
+                       ', '.join(unknown_keys))
 
     runs = config.get('runs') or []
     packages = read_packages(config.get('packages'), File, Package)
