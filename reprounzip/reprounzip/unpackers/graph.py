@@ -34,6 +34,9 @@ from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
     unicode_, escape, normalize_path
 
 
+logger = logging.getLogger('reprounzip.graph')
+
+
 C_INITIAL = 0   # First process or don't know
 C_FORK = 1      # Might actually be any one of fork, vfork or clone
 C_EXEC = 2      # Replaced image with execve

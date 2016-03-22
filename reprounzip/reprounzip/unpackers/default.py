@@ -42,6 +42,9 @@ from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
     download_file
 
 
+logger = logging.getLogger('reprounzip')
+
+
 def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """

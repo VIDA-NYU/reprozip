@@ -38,6 +38,9 @@ from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
+logger = logging.getLogger('reprounzip.vagrant')
+
+
 def select_box(runs, gui=False):
     """Selects a box for the experiment, with the correct distribution.
     """

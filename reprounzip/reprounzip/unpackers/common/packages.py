@@ -15,6 +15,9 @@ from reprounzip.unpackers.common.misc import UsageError
 from reprounzip.utils import itervalues
 
 
+logger = logging.getLogger('reprounzip')
+
+
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 

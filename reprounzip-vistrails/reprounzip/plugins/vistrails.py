@@ -36,6 +36,9 @@ from reprounzip.utils import iteritems
 __version__ = '1.0.5'
 
 
+logger = logging.getLogger('reprounzip.vistrails')
+
+
 def escape_xml(s):
     """Escapes for XML.
     """

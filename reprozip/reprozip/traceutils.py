@@ -19,6 +19,9 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import PY3, listvalues
 
 
+logger = logging.getLogger('reprozip')
+
+
 def create_schema(conn):
     """Create the trace database schema on a given SQLite3 connection.
     """

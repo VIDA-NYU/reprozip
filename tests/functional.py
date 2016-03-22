@@ -24,6 +24,9 @@ from reprounzip.utils import PY3, stderr_bytes, stderr
 tests = Path(__file__).parent.absolute()
 
 
+logger = logging.getLogger('reprozip-tests')
+
+
 def download_file_retry(url, dest):
     attempt = 0
     while True:

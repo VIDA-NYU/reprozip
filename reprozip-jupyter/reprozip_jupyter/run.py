@@ -25,6 +25,9 @@ from reprounzip.common import setup_logging
 __version__ = '0.1'
 
 
+logger = logging.getLogger('reprozip_jupyter')
+
+
 @contextlib.contextmanager
 def process_connection_file(original):
     with original.open('rb') as fp:

@@ -10,6 +10,9 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import irange, iteritems
 
 
+logger = logging.getLogger('reprozip')
+
+
 def builtin(input_files, **kwargs):
     """Default heuristics for input files.
     """

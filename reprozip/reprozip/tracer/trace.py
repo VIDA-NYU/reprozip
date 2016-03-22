@@ -31,6 +31,9 @@ from reprozip.utils import PY3, izip, iteritems, itervalues, \
     unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links
 
 
+logger = logging.getLogger('reprozip')
+
+
 class TracedFile(File):
     """Override of `~reprozip.common.File` that reads stats from filesystem.
 

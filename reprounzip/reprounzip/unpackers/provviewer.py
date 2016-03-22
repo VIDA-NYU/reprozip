@@ -24,6 +24,9 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, shell_escape
 from reprounzip.utils import PY3, iteritems, stderr
 
 
+logger = logging.getLogger('reprounzip.provviewer')
+
+
 def xml_escape(s):
     """Escapes for XML.
     """

@@ -34,6 +34,9 @@ from reprounzip.unpackers.common import UsageError
 __version__ = '1.0.11'
 
 
+logger = logging.getLogger('reprounzip')
+
+
 unpackers = {}
 
 

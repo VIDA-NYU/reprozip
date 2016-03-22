@@ -19,6 +19,9 @@ import threading
 from reprounzip.utils import irange, iteritems
 
 
+logger = logging.getLogger('reprounzip')
+
+
 # #include <X11/Xauth.h>
 #
 # typedef struct xauth {

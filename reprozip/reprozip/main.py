@@ -36,6 +36,9 @@ import reprozip.traceutils
 from reprozip.utils import PY3, unicode_, stderr
 
 
+logger = logging.getLogger('reprozip')
+
+
 safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"

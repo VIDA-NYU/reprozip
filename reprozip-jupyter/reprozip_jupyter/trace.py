@@ -25,6 +25,9 @@ from reprounzip.common import setup_logging
 __version__ = '0.1'
 
 
+logger = logging.getLogger('reprozip_jupyter')
+
+
 class RPZOptions(object):
     def __init__(self, verbosity=1, dir=None, identify_packages=True,
                  find_inputs_outputs=True, append=None):
