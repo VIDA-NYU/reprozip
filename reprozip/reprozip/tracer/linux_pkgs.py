@@ -173,7 +173,7 @@ def identify_packages(files):
 
     begin = time.time()
     manager.search_for_files(files)
-    logging.debug("Assigning files to packages took %f seconds",
+    logger.debug("Assigning files to packages took %f seconds",
                   (time.time() - begin))
 
     return manager.unknown_files, listvalues(manager.packages)

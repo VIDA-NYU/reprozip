@@ -63,7 +63,7 @@ def target_must_exist(func):
     def wrapper(args):
         target = Path(args.target[0])
         if not target.is_dir():
-            logging.critical("Error: Target directory doesn't exist")
+            logger.critical("Error: Target directory doesn't exist")
             raise UsageError
         return func(args)
     return wrapper
@@ -171,7 +171,7 @@ class FileUploader(object):
             for filespec in files:
                 filespec_split = filespec.rsplit(':', 1)
                 if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r",
+                    logger.critical("Invalid file specification: %r",
                                      filespec)
                     sys.exit(1)
                 local_path, input_name = filespec_split
@@ -179,14 +179,14 @@ class FileUploader(object):
                 try:
                     input_path = input_files[input_name]
                 except KeyError:
-                    logging.critical("Invalid input file: %r", input_name)
+                    logger.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
 
                 temp = None
 
                 if not local_path:
                     # Restore original file from pack
-                    logging.debug("Restoring input file %s", input_path)
+                    logger.debug("Restoring input file %s", input_path)
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
@@ -194,15 +194,15 @@ class FileUploader(object):
                                                              temp)
                     if local_path is None:
                         temp.remove()
-                        logging.warning("No original packed, can't restore "
+                        logger.warning("No original packed, can't restore "
                                         "input file %s", input_name)
                         continue
                 else:
                     local_path = Path(local_path)
-                    logging.debug("Uploading file %s to %s",
+                    logger.debug("Uploading file %s to %s",
                                   local_path, input_path)
                     if not local_path.exists():
-                        logging.critical("Local file %s doesn't exist",
+                        logger.critical("Local file %s doesn't exist",
                                          local_path)
                         sys.exit(1)
 
@@ -273,7 +273,7 @@ class FileDownloader(object):
             elif len(filespec_split) == 2:
                 output_name, local_path = filespec_split
             else:
-                logging.critical("Invalid file specification: %r",
+                logger.critical("Invalid file specification: %r",
                                  filespec)
                 sys.exit(1)
             local_path = Path(local_path) if local_path else None
@@ -294,10 +294,10 @@ class FileDownloader(object):
                 try:
                     remote_path = output_files[output_name]
                 except KeyError:
-                    logging.critical("Invalid output file: %r", output_name)
+                    logger.critical("Invalid output file: %r", output_name)
                     sys.exit(1)
 
-                logging.debug("Downloading file %s", remote_path)
+                logger.debug("Downloading file %s", remote_path)
                 if local_path is None:
                     ret = self.download_and_print(remote_path)
                 else:
@@ -354,10 +354,10 @@ def get_runs(runs, selected_runs, cmdline):
         try:
             r = int(s)
         except ValueError:
-            logging.critical("Error: Unknown run %s", s)
+            logger.critical("Error: Unknown run %s", s)
             raise UsageError
         if r < 0 or r >= len(runs):
-            logging.critical("Error: Expected 0 <= run <= %d, got %d",
+            logger.critical("Error: Expected 0 <= run <= %d, got %d",
                              len(runs) - 1, r)
             sys.exit(1)
         return r
@@ -384,7 +384,7 @@ def get_runs(runs, selected_runs, cmdline):
                 else:
                     last = len(runs) - 1
                 if last < first:
-                    logging.critical("Error: Last run number should be "
+                    logger.critical("Error: Last run number should be "
                                      "greater than the first")
                     sys.exit(1)
                 run_list.extend(irange(first, last + 1))
@@ -473,7 +473,7 @@ def metadata_read(path, type_):
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
-        logging.critical("Wrong unpacker used: %s != %s",
+        logger.critical("Wrong unpacker used: %s != %s",
                          dct['unpacker'], type_)
         raise UsageError
     return dct

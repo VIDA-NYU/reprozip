@@ -212,7 +212,7 @@ def get_files(conn):
         if fi.what == TracedFile.READ_THEN_WRITTEN and
         not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
-        logging.warning(
+        logger.warning(
             "Some files were read and then written. We will only pack the "
             "final version of the file; reproducible experiments shouldn't "
             "change their input files:\n%s",
@@ -256,7 +256,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     cwd = Path.cwd()
     if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
             not cwd.lies_under('/usr/local')):
-        logging.warning(
+        logger.warning(
             "You are running this experiment from a system directory! "
             "Autodetection of non-system files will probably not work as "
             "intended")
@@ -264,27 +264,27 @@ def trace(binary, argv, directory, append, verbosity=1):
     # Trace directory
     if not append:
         if directory.exists():
-            logging.info("Removing existing directory %s", directory)
+            logger.info("Removing existing directory %s", directory)
             directory.rmtree()
         directory.mkdir(parents=True)
     else:
         if not directory.exists():
-            logging.warning("--continue was specified but %s does not exist "
+            logger.warning("--continue was specified but %s does not exist "
                             "-- creating", directory)
             directory.mkdir(parents=True)
 
     # Runs the trace
     database = directory / 'trace.sqlite3'
-    logging.info("Running program")
+    logger.info("Running program")
     # Might raise _pytracer.Error
     c = _pytracer.execute(binary, argv, database.path, verbosity)
     if c != 0:
         if c & 0x0100:
-            logging.warning("Program appears to have been terminated by "
+            logger.warning("Program appears to have been terminated by "
                             "signal %d", c & 0xFF)
         else:
-            logging.warning("Program exited with non-zero code %d", c)
-    logging.info("Program completed")
+            logger.warning("Program exited with non-zero code %d", c)
+    logger.info("Program completed")
 
 
 def write_configuration(directory, sort_packages, find_inputs_outputs,

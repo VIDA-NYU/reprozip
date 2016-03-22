@@ -52,7 +52,7 @@ def update_parameters():
                 cachename='parameters.json',
                 ssl_verify=get_reprozip_ca_certificate().path)
         except Exception:
-            logging.info("Can't download parameters.json, using bundled "
+            logger.info("Can't download parameters.json, using bundled "
                          "parameters")
         else:
             try:
@@ -60,7 +60,7 @@ def update_parameters():
                     parameters = json.load(fp)
                 return
             except ValueError:
-                logging.info("Downloaded parameters.json doesn't load, using "
+                logger.info("Downloaded parameters.json doesn't load, using "
                              "bundled parameters")
                 try:
                     filename.remove()

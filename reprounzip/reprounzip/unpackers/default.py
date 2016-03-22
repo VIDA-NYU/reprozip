@@ -49,7 +49,7 @@ def installpkgs(args):
     """Installs the necessary packages on the current machine.
     """
     if not THIS_DISTRIBUTION:
-        logging.critical("Not running on Linux")
+        logger.critical("Not running on Linux")
         sys.exit(1)
 
     pack = args.pack[0]
@@ -61,7 +61,7 @@ def installpkgs(args):
     try:
         installer = select_installer(pack, runs)
     except CantFindInstaller as e:
-        logging.error("Couldn't select a package installer: %s", e)
+        logger.error("Couldn't select a package installer: %s", e)
 
     if args.summary:
         # Print out a list of packages with their status
@@ -86,9 +86,9 @@ def installpkgs(args):
             req = pkg.version
             real = pkgs[pkg.name][1]
             if real == PKG_NOT_INSTALLED:
-                logging.warning("package %s was not installed", pkg.name)
+                logger.warning("package %s was not installed", pkg.name)
             else:
-                logging.warning("version %s of %s was installed, instead of "
+                logger.warning("version %s of %s was installed, instead of "
                                 "%s", real, pkg.name, req)
         if r != 0:
             sys.exit(r)
@@ -104,17 +104,17 @@ def directory_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        logging.critical("setup needs the pack filename")
+        logger.critical("setup needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        logging.critical("Target directory exists")
+        logger.critical("Target directory exists")
         sys.exit(1)
 
     if not issubclass(DefaultAbstractPath, PosixPath):
-        logging.critical("Not unpacking on POSIX system")
+        logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
     signals.pre_setup(target=target, pack=pack)
@@ -137,14 +137,14 @@ def directory_create(args):
             continue
         for f in pkg.files:
             if not Path(f.path).exists():
-                logging.error(
+                logger.error(
                     "Missing file %s (from package %s that wasn't packed) "
                     "on host, experiment will probably miss it.",
                     f, pkg.name)
                 missing_files = True
     if missing_files:
         record_usage(directory_missing_pkgs=True)
-        logging.error("Some packages are missing, you should probably install "
+        logger.error("Some packages are missing, you should probably install "
                       "them.\nUse 'reprounzip installpkgs -h' for help")
 
     root.mkdir()
@@ -159,7 +159,7 @@ def directory_create(args):
                 linkname = PosixPath(m.linkname)
                 if linkname.is_absolute:
                     m.linkname = join_root(root, PosixPath(m.linkname)).path
-        logging.info("Extracting files...")
+        logger.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
 
@@ -167,7 +167,7 @@ def directory_create(args):
         input_files = [f.path for f in itervalues(config.inputs_outputs)
                        if f.read_runs]
         if input_files:
-            logging.info("Packing up original input files...")
+            logger.info("Packing up original input files...")
             inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
             for ifile in input_files:
                 filename = join_root(root, ifile)
@@ -265,7 +265,7 @@ def directory_run(args):
                         argv[i] = str(rp)
                         rewritten = True
             if rewritten:
-                logging.warning("Rewrote command-line as: %s",
+                logger.warning("Rewrote command-line as: %s",
                                 ' '.join(shell_escape(a) for a in argv))
         else:
             argv = cmdline
@@ -290,7 +290,7 @@ def directory_destroy(args):
     target = Path(args.target[0])
     metadata_read(target, 'directory')
 
-    logging.info("Removing directory %s...", target)
+    logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)
@@ -302,12 +302,12 @@ def should_restore_owner(param):
     if os.getuid() != 0:
         if param is True:
             # Restoring the owner was explicitely requested
-            logging.critical("Not running as root, cannot restore files' "
+            logger.critical("Not running as root, cannot restore files' "
                              "owner/group as requested")
             sys.exit(1)
         elif param is None:
             # Nothing was requested
-            logging.warning("Not running as root, won't restore files' "
+            logger.warning("Not running as root, won't restore files' "
                             "owner/group")
             ret = False
         else:
@@ -316,7 +316,7 @@ def should_restore_owner(param):
     else:
         if param is None:
             # Nothing was requested
-            logging.info("Running as root, we will restore files' "
+            logger.info("Running as root, we will restore files' "
                          "owner/group")
             ret = True
         elif param is True:
@@ -334,12 +334,12 @@ def should_mount_magic_dirs(param):
     if os.getuid() != 0:
         if param is True:
             # Restoring the owner was explicitely requested
-            logging.critical("Not running as root, cannot mount /dev and "
+            logger.critical("Not running as root, cannot mount /dev and "
                              "/proc")
             sys.exit(1)
         elif param is None:
             # Nothing was requested
-            logging.warning("Not running as root, won't mount /dev and /proc")
+            logger.warning("Not running as root, won't mount /dev and /proc")
             ret = False
         else:
             # If False: skip warning
@@ -347,7 +347,7 @@ def should_mount_magic_dirs(param):
     else:
         if param is None:
             # Nothing was requested
-            logging.info("Running as root, will mount /dev and /proc")
+            logger.info("Running as root, will mount /dev and /proc")
             ret = True
         elif param is True:
             ret = True
@@ -368,17 +368,17 @@ def chroot_create(args):
     an upload) and the configuration file is extracted.
     """
     if not args.pack:
-        logging.critical("setup/create needs the pack filename")
+        logger.critical("setup/create needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        logging.critical("Target directory exists")
+        logger.critical("Target directory exists")
         sys.exit(1)
 
     if DefaultAbstractPath is not PosixPath:
-        logging.critical("Not unpacking on POSIX system")
+        logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
     signals.pre_setup(target=target, pack=pack)
@@ -403,7 +403,7 @@ def chroot_create(args):
         packages_not_packed = [pkg for pkg in packages if not pkg.packfiles]
         if packages_not_packed:
             record_usage(chroot_missing_pkgs=True)
-            logging.warning("According to configuration, some files were left "
+            logger.warning("According to configuration, some files were left "
                             "out because they belong to the following "
                             "packages:%s\nWill copy files from HOST SYSTEM",
                             ''.join('\n    %s' % pkg
@@ -413,7 +413,7 @@ def chroot_create(args):
                 for f in pkg.files:
                     path = Path(f.path)
                     if not path.exists():
-                        logging.error(
+                        logger.error(
                             "Missing file %s (from package %s) on host, "
                             "experiment will probably miss it",
                             path, pkg.name)
@@ -442,7 +442,7 @@ def chroot_create(args):
             for m in members:
                 m.uid = uid
                 m.gid = gid
-        logging.info("Extracting files...")
+        logger.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
 
@@ -450,7 +450,7 @@ def chroot_create(args):
         sh_path = join_root(root, Path('/bin/sh'))
         env_path = join_root(root, Path('/usr/bin/env'))
         if not sh_path.lexists() or not env_path.lexists():
-            logging.info("Setting up busybox...")
+            logger.info("Setting up busybox...")
             busybox_path = join_root(root, Path('/bin/busybox'))
             busybox_path.parent.mkdir(parents=True)
             with make_dir_writable(join_root(root, Path('/bin'))):
@@ -469,7 +469,7 @@ def chroot_create(args):
         input_files = [f.path for f in itervalues(config.inputs_outputs)
                        if f.read_runs]
         if input_files:
-            logging.info("Packing up original input files...")
+            logger.info("Packing up original input files...")
             inputtar = tarfile.open(str(target / 'inputs.tar.gz'), 'w:gz')
             for ifile in input_files:
                 filename = join_root(root, ifile)
@@ -496,13 +496,13 @@ def chroot_mount(args):
     for m in ('/dev', '/dev/pts', '/proc'):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
-        logging.info("Mounting %s on %s...", m, d)
+        logger.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
     unpacked_info['mounted'] = True
     metadata_write(target, unpacked_info, 'chroot')
 
-    logging.warning("The host's /dev and /proc have been mounted into the "
+    logger.warning("The host's /dev and /proc have been mounted into the "
                     "chroot. Do NOT remove the unpacked directory with "
                     "rm -rf, it WILL WIPE the host's /dev directory.")
 
@@ -584,7 +584,7 @@ def chroot_unmount(target):
     for m in ('/dev', '/proc'):
         d = join_root(target / 'root', Path(m))
         if d.exists():
-            logging.info("Unmounting %s...", d)
+            logger.info("Unmounting %s...", d)
             # Unmounts recursively
             subprocess.check_call(
                 'grep %s /proc/mounts | '
@@ -606,7 +606,7 @@ def chroot_destroy_unmount(args):
     target = Path(args.target[0])
 
     if not chroot_unmount(target):
-        logging.critical("Magic directories were not mounted")
+        logger.critical("Magic directories were not mounted")
         sys.exit(1)
 
 
@@ -618,10 +618,10 @@ def chroot_destroy_dir(args):
     mounted = metadata_read(target, 'chroot').get('mounted', False)
 
     if mounted:
-        logging.critical("Magic directories might still be mounted")
+        logger.critical("Magic directories might still be mounted")
         sys.exit(1)
 
-    logging.info("Removing directory %s...", target)
+    logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)
@@ -635,7 +635,7 @@ def chroot_destroy(args):
 
     chroot_unmount(target)
 
-    logging.info("Removing directory %s...", target)
+    logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     rmtree_fixed(target)
     signals.post_destroy(target=target)
@@ -702,7 +702,7 @@ class LocalDownloader(FileDownloader):
 
         # Output to stdout
         if not remote_path.exists():
-            logging.critical("Can't get output file (doesn't exist): %s",
+            logger.critical("Can't get output file (doesn't exist): %s",
                              remote_path)
             return False
         with remote_path.open('rb') as fp:
@@ -714,7 +714,7 @@ class LocalDownloader(FileDownloader):
 
         # Copy
         if not remote_path.exists():
-            logging.critical("Can't get output file (doesn't exist): %s",
+            logger.critical("Can't get output file (doesn't exist): %s",
                              remote_path)
             return False
         remote_path.copyfile(local_path)
