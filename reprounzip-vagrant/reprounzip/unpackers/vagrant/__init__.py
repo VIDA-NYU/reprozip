@@ -597,7 +597,7 @@ class SSHDownloader(FileDownloader):
                 ltemp.remove()
             except OSError:
                 pass
-            sys.exit(1)
+            return False
 
         # Move file to final destination
         try:
@@ -606,7 +606,8 @@ class SSHDownloader(FileDownloader):
             logging.critical("Couldn't download output file: %s\n%s",
                              remote_path, str(e))
             ltemp.remove()
-            sys.exit(1)
+            return False
+        return True
 
     def finalize(self):
         self.ssh.close()

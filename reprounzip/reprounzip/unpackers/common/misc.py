@@ -15,6 +15,8 @@ import os
 import pickle
 import random
 import re
+import warnings
+
 from rpaths import PosixPath, Path
 import signal
 import subprocess
@@ -282,6 +284,7 @@ class FileDownloader(object):
 
         self.prepare_download(resolved_files)
 
+        success = True
         try:
             # Download files
             for output_name, local_path in resolved_files:
@@ -293,9 +296,18 @@ class FileDownloader(object):
 
                 logging.debug("Downloading file %s", remote_path)
                 if local_path is None:
-                    self.download_and_print(remote_path)
+                    ret = self.download_and_print(remote_path)
                 else:
-                    self.download(remote_path, local_path)
+                    ret = self.download(remote_path, local_path)
+                if ret is None:
+                    ret = True
+                    warnings.warn("download() returned None instead of "
+                                  "True/False, assuming True",
+                                  category=DeprecationWarning)
+                if not ret:
+                    success = False
+            if not success:
+                sys.exit(1)
         finally:
             self.finalize()
 
@@ -310,11 +322,14 @@ class FileDownloader(object):
         # Download to temporary file
         fd, temp = Path.tempfile(prefix='reprozip_output_')
         os.close(fd)
-        self.download(remote_path, temp)
+        download_status = self.download(remote_path, temp)
+        if download_status is not None and not download_status:
+            return False
         # Output to stdout
         with temp.open('rb') as fp:
             copyfile(fp, stdout_bytes)
         temp.remove()
+        return True
 
     def download(self, remote_path, local_path):
         raise NotImplementedError

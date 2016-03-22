@@ -609,10 +609,11 @@ class ContainerDownloader(FileDownloader):
                                   tmpdir.path])
             if ret != 0:
                 logging.critical("Can't get output file: %s", remote_path)
-                sys.exit(1)
+                return False
             (tmpdir / remote_path.name).copyfile(local_path)
         finally:
             tmpdir.rmtree()
+        return True
 
     def finalize(self):
         logging.info("Removing container %s", self.container.decode('ascii'))
