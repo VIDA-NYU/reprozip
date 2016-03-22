@@ -69,10 +69,10 @@ def select_image(runs):
                                                  architecture))
 
     if architecture == 'i686':
-        logging.info("Wanted architecture was i686, but we'll use x86_64 with "
+        logger.info("Wanted architecture was i686, but we'll use x86_64 with "
                      "Docker")
     elif architecture != 'x86_64':
-        logging.error("Error: unsupported architecture %s", architecture)
+        logger.error("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
     def find_distribution(parameter, distribution, version):
@@ -85,7 +85,7 @@ def select_image(runs):
                 if result is not None:
                     return result
         distrib = images[default]
-        logging.warning("Unsupported distribution '%s', using %s",
+        logger.warning("Unsupported distribution '%s', using %s",
                         distribution, default)
         return find_version(distrib, None)
 
@@ -96,7 +96,7 @@ def select_image(runs):
                     return image['distribution'], image['image']
         image = distrib['default']
         if version is not None:
-            logging.warning("Using %s instead of '%s'",
+            logger.warning("Using %s instead of '%s'",
                             image['name'], version)
         return image['distribution'], image['image']
 
@@ -131,7 +131,7 @@ def docker_setup_create(args):
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        logging.critical("Target directory exists")
+        logger.critical("Target directory exists")
         sys.exit(1)
 
     signals.pre_setup(target=target, pack=pack)
@@ -156,15 +156,15 @@ def docker_setup_create(args):
                 target_distribution = None
         else:
             target_distribution, base_image = select_image(runs)
-        logging.info("Using base image %s", base_image)
-        logging.debug("Distribution: %s", target_distribution or "unknown")
+        logger.info("Using base image %s", base_image)
+        logger.debug("Distribution: %s", target_distribution or "unknown")
 
         rpz_pack.copy_data_tar(target / 'data.tgz')
 
         arch = runs[0]['architecture']
 
         # Writes Dockerfile
-        logging.info("Writing %s...", target / 'Dockerfile')
+        logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
                                           newline='\n') as fp:
             fp.write('FROM %s\n\n' % base_image)
@@ -199,7 +199,7 @@ def docker_setup_create(args):
                     installer = select_installer(pack, runs,
                                                  target_distribution)
                 except CantFindInstaller as e:
-                    logging.error("Need to install %d packages but couldn't "
+                    logger.error("Need to install %d packages but couldn't "
                                   "select a package installer: %s",
                                   len(packages), e)
                     sys.exit(1)
@@ -209,7 +209,7 @@ def docker_setup_create(args):
                     fp.write('    %s && \\\n' % update_script)
                 # Installs necessary packages
                 fp.write('    %s && \\\n' % installer.install_script(packages))
-                logging.info("Dockerfile will install the %d software "
+                logger.info("Dockerfile will install the %d software "
                              "packages that were not packed", len(packages))
             else:
                 record_usage(docker_install_pkgs=False)
@@ -218,7 +218,7 @@ def docker_setup_create(args):
             paths = set()
             pathlist = []
             # Add intermediate directories, and check for existence in the tar
-            logging.info("Generating file list...")
+            logger.info("Generating file list...")
             missing_files = chain.from_iterable(pkg.files
                                                 for pkg in missing_packages)
             data_files = rpz_pack.data_filenames()
@@ -238,7 +238,7 @@ def docker_setup_create(args):
                     if path in data_files:
                         pathlist.append(path)
                     else:
-                        logging.info("Missing file %s", path)
+                        logger.info("Missing file %s", path)
             rpz_pack.close()
             # FIXME : for some reason we need reversed() here, I'm not sure why
             # Need to read more of tar's docs.
@@ -269,7 +269,7 @@ def docker_setup_build(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target)
     if 'initial_image' in unpacked_info:
-        logging.critical("Image already built")
+        logger.critical("Image already built")
         sys.exit(1)
 
     if args.image_name:
@@ -277,19 +277,19 @@ def docker_setup_build(args):
     else:
         image = make_unique_name(b'reprounzip_image_')
 
-    logging.info("Calling 'docker build'...")
+    logger.info("Calling 'docker build'...")
     try:
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
                                   cwd=target.path)
     except OSError:
-        logging.critical("docker executable not found")
+        logger.critical("docker executable not found")
         sys.exit(1)
     else:
         if retcode != 0:
-            logging.critical("docker build failed with code %d", retcode)
+            logger.critical("docker build failed with code %d", retcode)
             sys.exit(1)
-    logging.info("Initial image created: %s", image.decode('ascii'))
+    logger.info("Initial image created: %s", image.decode('ascii'))
 
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
@@ -317,19 +317,19 @@ def docker_reset(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target)
     if 'initial_image' not in unpacked_info:
-        logging.critical("Image doesn't exist yet, have you run setup/build?")
+        logger.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
     image = unpacked_info['current_image']
     initial = unpacked_info['initial_image']
 
     if image == initial:
-        logging.warning("Image is already in the initial state, nothing to "
+        logger.warning("Image is already in the initial state, nothing to "
                         "reset")
     else:
-        logging.info("Removing image %s", image.decode('ascii'))
+        logger.info("Removing image %s", image.decode('ascii'))
         retcode = subprocess.call(args.docker_cmd.split() + ['rmi', image])
         if retcode != 0:
-            logging.warning("Can't remove previous image, docker returned %d",
+            logger.warning("Can't remove previous image, docker returned %d",
                             retcode)
         unpacked_info['current_image'] = initial
         write_dict(target, unpacked_info)
@@ -404,7 +404,7 @@ def docker_run(args):
 
     # Sanity check
     if args.detach and args.x11:
-        logging.critical("Error: Can't use X11 forwarding if you're detaching")
+        logger.critical("Error: Can't use X11 forwarding if you're detaching")
         raise UsageError
 
     # Loads config
@@ -416,9 +416,9 @@ def docker_run(args):
     # Get current image name
     if 'current_image' in unpacked_info:
         image = unpacked_info['current_image']
-        logging.debug("Running from image %s", image.decode('ascii'))
+        logger.debug("Running from image %s", image.decode('ascii'))
     else:
-        logging.critical("Image doesn't exist yet, have you run setup/build?")
+        logger.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
 
     # Name of new container
@@ -456,7 +456,7 @@ def docker_run(args):
                 ssh_cmdline = ' '.join(
                     '-R*:%(p)d:127.0.0.1:%(p)d' % {'p': port}
                     for port, connector in x11.port_forward)
-                logging.warning(
+                logger.warning(
                     "You requested X11 forwarding but the Docker container "
                     "appears to be running remotely. It is probable that it "
                     "won't be able to connect to the local display. Creating "
@@ -499,7 +499,7 @@ def docker_run(args):
         forwarders.append(LocalForwarder(connector, port))
 
     if args.detach:
-        logging.info("Start container %s (detached)",
+        logger.info("Start container %s (detached)",
                      container.decode('ascii'))
         retcode = interruptible_call(args.docker_cmd.split() +
                                      ['run', b'--name=' + container,
@@ -509,13 +509,13 @@ def docker_run(args):
                                      args.docker_option +
                                      [image, '/busybox', 'sh', '-c', cmds])
         if retcode != 0:
-            logging.critical("docker run failed with code %d", retcode)
+            logger.critical("docker run failed with code %d", retcode)
             subprocess.call(['docker', 'rm', '-f', container])
             sys.exit(1)
         return
 
     # Run command in container
-    logging.info("Starting container %s", container.decode('ascii'))
+    logger.info("Starting container %s", container.decode('ascii'))
     retcode = interruptible_call(args.docker_cmd.split() +
                                  ['run', b'--name=' + container,
                                   '-h', hostname,
@@ -530,20 +530,20 @@ def docker_run(args):
         out = subprocess.check_output(args.docker_cmd.split() +
                                       ['inspect', container])
     except subprocess.CalledProcessError:
-        logging.critical("docker run failed with code %d", retcode)
+        logger.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
-        logging.error("Invalid container state after execution:\n%s",
+        logger.error("Invalid container state after execution:\n%s",
                       json.dumps(outjson[0]["State"]))
     retcode = outjson[0]["State"]["ExitCode"]
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Commit to create new image
     new_image = make_unique_name(b'reprounzip_image_')
-    logging.info("Committing container %s to image %s",
+    logger.info("Committing container %s to image %s",
                  container.decode('ascii'), new_image.decode('ascii'))
     subprocess.check_call(args.docker_cmd.split() +
                           ['commit', container, new_image])
@@ -553,14 +553,14 @@ def docker_run(args):
     write_dict(target, unpacked_info)
 
     # Remove the container
-    logging.info("Destroying container %s", container.decode('ascii'))
+    logger.info("Destroying container %s", container.decode('ascii'))
     retcode = subprocess.call(args.docker_cmd.split() + ['rm', container])
     if retcode != 0:
-        logging.error("Error deleting container %s", container.decode('ascii'))
+        logger.error("Error deleting container %s", container.decode('ascii'))
 
     # Untag previous image, unless it is the initial_image
     if image != unpacked_info['initial_image']:
-        logging.info("Untagging previous image %s", image.decode('ascii'))
+        logger.info("Untagging previous image %s", image.decode('ascii'))
         subprocess.check_call(args.docker_cmd.split() + ['rmi', image])
 
     # Update input file status
@@ -595,7 +595,7 @@ class ContainerUploader(FileUploader):
             name = stem + ('_%d' % nb).encode('ascii') + ext
         name = Path(name)
         local_path.copyfile(self.build_directory / name)
-        logging.info("Copied file %s to %s", local_path, name)
+        logger.info("Copied file %s to %s", local_path, name)
         self.docker_copy.append((name, input_path))
 
     def finalize(self):
@@ -629,17 +629,17 @@ class ContainerUploader(FileUploader):
                                   ['build', '-t', image, '.'],
                                   cwd=self.build_directory.path)
         if retcode != 0:
-            logging.critical("docker build failed with code %d", retcode)
+            logger.critical("docker build failed with code %d", retcode)
             sys.exit(1)
         else:
-            logging.info("New image created: %s", image.decode('ascii'))
+            logger.info("New image created: %s", image.decode('ascii'))
             if from_image != self.unpacked_info['initial_image']:
-                logging.info("Untagging previous image %s",
+                logger.info("Untagging previous image %s",
                              from_image.decode('ascii'))
                 retcode = subprocess.call(self.docker_cmd +
                                           ['rmi', from_image])
                 if retcode != 0:
-                    logging.warning("Can't remove previous image, docker "
+                    logger.warning("Can't remove previous image, docker "
                                     "returned %d", retcode)
             self.unpacked_info['current_image'] = image
             write_dict(self.target, self.unpacked_info)
@@ -672,7 +672,7 @@ class ContainerDownloader(FileDownloader):
     def prepare_download(self, files):
         # Create a container from the image
         self.container = make_unique_name(b'reprounzip_dl_')
-        logging.info("Creating container %s", self.container.decode('ascii'))
+        logger.info("Creating container %s", self.container.decode('ascii'))
         subprocess.check_call(self.docker_cmd +
                               ['create',
                                b'--name=' + self.container,
@@ -688,7 +688,7 @@ class ContainerDownloader(FileDownloader):
                                    self.container + b':' + remote_path.path,
                                    tmpdir.path])
             if ret != 0:
-                logging.critical("Can't get output file: %s", remote_path)
+                logger.critical("Can't get output file: %s", remote_path)
                 return False
             (tmpdir / remote_path.name).copyfile(local_path)
         finally:
@@ -696,10 +696,10 @@ class ContainerDownloader(FileDownloader):
         return True
 
     def finalize(self):
-        logging.info("Removing container %s", self.container.decode('ascii'))
+        logger.info("Removing container %s", self.container.decode('ascii'))
         retcode = subprocess.call(self.docker_cmd + ['rm', self.container])
         if retcode != 0:
-            logging.warning("Can't remove temporary container, docker "
+            logger.warning("Can't remove temporary container, docker "
                             "returned %d", retcode)
 
 
@@ -712,10 +712,10 @@ def docker_download(args):
     unpacked_info = read_dict(target)
 
     if 'current_image' not in unpacked_info:
-        logging.critical("Image doesn't exist yet, have you run setup/build?")
+        logger.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
     image = unpacked_info['current_image']
-    logging.debug("Downloading from image %s", image.decode('ascii'))
+    logger.debug("Downloading from image %s", image.decode('ascii'))
 
     ContainerDownloader(target, files, image,
                         all_=args.all, docker_cmd=args.docker_cmd.split())
@@ -728,7 +728,7 @@ def docker_destroy_docker(args):
     target = Path(args.target[0])
     unpacked_info = read_dict(target)
     if 'initial_image' not in unpacked_info:
-        logging.critical("Image not created")
+        logger.critical("Image not created")
         sys.exit(1)
 
     initial_image = unpacked_info.pop('initial_image')
@@ -736,15 +736,15 @@ def docker_destroy_docker(args):
     if 'current_image' in unpacked_info:
         image = unpacked_info.pop('current_image')
         if image != initial_image:
-            logging.info("Destroying image %s...", image.decode('ascii'))
+            logger.info("Destroying image %s...", image.decode('ascii'))
             retcode = subprocess.call(args.docker_cmd.split() + ['rmi', image])
             if retcode != 0:
-                logging.error("Error deleting image %s", image.decode('ascii'))
+                logger.error("Error deleting image %s", image.decode('ascii'))
 
-    logging.info("Destroying image %s...", initial_image.decode('ascii'))
+    logger.info("Destroying image %s...", initial_image.decode('ascii'))
     retcode = subprocess.call(args.docker_cmd.split() + ['rmi', initial_image])
     if retcode != 0:
-        logging.error("Error deleting image %s", initial_image.decode('ascii'))
+        logger.error("Error deleting image %s", initial_image.decode('ascii'))
 
 
 @target_must_exist
@@ -754,7 +754,7 @@ def docker_destroy_dir(args):
     target = Path(args.target[0])
     read_dict(target)
 
-    logging.info("Removing directory %s...", target)
+    logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
     target.rmtree()
     signals.post_destroy(target=target)

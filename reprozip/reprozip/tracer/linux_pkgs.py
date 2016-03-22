@@ -81,7 +81,7 @@ class PkgManager(object):
                          for pkgname, pkg in iteritems(self.packages)
                          if pkg.files}
 
-        logging.info("%d packages with %d files, and %d other files",
+        logger.info("%d packages with %d files, and %d other files",
                      len(self.packages),
                      nb_pkg_files,
                      len(self.unknown_files))
@@ -157,7 +157,7 @@ class DpkgManager(PkgManager):
             package.add_file(requested.pop(path))
             nb_pkg_files += 1
 
-        logging.info("%d packages with %d files, and %d other files",
+        logger.info("%d packages with %d files, and %d other files",
                      len(self.packages),
                      nb_pkg_files,
                      len(self.unknown_files))
@@ -192,7 +192,7 @@ class DpkgManager(PkgManager):
             p.wait()
         if p.returncode == 0:
             pkg = Package(pkgname, version, size=size)
-            logging.debug("Found package %s", pkg)
+            logger.debug("Found package %s", pkg)
             return pkg
         else:
             return None
@@ -223,7 +223,7 @@ class RpmManager(PkgManager):
             version, size = out.strip().decode('iso-8859-1').rsplit(' ', 1)
             size = int(size)
             pkg = Package(pkgname, version, size=size)
-            logging.debug("Found package %s", pkg)
+            logger.debug("Found package %s", pkg)
             return pkg
         else:
             return None
@@ -234,20 +234,20 @@ def identify_packages(files):
     """
     distribution = platform.linux_distribution()[0].lower()
     if distribution in ('debian', 'ubuntu'):
-        logging.info("Identifying Debian packages for %d files...", len(files))
+        logger.info("Identifying Debian packages for %d files...", len(files))
         manager = DpkgManager()
     elif (distribution in ('centos', 'centos linux',
                            'fedora', 'scientific linux') or
             distribution.startswith('red hat')):
-        logging.info("Identifying RPM packages for %d files...", len(files))
+        logger.info("Identifying RPM packages for %d files...", len(files))
         manager = RpmManager()
     else:
-        logging.info("Unknown distribution, can't identify packages")
+        logger.info("Unknown distribution, can't identify packages")
         return files, []
 
     begin = time.time()
     manager.search_for_files(files)
-    logging.debug("Assigning files to packages took %f seconds",
+    logger.debug("Assigning files to packages took %f seconds",
                   (time.time() - begin))
 
     return manager.unknown_files, listvalues(manager.packages)

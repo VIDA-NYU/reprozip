@@ -155,7 +155,7 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
             chan.get_pty()
 
         # Execute command
-        logging.info("Connected via SSH, running command...")
+        logger.info("Connected via SSH, running command...")
         chan.exec_command(cmd)
 
         # Get output

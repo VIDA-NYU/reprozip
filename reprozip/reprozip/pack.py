@@ -38,7 +38,7 @@ def expand_patterns(patterns):
     # Finds all matching paths
     for pattern in patterns:
         if logging.root.isEnabledFor(logging.DEBUG):
-            logging.debug("Expanding pattern %r into %d paths",
+            logger.debug("Expanding pattern %r into %d paths",
                           pattern,
                           len(list(Path('/').recursedir(pattern))))
         for path in Path('/').recursedir(pattern):
@@ -65,7 +65,7 @@ def canonicalize_config(packages, other_files, additional_patterns,
     """
     if additional_patterns:
         add_files = expand_patterns(additional_patterns)
-        logging.info("Found %d files from expanding additional_patterns...",
+        logger.info("Found %d files from expanding additional_patterns...",
                      len(add_files))
         if add_files:
             if sort_packages:
@@ -108,7 +108,7 @@ class PackBuilder(object):
             path = path / c
             if path in self.seen:
                 continue
-            logging.debug("%s -> %s", path, data_path(path))
+            logger.debug("%s -> %s", path, data_path(path))
             self.tar.add(str(path), str(data_path(path)), recursive=False)
             self.seen.add(path)
 
@@ -122,13 +122,13 @@ def pack(target, directory, sort_packages):
     """
     if target.exists():
         # Don't overwrite packs...
-        logging.critical("Target file exists!")
+        logger.critical("Target file exists!")
         sys.exit(1)
 
     # Reads configuration
     configfile = directory / 'config.yml'
     if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
+        logger.critical("Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")
@@ -146,7 +146,7 @@ def pack(target, directory, sort_packages):
     for i, run in enumerate(runs):
         if (any(c not in run_chars for c in run['id']) or
                 all(c in string.digits for c in run['id'])):
-            logging.critical("Illegal run id: %r (run number %d)",
+            logger.critical("Illegal run id: %r (run number %d)",
                              run['id'], i)
             sys.exit(1)
 
@@ -154,7 +154,7 @@ def pack(target, directory, sort_packages):
     packages, other_files = canonicalize_config(
         packages, other_files, additional_patterns, sort_packages)
 
-    logging.info("Creating pack %s...", target)
+    logger.info("Creating pack %s...", target)
     tar = tarfile.open(str(target), 'w:')
 
     fd, tmp = Path.tempfile()
@@ -164,25 +164,25 @@ def pack(target, directory, sort_packages):
         # Add the files from the packages
         for pkg in packages:
             if pkg.packfiles:
-                logging.info("Adding files from package %s...", pkg.name)
+                logger.info("Adding files from package %s...", pkg.name)
                 files = []
                 for f in pkg.files:
                     if not Path(f.path).exists():
-                        logging.warning("Missing file %s from package %s",
+                        logger.warning("Missing file %s from package %s",
                                         f.path, pkg.name)
                     else:
                         datatar.add_data(f.path)
                         files.append(f)
                 pkg.files = files
             else:
-                logging.info("NOT adding files from package %s", pkg.name)
+                logger.info("NOT adding files from package %s", pkg.name)
 
         # Add the rest of the files
-        logging.info("Adding other files...")
+        logger.info("Adding other files...")
         files = set()
         for f in other_files:
             if not Path(f.path).exists():
-                logging.warning("Missing file %s", f.path)
+                logger.warning("Missing file %s", f.path)
             else:
                 datatar.add_data(f.path)
                 files.add(f)
@@ -193,7 +193,7 @@ def pack(target, directory, sort_packages):
     finally:
         tmp.remove()
 
-    logging.info("Adding metadata...")
+    logger.info("Adding metadata...")
     # Stores pack version
     fd, manifest = Path.tempfile(prefix='reprozip_', suffix='.txt')
     os.close(fd)
@@ -207,14 +207,14 @@ def pack(target, directory, sort_packages):
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
     if not trace.is_file():
-        logging.critical("trace.sqlite3 is gone! Aborting")
+        logger.critical("trace.sqlite3 is gone! Aborting")
         sys.exit(1)
     tar.add(str(trace), 'METADATA/trace.sqlite3')
 
     # Checks that input files are packed
     for name, f in iteritems(inputs_outputs):
         if f.read_runs and not Path(f.path).exists():
-            logging.warning("File is designated as input (name %s) but is not "
+            logger.warning("File is designated as input (name %s) but is not "
                             "to be packed: %s", name, f.path)
 
     # Generates a unique identifier for the pack (for usage reports purposes)

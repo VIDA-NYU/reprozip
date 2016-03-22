@@ -69,7 +69,7 @@ class RPUZArgumentParser(argparse.ArgumentParser):
 
 def usage_report(args):
     if bool(args.enable) == bool(args.disable):
-        logging.critical("What do you want to do?")
+        logger.critical("What do you want to do?")
         raise UsageError
     enable_usage_report(args.enable)
     sys.exit(0)

@@ -32,7 +32,7 @@ def download_file_retry(url, dest):
     while True:
         attempt += 1
         try:
-            logging.info("Download %s, attempt %d", url, attempt)
+            logger.info("Download %s, attempt %d", url, attempt)
             response = requests.get(url, stream=True)
             response.raise_for_status()
             try:
@@ -50,7 +50,7 @@ def download_file_retry(url, dest):
         except requests.RequestException as e:
             if attempt == 2:
                 raise e
-            logging.warning("Download %s: retrying after error: %s", url, e)
+            logger.warning("Download %s: retrying after error: %s", url, e)
 
 
 def in_temp_dir(f):

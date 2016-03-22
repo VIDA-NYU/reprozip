@@ -39,7 +39,7 @@ def generate(target, configfile, database):
     """
     # Reads package ownership from the configuration
     if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
+        logger.critical("Configuration file does not exist!\n"
                          "Did you forget to run 'reprozip trace'?\n"
                          "If not, you might want to use --dir to specify an "
                          "alternate location.")

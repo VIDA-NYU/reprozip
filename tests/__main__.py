@@ -79,11 +79,11 @@ if __name__ == '__main__':
 
     successful = True
     if unittests:
-        logging.info("Running unit tests")
+        logger.info("Running unit tests")
         prog = Program(argv=['tests'] + args.arg, exit=False)
         successful = prog.result.wasSuccessful()
     if functests:
-        logging.info("Running functional tests")
+        logger.info("Running functional tests")
         functional_tests(args.raise_warnings,
                          args.interactive, args.run_vagrant, args.run_docker)
 

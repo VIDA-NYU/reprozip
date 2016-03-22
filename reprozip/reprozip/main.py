@@ -165,7 +165,7 @@ def testrun(args):
             argv = [args.arg0] + args.cmdline[1:]
         else:
             argv = args.cmdline
-        logging.debug("Starting tracer, binary=%r, argv=%r",
+        logger.debug("Starting tracer, binary=%r, argv=%r",
                       args.cmdline[0], argv)
         c = _pytracer.execute(args.cmdline[0], argv, database.path,
                               args.verbosity)
@@ -194,7 +194,7 @@ def trace(args):
     else:
         argv = args.cmdline
     if args.append and args.overwrite:
-        logging.critical("You can't use both --continue and --overwrite")
+        logger.critical("You can't use both --continue and --overwrite")
         sys.exit(2)
     elif args.append:
         append = True
@@ -234,7 +234,7 @@ def pack(args):
     target = Path(args.target)
     if not target.unicodename.lower().endswith('.rpz'):
         target = Path(target.path + b'.rpz')
-        logging.warning("Changing output filename to %s", target.unicodename)
+        logger.warning("Changing output filename to %s", target.unicodename)
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 
@@ -265,7 +265,7 @@ def combine(args):
 
 def usage_report(args):
     if bool(args.enable) == bool(args.disable):
-        logging.critical("What do you want to do?")
+        logger.critical("What do you want to do?")
         sys.exit(2)
     enable_usage_report(args.enable)
     sys.exit(0)

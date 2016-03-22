@@ -99,7 +99,7 @@ def run_filter_plugins(files, input_files):
         func = entry_point.load()
         name = entry_point.name
 
-        logging.info("Running filter plugin %s", name)
+        logger.info("Running filter plugin %s", name)
         func(files=files, input_files=input_files)
 
 
@@ -229,11 +229,11 @@ def get_files(conn):
         if fi.what == TracedFile.READ_THEN_WRITTEN and
         not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
-        logging.warning(
+        logger.warning(
             "Some files were read and then written. We will only pack the "
             "final version of the file; reproducible experiments shouldn't "
             "change their input files")
-        logging.info("Paths:\n%s",
+        logger.info("Paths:\n%s",
                      ", ".join(unicode_(fi.path)
                                for fi in read_then_written_files))
 
@@ -301,7 +301,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     cwd = Path.cwd()
     if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
             not cwd.lies_under('/usr/local')):
-        logging.warning(
+        logger.warning(
             "You are running this experiment from a system directory! "
             "Autodetection of non-system files will probably not work as "
             "intended")
@@ -315,7 +315,7 @@ def trace(binary, argv, directory, append, verbosity=1):
                 directory,
                 'aAdDsS')
             if r is None:
-                logging.critical(
+                logger.critical(
                     "Trace directory %s exists\n"
                     "Please use either --continue or --overwrite\n",
                     directory)
@@ -325,30 +325,30 @@ def trace(binary, argv, directory, append, verbosity=1):
             elif r in 'dD':
                 directory.rmtree()
                 directory.mkdir()
-            logging.warning(
+            logger.warning(
                 "You can use --overwrite to replace the existing trace "
                 "(or --continue to append\nwithout prompt)")
         elif append is False:
-            logging.info("Removing existing trace directory %s", directory)
+            logger.info("Removing existing trace directory %s", directory)
             directory.rmtree()
             directory.mkdir(parents=True)
     else:
         if append is True:
-            logging.warning("--continue was set but trace doesn't exist yet")
+            logger.warning("--continue was set but trace doesn't exist yet")
         directory.mkdir()
 
     # Runs the trace
     database = directory / 'trace.sqlite3'
-    logging.info("Running program")
+    logger.info("Running program")
     # Might raise _pytracer.Error
     c = _pytracer.execute(binary, argv, database.path, verbosity)
     if c != 0:
         if c & 0x0100:
-            logging.warning("Program appears to have been terminated by "
+            logger.warning("Program appears to have been terminated by "
                             "signal %d", c & 0xFF)
         else:
-            logging.warning("Program exited with non-zero code %d", c)
-    logging.info("Program completed")
+            logger.warning("Program exited with non-zero code %d", c)
+    logger.info("Program completed")
 
     return c
 

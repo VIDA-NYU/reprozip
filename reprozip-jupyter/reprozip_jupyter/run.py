@@ -53,7 +53,7 @@ class RPZKernelManager(IOLoopKernelManager):
 
     def _launch_kernel(self, kernel_cmd, **kw):
         # Need to parse kernel command-line to find the connection file
-        logging.info("Kernel command-line: %s", ' '.join(kernel_cmd))
+        logger.info("Kernel command-line: %s", ' '.join(kernel_cmd))
         connection_file = None
         for i, arg in enumerate(kernel_cmd):
             if arg == '-f':
@@ -61,7 +61,7 @@ class RPZKernelManager(IOLoopKernelManager):
                 break
 
         if connection_file is None:
-            logging.critical("The notebook didn't pass a connection file to "
+            logger.critical("The notebook didn't pass a connection file to "
                              "the kernel")
             sys.exit(1)
 
@@ -97,7 +97,7 @@ def run_server(target, jupyter_args=None, verbosity=1):
     if not jupyter_args:
         jupyter_args = []
 
-    logging.info("Starting Jupyter notebook")
+    logger.info("Starting Jupyter notebook")
     NotebookApp.launch_instance(argv=jupyter_args,
                                 kernel_manager_class=RPZMappingKernelManager)
 
