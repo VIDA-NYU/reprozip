@@ -270,7 +270,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     else:
         if not directory.exists():
             logger.warning("--continue was specified but %s does not exist "
-                            "-- creating", directory)
+                           "-- creating", directory)
             directory.mkdir(parents=True)
 
     # Runs the trace
@@ -280,8 +280,8 @@ def trace(binary, argv, directory, append, verbosity=1):
     c = _pytracer.execute(binary, argv, database.path, verbosity)
     if c != 0:
         if c & 0x0100:
-            logger.warning("Program appears to have been terminated by "
-                            "signal %d", c & 0xFF)
+            logger.warning("Program appears to have been terminated by signal "
+                           "%d", c & 0xFF)
         else:
             logger.warning("Program exited with non-zero code %d", c)
     logger.info("Program completed")

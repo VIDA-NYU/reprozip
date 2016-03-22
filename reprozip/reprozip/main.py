@@ -154,7 +154,7 @@ def testrun(args):
         else:
             argv = args.cmdline
         logger.debug("Starting tracer, binary=%r, argv=%r",
-                      args.cmdline[0], argv)
+                     args.cmdline[0], argv)
         c = _pytracer.execute(args.cmdline[0], argv, database.path,
                               args.verbosity)
         print("\n\n-----------------------------------------------------------"

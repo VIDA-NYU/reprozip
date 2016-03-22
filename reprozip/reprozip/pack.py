@@ -39,8 +39,8 @@ def expand_patterns(patterns):
     for pattern in patterns:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Expanding pattern %r into %d paths",
-                          pattern,
-                          len(list(Path('/').recursedir(pattern))))
+                         pattern,
+                         len(list(Path('/').recursedir(pattern))))
         for path in Path('/').recursedir(pattern):
             if path.is_dir():
                 dirs.add(path)
@@ -125,9 +125,9 @@ def pack(target, directory, sort_packages):
     configfile = directory / 'config.yml'
     if not configfile.is_file():
         logger.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
+                        "Did you forget to run 'reprozip trace'?\n"
+                        "If not, you might want to use --dir to specify an "
+                        "alternate location.")
         sys.exit(1)
     runs, packages, other_files = config = load_config(
         configfile,
@@ -143,7 +143,7 @@ def pack(target, directory, sort_packages):
         if (any(c not in run_chars for c in run['id']) or
                 all(c in string.digits for c in run['id'])):
             logger.critical("Illegal run id: %r (run number %d)",
-                             run['id'], i)
+                            run['id'], i)
             sys.exit(1)
 
     # Canonicalize config (re-sort, expand 'additional_files' patterns)
@@ -165,7 +165,7 @@ def pack(target, directory, sort_packages):
                 for f in pkg.files:
                     if not Path(f.path).exists():
                         logger.warning("Missing file %s from package %s",
-                                        f.path, pkg.name)
+                                       f.path, pkg.name)
                     else:
                         datatar.add_data(f.path)
                         files.append(f)
@@ -211,7 +211,7 @@ def pack(target, directory, sort_packages):
     for name, f in iteritems(inputs_outputs):
         if f.read_runs and not Path(f.path).exists():
             logger.warning("File is designated as input (name %s) but is not "
-                            "to be packed: %s", name, f.path)
+                           "to be packed: %s", name, f.path)
 
     # Generates a unique identifier for the pack (for usage reports purposes)
     pack_id = str(uuid.uuid4())

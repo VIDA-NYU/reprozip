@@ -242,7 +242,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                       'drop': LVL_PKG_DROP}[level_pkgs]
     except KeyError:
         logger.critical("Unknown level of detail for packages: '%s'",
-                         level_pkgs)
+                        level_pkgs)
         sys.exit(1)
     try:
         level_processes = {'thread': LVL_PROC_THREAD,
@@ -253,7 +253,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                            'runs': LVL_PROC_RUN}[level_processes]
     except KeyError:
         logger.critical("Unknown level of detail for processes: '%s'",
-                         level_processes)
+                        level_processes)
         sys.exit(1)
     if level_other_files.startswith('depth:'):
         file_depth = int(level_other_files[6:])
@@ -269,7 +269,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                              'drop': LVL_OTHER_NO}[level_other_files]
     except KeyError:
         logger.critical("Unknown level of detail for other files: '%s'",
-                         level_other_files)
+                        level_other_files)
         sys.exit(1)
 
     return level_pkgs, level_processes, level_other_files, file_depth
@@ -443,9 +443,9 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     # Reads package ownership from the configuration
     if not configfile.is_file():
         logger.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
+                        "Did you forget to run 'reprozip trace'?\n"
+                        "If not, you might want to use --dir to specify an "
+                        "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
     inputs_outputs = dict((f.path, n)
@@ -458,7 +458,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     # Label the runs
     if len(runs) != len(config.runs):
         logger.warning("Configuration file doesn't list the same number of "
-                        "runs we found in the database!")
+                       "runs we found in the database!")
     else:
         for config_run, run in izip(config.runs, runs):
             run.name = config_run['id']

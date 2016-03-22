@@ -116,9 +116,9 @@ class X11Handler(object):
 
         self.xauth = PosixPath('/.reprounzip_xauthority')
         self.display = display if display is not None else self.DISPLAY_NUMBER
-        logger.debug("X11 support enabled; will create Xauthority file %s "
-                      "for experiment. Display number is %d", self.xauth,
-                      self.display)
+        logger.debug("X11 support enabled; will create Xauthority file %s for "
+                     "experiment. Display number is %d", self.xauth,
+                     self.display)
 
         # List of addresses that match the $DISPLAY variable
         possible, local_display = self._locate_display()
@@ -168,8 +168,8 @@ class X11Handler(object):
                 self.connection_info = (socket.AF_UNIX, socket.SOCK_STREAM,
                                         address)
                 self.xauth_record = xauth_entries[(family, None)]
-                logger.debug("Will connect to local X display via UNIX "
-                              "socket %s", address)
+                logger.debug("Will connect to local X display via UNIX socket "
+                             "%s", address)
                 break
             else:
                 # Checks that we have a cookie
@@ -178,8 +178,8 @@ class X11Handler(object):
                                         (address, tcp_portnum))
                 self.xauth_record = xauth_entries[(family, address)]
                 logger.debug("Will connect to X display %s:%d via %s/TCP",
-                              address, tcp_portnum,
-                              "IPv6" if family == socket.AF_INET6 else "IPv4")
+                             address, tcp_portnum,
+                             "IPv6" if family == socket.AF_INET6 else "IPv4")
                 break
 
         # Didn't find an Xauthority record -- assume no authentication is
@@ -193,14 +193,14 @@ class X11Handler(object):
                     self.connection_info = (socket.AF_UNIX, socket.SOCK_STREAM,
                                             address)
                     logger.debug("Will connect to X display via UNIX socket "
-                                  "%s, no authentication", address)
+                                 "%s, no authentication", address)
                     break
             else:
                 self.connection_info = (socket.AF_INET, socket.SOCK_STREAM,
                                         ('127.0.0.1', tcp_portnum))
                 logger.debug("Will connect to X display 127.0.0.1:%d via "
-                              "IPv4/TCP, no authentication",
-                              tcp_portnum)
+                             "IPv4/TCP, no authentication",
+                             tcp_portnum)
 
         if self.connection_info is None:
             raise RuntimeError("Couldn't determine how to connect to local X "
@@ -276,7 +276,7 @@ class X11Handler(object):
         def connect(src_addr):
             logger.info("Got remote X connection from %s", (src_addr,))
             logger.debug("Connecting to X server: %s",
-                          (self.connection_info,))
+                         (self.connection_info,))
             sock = socket.socket(*self.connection_info[:2])
             sock.connect(self.connection_info[2])
             yield sock
