@@ -26,6 +26,9 @@ from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
 from reprounzip.utils import iteritems, itervalues, unicode_, hsize
 
 
+logger = logging.getLogger('reprounzip')
+
+
 def print_info(args):
     """Writes out some information about a pack file.
     """

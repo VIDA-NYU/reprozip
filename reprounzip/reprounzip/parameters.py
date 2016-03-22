@@ -23,6 +23,9 @@ from reprounzip.common import get_reprozip_ca_certificate
 from reprounzip.utils import download_file
 
 
+logger = logging.getLogger('reprounzip')
+
+
 parameters = None
 
 

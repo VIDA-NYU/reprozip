@@ -30,6 +30,9 @@ import subprocess
 import sys
 
 
+logger = logging.getLogger(__name__.split('.', 1)[0])
+
+
 class StreamWriter(object):
     def __init__(self, stream):
         writer = codecs.getwriter(locale.getpreferredencoding())

@@ -24,6 +24,9 @@ from reprozip.common import Package
 from reprozip.utils import listvalues
 
 
+logger = logging.getLogger('reprozip')
+
+
 magic_dirs = ('/dev', '/proc', '/sys')
 system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
 

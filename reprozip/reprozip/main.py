@@ -31,6 +31,9 @@ import reprozip.tracer.trace
 from reprozip.utils import PY3, unicode_, stderr
 
 
+logger = logging.getLogger('reprozip')
+
+
 def shell_escape(s):
     """Given bl"a, returns "bl\\"a".
     """

@@ -30,6 +30,9 @@ from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
     unicode_, join_root, copyfile
 
 
+logger = logging.getLogger('reprounzip')
+
+
 COMPAT_OK = 0
 COMPAT_NO = 1
 COMPAT_MAYBE = 2

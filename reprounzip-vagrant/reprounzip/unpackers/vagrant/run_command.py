@@ -23,6 +23,9 @@ from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import irange, stdout_bytes
 
 
+logger = logging.getLogger('reprounzip.vagrant')
+
+
 class IgnoreMissingKey(MissingHostKeyPolicy):
     """Policy that just ignores missing SSH host keys.
 

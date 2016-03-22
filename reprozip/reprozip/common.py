@@ -39,6 +39,9 @@ from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
     copyfile
 
 
+logger = logging.getLogger(__name__.split('.', 1)[0])
+
+
 FILE_READ = 0x01
 FILE_WRITE = 0x02
 FILE_WDIR = 0x04

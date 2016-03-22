@@ -28,6 +28,9 @@ from reprozip.tracer.trace import merge_files
 from reprozip.utils import iteritems
 
 
+logger = logging.getLogger('reprozip')
+
+
 def expand_patterns(patterns):
     files = set()
     dirs = set()

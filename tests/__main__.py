@@ -28,6 +28,9 @@ from reprounzip.signals import SignalWarning    # noqa
 from tests.functional import functional_tests   # noqa
 
 
+logger = logging.getLogger('reprozip.testsuite')
+
+
 class Program(unittest.TestProgram):
     def createTests(self):
         if self.testNames is None:

@@ -38,6 +38,9 @@ from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
+logger = logging.getLogger('reprounzip.vagrant')
+
+
 def rb_escape(s):
     """Given bl'a, returns 'bl\\'a'.
     """

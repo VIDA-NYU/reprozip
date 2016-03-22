@@ -37,6 +37,9 @@ from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     download_file
 
 
+logger = logging.getLogger('reprounzip.docker')
+
+
 # How this all works:
 #  - setup/create just copies file to the target directory and writes the
 #    Dockerfile
