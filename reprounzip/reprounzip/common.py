@@ -30,6 +30,7 @@ import logging
 import logging.handlers
 import os
 from rpaths import PosixPath, Path
+import sys
 import tarfile
 import usagestats
 import yaml
@@ -605,6 +606,13 @@ def setup_logging(tag, verbosity):
         filehandler.setLevel(file_level)
         logger.addHandler(filehandler)
 
+        filehandler.emit(logging.root.makeRecord(
+            __name__.split('.', 1)[0],
+            logging.INFO,
+            "(log start)", 0,
+            "Log opened %s %s",
+            (datetime.now().strftime("%Y-%m-%d"), sys.argv),
+            None))
 
 _usage_report = None
 

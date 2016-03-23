@@ -701,9 +701,10 @@ class LocalDownloader(FileDownloader):
         if not remote_path.exists():
             logging.critical("Can't get output file (doesn't exist): %s",
                              remote_path)
-            sys.exit(1)
+            return False
         with remote_path.open('rb') as fp:
             copyfile(fp, stdout_bytes)
+        return True
 
     def download(self, remote_path, local_path):
         remote_path = join_root(self.root, remote_path)
@@ -712,9 +713,10 @@ class LocalDownloader(FileDownloader):
         if not remote_path.exists():
             logging.critical("Can't get output file (doesn't exist): %s",
                              remote_path)
-            sys.exit(1)
+            return False
         remote_path.copyfile(local_path)
         remote_path.copymode(local_path)
+        return True
 
 
 @target_must_exist

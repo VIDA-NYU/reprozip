@@ -261,7 +261,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     # Trace directory
     if not append:
         if directory.exists():
-            logging.info("Removing existing directory %s", directory)
+            logging.warning("Removing existing directory %s", directory)
             directory.rmtree()
         directory.mkdir(parents=True)
     else:
