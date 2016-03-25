@@ -120,7 +120,7 @@ class DpkgManager(PkgManager):
         self.unknown_files.update(f for f in files if f.path in requested)
 
     def _filter(self, f):
-        # Directories and non-existent files
+        # Directories
         if f.path.is_dir():
             self.unknown_files.add(f)
             return True
@@ -157,14 +157,48 @@ class DpkgManager(PkgManager):
         return Package(pkgname, version, size=size)
 
 
+class RpmManager(PkgManager):
+    """Package identifier for rpm-based systems (Fedora, CentOS).
+    """
+    def _filter(self, f):
+        # Directories
+        if f.path.is_dir():
+            self.unknown_files.add(f)
+            return True
+
+        return super(RpmManager, self)._filter(f)
+
+    def _get_package_for_file(self, filename):
+        p = subprocess.Popen(['rpm', '-qf', filename.path,
+                              '--qf', '%{NAME}'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            return None
+        return out.strip().decode('iso-8859-1')
+
+    def _create_package(self, pkgname):
+        p = subprocess.Popen(['rpm', '-q', pkgname,
+                              '--qf', '%{VERSION}-%{RELEASE} %{SIZE}'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        assert p.returncode == 0
+        version, size = out.strip().decode('iso-8859-1').rsplit(' ', 1)
+        size = int(size)
+        return Package(pkgname, version, size=size)
+
+
 def identify_packages(files):
     """Organizes the files, using the distribution's package manager.
     """
     distribution = platform.linux_distribution()[0].lower()
-    if distribution == 'ubuntu':
+    if distribution in ('debian', 'ubuntu'):
         manager = DpkgManager()
-    elif distribution == 'debian':
-        manager = DpkgManager()
+    elif (distribution in ('centos', 'fedora', 'scientific linux') or
+            distribution.startswith('red hat')):
+        manager = RpmManager()
     else:
         return files, []
 
