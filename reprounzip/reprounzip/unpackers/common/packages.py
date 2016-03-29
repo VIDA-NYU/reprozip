@@ -71,11 +71,8 @@ class AptInstaller(object):
                 if len(fields) == 2:
                     name = fields[0].decode('ascii')
                     status = fields[1].decode('ascii')
-                else:
-                    name = fields[0].decode('ascii')
-                    status = PKG_NOT_INSTALLED
-                pkg, _ = pkgs_dict[name]
-                pkgs_dict[name] = pkg, status
+                    pkg, _ = pkgs_dict[name]
+                    pkgs_dict[name] = pkg, status
         finally:
             p.communicate()
 
