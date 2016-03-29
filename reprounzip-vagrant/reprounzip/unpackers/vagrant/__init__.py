@@ -61,17 +61,18 @@ def select_box(runs):
 
     def find_distribution(parameter, distribution, version, architecture):
         boxes = parameter['boxes']
-        default = parameter['default']
 
-        for distrib_name, distrib in iteritems(boxes):
-            if distribution == distrib_name is not None:
+        for distrib in boxes:
+            if re.match(distrib['name'], distribution) is not None:
                 result = find_version(distrib, version, architecture)
                 if result is not None:
                     return result
-        distrib = boxes[default]
+        default = parameter['default']
         logging.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
-        return find_version(distrib, None, architecture)
+                        distribution, default['name'])
+        result = default['architectures'].get(architecture)
+        if result:
+            return default['distribution'], result
 
     def find_version(distrib, version, architecture):
         if version is not None:

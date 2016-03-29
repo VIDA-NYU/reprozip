@@ -74,17 +74,16 @@ def select_image(runs):
 
     def find_distribution(parameter, distribution, version):
         images = parameter['images']
-        default = parameter['default']
 
-        for distrib_name, distrib in iteritems(images):
-            if distribution == distrib_name is not None:
+        for distrib in images:
+            if re.match(distrib['name'], distribution) is not None:
                 result = find_version(distrib, version)
                 if result is not None:
                     return result
-        distrib = images[default]
+        default = parameter['default']
         logging.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
-        return find_version(distrib, None)
+                        distribution, default['name'])
+        return default['distribution'], default['image']
 
     def find_version(distrib, version):
         if version is not None:
