@@ -64,7 +64,7 @@ def select_box(runs):
         default = parameter['default']
 
         for distrib_name, distrib in iteritems(boxes):
-            if distribution == distrib_name is not None:
+            if distribution == distrib_name:
                 result = find_version(distrib, version, architecture)
                 if result is not None:
                     return result

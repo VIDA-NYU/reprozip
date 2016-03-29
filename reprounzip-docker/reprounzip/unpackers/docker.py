@@ -77,7 +77,7 @@ def select_image(runs):
         default = parameter['default']
 
         for distrib_name, distrib in iteritems(images):
-            if distribution == distrib_name is not None:
+            if distribution == distrib_name:
                 result = find_version(distrib, version)
                 if result is not None:
                     return result
