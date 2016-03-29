@@ -38,13 +38,6 @@ from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
-def rb_escape(s):
-    """Given bl'a, returns 'bl\\'a'.
-    """
-    return "'%s'" % (s.replace('\\', '\\\\')
-                      .replace("'", "\\'"))
-
-
 def select_box(runs):
     """Selects a box for the experiment, with the correct distribution.
     """
