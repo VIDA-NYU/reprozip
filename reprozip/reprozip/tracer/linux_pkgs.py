@@ -21,7 +21,7 @@ import subprocess
 import time
 
 from reprozip.common import Package
-from reprozip.utils import listvalues
+from reprozip.utils import iteritems, listvalues
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
@@ -101,10 +101,14 @@ class DpkgManager(PkgManager):
     def search_for_files(self, files):
         # Make a set of all the requested files
         requested = dict((f.path, f) for f in self.filter_files(files))
+        found = {}  # {path: pkgname}
 
         # Process /var/lib/dpkg/info/*.list
         for listfile in Path('/var/lib/dpkg/info').listdir():
-            package = None
+            pkgname = listfile.unicodename[:-5]
+            # Removes :arch
+            pkgname = pkgname.split(':', 1)[0]
+
             if not listfile.unicodename.endswith('.list'):
                 continue
             with listfile.open('rb') as fp:
@@ -114,22 +118,28 @@ class DpkgManager(PkgManager):
                     if l[-1:] == b'\n':
                         l = l[:-1]
                     path = Path(l)
-                    # If it's one of the requested paths, update the package
+                    # If it's one of the requested paths
                     if path in requested:
-                        if package is None:
-                            pkgname = listfile.unicodename[:-5]
-                            # Removes :arch
-                            pkgname = pkgname.split(':', 1)[0]
-                            if pkgname in self.packages:
-                                package = self.packages[pkgname]
-                            else:
-                                package = self._create_package(pkgname)
-                                self.packages[pkgname] = package
-                        package.add_file(requested.pop(path))
+                        # If we had assigned it to a package already, undo
+                        if path in found:
+                            found[path] = None
+                        # Else assign to the package
+                        else:
+                            found[path] = pkgname
                     l = fp.readline()
 
         # Remaining files are not from packages
-        self.unknown_files.update(f for f in files if f.path in requested)
+        self.unknown_files.update(
+            f for f in files
+            if f.path in requested and f.path not in found)
+
+        for path, pkgname in iteritems(found):
+            if pkgname in self.packages:
+                package = self.packages[pkgname]
+            else:
+                package = self._create_package(pkgname)
+                self.packages[pkgname] = package
+            package.add_file(requested.pop(path))
 
     def _get_packages_for_file(self, filename):
         # This method is no longer used for dpkg: instead of querying each file
