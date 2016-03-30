@@ -152,7 +152,7 @@ class DpkgManager(PkgManager):
                     size = int(fields[2].decode('ascii')) * 1024    # kbytes
                     break
         finally:
-            p.wait()
+            p.communicate()
         assert p.returncode == 0
         return Package(pkgname, version, size=size)
 

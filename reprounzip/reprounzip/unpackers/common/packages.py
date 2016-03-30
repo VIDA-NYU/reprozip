@@ -77,7 +77,7 @@ class AptInstaller(object):
                 pkg, _ = pkgs_dict[name]
                 pkgs_dict[name] = pkg, status
         finally:
-            p.wait()
+            p.communicate()
 
         return pkgs_dict
 
