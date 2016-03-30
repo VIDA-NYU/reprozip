@@ -131,14 +131,6 @@ class DpkgManager(PkgManager):
         # Remaining files are not from packages
         self.unknown_files.update(f for f in files if f.path in requested)
 
-    def _filter(self, f):
-        # Directories
-        if f.path.is_dir():
-            self.unknown_files.add(f)
-            return True
-
-        return super(DpkgManager, self)._filter(f)
-
     def _get_packages_for_file(self, filename):
         # This method is no longer used for dpkg: instead of querying each file
         # using `dpkg -S`, we read all the list files once ourselves since it
@@ -174,14 +166,6 @@ class DpkgManager(PkgManager):
 class RpmManager(PkgManager):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
-    def _filter(self, f):
-        # Directories
-        if f.path.is_dir():
-            self.unknown_files.add(f)
-            return True
-
-        return super(RpmManager, self)._filter(f)
-
     def _get_packages_for_file(self, filename):
         p = subprocess.Popen(['rpm', '-qf', filename.path,
                               '--qf', '%{NAME}'],
