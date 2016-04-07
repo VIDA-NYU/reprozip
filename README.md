@@ -6,6 +6,7 @@
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/)]
 (http://reprozip.readthedocs.org/en/latest/)
+[![Gitter](https://badges.gitter.im/ViDA-NYU/reprozip.svg)](https://gitter.im/ViDA-NYU/reprozip?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ReproZip
 ========
