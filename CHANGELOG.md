@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.5 (2016-04-07)
+------------------
+
+(reprounzip-vagrant didn't change)
+
+Bugfixes:
+* Correctly download parameters from server
+* More reliable way of determining X server IP without using /bin/ip
+
 1.0.4 (2016-03-10)
 ------------------
 
