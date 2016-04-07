@@ -35,34 +35,34 @@ def update_parameters():
 
     url = 'https://reprozip-stats.poly.edu/parameters/'
     env_var = os.environ.get('REPROZIP_PARAMETERS')
-    if env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true'):
+    if env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true') and (
+            env_var.startswith('http://') or env_var.startswith('https://')):
         # This is only used for testing
         # Note that this still expects the ReproZip CA
-        if env_var and (env_var.startswith('http://') or
-                        env_var.startswith('https://')):
-            url = env_var
+        url = env_var
+
+    try:
+        from reprounzip.main import __version__ as version
+        filename = download_file(
+            '%s%s' % (url, version),
+            None,
+            cachename='parameters.json',
+            ssl_verify=get_reprozip_ca_certificate().path)
+    except Exception:
+        logging.info("Can't download parameters.json, using bundled "
+                     "parameters")
+    else:
         try:
-            from reprounzip.main import __version__ as version
-            filename = download_file(
-                '%s%s' % (url, version),
-                None,
-                cachename='parameters.json',
-                ssl_verify=get_reprozip_ca_certificate().path)
-        except Exception:
-            logging.info("Can't download parameters.json, using bundled "
-                         "parameters")
-        else:
+            with filename.open() as fp:
+                parameters = json.load(fp)
+            return
+        except ValueError:
+            logging.info("Downloaded parameters.json doesn't load, using "
+                         "bundled parameters")
             try:
-                with filename.open() as fp:
-                    parameters = json.load(fp)
-                return
-            except ValueError:
-                logging.info("Downloaded parameters.json doesn't load, using "
-                             "bundled parameters")
-                try:
-                    filename.remove()
-                except OSError:
-                    pass
+                filename.remove()
+            except OSError:
+                pass
 
     parameters = json.loads(bundled_parameters)
 
@@ -79,10 +79,8 @@ def get_parameter(section):
 bundled_parameters = (
     '{\n'
     '  "busybox_url": {\n'
-    '    "x86_64": "https://www.busybox.net/downloads/binaries/latest/busybox-'
-    'x86_64",\n'
-    '    "i686": "https://www.busybox.net/downloads/binaries/latest/busybox-i6'
-    '86"\n'
+    '    "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",\n'
+    '    "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"\n'
     '  },\n'
     '  "rpzsudo_url": {\n'
     '    "x86_64": "https://github.com/remram44/static-sudo/releases/download/'
