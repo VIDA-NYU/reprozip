@@ -79,10 +79,8 @@ def get_parameter(section):
 bundled_parameters = (
     '{\n'
     '  "busybox_url": {\n'
-    '    "x86_64": "https://www.busybox.net/downloads/binaries/latest/busybox-'
-    'x86_64",\n'
-    '    "i686": "https://www.busybox.net/downloads/binaries/latest/busybox-i6'
-    '86"\n'
+    '    "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",\n'
+    '    "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"\n'
     '  },\n'
     '  "rpzsudo_url": {\n'
     '    "x86_64": "https://github.com/remram44/static-sudo/releases/download/'
