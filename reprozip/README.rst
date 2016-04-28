@@ -23,7 +23,7 @@ Additional Information
 ----------------------
 
 For more detailed information, please refer to our `website <http://vida-nyu.github.io/reprozip/>`_, as well as to
-our `documentation <http://reprozip.readthedocs.org/>`_.
+our `documentation <http://reprozip.readthedocs.io/>`_.
 
 ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. The team includes:
 

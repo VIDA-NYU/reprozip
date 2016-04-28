@@ -150,7 +150,7 @@ Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter i
             InsecurePlatformWarning: A true SSLContext object is not available. This
             prevents urllib3 from configuring SSL appropriately and may cause certain SSL
             connections to fail. For more information, see
-            https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning.
+            https://urllib3.readthedocs.io/en/latest/security.html#insecureplatformwarning.
 
 :Diagnosis: Most Python versions are insecure, because they do not validate SSL certificates, thus generating these warnings.
 :Solution: If you are using Python 2.7.9 and later, you shouldn't be affected, but if you see ``InsecurePlatformWarning``, you can run ``pip install requests[security]``, which should bring in the missing components.
