@@ -23,6 +23,8 @@ the experiment in his environment to reproduce the results (unpacking step).
 Quickstart
 ----------
 
+We have an [example repository](https://github.com/ViDA-NYU/reprozip-examples) with a variety of different software. Don't hesitate to check it out, and contribute your own example if use ReproZip for something new!
+
 ### Packing
 
 Packing experiments is only available for Linux distributions. In the
