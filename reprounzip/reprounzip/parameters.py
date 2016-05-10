@@ -15,6 +15,7 @@ and Docker images for various operating systems.
 
 from __future__ import division, print_function, unicode_literals
 
+from distutils.version import LooseVersion
 import json
 import logging
 import os
@@ -55,7 +56,6 @@ def update_parameters():
         try:
             with filename.open() as fp:
                 parameters = json.load(fp)
-            return
         except ValueError:
             logging.info("Downloaded parameters.json doesn't load, using "
                          "bundled parameters")
@@ -63,6 +63,13 @@ def update_parameters():
                 filename.remove()
             except OSError:
                 pass
+        else:
+            ver = parameters.get('version', '1.0')
+            if LooseVersion('1.1') <= ver < LooseVersion('1.2'):
+                return
+            else:
+                logging.info("parameters.json has incompatible version %s, "
+                             "using bundled parameters", ver)
 
     parameters = json.loads(bundled_parameters)
 
@@ -78,6 +85,7 @@ def get_parameter(section):
 
 bundled_parameters = (
     '{\n'
+    '  "version": "1.1.0",\n'
     '  "busybox_url": {\n'
     '    "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",\n'
     '    "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"\n'
