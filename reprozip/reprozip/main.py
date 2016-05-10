@@ -12,6 +12,10 @@ It dispatchs to other routines, or handles the testrun command.
 
 from __future__ import division, print_function, unicode_literals
 
+if __name__ == '__main__':  # noqa
+    from reprozip.main import main
+    main()
+
 import argparse
 import locale
 import logging
@@ -380,7 +384,3 @@ def main():
     else:
         submit_usage_report(result='success')
     sys.exit(0)
-
-
-if __name__ == '__main__':
-    main()

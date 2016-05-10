@@ -13,6 +13,10 @@ It dispatchs to plugins registered through pkg_resources as entry point
 
 from __future__ import division, print_function, unicode_literals
 
+if __name__ == '__main__':  # noqa
+    from reprounzip.main import main
+    main()
+
 import argparse
 import locale
 import logging
@@ -148,7 +152,3 @@ def main():
         sys.exit(2)
     submit_usage_report(result='success')
     sys.exit(0)
-
-
-if __name__ == '__main__':
-    main()
