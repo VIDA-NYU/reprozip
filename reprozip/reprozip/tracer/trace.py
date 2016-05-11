@@ -103,7 +103,7 @@ def get_files(conn):
         FROM processes
         WHERE parent ISNULL
         ORDER BY id;
-        ''')
+        ''')  # HERE: ISNULL
     run_timestamps = [r_timestamp for r_timestamp, in executions][1:]
     proc_cursor.close()
 
@@ -328,7 +328,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
                 LIMIT 1
             )
             WHERE p.parent ISNULL;
-            ''')
+            ''')  # HERE: ISNULL
     else:
         # Loads in previous config
         runs, oldpkgs, oldfiles = load_config(config,
@@ -349,7 +349,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             WHERE p.parent ISNULL
             ORDER BY p.id DESC
             LIMIT 1;
-            ''')
+            ''')  # HERE: ISNULL
     for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
         # Decodes command-line
         argv = r_argv.split('\0')

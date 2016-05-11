@@ -346,7 +346,7 @@ def read_events(database, all_forks, has_thread_flag):
         if event_type == 'process':
             r_id, r_parent, r_timestamp, r_thread = data
             logging.debug("Process %d created (parent %r)", r_id, r_parent)
-            if r_parent is not None:
+            if r_parent is not None:  # HERE
                 parent = processes[r_parent]
                 binary = parent.binary
             else:
