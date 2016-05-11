@@ -64,7 +64,7 @@ def update_parameters():
             except OSError:
                 pass
         else:
-            ver = parameters.get('version', '1.0')
+            ver = LooseVersion(parameters.get('version', '1.0'))
             if LooseVersion('1.1') <= ver < LooseVersion('1.2'):
                 return
             else:
