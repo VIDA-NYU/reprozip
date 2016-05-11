@@ -27,7 +27,7 @@ from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
-    CantFindInstaller, composite_action, target_must_exist, \
+    UsageError, CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, interruptible_call, metadata_read, metadata_write, \
@@ -365,6 +365,11 @@ def docker_run(args):
     unpacked_info = read_dict(target)
     cmdline = args.cmdline
 
+    # Sanity check
+    if args.detach and args.x11:
+        logging.critical("Error: Can't use X11 forwarding if you're detaching")
+        raise UsageError
+
     # Loads config
     config = load_config(target / 'config.yml', True)
     runs = config.runs
@@ -380,7 +385,10 @@ def docker_run(args):
         sys.exit(1)
 
     # Name of new container
-    container = make_unique_name(b'reprounzip_run_')
+    if args.detach:
+        container = make_unique_name(b'reprounzip_detached_')
+    else:
+        container = make_unique_name(b'reprounzip_run_')
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
@@ -446,6 +454,20 @@ def docker_run(args):
     forwarders = []
     for port, connector in x11.port_forward:
         forwarders.append(LocalForwarder(connector, port))
+
+    if args.detach:
+        logging.info("Start container %s (detached)",
+                     container.decode('ascii'))
+        retcode = interruptible_call(['docker', 'run', b'--name=' + container,
+                                      '-h', hostname,
+                                      '-d', '-t'] +
+                                     args.docker_option +
+                                     [image, '/busybox', 'sh', '-c', cmds])
+        if retcode != 0:
+            logging.critical("docker run failed with code %d", retcode)
+            subprocess.call(['docker', 'rm', '-f', container])
+            sys.exit(1)
+        return
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
@@ -804,6 +826,9 @@ def setup(parser, **kwargs):
         help="Connect X11 to local machine from Docker container instead of "
              "trying to connect to this one (useful if the Docker machine has "
              "an X server or if a tunnel is used to access this one)")
+    parser_run.add_argument('-d', '--detach', action='store_true',
+                            help="Don't attach or commit the created "
+                                 "container, just start it and leave it be")
     add_raw_docker_option(parser_run)
     add_environment_options(parser_run)
     parser_run.set_defaults(func=docker_run)
