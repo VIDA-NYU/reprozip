@@ -34,3 +34,12 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     packages = listvalues(packages)
 
     return files, packages
+
+
+def merge_traces(traces, target):
+    """Merge multiple trace databases into one.
+
+    The runs from the original traces are appended ('run_id' field gets
+    translated to avoid conflicts).
+    """
+    raise NotImplementedError
