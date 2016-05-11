@@ -824,7 +824,7 @@ def setup_directory(parser, **kwargs):
     # run
     parser_run = subparsers.add_parser('run')
     add_opt_general(parser_run)
-    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
@@ -940,7 +940,7 @@ def setup_chroot(parser, **kwargs):
     # run
     parser_run = subparsers.add_parser('run')
     add_opt_general(parser_run)
-    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
