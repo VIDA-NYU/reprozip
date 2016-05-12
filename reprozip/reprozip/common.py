@@ -150,7 +150,7 @@ class RPZPack(object):
             path = PosixPath(path)
         components = path.components[1:]
         if not components:
-            return path.__class__('/')
+            return path.__class__('')
         return path.__class__(*components)
 
     def open_config(self):
