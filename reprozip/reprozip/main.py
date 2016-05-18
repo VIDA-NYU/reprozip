@@ -28,6 +28,7 @@ from reprozip.common import setup_logging, \
     submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
+import reprozip.traceutils
 from reprozip.utils import PY3, unicode_, stderr
 
 
@@ -230,6 +231,10 @@ def merge(args):
         traces.append(tracepath)
 
     reprozip.traceutils.merge_traces(traces, Path(args.dir))
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              args.find_inputs_outputs,
+                                              overwrite=True)
 
 
 def usage_report(args):

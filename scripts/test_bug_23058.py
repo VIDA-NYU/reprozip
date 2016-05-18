@@ -27,7 +27,7 @@ class Test23058(unittest.TestCase):
         self.do_test_verbosity(parser, 'command -v', 2)
         self.do_test_verbosity(parser, 'command -v -v', 3)
         self.do_test_verbosity(parser, '-v command', 2)  # FAILS
-                # arguments passed to main parser are *silently ignored*
+            # arguments passed to main parser are *silently ignored*
         self.do_test_verbosity(parser, '-v -v command', 3)
         self.do_test_verbosity(parser, '-v -v command -v -v', 5)
 
@@ -48,7 +48,7 @@ class Test23058(unittest.TestCase):
         self.do_test_verbosity(parser, 'command -v', 2)
         self.do_test_verbosity(parser, 'command -v -v', 3)
         self.do_test_verbosity(parser, '-v command', 2)  # FAILS
-                # arguments passed to main parser are *silently ignored*
+            # arguments passed to main parser are *silently ignored*
         self.do_test_verbosity(parser, '-v -v command', 3)
         self.do_test_verbosity(parser, '-v -v command -v -v', 5)
 
