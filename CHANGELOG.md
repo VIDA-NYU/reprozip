@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.6 (???)
+-----------
+
+Enhancements:
+* `docker run` gets a `--detach` command, to keep the container running (useful for starting servers on remote machines)
+* Restrictions on upload and download commands have been relaxed, in particular it is possible to download input files as well as output files
+
 1.0.5 (2016-04-07)
 ------------------
 
