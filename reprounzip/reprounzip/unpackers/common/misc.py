@@ -141,14 +141,13 @@ class FileUploader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(upload_files=len(files))
-        input_files = {n: f.path
-                       for n, f in iteritems(self.get_config().inputs_outputs)
-                       if f.read_runs}
+        inputs_outputs = self.get_config().inputs_outputs
 
         # No argument: list all the input files and exit
         if not files:
             print("Input files:")
-            for input_name in sorted(input_files):
+            for input_name in sorted(n for n, f in iteritems(inputs_outputs)
+                                     if f.read_runs):
                 assigned = self.input_files.get(input_name)
                 if assigned is None:
                     assigned = "(original)"
@@ -174,7 +173,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 try:
-                    input_path = input_files[input_name]
+                    input_path = inputs_outputs[input_name].path
                 except KeyError:
                     logging.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
