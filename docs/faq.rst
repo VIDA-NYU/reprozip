@@ -9,7 +9,7 @@ Can ReproZip pack a client-server scenario?
 Yes! However, note that only tracing the client will not capture the full story: reproducibility is better achieved (and guaranteed) if the server is traced as well.
 Having said that, currently, ReproZip can only trace local servers: if the server is remote (i.e., running in another machine), ReproZip cannot capture it. In this case, you can trace the client, and the experiment can only be reproduced if the remote server is still running at the moment of the reproduction.
 
-The easiest way to pack a local client-server experiment is to write a script that starts the server, runs your client(s), and then shuts down the server; ReproZip can then trace this script. See :ref:`Further Considerations When Packing <packing-further>` for more information.
+The easiest way to pack a local client-server experiment is to write a script that starts the server, runs your client(s), and then shuts down the server; ReproZip can then trace this script. See :ref:`Capturing Connections to Servers <packing-clientserv>` for more information.
 
 Can ReproZip pack a database?
 =============================

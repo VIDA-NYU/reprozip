@@ -166,6 +166,8 @@ Packing GUI and Interactive Tools
 
 ReproZip is able to pack GUI tools. Additionally, there is no restriction in packing interactive experiments (i.e., experiments that require input from users). Note, however, that if entering something different can make the experiment load additional dependencies, the experiment will probably fail when reproduced on a different machine.
 
+..  _packing-clientserv:
+
 Capturing Connections to Servers
 ++++++++++++++++++++++++++++++++
 
@@ -176,6 +178,18 @@ When reproducing an experiment that communicates with a server, the experiment w
 * stop the server,
 
 and use *reprozip* to trace the script execution, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
+
+For example, to start postgresql, then a webserver (that will run until Ctrl+C is received), then stop postgresql::
+
+    #!/bin/sh
+
+    /etc/init.d/postgresql start    # Start PostgreSQL
+
+    trap ' ' INT                    # Don't exit the whole script on Ctrl+C
+    ./manage.py runserver 0.0.0.0:8000
+    trap - INT
+
+    /etc/init.d/postgresql stop     # Stop PostgreSQL
 
 Excluding Sensitive and Third-Party Information
 +++++++++++++++++++++++++++++++++++++++++++++++

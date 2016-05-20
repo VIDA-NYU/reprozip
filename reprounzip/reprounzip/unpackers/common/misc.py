@@ -141,14 +141,13 @@ class FileUploader(object):
 
     def run(self, files):
         reprounzip.common.record_usage(upload_files=len(files))
-        input_files = {n: f.path
-                       for n, f in iteritems(self.get_config().inputs_outputs)
-                       if f.read_runs}
+        inputs_outputs = self.get_config().inputs_outputs
 
         # No argument: list all the input files and exit
         if not files:
             print("Input files:")
-            for input_name in sorted(input_files):
+            for input_name in sorted(n for n, f in iteritems(inputs_outputs)
+                                     if f.read_runs):
                 assigned = self.input_files.get(input_name)
                 if assigned is None:
                     assigned = "(original)"
@@ -174,7 +173,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 try:
-                    input_path = input_files[input_name]
+                    input_path = inputs_outputs[input_name].path
                 except KeyError:
                     logging.critical("Invalid input file: %r", input_name)
                     sys.exit(1)
@@ -249,20 +248,20 @@ class FileDownloader(object):
 
     def run(self, files, all_):
         reprounzip.common.record_usage(download_files=len(files))
-        output_files = {n: f.path
-                        for n, f in iteritems(self.get_config().inputs_outputs)
-                        if f.write_runs}
+        inputs_outputs = self.get_config().inputs_outputs
 
         # No argument: list all the output files and exit
         if not (all_ or files):
             print("Output files:")
-            for output_name in output_files:
+            for output_name in sorted(n for n, f in iteritems(inputs_outputs)
+                                      if f.write_runs):
                 print("    %s" % output_name)
             return
 
         # Parse the name[:path] syntax
         resolved_files = []
-        all_files = set(output_files)
+        all_files = set(n for n, f in iteritems(inputs_outputs)
+                        if f.write_runs)
         for filespec in files:
             filespec_split = filespec.split(':', 1)
             if len(filespec_split) == 1:
@@ -289,7 +288,7 @@ class FileDownloader(object):
             # Download files
             for output_name, local_path in resolved_files:
                 try:
-                    remote_path = output_files[output_name]
+                    remote_path = inputs_outputs[output_name].path
                 except KeyError:
                     logging.critical("Invalid output file: %r", output_name)
                     sys.exit(1)
