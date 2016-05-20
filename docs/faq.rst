@@ -19,7 +19,9 @@ ReproZip can trace a database server; however, because of the format it uses to 
     additional_patterns:
       - /var/lib/mysql/**
 
-Also note that ReproZip does not currently save the state of the files. Therefore, if your experiment modifies a database, ReproZip will pack the already modified data (not the one before tracing the experiment execution).
+See :ref:`Capturing Connections to Servers <packing-clientserv>` for an example using a database and additional information.
+
+Note that ReproZip does not currently save the state of the files. Therefore, if your experiment modifies a database, ReproZip will pack the already modified data (not the one before tracing the experiment execution).
 
 Can ReproZip pack interactive tools?
 ====================================
