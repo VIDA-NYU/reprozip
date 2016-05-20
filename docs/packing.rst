@@ -179,7 +179,7 @@ When reproducing an experiment that communicates with a server, the experiment w
 
 and use *reprozip* to trace the script execution, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
 
-For example, if you have an web app that uses PostgreSQL and that runs until `Ctrl+C` is received, you can use the following script::
+For example, if you have an web app that uses PostgreSQL and that runs until ``Ctrl+C`` is received, you can use the following script::
 
     #!/bin/sh
 
@@ -191,7 +191,7 @@ For example, if you have an web app that uses PostgreSQL and that runs until `Ct
 
     /etc/init.d/postgresql stop         # Stop PostgreSQL
     
-Note the use of `trap` to avoid exiting the entire script when pressing `Ctrl+C`.
+Note the use of ``trap`` to avoid exiting the entire script when pressing ``Ctrl+C``.
 
 Excluding Sensitive and Third-Party Information
 +++++++++++++++++++++++++++++++++++++++++++++++
