@@ -56,6 +56,8 @@ If you are running ``reprounzip docker``, you can inspect the Docker container d
 
 For ``reprounzip chroot`` and ``reprounzip directory``, the filesystem is in the ``root`` subdirectory under the experiment path.
 
+See :ref:`Structure of Unpacked Experiments <unpacked-format>` for more details.
+
 ..  warning::
 
     Note that, in the generated system, only the files needed for running the unpacked experiment are guaranteed to work correctly. This means that you may have only parts of a software distribution (required to run the experiment), but not the software in its entirety (unless the complete software was included in the configuration file while packing). For example, you may only have a few Python files that the experiment needs, but not the ones required to run Python interactively or install new libraries. Therefore, do not expect that all the software components will run smoothly when acessing the system.
