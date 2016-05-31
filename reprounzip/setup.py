@@ -14,6 +14,7 @@ req = [
     'PyYAML',
     'rpaths>=0.8',
     'usagestats>=0.3',
+    'unix_ar',
     'requests']
 setup(name='reprounzip',
       version='1.0.5',
