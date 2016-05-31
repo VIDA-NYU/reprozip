@@ -32,6 +32,7 @@ import os
 from rpaths import PosixPath, Path
 import sys
 import tarfile
+import unix_ar
 import usagestats
 import yaml
 
@@ -85,9 +86,11 @@ class Package(CommonEqualityMixin):
 # Pack format history:
 # 1: used by reprozip 0.2 through 0.7. Single tar.gz file, metadata under
 #   METADATA/, data under DATA/
-# 2: pack is usually not compressed, metadata under METADATA/, data in another
-#   DATA.tar.gz (files inside it still have the DATA/ prefix for ease-of-use
-#   in unpackers)
+# 2: used by reprozip 1.0. Pack is usually not compressed, metadata under
+#   METADATA/, data in another DATA.tar.gz (files inside it still have the
+#   DATA/ prefix for ease-of-use in unpackers)
+# 3: pack used since reprozip 1.0.6. It is now an AR archive, though the data
+#   is still in a DATA.tar.gz
 #
 # Pack metadata history:
 # 0.2: used by reprozip 0.2
@@ -114,36 +117,14 @@ class Package(CommonEqualityMixin):
 class RPZPack(object):
     """Encapsulates operations on the RPZ pack format.
     """
+    def __new__(cls, pack):
+        if tarfile.is_tarfile(str(Path(pack))):
+            return RPZTarPack(pack)
+        else:
+            return RPZArPack(pack)
+
     def __init__(self, pack):
         self.pack = Path(pack)
-
-        self.tar = tarfile.open(str(self.pack), 'r:*')
-        f = self.tar.extractfile('METADATA/version')
-        version = f.read()
-        f.close()
-        if version.startswith(b'REPROZIP VERSION '):
-            try:
-                version = int(version[17:].rstrip())
-            except ValueError:
-                version = None
-            if version in (1, 2):
-                self.version = version
-                self.data_prefix = PosixPath(b'DATA')
-            else:
-                raise ValueError(
-                    "Unknown format version %r (maybe you should upgrade "
-                    "reprounzip? I only know versions 1 and 2" % version)
-        else:
-            raise ValueError("File doesn't appear to be a RPZ pack")
-
-        if self.version == 1:
-            self.data = self.tar
-        elif version == 2:
-            self.data = tarfile.open(
-                fileobj=self.tar.extractfile('DATA.tar.gz'),
-                mode='r:*')
-        else:
-            assert False
 
     def remove_data_prefix(self, path):
         if not isinstance(path, PosixPath):
@@ -156,18 +137,14 @@ class RPZPack(object):
     def open_config(self):
         """Gets the configuration file.
         """
-        return self.tar.extractfile('METADATA/config.yml')
+        raise NotImplementedError
 
     def extract_config(self, target):
         """Extracts the config to the specified path.
 
         It is up to the caller to remove that file once done.
         """
-        member = copy.copy(self.tar.getmember('METADATA/config.yml'))
-        member.name = str(target.components[-1])
-        self.tar.extract(member,
-                         path=str(Path.cwd() / target.parent))
-        assert target.is_file()
+        raise NotImplementedError
 
     @contextlib.contextmanager
     def with_config(self):
@@ -184,21 +161,7 @@ class RPZPack(object):
 
         It is up to the caller to remove that file once done.
         """
-        target = Path(target)
-        if self.version == 1:
-            member = self.tar.getmember('METADATA/trace.sqlite3')
-        elif self.version == 2:
-            try:
-                member = self.tar.getmember('METADATA/trace.sqlite3.gz')
-            except KeyError:
-                member = self.tar.getmember('METADATA/trace.sqlite3')
-        else:
-            assert False
-        member = copy.copy(member)
-        member.name = str(target.components[-1])
-        self.tar.extract(member,
-                         path=str(Path.cwd() / target.parent))
-        assert target.is_file()
+        raise NotImplementedError
 
     @contextlib.contextmanager
     def with_trace(self):
@@ -236,6 +199,84 @@ class RPZPack(object):
     def copy_data_tar(self, target):
         """Copies the file in which the data lies to the specified destination.
         """
+        raise NotImplementedError
+
+    def close(self):
+        raise NotImplementedError
+
+
+class RPZTarPack(RPZPack):
+    def __init__(self, pack):
+        RPZPack.__init__(self, pack)
+
+        self.tar = tarfile.open(str(self.pack), 'r:*')
+        f = self.tar.extractfile('METADATA/version')
+        version = f.read()
+        f.close()
+        if version.startswith(b'REPROZIP VERSION '):
+            try:
+                version = int(version[17:].rstrip())
+            except ValueError:
+                version = None
+            if version in (1, 2):
+                self.version = version
+                self.data_prefix = PosixPath(b'DATA')
+            else:
+                raise ValueError(
+                    "Unknown format version %r (maybe you should upgrade "
+                    "reprounzip? I only know versions 1 and 2" % version)
+        else:
+            raise ValueError("File doesn't appear to be a RPZ pack")
+
+        if self.version == 1:
+            self.data = self.tar
+        elif version == 2:
+            self.data = tarfile.open(
+                fileobj=self.tar.extractfile('DATA.tar.gz'),
+                mode='r:*')
+        else:
+            assert False
+
+    def open_config(self):
+        """Gets the configuration file.
+        """
+        return self.tar.extractfile('METADATA/config.yml')
+
+    def extract_config(self, target):
+        """Extracts the config to the specified path.
+
+        It is up to the caller to remove that file once done.
+        """
+        member = copy.copy(self.tar.getmember('METADATA/config.yml'))
+        member.name = str(target.components[-1])
+        self.tar.extract(member,
+                         path=str(Path.cwd() / target.parent))
+        assert target.is_file()
+
+    def extract_trace(self, target):
+        """Extracts the trace database to the specified path.
+
+        It is up to the caller to remove that file once done.
+        """
+        target = Path(target)
+        if self.version == 1:
+            member = self.tar.getmember('METADATA/trace.sqlite3')
+        elif self.version == 2:
+            try:
+                member = self.tar.getmember('METADATA/trace.sqlite3.gz')
+            except KeyError:
+                member = self.tar.getmember('METADATA/trace.sqlite3')
+        else:
+            assert False
+        member = copy.copy(member)
+        member.name = str(target.components[-1])
+        self.tar.extract(member,
+                         path=str(Path.cwd() / target.parent))
+        assert target.is_file()
+
+    def copy_data_tar(self, target):
+        """Copies the file in which the data lies to the specified destination.
+        """
         if self.version == 1:
             self.pack.copyfile(target)
         elif self.version == 2:
@@ -249,6 +290,119 @@ class RPZPack(object):
             self.data.close()
         self.tar.close()
         self.data = self.tar = None
+
+
+class RPZArPack(RPZPack):
+    def __init__(self, pack):
+        RPZPack.__init__(self, pack)
+
+        self.ar = unix_ar.open(str(self.pack), 'r')
+        f = self.ar.extractfile('METADATA/version')
+        version = f.read()
+        f.close()
+        if version.startswith(b'REPROZIP VERSION '):
+            try:
+                version = int(version[17:].rstrip())
+            except ValueError:
+                version = None
+            if version in (1, 2):
+                self.version = version
+                self.data_prefix = PosixPath(b'DATA')
+            else:
+                raise ValueError(
+                    "Unknown format version %r (maybe you should upgrade "
+                    "reprounzip? I only know versions 1 and 2" % version)
+        else:
+            raise ValueError("File doesn't appear to be a RPZ pack")
+
+        if self.version == 1:
+            self.data = self.tar
+        elif version == 2:
+            self.data = tarfile.open(
+                fileobj=self.tar.extractfile('DATA.tar.gz'),
+                mode='r:*')
+        else:
+            assert False
+
+    def open_config(self):
+        """Gets the configuration file.
+        """
+        return self.tar.extractfile('METADATA/config.yml')
+
+    def extract_config(self, target):
+        """Extracts the config to the specified path.
+
+        It is up to the caller to remove that file once done.
+        """
+        member = copy.copy(self.tar.getmember('METADATA/config.yml'))
+        member.name = str(target.components[-1])
+        self.tar.extract(member,
+                         path=str(Path.cwd() / target.parent))
+        assert target.is_file()
+
+    def extract_trace(self, target):
+        """Extracts the trace database to the specified path.
+
+        It is up to the caller to remove that file once done.
+        """
+        target = Path(target)
+        if self.version == 1:
+            member = self.tar.getmember('METADATA/trace.sqlite3')
+        elif self.version == 2:
+            try:
+                member = self.tar.getmember('METADATA/trace.sqlite3.gz')
+            except KeyError:
+                member = self.tar.getmember('METADATA/trace.sqlite3')
+        else:
+            assert False
+        member = copy.copy(member)
+        member.name = str(target.components[-1])
+        self.tar.extract(member,
+                         path=str(Path.cwd() / target.parent))
+        assert target.is_file()
+
+    def copy_data_tar(self, target):
+        """Copies the file in which the data lies to the specified destination.
+        """
+        if self.version == 1:
+            self.pack.copyfile(target)
+        elif self.version == 2:
+            with target.open('wb') as fp:
+                data = self.tar.extractfile('DATA.tar.gz')
+                copyfile(data, fp)
+                data.close()
+
+    def close(self):
+        if self.data is not self.tar:
+            self.data.close()
+        self.tar.close()
+        self.data = self.tar = None
+
+    def extract_temp(self, name):
+        member = self.ar.getinfo(name)
+        fd, temp = Path.tempfile(prefix='reprozip_ar_')
+        try:
+            member.name = temp.path
+            self.ar.extract(member)
+            return RemoveWrapper(temp, 'rb')
+        except:
+            temp.remove()
+            raise
+        finally:
+            os.close(fd)
+
+
+class RemoveWrapper(object):
+    def __init__(self, path, mode):
+        self.__fp = open(path, mode)
+        self.__path = path
+
+    def __getattr__(self, name):
+        return getattr(self.__fp, name)
+
+    def close(self):
+        self.__fp.close()
+        self.__path.remove()
 
 
 class InvalidConfig(ValueError):
