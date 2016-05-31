@@ -42,21 +42,22 @@ def print_info(args):
     pack_symlinks = 0
     pack_hardlinks = 0
     pack_others = 0
-    rpz_pack = RPZPack(pack)
-    for m in rpz_pack.list_data():
-        pack_total_size += m.size
-        pack_total_paths += 1
-        if m.isfile():
-            pack_files += 1
-        elif m.isdir():
-            pack_dirs += 1
-        elif m.issym():
-            pack_symlinks += 1
-        elif hasattr(m, 'islnk') and m.islnk():
-            pack_hardlinks += 1
-        else:
-            pack_others += 1
-    rpz_pack.close()
+    if args.verbosity >= 2:
+        rpz_pack = RPZPack(pack)
+        for m in rpz_pack.list_data():
+            pack_total_size += m.size
+            pack_total_paths += 1
+            if m.isfile():
+                pack_files += 1
+            elif m.isdir():
+                pack_dirs += 1
+            elif m.issym():
+                pack_symlinks += 1
+            elif hasattr(m, 'islnk') and m.islnk():
+                pack_hardlinks += 1
+            else:
+                pack_others += 1
+        rpz_pack.close()
 
     meta_total_paths = 0
     meta_packed_packages_files = 0

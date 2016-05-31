@@ -148,7 +148,7 @@ def pack(target, directory, sort_packages):
         packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
-    tar = tarfile.open(str(target), 'w:gz')
+    tar = tarfile.open(str(target), 'w:')
 
     fd, tmp = Path.tempfile()
     os.close(fd)
