@@ -18,6 +18,7 @@ from rpaths import Path
 import string
 import sys
 import tarfile
+import unix_ar
 import uuid
 
 from reprozip import __version__ as reprozip_version
@@ -148,7 +149,7 @@ def pack(target, directory, sort_packages):
         packages, other_files, additional_patterns, sort_packages)
 
     logging.info("Creating pack %s...", target)
-    tar = tarfile.open(str(target), 'w:')
+    rpz = unix_ar.open(str(target), 'w')
 
     fd, tmp = Path.tempfile()
     os.close(fd)
@@ -182,7 +183,7 @@ def pack(target, directory, sort_packages):
         other_files = files
         datatar.close()
 
-        tar.add(str(tmp), 'DATA.tar.gz')
+        rpz.add(str(tmp), 'DATA.tar.gz')
     finally:
         tmp.remove()
 
@@ -192,8 +193,8 @@ def pack(target, directory, sort_packages):
     os.close(fd)
     try:
         with manifest.open('wb') as fp:
-            fp.write(b'REPROZIP VERSION 2\n')
-        tar.add(str(manifest), 'METADATA/version')
+            fp.write(b'REPROZIP VERSION 3\n')
+        rpz.add(str(manifest), 'METADATA/version')
     finally:
         manifest.remove()
 
@@ -202,7 +203,7 @@ def pack(target, directory, sort_packages):
     if not trace.is_file():
         logging.critical("trace.sqlite3 is gone! Aborting")
         sys.exit(1)
-    tar.add(str(trace), 'METADATA/trace.sqlite3')
+    rpz.add(str(trace), 'METADATA/trace.sqlite3')
 
     # Checks that input files are packed
     for name, f in iteritems(inputs_outputs):
@@ -222,11 +223,11 @@ def pack(target, directory, sort_packages):
                     inputs_outputs, canonical=True,
                     pack_id=pack_id)
 
-        tar.add(str(can_configfile), 'METADATA/config.yml')
+        rpz.add(str(can_configfile), 'METADATA/config.yml')
     finally:
         can_configfile.remove()
 
-    tar.close()
+    rpz.close()
 
     # Record some info to the usage report
     record_usage_package(runs, packages, other_files,
