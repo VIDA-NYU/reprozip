@@ -206,6 +206,8 @@ class RPZPack(object):
 
 
 class RPZTarPack(RPZPack):
+    __new__ = object.__new__
+
     def __init__(self, pack):
         RPZPack.__init__(self, pack)
 
@@ -293,6 +295,8 @@ class RPZTarPack(RPZPack):
 
 
 class RPZArPack(RPZPack):
+    __new__ = object.__new__
+
     def __init__(self, pack):
         RPZPack.__init__(self, pack)
 
