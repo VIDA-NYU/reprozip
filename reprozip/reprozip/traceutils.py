@@ -90,7 +90,7 @@ def create_schema(conn):
         conn.execute(stmt)
 
 
-def merge_files(newfiles, newpackages, oldfiles, oldpackages):
+def combine_files(newfiles, newpackages, oldfiles, oldpackages):
     """Merges two sets of packages and files.
     """
     files = set(oldfiles)
@@ -114,8 +114,8 @@ def merge_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
-def merge_traces(traces, target):
-    """Merge multiple trace databases into one.
+def combine_traces(traces, target):
+    """Combines multiple trace databases into one.
 
     The runs from the original traces are appended ('run_id' field gets
     translated to avoid conflicts).
@@ -128,7 +128,7 @@ def merge_traces(traces, target):
     """
     # We are probably overwriting on of the traces we're reading, so write to
     # a temporary file first then move it
-    fd, output = Path.tempfile('.sqlite3', 'reprozip_merged_')
+    fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
     if PY3:
         # On PY3, connect() only accepts unicode
         conn = sqlite3.connect(str(output))

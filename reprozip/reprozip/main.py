@@ -212,10 +212,10 @@ def pack(args):
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 
-def merge(args):
-    """merge subcommand.
+def combine(args):
+    """combine subcommand.
 
-    Reads in multiple trace databases and merges them into one.
+    Reads in multiple trace databases and combines them into one.
 
     The runs from the original traces are appended ('run_id' field gets
     translated to avoid conflicts).
@@ -230,7 +230,7 @@ def merge(args):
                 tracepath = tracepath / 'trace.sqlite3'
         traces.append(tracepath)
 
-    reprozip.traceutils.merge_traces(traces, Path(args.dir))
+    reprozip.traceutils.combine_traces(traces, Path(args.dir))
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
                                               args.find_inputs_outputs,
@@ -343,13 +343,13 @@ def main():
                              help="Destination file")
     parser_pack.set_defaults(func=pack)
 
-    # merge command
-    parser_merge = subparsers.add_parser(
-        'merge',
-        help="Merge multiple traces into one (possibly as subsequent runs)")
-    add_options(parser_merge)
-    parser_merge.add_argument('traces', nargs=argparse.ONE_OR_MORE)
-    parser_merge.set_defaults(func=merge)
+    # combine command
+    parser_combine = subparsers.add_parser(
+        'combine',
+        help="Combine multiple traces into one (possibly as subsequent runs)")
+    add_options(parser_combine)
+    parser_combine.add_argument('traces', nargs=argparse.ONE_OR_MORE)
+    parser_combine.set_defaults(func=combine)
 
     args = parser.parse_args()
     setup_logging('REPROZIP', args.verbosity)
