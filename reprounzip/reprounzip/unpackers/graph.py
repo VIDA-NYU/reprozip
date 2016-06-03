@@ -17,6 +17,7 @@ See http://www.graphviz.org/
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+import codecs
 from distutils.version import LooseVersion
 import heapq
 import json
@@ -561,7 +562,11 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
               inputs_outputs, level_pkgs, level_processes, level_other_files):
     """Writes a GraphViz DOT file from the collected information.
     """
-    with target.open('w', encoding='utf-8', newline='\n') as fp:
+    if target is None:
+        fp = codecs.getwriter('utf-8')(sys.stdout)
+    else:
+        fp = target.open('w', encoding='utf-8', newline='\n')
+    try:
         fp.write('digraph G {\n    /* programs */\n'
                  '    node [shape=box fontcolor=white '
                  'fillcolor=black style=filled];\n')
@@ -627,6 +632,9 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
                          endp_file, endp_prog))
 
         fp.write('}\n')
+    finally:
+        if target is not None:
+            fp.close()
 
 
 def graph_json(target, runs, packages, other_files, package_map, edges,
@@ -656,10 +664,15 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
 
     json_other_files.sort()
 
-    if PY3:
-        fp = target.open('w', encoding='utf-8', newline='\n')
+    if target is None:
+        fp = sys.stdout
+        if PY3:
+            fp = codecs.getwriter('utf-8')(fp)
     else:
-        fp = target.open('wb')
+        if PY3:
+            fp = target.open('w', encoding='utf-8', newline='\n')
+        else:
+            fp = target.open('wb')
     try:
         json.dump({'packages': sorted(json_packages,
                                       key=lambda p: p['name']),
@@ -670,7 +683,8 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
                   indent=2,
                   sort_keys=True)
     finally:
-        fp.close()
+        if target is not None:
+            fp.close()
 
 
 def graph(args):
@@ -680,7 +694,9 @@ def graph(args):
     format or JSON.
     """
     def call_generate(args, config, trace):
-        generate(Path(args.target[0]), config, trace, args.all_forks,
+        target = args.target[0]
+        target = None if target == '-' else Path(args.target[0])
+        generate(target, config, trace, args.all_forks,
                  args.format, args.packages, args.processes, args.otherfiles,
                  args.regex_filter, args.regex_replace, args.aggregate)
 
