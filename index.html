@@ -48,6 +48,15 @@
         height: 0;
     }
 }
+@media screen and (max-width: 600px) {
+    #one { 
+        float: none;
+        width:auto;
+        padding-left: 0px;
+        padding-right: 0px;
+        margin-bottom: 0px;
+    }
+}
 /* Sample titles */
 .code-title {
     font-size: 13px;
@@ -109,16 +118,16 @@ iframe {
 .left {
     float: left;
     width: 50%;
+    height: auto;
     padding-right: 20px;
-    margin-bottom: 40px;
 }
 
 .right {
     float: right;
     width: 50%;
+    height: auto;
+    overflow: hidden;
     padding-left: 20px;
-    padding-top: 36px;
-    margin-bottom: 40px;
 }
     </style>
 
@@ -262,7 +271,7 @@ result: -17.814</span></code></pre></div>
 <p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
 
 <div>
-<div class="left col-md-6">
+<div class="left" id="one">
 
 <div class="page-header" id="examples">
   <h2>Examples</h2>
@@ -277,13 +286,18 @@ result: -17.814</span></code></pre></div>
 </div>
 
 </div>
-<div class="right col-md-6">
+<div class="right" id="one">
+
+<p>&nbsp;</p>
 
             <a class="twitter-timeline"  href="https://twitter.com/search?q=reprozip" data-widget-id="708053642100789249">Tweets about reprozip</a>
             <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>   
 
 </div>
+
 </div>
+
+<p>&nbsp;</p>
 
 <div class="page-header" id="feedback">
   <h2>Feedback</h2>
