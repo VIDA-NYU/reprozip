@@ -89,6 +89,37 @@ iframe {
     margin: 0 auto;
     display: block;
 }
+
+.video-container {
+	position:relative;
+	padding-bottom:56.25%;
+	padding-top:30px;
+	height:0;
+	overflow:hidden;
+}
+
+.video-container iframe, .video-container object, .video-container embed {
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+}
+
+.left {
+    float: left;
+    width: 50%;
+    padding-right: 20px;
+    margin-bottom: 40px;
+}
+
+.right {
+    float: right;
+    width: 50%;
+    padding-left: 20px;
+    padding-top: 36px;
+    margin-bottom: 40px;
+}
     </style>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -230,6 +261,9 @@ result: -17.814</span></code></pre></div>
 
 <p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
 
+<div>
+<div class="left">
+
 <div class="page-header" id="examples">
   <h2>Examples</h2>
 </div>
@@ -238,7 +272,18 @@ result: -17.814</span></code></pre></div>
 
 <p>The following video shows how to use ReproZip to make your experiment reproducible. The example used in the video is based on a <a href="http://scikit-learn.org/stable/auto_examples/classification/plot_digits_classification.html" target="_blank" rel="noopener">tutorial</a> from the scikit-learn Python library and is available for download <a href="https://github.com/ViDA-NYU/reprozip-examples/tree/master/digits-sklearn-images" target="_blank" rel="noopener">here</a>.</p>
 
+<div class="video-container">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
+</div>
+
+</div>
+<div class="right">
+
+            <a class="twitter-timeline"  href="https://twitter.com/search?q=reprozip" data-widget-id="708053642100789249">Tweets about reprozip</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>   
+
+</div>
+</div>
 
 <div class="page-header" id="feedback">
   <h2>Feedback</h2>
