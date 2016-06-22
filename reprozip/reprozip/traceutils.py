@@ -8,10 +8,10 @@ These are operations on traces that are not directly related to the tracing
 process itself.
 """
 
+import logging
 import os
-import sqlite3
-
 from rpaths import Path
+import sqlite3
 
 from reprozip.tracer.trace import TracedFile
 from reprozip.utils import PY3, listvalues
@@ -45,8 +45,8 @@ def create_schema(conn):
     sql = [
         '''
         CREATE TABLE processes(
-            id INTEGER NOT NULL PRIMARY KEY,    #
-            run_id INTEGER NOT NULL,            #
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
             parent INTEGER,
             timestamp INTEGER NOT NULL,
             is_thread BOOLEAN NOT NULL,
@@ -58,13 +58,13 @@ def create_schema(conn):
         ''',
         '''
         CREATE TABLE opened_files(
-            id INTEGER NOT NULL PRIMARY KEY,    =
-            run_id INTEGER NOT NULL,            -
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
             name TEXT NOT NULL,
             timestamp INTEGER NOT NULL,
             mode INTEGER NOT NULL,
             is_directory BOOLEAN NOT NULL,
-            process INTEGER NOT NULL            -
+            process INTEGER NOT NULL
             );
         ''',
         '''
@@ -72,11 +72,11 @@ def create_schema(conn):
         ''',
         '''
         CREATE TABLE executed_files(
-            id INTEGER NOT NULL PRIMARY KEY,    =
+            id INTEGER NOT NULL PRIMARY KEY,
             name TEXT NOT NULL,
-            run_id INTEGER NOT NULL,            -
+            run_id INTEGER NOT NULL,
             timestamp INTEGER NOT NULL,
-            process INTEGER NOT NULL,           -
+            process INTEGER NOT NULL,
             argv TEXT NOT NULL,
             envp TEXT NOT NULL,
             workingdir TEXT NOT NULL
@@ -114,6 +114,12 @@ def combine_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
+def sq(code):
+    global _SQ
+    _SQ = list(list(r) for r in conn.execute(code))
+    return _SQ
+
+
 def combine_traces(traces, target):
     """Combines multiple trace databases into one.
 
@@ -126,6 +132,7 @@ def combine_traces(traces, target):
         configuration file.
     :type target: Path
     """
+    global conn
     # We are probably overwriting on of the traces we're reading, so write to
     # a temporary file first then move it
     fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
@@ -162,6 +169,10 @@ def combine_traces(traces, target):
 
     # Do the merge
     for i, other in enumerate(traces):
+        import pdb; pdb.set_trace()
+
+        logging.info("Attaching database %s", other)
+
         # Attach the other trace
         conn.execute(
             '''
@@ -173,19 +184,28 @@ def combine_traces(traces, target):
         conn.execute(
             '''
             INSERT INTO maps.runs(old)
-            SELECT DISTINCT run_id
+            SELECT DISTINCT run_id AS old
             FROM trace.processes;
             ''')
+
+        logging.info(
+            "%d rows in maps.runs",
+            list(conn.execute('SELECT COUNT(*) FROM maps.runs;'))[0][0])
 
         # Add processes to lookup table
         conn.execute(
             '''
             INSERT INTO maps.processes(old)
-            SELECT id
+            SELECT id AS old
             FROM trace.processes;
             ''')
 
+        logging.info(
+            "%d rows in maps.processes",
+            list(conn.execute('SELECT COUNT(*) FROM maps.processes;'))[0][0])
+
         # processes
+        logging.info("Insert processes...")
         conn.execute(
             '''
             INSERT INTO main.processes(id, run_id, parent,
@@ -198,6 +218,7 @@ def combine_traces(traces, target):
             ''')
 
         # opened_files
+        logging.info("Insert opened_files...")
         conn.execute(
             '''
             INSERT INTO opened_files(run_id, name, timestamp,
@@ -210,6 +231,7 @@ def combine_traces(traces, target):
             ''')
 
         # executed_files
+        logging.info("Insert executed_files...")
         conn.execute(
             '''
             INSERT INTO opened_files(run_id, name, timestamp,
@@ -221,12 +243,23 @@ def combine_traces(traces, target):
             INNER JOIN maps.processes p ON t.id = p.old;
             ''')
 
+        # Flush maps
+        conn.execute(
+            '''
+            DELETE FROM maps.runs;
+            ''')
+        conn.execute(
+            '''
+            DELETE FROM maps.processes;
+            ''')
+
         # Detach
         conn.execute(
             '''
             DETACH DATABASE trace;
             ''')
 
+    conn.commit()
     conn.close()
 
     # Move database to final destination
