@@ -4,7 +4,7 @@ Installation
 ************
 
 ReproZip is available as open source, released under the Revised BSD License. The tool is comprised of two components: **reprozip** (for the packing step) and **reprounzip** (for the unpack step). Additional components and plugins are also provided for *reprounzip*: **reprounzip-vagrant**, which unpacks the experiment in a Vagrant virtual machine; **reprounzip-docker**, which unpacks the experiment in a Docker container; and **reprounzip-vistrails**, which creates a VisTrails workflow to reproduce the experiment. More plugins may be developed in the future (and, of course, you are free to :ref:`roll your own <develop-plugins>`).
-In our `website <http://vida-nyu.github.io/reprozip/>`__, you can find links to our PyPI packages and our `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__.
+In our `website <https://vida-nyu.github.io/reprozip/>`__, you can find links to our PyPI packages and our `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__.
 
 In the following, you will find installation instructions for :ref:`linux`, :ref:`mac`, and :ref:`windows`. ReproZip is also available for the :ref:`conda` Python distribution.
 
