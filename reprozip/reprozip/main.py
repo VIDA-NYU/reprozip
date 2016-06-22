@@ -347,7 +347,8 @@ def main():
         'pack',
         help="Packs the experiment according to the current configuration")
     add_options(parser_pack)
-    parser_pack.add_argument('target', nargs='?', default='experiment.rpz',
+    parser_pack.add_argument('target', nargs=argparse.OPTIONAL,
+                             default='experiment.rpz',
                              help="Destination file")
     parser_pack.set_defaults(func=pack)
 

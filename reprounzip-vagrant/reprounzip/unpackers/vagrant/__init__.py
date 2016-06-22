@@ -800,7 +800,7 @@ def setup(parser, **kwargs):
     # run
     parser_run = subparsers.add_parser('run')
     add_opt_general(parser_run)
-    parser_run.add_argument('run', default=None, nargs='?')
+    parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
     parser_run.add_argument('--no-stdin', action='store_true', default=False,
                             help="Don't connect program's input stream to "
                                  "this terminal")
