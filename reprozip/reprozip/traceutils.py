@@ -154,14 +154,14 @@ def combine_traces(traces, target):
         ''')
     conn.execute(
         '''
-        CREATE TABLE maps.runs(
+        CREATE TABLE maps.map_runs(
             old INTEGER NOT NULL,
             new INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT
             );
         ''')
     conn.execute(
         '''
-        CREATE TABLE maps.processes(
+        CREATE TABLE maps.map_processes(
             old INTEGER NOT NULL,
             new INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT
             );
@@ -181,26 +181,27 @@ def combine_traces(traces, target):
         # Add runs to lookup table
         conn.execute(
             '''
-            INSERT INTO maps.runs(old)
+            INSERT INTO maps.map_runs(old)
             SELECT DISTINCT run_id AS old
             FROM trace.processes;
             ''')
 
         logging.info(
-            "%d rows in maps.runs",
-            list(conn.execute('SELECT COUNT(*) FROM maps.runs;'))[0][0])
+            "%d rows in maps.map_runs",
+            list(conn.execute('SELECT COUNT(*) FROM maps.map_runs;'))[0][0])
 
         # Add processes to lookup table
         conn.execute(
             '''
-            INSERT INTO maps.processes(old)
+            INSERT INTO maps.map_processes(old)
             SELECT id AS old
             FROM trace.processes;
             ''')
 
         logging.info(
-            "%d rows in maps.processes",
-            list(conn.execute('SELECT COUNT(*) FROM maps.processes;'))[0][0])
+            "%d rows in maps.map_processes",
+            list(conn.execute('SELECT COUNT(*) FROM maps.map_processes;'))
+            [0][0])
 
         # processes
         logging.info("Insert processes...")
@@ -211,8 +212,8 @@ def combine_traces(traces, target):
             SELECT p.new AS id, r.new AS run_id, parent,
                    timestamp, is_thread, exitcode
             FROM trace.processes t
-            INNER JOIN maps.runs r ON t.run_id = r.old
-            INNER JOIN maps.processes p ON t.id = p.old;
+            INNER JOIN maps.map_runs r ON t.run_id = r.old
+            INNER JOIN maps.map_processes p ON t.id = p.old;
             ''')
 
         # opened_files
@@ -224,8 +225,8 @@ def combine_traces(traces, target):
             SELECT r.new AS run_id, name, timestamp,
                    mode, is_directory, p.new AS process
             FROM trace.opened_files t
-            INNER JOIN maps.runs r ON t.run_id = r.old
-            INNER JOIN maps.processes p ON t.id = p.old;
+            INNER JOIN maps.map_runs r ON t.run_id = r.old
+            INNER JOIN maps.map_processes p ON t.process = p.old;
             ''')
 
         # executed_files
@@ -237,18 +238,18 @@ def combine_traces(traces, target):
             SELECT r.new AS run_id, name, timestamp,
                    mode, is_directory, p.new AS process
             FROM trace.opened_files t
-            INNER JOIN maps.runs r ON t.run_id = r.old
-            INNER JOIN maps.processes p ON t.id = p.old;
+            INNER JOIN maps.map_runs r ON t.run_id = r.old
+            INNER JOIN maps.map_processes p ON t.id = p.old;
             ''')
 
         # Flush maps
         conn.execute(
             '''
-            DELETE FROM maps.runs;
+            DELETE FROM maps.map_runs;
             ''')
         conn.execute(
             '''
-            DELETE FROM maps.processes;
+            DELETE FROM maps.map_processes;
             ''')
 
         # Detach
