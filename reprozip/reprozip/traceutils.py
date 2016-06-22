@@ -169,8 +169,6 @@ def combine_traces(traces, target):
 
     # Do the merge
     for i, other in enumerate(traces):
-        import pdb; pdb.set_trace()
-
         logging.info("Attaching database %s", other)
 
         # Attach the other trace
@@ -208,7 +206,7 @@ def combine_traces(traces, target):
         logging.info("Insert processes...")
         conn.execute(
             '''
-            INSERT INTO main.processes(id, run_id, parent,
+            INSERT INTO processes(id, run_id, parent,
                                        timestamp, is_thread, exitcode)
             SELECT p.new AS id, r.new AS run_id, parent,
                    timestamp, is_thread, exitcode
@@ -258,6 +256,11 @@ def combine_traces(traces, target):
             '''
             DETACH DATABASE trace;
             ''')
+
+    conn.execute(
+        '''
+        DETACH DATABASE maps;
+        ''')
 
     conn.commit()
     conn.close()
