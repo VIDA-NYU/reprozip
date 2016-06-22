@@ -239,7 +239,7 @@ def combine_traces(traces, target):
                    mode, is_directory, p.new AS process
             FROM trace.opened_files t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
-            INNER JOIN maps.map_processes p ON t.id = p.old;
+            INNER JOIN maps.map_processes p ON t.process = p.old;
             ''')
 
         # Flush maps
