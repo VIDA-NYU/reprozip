@@ -17,28 +17,6 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import PY3, listvalues
 
 
-"""
-create table processes(id integer not null primary key, orig_id integer not null);
-create table files(process integer not null, orig_process integer);
-insert into processes(id, orig_id) values(0, 0), (1, 1), (2, 2), (5, 5), (7, 7), (8, 8);
-insert into files(process, orig_process) values(0, 0), (2, 2), (5, 5), (7, 7);
-
-attach database '' as tempmap;
-create table tempmap.map(old integer not null, new integer not null primary key autoincrement);
-create index tempmap.map_old on map(old);
-
-insert into tempmap.map(old, new) values(-1, -1);
-delete from tempmap.map where new = -1;
-select * from sqlite_sequence;
-update sqlite_sequence set seq=-1 where name='map';
-select * from sqlite_sequence;
-
-insert into tempmap.map(old) select id from processes;
-
-select * from tempmap.map;
-"""
-
-
 def create_schema(conn):
     """Create the trace database schema on a given SQLite3 connection.
     """
@@ -114,12 +92,6 @@ def combine_files(newfiles, newpackages, oldfiles, oldpackages):
     return files, packages
 
 
-def sq(code):
-    global _SQ
-    _SQ = list(list(r) for r in conn.execute(code))
-    return _SQ
-
-
 def combine_traces(traces, target):
     """Combines multiple trace databases into one.
 
@@ -132,7 +104,6 @@ def combine_traces(traces, target):
         configuration file.
     :type target: Path
     """
-    global conn
     # We are probably overwriting on of the traces we're reading, so write to
     # a temporary file first then move it
     fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
@@ -233,11 +204,11 @@ def combine_traces(traces, target):
         logging.info("Insert executed_files...")
         conn.execute(
             '''
-            INSERT INTO opened_files(run_id, name, timestamp,
-                                     mode, is_directory, process)
-            SELECT r.new AS run_id, name, timestamp,
-                   mode, is_directory, p.new AS process
-            FROM trace.opened_files t
+            INSERT INTO executed_files(name, run_id, timestamp, process,
+                                       argv, envp, workingdir)
+            SELECT name, r.new AS run_id, timestamp, p.new AS process,
+                   argv, envp, workingdir
+            FROM trace.executed_files t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
             INNER JOIN maps.map_processes p ON t.process = p.old;
             ''')
