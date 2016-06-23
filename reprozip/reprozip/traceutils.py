@@ -184,7 +184,8 @@ def combine_traces(traces, target):
                    timestamp, is_thread, exitcode
             FROM trace.processes t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
-            INNER JOIN maps.map_processes p ON t.id = p.old;
+            INNER JOIN maps.map_processes p ON t.id = p.old
+            ORDER BY t.id;
             ''')
 
         # opened_files
@@ -197,7 +198,8 @@ def combine_traces(traces, target):
                    mode, is_directory, p.new AS process
             FROM trace.opened_files t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
-            INNER JOIN maps.map_processes p ON t.process = p.old;
+            INNER JOIN maps.map_processes p ON t.process = p.old
+            ORDER BY t.id;
             ''')
 
         # executed_files
@@ -210,7 +212,8 @@ def combine_traces(traces, target):
                    argv, envp, workingdir
             FROM trace.executed_files t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
-            INNER JOIN maps.map_processes p ON t.process = p.old;
+            INNER JOIN maps.map_processes p ON t.process = p.old
+            ORDER BY t.id;
             ''')
 
         # Flush maps
