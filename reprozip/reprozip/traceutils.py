@@ -154,7 +154,8 @@ def combine_traces(traces, target):
             '''
             INSERT INTO maps.map_runs(old)
             SELECT DISTINCT run_id AS old
-            FROM trace.processes;
+            FROM trace.processes
+            ORDER BY run_id;
             ''')
 
         logging.info(
@@ -166,7 +167,8 @@ def combine_traces(traces, target):
             '''
             INSERT INTO maps.map_processes(old)
             SELECT id AS old
-            FROM trace.processes;
+            FROM trace.processes
+            ORDER BY id;
             ''')
 
         logging.info(
