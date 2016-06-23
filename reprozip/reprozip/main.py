@@ -28,6 +28,7 @@ from reprozip.common import setup_logging, \
     submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
+import reprozip.traceutils
 from reprozip.utils import PY3, unicode_, stderr
 
 
@@ -246,6 +247,31 @@ def pack(args):
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 
+def combine(args):
+    """combine subcommand.
+
+    Reads in multiple trace databases and combines them into one.
+
+    The runs from the original traces are appended ('run_id' field gets
+    translated to avoid conflicts).
+    """
+    traces = []
+    for tracepath in args.traces:
+        if tracepath == '-':
+            tracepath = Path(args.dir) / 'trace.sqlite3'
+        else:
+            tracepath = Path(tracepath)
+            if tracepath.is_dir():
+                tracepath = tracepath / 'trace.sqlite3'
+        traces.append(tracepath)
+
+    reprozip.traceutils.combine_traces(traces, Path(args.dir))
+    reprozip.tracer.trace.write_configuration(Path(args.dir),
+                                              args.identify_packages,
+                                              args.find_inputs_outputs,
+                                              overwrite=True)
+
+
 def usage_report(args):
     if bool(args.enable) == bool(args.disable):
         logging.critical("What do you want to do?")
@@ -351,6 +377,14 @@ def main():
                              default='experiment.rpz',
                              help="Destination file")
     parser_pack.set_defaults(func=pack)
+
+    # combine command
+    parser_combine = subparsers.add_parser(
+        'combine',
+        help="Combine multiple traces into one (possibly as subsequent runs)")
+    add_options(parser_combine)
+    parser_combine.add_argument('traces', nargs=argparse.ONE_OR_MORE)
+    parser_combine.set_defaults(func=combine)
 
     args = parser.parse_args()
     setup_logging('REPROZIP', args.verbosity)

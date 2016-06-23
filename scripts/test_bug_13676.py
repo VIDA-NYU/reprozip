@@ -12,19 +12,19 @@ if __name__ == '__main__':
     conn.row_factory = sqlite3.Row
 
     conn.execute(
-            '''
-            CREATE TABLE test(data TEXT);
-            ''')
+        '''
+        CREATE TABLE test(data TEXT);
+        ''')
     conn.execute(
-            '''
-            INSERT INTO test(data)
-            VALUES(?);
-            ''',
-            (data_in,))
+        '''
+        INSERT INTO test(data)
+        VALUES(?);
+        ''',
+        (data_in,))
     data_rows = conn.execute(
-            '''
-            SELECT data FROM test;
-            ''')
+        '''
+        SELECT data FROM test;
+        ''')
     data_out = next(iter(data_rows))[0]
 
     if data_out == data_in:
