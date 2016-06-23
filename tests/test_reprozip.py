@@ -5,13 +5,16 @@
 from __future__ import print_function, unicode_literals
 
 import os
+
+import sqlite3
 from rpaths import AbstractPath, Path
 import sys
 import unittest
 
 from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
-from reprozip.utils import unicode_, UniqueNames, make_dir_writable
+from reprozip import traceutils
+from reprozip.utils import PY3, unicode_, UniqueNames, make_dir_writable
 
 from tests.common import make_database
 
@@ -217,3 +220,131 @@ class TestFiles(unittest.TestCase):
                                   [set(l) for l in outputs])
         finally:
             Path.is_file, Path.stat = old
+
+
+class TestCombine(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = Path.tempdir()
+
+    def tearDown(self):
+        self.tmpdir.rmtree()
+
+    def test_combine(self):
+        traces = []
+        schema = '''
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE processes(
+    id INTEGER NOT NULL PRIMARY KEY,
+    run_id INTEGER NOT NULL,
+    parent INTEGER,
+    timestamp INTEGER NOT NULL,
+    is_thread BOOLEAN NOT NULL,
+    exitcode INTEGER
+    );
+CREATE TABLE opened_files(
+    id INTEGER NOT NULL PRIMARY KEY,
+    run_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    mode INTEGER NOT NULL,
+    is_directory BOOLEAN NOT NULL,
+    process INTEGER NOT NULL
+    );
+CREATE TABLE executed_files(
+    id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    run_id INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
+    process INTEGER NOT NULL,
+    argv TEXT NOT NULL,
+    envp TEXT NOT NULL,
+    workingdir TEXT NOT NULL
+    );
+CREATE INDEX proc_parent_idx ON processes(parent);
+CREATE INDEX open_proc_idx ON opened_files(process);
+CREATE INDEX exec_proc_idx ON executed_files(process);
+        '''
+        sql_data = [
+            schema + '''
+INSERT INTO "processes" VALUES(1,0,NULL,12345678901001,0,0);
+INSERT INTO "opened_files" VALUES(1,0,'/home/vagrant',12345678901001,4,1,1);
+INSERT INTO "opened_files" VALUES(2,0,'/lib/ld.so',12345678901003,1,0,1);
+INSERT INTO "executed_files" VALUES(1,'/usr/bin/id',0,12345678901002,1,'id',
+    'RUN=first','/home/vagrant');
+            ''',
+            schema + '''
+INSERT INTO "processes" VALUES(1,0,NULL,12345678902001,0,0);
+INSERT INTO "processes" VALUES(2,0,1,12345678902002,1,0);
+INSERT INTO "processes" VALUES(3,1,NULL,12345678902004,0,0);
+INSERT INTO "processes" VALUES(4,1,3,12345678902005,0,1);
+INSERT INTO "opened_files" VALUES(1,0,'/usr',12345678902001,4,1,1);
+INSERT INTO "opened_files" VALUES(2,0,'/lib/ld.so',12345678902003,1,0,2);
+INSERT INTO "opened_files" VALUES(3,1,'/usr/bin',12345678902004,4,1,3);
+INSERT INTO "executed_files" VALUES(1,'/usr/bin/id',1,12345678902006,4,'id',
+    'RUN=third','/home/vagrant');
+            ''',
+            schema + '''
+INSERT INTO "processes" VALUES(0,0,NULL,12345678903001,0,1);
+INSERT INTO "opened_files" VALUES(0,0,'/home',12345678903001,4,1,0);
+INSERT INTO "executed_files" VALUES(1,'/bin/false',0,12345678903002,0,'false',
+    'RUN=fourth','/home');
+            ''']
+
+        for i, dat in enumerate(sql_data):
+            trace = self.tmpdir / ('trace%d.sqlite3' % i)
+            if PY3:
+                conn = sqlite3.connect(str(trace))
+            else:
+                conn = sqlite3.connect(trace.path)
+            conn.row_factory = sqlite3.Row
+            conn.executescript(dat + 'COMMIT;')
+            conn.commit()
+            conn.close()
+
+            traces.append(trace)
+
+        target = self.tmpdir / 'target'
+        traceutils.combine_traces(traces, target)
+        target = target / 'trace.sqlite3'
+
+        if PY3:
+            conn = sqlite3.connect(str(target))
+        else:
+            conn = sqlite3.connect(target.path)
+        conn.row_factory = None
+        processes = list(conn.execute(
+            '''
+            SELECT * FROM processes;
+            '''))
+        opened_files = list(conn.execute(
+            '''
+            SELECT * FROM opened_files;
+            '''))
+        executed_files = list(conn.execute(
+            '''
+            SELECT * FROM executed_files;
+            '''))
+
+        self.assertEqual([processes, opened_files, executed_files], [
+            [(1, 1, None, 12345678901001, 0, 0),
+             (2, 2, None, 12345678902001, 0, 0),
+             (3, 2, 1, 12345678902002, 1, 0),
+             (4, 3, None, 12345678902004, 0, 0),
+             (5, 3, 3, 12345678902005, 0, 1),
+             (6, 4, None, 12345678903001, 0, 1)],
+
+            [(1, 1, '/home/vagrant', 12345678901001, 4, 1, 1),
+             (2, 1, '/lib/ld.so', 12345678901003, 1, 0, 1),
+             (3, 2, '/usr', 12345678902001, 4, 1, 2),
+             (4, 2, '/lib/ld.so', 12345678902003, 1, 0, 3),
+             (5, 3, '/usr/bin', 12345678902004, 4, 1, 4),
+             (6, 4, '/home', 12345678903001, 4, 1, 6)],
+
+            [(1, '/usr/bin/id', 1, 12345678901002, 1, 'id',
+              'RUN=first', '/home/vagrant'),
+             (2, '/usr/bin/id', 3, 12345678902006, 5, 'id',
+              'RUN=third', '/home/vagrant'),
+             (3, '/bin/false', 4, 12345678903002, 6, 'false',
+              'RUN=fourth', '/home')],
+        ])

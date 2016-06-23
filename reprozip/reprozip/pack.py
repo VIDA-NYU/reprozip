@@ -24,7 +24,7 @@ from reprozip import __version__ as reprozip_version
 from reprozip.common import File, load_config, save_config, \
     record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
-from reprozip.tracer.trace import merge_files
+from reprozip.traceutils import combine_files
 from reprozip.utils import iteritems
 
 
@@ -65,8 +65,8 @@ def canonicalize_config(packages, other_files, additional_patterns,
         add_files, add_packages = identify_packages(add_files)
     else:
         add_packages = []
-    other_files, packages = merge_files(add_files, add_packages,
-                                        other_files, packages)
+    other_files, packages = combine_files(add_files, add_packages,
+                                          other_files, packages)
     return packages, other_files
 
 

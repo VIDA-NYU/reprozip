@@ -25,7 +25,7 @@ from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, iteritems, itervalues, listvalues, \
+from reprozip.utils import PY3, izip, iteritems, itervalues, \
     unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links
 
 
@@ -223,30 +223,6 @@ def get_files(conn):
         if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                      for m in magic_dirs))
     return files, inputs, outputs
-
-
-def merge_files(newfiles, newpackages, oldfiles, oldpackages):
-    """Merges two sets of packages and files.
-    """
-    files = set(oldfiles)
-    files.update(newfiles)
-
-    packages = dict((pkg.name, pkg) for pkg in newpackages)
-    for oldpkg in oldpackages:
-        if oldpkg.name in packages:
-            pkg = packages[oldpkg.name]
-            # Here we build TracedFiles from the Files so that the comment
-            # (size, etc) gets set
-            s = set(TracedFile(fi.path) for fi in oldpkg.files)
-            s.update(pkg.files)
-            oldpkg.files = list(s)
-            packages[oldpkg.name] = oldpkg
-        else:
-            oldpkg.files = [TracedFile(fi.path) for fi in oldpkg.files]
-            packages[oldpkg.name] = oldpkg
-    packages = listvalues(packages)
-
-    return files, packages
 
 
 def trace(binary, argv, directory, append, verbosity=1):
