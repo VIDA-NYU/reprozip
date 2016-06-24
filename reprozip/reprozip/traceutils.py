@@ -139,7 +139,7 @@ def combine_traces(traces, target):
         ''')
 
     # Do the merge
-    for i, other in enumerate(traces):
+    for other in traces:
         logging.info("Attaching database %s", other)
 
         # Attach the other trace
