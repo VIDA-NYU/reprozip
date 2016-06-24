@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
-from reprounzip.unpackers.common.x11 import X11Handler
+from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
@@ -385,6 +385,20 @@ def vagrant_setup_start(args):
     machine_setup(target, use_chroot)
 
 
+class LocalX11Handler(BaseX11Handler):
+    port_forward = []
+    init_cmds = []
+
+    @staticmethod
+    def fix_env(env):
+        """Sets ``$XAUTHORITY`` and ``$DISPLAY`` in the environment.
+        """
+        new_env = dict(env)
+        new_env.pop('XAUTHORITY', None)
+        new_env['DISPLAY'] = ':0'
+        return new_env
+
+
 @target_must_exist
 def vagrant_run(args):
     """Runs the experiment in the virtual machine.
@@ -405,7 +419,10 @@ def vagrant_run(args):
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
     # X11 handler
-    x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
+    if unpacked_info['gui']:
+        x11 = LocalX11Handler()
+    else:
+        x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
 
     cmds = []
     for run_number in selected_runs:
