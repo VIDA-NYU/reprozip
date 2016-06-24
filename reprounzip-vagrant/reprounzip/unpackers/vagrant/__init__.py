@@ -221,6 +221,8 @@ def vagrant_setup_create(args):
             target_distribution = args.distribution[0]
         else:
             target_distribution = None
+    elif args.gui:
+        target_distribution, box = 'debian', 'remram/debian-8-amd64-x'
     else:
         target_distribution, box = select_box(runs)
     logging.info("Using box %s", box)
@@ -353,10 +355,13 @@ mkdir -p /experimentroot/bin
             fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
 
             # Memory size
-            if memory is not None:
-                fp.write('  config.vm.provider "virtualbox" do |v|\n'
-                         '    v.memory = %d\n'
-                         '  end\n' % memory)
+            if memory is not None or args.gui:
+                fp.write('  config.vm.provider "virtualbox" do |v|\n')
+                if memory is not None:
+                    fp.write('    v.memory = %d\n' % memory)
+                if args.gui:
+                    fp.write('    v.gui = true\n')
+                fp.write('  end\n')
 
             fp.write('end\n')
 
