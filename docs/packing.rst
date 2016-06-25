@@ -161,6 +161,8 @@ As mentioned before, ReproZip allows multiple runs (i.e., command lines) to be t
 
 Note that this flexibility has the caveat that users may reproduce the runs in a different order than the one originally used while tracing. If the order is important for the reproduction (e.g.: each run represents a step in a dataflow), please make sure to inform the correct reproduction order to whoever wants to replicate the experiment. This can also be obtained by running ``reprounzip graph``; please refer to :ref:`provenance-graph` for more information.
 
+ReproZip can also combine multiple traces into a single one, in order to create a single package, using the ``reprozip combine`` command. The runs of each subsequent trace are simply appended in order.
+
 Packing GUI and Interactive Tools
 +++++++++++++++++++++++++++++++++
 
