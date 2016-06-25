@@ -42,7 +42,7 @@ req = [
     'usagestats>=0.3',
     'requests']
 setup(name='reprozip',
-      version='1.0.5',
+      version='1.0.6',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={'console_scripts': [

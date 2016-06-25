@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.0.6 (???)
------------
+1.0.6 (2016-06-25)
+------------------
+
+(reprounzip-vistrails didn't change)
 
 Bugfixes:
 * Fixes error using Docker with`--enable-x11` on Python 3
