@@ -13,7 +13,7 @@ Enhancements:
 * `docker run` gets a `--detach` command, to keep the container running (useful for starting servers on remote machines)
 * Restrictions on upload and download commands have been relaxed, in particular it is possible to download input files as well as output files
 * Don't compress outer tar (data is still compressed); this should make some operations (like `reprounzip info`) faster
-* Add `reprounzip combine`, useful to combine multiple traces into one (as different runs). Handy if running distributed experiments on shared filesystem (MPI)
+* Add `reprozip combine`, useful to combine multiple traces into one (as different runs). Handy if running distributed experiments on shared filesystem (MPI)
 
 1.0.5 (2016-04-07)
 ------------------
