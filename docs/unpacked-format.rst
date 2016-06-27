@@ -152,4 +152,6 @@ Note that the ``docker`` command connects to a Docker daemon over a socket and t
 
 Images and containers built by the unpacker are given a random name with the prefixes ``reprounzip_image_`` and ``reprounzip_run_``, respectively; they are cleaned up when the ``destroy`` command is invoked. There are two images of which `reprounzip-docker` keeps track in the ``.reprounzip`` pickle file: the initial image, i.e., the one built by ``setup/build`` by calling ``docker build``, and the current image (initially the same as the initial image), which has been affected by a number of ``run`` and ``upload`` calls. Running the ``reset`` command returns to the initial image without having to rebuild. After each ``run`` invocation, the container is committed to a new current image so that state is kept.
 
+A ``--detach`` option allows to start container and forget about them. reprounzip-docker leaves the container running and doesn't wait for it; this means that you can start a service on a remote machine, but note that because that container won't be committed to a new image, the side-effects of running it won't affect later executions on the same unpacked folder.
+
 Uploading files to the environment is done by running a simple Dockerfile that builds a new image. Downloading files is done via the ``docker cp`` command.
