@@ -237,7 +237,7 @@ def docker_setup_create(args):
                     lfp.write(join_root(rpz_pack.data_prefix, p).path)
                     lfp.write(b'\0')
             fp.write('    cd / && '
-                     '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
+                     '(tar pxf /reprozip_data.tgz -U --recursive-unlink '
                      '--numeric-owner --strip=1 --null -T /rpz-files.list || '
                      '/busybox echo "TAR reports errors, this might or might '
                      'not prevent the execution to run")\n')

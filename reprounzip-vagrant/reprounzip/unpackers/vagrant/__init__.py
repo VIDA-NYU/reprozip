@@ -266,7 +266,7 @@ def vagrant_setup_create(args):
             if use_chroot:
                 fp.write('\n'
                          'mkdir /experimentroot; cd /experimentroot\n')
-                fp.write('tar zpxf /vagrant/data.tgz --numeric-owner '
+                fp.write('tar pxf /vagrant/data.tgz --numeric-owner '
                          '--strip=1 %s\n' % rpz_pack.data_prefix)
                 if mount_bind:
                     fp.write('\n'
@@ -313,7 +313,7 @@ def vagrant_setup_create(args):
                     for p in reversed(pathlist):
                         lfp.write(join_root(rpz_pack.data_prefix, p).path)
                         lfp.write(b'\0')
-                fp.write('tar zpxf /vagrant/data.tgz --keep-old-files '
+                fp.write('tar pxf /vagrant/data.tgz --keep-old-files '
                          '--numeric-owner --strip=1 '
                          '--null -T /vagrant/rpz-files.list || /bin/true\n')
 
