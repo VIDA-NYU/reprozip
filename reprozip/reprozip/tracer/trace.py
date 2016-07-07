@@ -285,16 +285,19 @@ def trace(binary, argv, directory, append, verbosity=1):
             "intended")
 
     # Trace directory
-    if not append:
-        if directory.exists():
-            logging.warning("Removing existing directory %s", directory)
+    if directory.exists():
+        if append is None:
+            if not tty_prompt_yesno("Trace directory %s exists, append run "
+                                    "to the trace? " % directory):
+                sys.exit(1)
+        elif append is False:
+            logging.info("Removing existing trace directory %s", directory)
             directory.rmtree()
-        directory.mkdir(parents=True)
-    else:
-        if not directory.exists():
-            logging.warning("--continue was specified but %s does not exist "
-                            "-- creating", directory)
             directory.mkdir(parents=True)
+    else:
+        if append is True:
+            logging.warning("--continue was set but trace doesn't exist yet")
+        directory.mkdir()
 
     # Runs the trace
     database = directory / 'trace.sqlite3'
