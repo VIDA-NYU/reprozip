@@ -18,6 +18,7 @@ import os
 import platform
 from rpaths import Path
 import sqlite3
+import sys
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
@@ -223,6 +224,53 @@ def get_files(conn):
         if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                      for m in magic_dirs))
     return files, inputs, outputs
+
+
+def tty_prompt_yesno(prompt):
+    """Get input from the terminal.
+
+    On Linux, this will find the controlling terminal and ask there.
+
+    :param prompt: String to be displayed on the terminal before reading the
+        input.
+    """
+    try:
+        import termios
+
+        fd = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
+        stream = os.fdopen(fd, 'w+', 1)
+        old = termios.tcgetattr(fd)
+    except (ImportError, AttributeError, IOError, OSError):
+        ostream = sys.stdout
+        istream = sys.stdin
+
+        while True:
+            ostream.write(prompt)
+            ostream.flush()
+            line = istream.readline()
+            if line[0] in 'yY':
+                return True
+            elif line[0] in 'nN':
+                return False
+    else:
+        new = old[:]
+        new[3] &= ~termios.ICANON  # 3 == 'lflags'
+        tcsetattr_flags = termios.TCSAFLUSH | getattr(termios, 'TCSASOFT', 0)
+        try:
+            termios.tcsetattr(fd, tcsetattr_flags, new)
+            stream.write(prompt)
+            stream.flush()
+            while True:
+                char = stream.read(1)
+                if char in 'yY':
+                    stream.write('Y')
+                    return True
+                elif char in 'nN':
+                    stream.write('N')
+                    return False
+        finally:
+            termios.tcsetattr(fd, tcsetattr_flags, old)
+            stream.flush()
 
 
 def trace(binary, argv, directory, append, verbosity=1):
