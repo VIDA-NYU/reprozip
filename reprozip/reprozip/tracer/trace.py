@@ -292,6 +292,9 @@ def trace(binary, argv, directory, append, verbosity=1):
             elif r in 'dD':
                 directory.rmtree()
                 directory.mkdir()
+            logging.warning(
+                "You can use --overwrite to replace the existing trace "
+                "(or --continue to append\nwithout prompt)")
         elif append is False:
             logging.info("Removing existing trace directory %s", directory)
             directory.rmtree()

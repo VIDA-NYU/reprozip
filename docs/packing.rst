@@ -18,7 +18,7 @@ The following command is used to trace a command line, or a `run`, used by the e
 
 where `<command-line>` is the command line. By running this command, *reprozip* executes `<command-line>` and uses ``ptrace`` to trace all the system calls issued, storing them in an SQLite database.
 
-Multiple runs can also be traced and combined in a single package by using the flag ``--continue``, or ``-c``, for all the runs except the first one::
+If you run the command multiple times, *reprozip* might ask you if you want to continue with your current trace (append the new command-line to it) or replace it (throw away the previous command-line you traced). You can skip this prompt by using either the ``--continue`` or ``--overwrite`` flag, like this::
 
     $ reprozip trace --continue <command-line>
 
