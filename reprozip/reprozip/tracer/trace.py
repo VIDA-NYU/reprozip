@@ -226,13 +226,14 @@ def get_files(conn):
     return files, inputs, outputs
 
 
-def tty_prompt_yesno(prompt):
+def tty_prompt(prompt, chars):
     """Get input from the terminal.
 
     On Linux, this will find the controlling terminal and ask there.
 
     :param prompt: String to be displayed on the terminal before reading the
         input.
+    :param chars: Accepted character responses.
     """
     try:
         import termios
@@ -248,10 +249,8 @@ def tty_prompt_yesno(prompt):
             ostream.write(prompt)
             ostream.flush()
             line = istream.readline()
-            if line[0] in 'yY':
-                return True
-            elif line[0] in 'nN':
-                return False
+            if line[0] in chars:
+                return line[0]
     else:
         new = old[:]
         new[3] &= ~termios.ICANON  # 3 == 'lflags'
@@ -262,12 +261,8 @@ def tty_prompt_yesno(prompt):
             stream.flush()
             while True:
                 char = stream.read(1)
-                if char in 'yY':
-                    stream.write('Y')
-                    return True
-                elif char in 'nN':
-                    stream.write('N')
-                    return False
+                if char in chars:
+                    return char
         finally:
             termios.tcsetattr(fd, tcsetattr_flags, old)
             stream.flush()
@@ -287,9 +282,16 @@ def trace(binary, argv, directory, append, verbosity=1):
     # Trace directory
     if directory.exists():
         if append is None:
-            if not tty_prompt_yesno("Trace directory %s exists, append run "
-                                    "to the trace? " % directory):
+            r = tty_prompt(
+                "Trace directory %s exists\n"
+                "(a)ppend run to the trace, (d)elete it or (s)top? [a/d/s] " %
+                directory,
+                'aAdDsS')
+            if r in 'sS':
                 sys.exit(1)
+            elif r in 'dD':
+                directory.rmtree()
+                directory.mkdir()
         elif append is False:
             logging.info("Removing existing trace directory %s", directory)
             directory.rmtree()
