@@ -207,10 +207,12 @@ def identify_packages(files):
     """
     distribution = platform.linux_distribution()[0].lower()
     if distribution in ('debian', 'ubuntu'):
+        logging.info("Identifying Debian packages...")
         manager = DpkgManager()
     elif (distribution in ('centos', 'centos linux',
                            'fedora', 'scientific linux') or
             distribution.startswith('red hat')):
+        logging.info("Identifying RPM packages...")
         manager = RpmManager()
     else:
         return files, []
