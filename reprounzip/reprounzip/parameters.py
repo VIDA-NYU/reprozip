@@ -35,11 +35,13 @@ def update_parameters():
 
     url = 'https://reprozip-stats.poly.edu/parameters/'
     env_var = os.environ.get('REPROZIP_PARAMETERS')
-    if env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true') and (
-            env_var.startswith('http://') or env_var.startswith('https://')):
+    if env_var.startswith('http://') or env_var.startswith('https://'):
         # This is only used for testing
         # Note that this still expects the ReproZip CA
         url = env_var
+    elif env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true'):
+        parameters = json.loads(bundled_parameters)
+        return
 
     try:
         from reprounzip.main import __version__ as version
