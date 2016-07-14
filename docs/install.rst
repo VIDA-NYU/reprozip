@@ -18,34 +18,37 @@ For Linux distributions, both *reprozip* and *reprounzip* components are availab
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is required to run ReproZip [#bug]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__ [#deb]_. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
+Python 2.7.3 or greater is required to run ReproZip [#bug]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__ [#deb]_ [#yum]_. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+------------------------------------------------+
-| Component / Plugin           | Required Software Packages                     |
-+==============================+================================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_,  |
-|                              | Python headers [#deb3]_,                       |
-|                              | a working C compiler                           |
-+------------------------------+------------------------------------------------+
-| *reprounzip*                 | None                                           |
-+------------------------------+------------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypton]_,         |
-|                              | a working C compiler [#pycrypton]_,            |
-|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,|
-|                              | `VirtualBox <https://www.virtualbox.org/>`__   |
-+------------------------------+------------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__           |
-+------------------------------+------------------------------------------------+
-| *reprounzip-vistrails*       | None [#vis1]_                                  |
-+------------------------------+------------------------------------------------+
++------------------------------+--------------------------------------------------------+
+| Component / Plugin           | Required Software Packages                             |
++==============================+========================================================+
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_ [#yum2]_, |
+|                              | Python headers [#deb3]_ [#yum3]_,                      |
+|                              | a working C compiler                                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip*                 | None                                                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#deb3]_ [#yum3]_ [#pycrypto]_,         |
+|                              | a working C compiler [#pycrypto]_,                     |
+|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,        |
+|                              | `VirtualBox <https://www.virtualbox.org/>`__           |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-vistrails*       | None [#vis1]_                                          |
++------------------------------+--------------------------------------------------------+
 
 ..  [#bug] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
 ..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
+..  [#yum] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install python``
 ..  [#deb2] On Debian and Debian-based, you can use ``sudo apt-get install libsqlite3-dev``.
+..  [#yum2] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install sqlite-devel``
 ..  [#deb3] On Debian and Debian-based, you can use ``sudo apt-get install python-dev``.
-..  [#pycrypton] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
+..  [#yum3] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install python-devel``
+..  [#pycrypto] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
 ..  [#vis1] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 Installing *reprozip*
@@ -102,8 +105,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +==============================+================================================+
 | *reprounzip*                 | None                                           |
 +------------------------------+------------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#macn]_ [#pycrypton2]_,        |
-|                              | a working C compiler [#macn]_ [#pycrypton2]_,  |
+| *reprounzip-vagrant*         | Python headers [#mac]_ [#pycrypto2]_,          |
+|                              | a working C compiler [#mac]_ [#pycrypto2]_,    |
 |                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,|
 |                              | `VirtualBox <https://www.virtualbox.org/>`__   |
 +------------------------------+------------------------------------------------+
@@ -113,8 +116,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+------------------------------------------------+
 
 ..  [#bug2] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
-..  [#macn] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
-..  [#pycrypton2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
+..  [#mac] This is usually provided by installing Xcode (in the Mac App Store) and the Command Line Developer Tools; instructions on installing the latter may depend on your Mac OS X version (some information on StackOverflow `here <http://stackoverflow.com/questions/9329243/xcode-4-4-and-later-install-command-line-tools?answertab=active#tab-top>`__).
+..  [#pycrypto2] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
 ..  [#vis2] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 ..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "unknown argument: -mno-fused-madd" on Mac OS X? <compiler_mac>`
@@ -166,7 +169,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +==============================+========================================================================+
 | *reprounzip*                 | None                                                                   |
 +------------------------------+------------------------------------------------------------------------+
-| *reprounzip-vagrant*         | `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__ [#pycrypton3]_,|
+| *reprounzip-vagrant*         | `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__ [#pycrypto3]_, |
 |                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,                        |
 |                              | `VirtualBox <https://www.virtualbox.org/>`__                           |
 +------------------------------+------------------------------------------------------------------------+
@@ -176,7 +179,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 +------------------------------+------------------------------------------------------------------------+
 
 ..  [#bug3] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
-..  [#pycrypton3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__.
+..  [#pycrypto3] A working C compiler is required to build PyCrypto. For installation without building from source, please see `this page <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__.
 ..  [#vis3] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
 ..  seealso:: :ref:`Why does reprounzip-vagrant installation fail with error "Unable to find vcvarsall.bat" on Windows? <pycrypto_windows>`

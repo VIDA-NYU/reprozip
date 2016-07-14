@@ -88,6 +88,7 @@ def installpkgs(args):
                 logging.warning("version %s of %s was installed, instead of "
                                 "%s", real, pkg.name, req)
         if r != 0:
+            logging.critical("Installer exited with %d", r)
             sys.exit(r)
 
 
@@ -208,7 +209,7 @@ def directory_run(args):
             if l.endswith(b':\n'):
                 lib_dirs.append(Path(l[:-2]))
     finally:
-        p.wait()
+        p.communicate()
     lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
                 shell_escape(unicode_(join_root(root, d)))
                 for d in lib_dirs))

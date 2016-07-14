@@ -21,7 +21,7 @@ import subprocess
 import time
 
 from reprozip.common import Package
-from reprozip.utils import listvalues
+from reprozip.utils import iteritems, listvalues
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
@@ -50,18 +50,30 @@ class PkgManager(object):
 
     def search_for_files(self, files):
         for f in self.filter_files(files):
-            pkgname = self._get_package_for_file(f.path)
+            pkgnames = self._get_packages_for_file(f.path)
 
             # Stores the file
-            if pkgname is None:
+            if not pkgnames:
                 self.unknown_files.add(f)
             else:
-                if pkgname in self.packages:
-                    self.packages[pkgname].add_file(f)
+                pkgs = []
+                for pkgname in pkgnames:
+                    if pkgname in self.packages:
+                        pkgs.append(self.packages[pkgname])
+                    else:
+                        pkg = self._create_package(pkgname)
+                        if pkg is not None:
+                            self.packages[pkgname] = pkg
+                            pkgs.append(self.packages[pkgname])
+                if len(pkgs) == 1:
+                    pkgs[0].add_file(f)
                 else:
-                    pkg = self._create_package(pkgname)
-                    pkg.add_file(f)
-                    self.packages[pkgname] = pkg
+                    self.unknown_files.add(f)
+
+        # Filter out packages with no files
+        self.packages = {pkgname: pkg
+                         for pkgname, pkg in iteritems(self.packages)
+                         if pkg.files}
 
     def _filter(self, f):
         # Special files
@@ -76,7 +88,7 @@ class PkgManager(object):
 
         return False
 
-    def _get_package_for_file(self, filename):
+    def _get_packages_for_file(self, filename):
         raise NotImplementedError
 
     def _create_package(self, pkgname):
@@ -89,10 +101,14 @@ class DpkgManager(PkgManager):
     def search_for_files(self, files):
         # Make a set of all the requested files
         requested = dict((f.path, f) for f in self.filter_files(files))
+        found = {}  # {path: pkgname}
 
         # Process /var/lib/dpkg/info/*.list
         for listfile in Path('/var/lib/dpkg/info').listdir():
-            package = None
+            pkgname = listfile.unicodename[:-5]
+            # Removes :arch
+            pkgname = pkgname.split(':', 1)[0]
+
             if not listfile.unicodename.endswith('.list'):
                 continue
             with listfile.open('rb') as fp:
@@ -102,32 +118,30 @@ class DpkgManager(PkgManager):
                     if l[-1:] == b'\n':
                         l = l[:-1]
                     path = Path(l)
-                    # If it's one of the requested paths, update the package
+                    # If it's one of the requested paths
                     if path in requested:
-                        if package is None:
-                            pkgname = listfile.unicodename[:-5]
-                            # Removes :arch
-                            pkgname = pkgname.split(':', 1)[0]
-                            if pkgname in self.packages:
-                                package = self.packages[pkgname]
-                            else:
-                                package = self._create_package(pkgname)
-                                self.packages[pkgname] = package
-                        package.add_file(requested.pop(path))
+                        # If we had assigned it to a package already, undo
+                        if path in found:
+                            found[path] = None
+                        # Else assign to the package
+                        else:
+                            found[path] = pkgname
                     l = fp.readline()
 
         # Remaining files are not from packages
-        self.unknown_files.update(f for f in files if f.path in requested)
+        self.unknown_files.update(
+            f for f in files
+            if f.path in requested and f.path not in found)
 
-    def _filter(self, f):
-        # Directories and non-existent files
-        if f.path.is_dir():
-            self.unknown_files.add(f)
-            return True
+        for path, pkgname in iteritems(found):
+            if pkgname in self.packages:
+                package = self.packages[pkgname]
+            else:
+                package = self._create_package(pkgname)
+                self.packages[pkgname] = package
+            package.add_file(requested.pop(path))
 
-        return super(DpkgManager, self)._filter(f)
-
-    def _get_package_for_file(self, filename):
+    def _get_packages_for_file(self, filename):
         # This method is no longer used for dpkg: instead of querying each file
         # using `dpkg -S`, we read all the list files once ourselves since it
         # is faster
@@ -152,20 +166,54 @@ class DpkgManager(PkgManager):
                     size = int(fields[2].decode('ascii')) * 1024    # kbytes
                     break
         finally:
-            p.wait()
-        assert p.returncode == 0
-        return Package(pkgname, version, size=size)
+            p.communicate()
+        if p.returncode == 0:
+            return Package(pkgname, version, size=size)
+        else:
+            return None
+
+
+class RpmManager(PkgManager):
+    """Package identifier for rpm-based systems (Fedora, CentOS).
+    """
+    def _get_packages_for_file(self, filename):
+        p = subprocess.Popen(['rpm', '-qf', filename.path,
+                              '--qf', '%{NAME}'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            return None
+        return [l.strip().decode('iso-8859-1')
+                for l in out.splitlines()
+                if l]
+
+    def _create_package(self, pkgname):
+        p = subprocess.Popen(['rpm', '-q', pkgname,
+                              '--qf', '%{VERSION}-%{RELEASE} %{SIZE}'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if p.returncode == 0:
+            version, size = out.strip().decode('iso-8859-1').rsplit(' ', 1)
+            size = int(size)
+            return Package(pkgname, version, size=size)
+        else:
+            return None
 
 
 def identify_packages(files):
     """Organizes the files, using the distribution's package manager.
     """
     distribution = platform.linux_distribution()[0].lower()
-    if distribution == 'ubuntu':
-        manager = DpkgManager()
-    elif distribution == 'debian':
+    if distribution in ('debian', 'ubuntu'):
         logging.info("Identifying Debian packages...")
         manager = DpkgManager()
+    elif (distribution in ('centos', 'centos linux',
+                           'fedora', 'scientific linux') or
+            distribution.startswith('red hat')):
+        logging.info("Identifying RPM packages...")
+        manager = RpmManager()
     else:
         return files, []
 

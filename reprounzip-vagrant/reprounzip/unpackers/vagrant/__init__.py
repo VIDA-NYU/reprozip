@@ -255,7 +255,9 @@ def vagrant_setup_create(args):
             fp.write('#!/bin/sh\n\nset -e\n\n')
             if packages:
                 # Updates package sources
-                fp.write(installer.update_script())
+                update_script = installer.update_script()
+                if update_script:
+                    fp.write(update_script)
                 fp.write('\n')
                 # Installs necessary packages
                 fp.write(installer.install_script(packages))

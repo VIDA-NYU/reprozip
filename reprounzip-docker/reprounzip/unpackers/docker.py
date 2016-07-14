@@ -201,7 +201,9 @@ def docker_setup_create(args):
                                   len(packages), e)
                     sys.exit(1)
                 # Updates package sources
-                fp.write('    %s && \\\n' % installer.update_script())
+                update_script = installer.update_script()
+                if update_script:
+                    fp.write('    %s && \\\n' % update_script)
                 # Installs necessary packages
                 fp.write('    %s && \\\n' % installer.install_script(packages))
                 logging.info("Dockerfile will install the %d software "

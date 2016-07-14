@@ -162,7 +162,7 @@ The `installpkgs` Unpacker: Installing Software Packages
 
 By default, ReproZip identifies if the current environment already has the required software packages for the experiment, then using the installed ones for reproduction. For the non-installed software packages, it uses the dependencies packed in the original environment and extracted under the experiment directory.
 
-Users may also let ReproZip try and install all the dependencies of the experiment on their machine by using the *installpkgs* unpacker (``reprounzip installpkgs``). This unpacker currently works for Debian and Debian-based operating systems only (e.g.: Ubuntu), and uses the `dpkg <http://en.wikipedia.org/wiki/Dpkg>`__ package manager to automatically install all the required software packages directly on the current machine, thus **interfering with your environment**.
+Users may also let ReproZip try and install all the dependencies of the experiment on their machine by using the *installpkgs* unpacker (``reprounzip installpkgs``). This unpacker currently works for distribution based on Debian or RPM packages (e.g.: Ubuntu, CentOS, ...), and uses the package manager to automatically install all the required software packages directly on the current machine, thus **interfering with your environment**.
 
 To install the required dependencies, the following command should be used::
 
