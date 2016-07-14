@@ -88,6 +88,7 @@ def installpkgs(args):
                 logging.warning("version %s of %s was installed, instead of "
                                 "%s", real, pkg.name, req)
         if r != 0:
+            logging.critical("Installer exited with %d", r)
             sys.exit(r)
 
 
