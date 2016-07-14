@@ -164,6 +164,7 @@ def identify_packages(files):
     if distribution == 'ubuntu':
         manager = DpkgManager()
     elif distribution == 'debian':
+        logging.info("Identifying Debian packages...")
         manager = DpkgManager()
     else:
         return files, []

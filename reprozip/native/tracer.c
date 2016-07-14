@@ -687,7 +687,8 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         memcpy(args, argv, argc * sizeof(char*));
         args[argc] = NULL;
         /* Trace this process */
-        ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+        if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) != 0)
+            log_critical(0, "couldn't use ptrace: %s", strerror(errno));
         /* Stop this once so tracer can set options */
         kill(getpid(), SIGSTOP);
         /* Execute the target */
