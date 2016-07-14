@@ -18,33 +18,36 @@ For Linux distributions, both *reprozip* and *reprounzip* components are availab
 Required Software Packages
 --------------------------
 
-Python 2.7.3 or greater is required to run ReproZip [#bug]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__ [#deb]_. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
+Python 2.7.3 or greater is required to run ReproZip [#bug]_. If you don't have Python on your machine, you can get it from `python.org <https://www.python.org/>`__ [#deb]_ [#yum]_. You will also need the `pip <https://pip.pypa.io/en/latest/installing.html>`__ installer.
 
 Besides Python and pip, each component or plugin to be used may have additional dependencies that you need to install (if you do not have them already installed in your environment), as described below:
 
-+------------------------------+------------------------------------------------+
-| Component / Plugin           | Required Software Packages                     |
-+==============================+================================================+
-| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_,  |
-|                              | Python headers [#deb3]_,                       |
-|                              | a working C compiler                           |
-+------------------------------+------------------------------------------------+
-| *reprounzip*                 | None                                           |
-+------------------------------+------------------------------------------------+
-| *reprounzip-vagrant*         | Python headers [#deb3]_ [#pycrypto]_,          |
-|                              | a working C compiler [#pycrypto]_,             |
-|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,|
-|                              | `VirtualBox <https://www.virtualbox.org/>`__   |
-+------------------------------+------------------------------------------------+
-| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__           |
-+------------------------------+------------------------------------------------+
-| *reprounzip-vistrails*       | None [#vis1]_                                  |
-+------------------------------+------------------------------------------------+
++------------------------------+--------------------------------------------------------+
+| Component / Plugin           | Required Software Packages                             |
++==============================+========================================================+
+| *reprozip*                   | `SQLite <http://www.sqlite.org/>`__ [#deb2]_ [#yum2]_, |
+|                              | Python headers [#deb3]_ [#yum3]_,                      |
+|                              | a working C compiler                                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip*                 | None                                                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-vagrant*         | Python headers [#deb3]_ [#yum3]_ [#pycrypto]_,         |
+|                              | a working C compiler [#pycrypto]_,                     |
+|                              | `Vagrant v1.1+ <https://www.vagrantup.com/>`__,        |
+|                              | `VirtualBox <https://www.virtualbox.org/>`__           |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-docker*          | `Docker <https://www.docker.com/>`__                   |
++------------------------------+--------------------------------------------------------+
+| *reprounzip-vistrails*       | None [#vis1]_                                          |
++------------------------------+--------------------------------------------------------+
 
 ..  [#bug] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
 ..  [#deb] On Debian and Debian-based, you can use ``sudo apt-get install python``.
+..  [#yum] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install python``
 ..  [#deb2] On Debian and Debian-based, you can use ``sudo apt-get install libsqlite3-dev``.
+..  [#yum2] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install sqlite-devel``
 ..  [#deb3] On Debian and Debian-based, you can use ``sudo apt-get install python-dev``.
+..  [#yum3] On RPM-based distributions, such as Red Hat, Fedora or CentOS, you can use ``yum install python-devel``
 ..  [#pycrypto] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
 ..  [#vis1] `VisTrails v2.2.3+ <http://www.vistrails.org/>`__ is required to run the workflow generated by the plugin.
 
