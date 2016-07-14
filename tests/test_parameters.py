@@ -42,6 +42,8 @@ class TestSelection(unittest.TestCase):
                          ('debian', 'debian:jessie'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'debian:jessie'))
+        self.assertEqual(get('x86_64', 'CentOS', '1'),
+                         ('centos', 'centos7'))
 
     def test_vagrant(self):
         def get(architecture, distribution, version):
@@ -59,3 +61,5 @@ class TestSelection(unittest.TestCase):
                          ('debian', 'remram/debian-8-amd64'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'remram/debian-8-amd64'))
+        self.assertEqual(get('x86_64', 'CentOS', '1'),
+                         ('centos', 'bento/centos-6.7'))
