@@ -289,6 +289,7 @@ def vagrant_setup_create(args):
                 pathlist = []
                 # Adds intermediate directories, and checks for existence in
                 # the tar
+                data_files = rpz_pack.data_filenames()
                 for f in other_files:
                     path = PosixPath('/')
                     for c in rpz_pack.remove_data_prefix(f.path).components:
@@ -296,12 +297,10 @@ def vagrant_setup_create(args):
                         if path in paths:
                             continue
                         paths.add(path)
-                        try:
-                            rpz_pack.get_data(path)
-                        except KeyError:
-                            logging.info("Missing file %s", path)
-                        else:
+                        if path in data_files:
                             pathlist.append(path)
+                        else:
+                            logging.info("Missing file %s", path)
                 # FIXME : for some reason we need reversed() here, I'm not sure
                 # why. Need to read more of tar's docs.
                 # TAR bug: --no-overwrite-dir removes --keep-old-files
