@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.7 (???)
+-----------
+
+Bugfixes:
+* Correctly show an error message if ptrace is unavailable
+* Make Docker & Vagrant setup much faster
+
 1.0.6 (2016-06-25)
 ------------------
 
