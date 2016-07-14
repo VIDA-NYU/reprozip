@@ -221,6 +221,16 @@ class RPZPack(object):
                 for m in self.data.getmembers()
                 if m.name.startswith('DATA/')]
 
+    def data_filenames(self):
+        """Returns a set of filenames for all the data paths.
+
+        Those paths begin with a slash / and the 'DATA' prefix has been
+        removed.
+        """
+        return set(PosixPath(m.name[4:])
+                   for m in self.data.getmembers()
+                   if m.name.startswith('DATA/'))
+
     def get_data(self, path):
         """Returns a tarfile.TarInfo object for the data path.
 

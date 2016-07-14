@@ -10,6 +10,16 @@ Behavior change:
 Features:
 * Configuration file contains the walltime taken by each run
 
+1.0.7 (???)
+-----------
+
+Bugfixes:
+* Correctly show an error message if ptrace is unavailable
+* Make Docker & Vagrant setup much faster
+
+Enhancements:
+* Add support for RPM-based distributions, in addition to Debian-based
+
 1.0.6 (2016-06-25)
 ------------------
 

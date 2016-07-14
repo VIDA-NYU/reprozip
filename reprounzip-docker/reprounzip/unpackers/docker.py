@@ -200,7 +200,9 @@ def docker_setup_create(args):
                                   len(packages), e)
                     sys.exit(1)
                 # Updates package sources
-                fp.write('    %s && \\\n' % installer.update_script())
+                update_script = installer.update_script()
+                if update_script:
+                    fp.write('    %s && \\\n' % update_script)
                 # Installs necessary packages
                 fp.write('    %s && \\\n' % installer.install_script(packages))
                 logging.info("Dockerfile will install the %d software "
@@ -214,19 +216,19 @@ def docker_setup_create(args):
             # Add intermediate directories, and check for existence in the tar
             missing_files = chain.from_iterable(pkg.files
                                                 for pkg in missing_packages)
-            for f in chain(other_files, missing_files):
+            data_files = rpz_pack.data_filenames()
+            listoffiles = list(chain(other_files, missing_files))
+            for f in listoffiles:
                 path = PosixPath('/')
                 for c in rpz_pack.remove_data_prefix(f.path).components:
                     path = path / c
                     if path in paths:
                         continue
                     paths.add(path)
-                    try:
-                        rpz_pack.get_data(path)
-                    except KeyError:
-                        logging.info("Missing file %s", path)
-                    else:
+                    if path in data_files:
                         pathlist.append(path)
+                    else:
+                        logging.info("Missing file %s", path)
             rpz_pack.close()
             # FIXME : for some reason we need reversed() here, I'm not sure why
             # Need to read more of tar's docs.
