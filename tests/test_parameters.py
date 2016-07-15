@@ -38,12 +38,14 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Ubuntu', '1.1'),
                          ('ubuntu', 'ubuntu:15.10'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
-        self.assertEqual(get('x86_64', 'Fedora', '12'),
+        self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
                          ('debian', 'debian:jessie'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'debian:jessie'))
         self.assertEqual(get('x86_64', 'CentOS', '1'),
                          ('centos', 'centos7'))
+        self.assertEqual(get('x86_64', 'Fedora', '21'),
+                         ('fedora', 'fedora:21'))
 
     def test_vagrant(self):
         def get(architecture, distribution, version):
