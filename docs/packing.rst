@@ -24,7 +24,7 @@ Multiple runs can also be traced and combined in a single package by using the f
 
 Note that the final package will be able to reproduce any of the runs, and files shared by multiple runs are only stored once.
 
-By default, if the operating system is based on Debian or RPM packages, (e.g.: Ubuntu, CentOS, ...), *reprozip* will also try to automatically identify the distribution packages from which the files come, using the available `package manager <http://en.wikipedia.org/wiki/Dpkg>`__ of the system. This is useful to provide more detailed information about the dependencies, as well as to further help when reproducing the experiment. However, note that the ``trace`` command can take some time doing that after the experiment finishes, depending on the number of file dependencies that the experiment has. To disable this feature, users may use the flag ``--dont-identify-packages``::
+By default, if the operating system is based on Debian or RPM packages (e.g.: Ubuntu, CentOS, Fedora, ...), *reprozip* will also try to automatically identify the distribution packages from which the files come, using the available package manager of the system. This is useful to provide more detailed information about the dependencies, as well as to further help when reproducing the experiment. However, note that the ``trace`` command can take some time doing that after the experiment finishes, depending on the number of file dependencies that the experiment has. To disable this feature, users may use the flag ``--dont-identify-packages``::
 
     $ reprozip trace --dont-identify-packages <command-line>
 
