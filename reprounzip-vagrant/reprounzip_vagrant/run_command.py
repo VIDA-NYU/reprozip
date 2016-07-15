@@ -19,7 +19,7 @@ import threading
 from reprounzip.common import record_usage
 from reprounzip.unpackers.common import interruptible_call
 from reprounzip.unpackers.common.x11 import BaseForwarder, LocalForwarder
-from reprounzip.unpackers.vagrant.interaction import interactive_shell
+from reprounzip_vagrant.interaction import interactive_shell
 from reprounzip.utils import irange, stdout_bytes
 
 
