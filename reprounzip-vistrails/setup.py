@@ -17,12 +17,11 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip-vistrails',
-      version='1.0.5',
-      packages=['reprounzip', 'reprounzip.plugins'],
+      version='1.1.0',
+      py_modules=['reprounzip_vistrails'],
       entry_points={
           'reprounzip.plugins': [
-              'vistrails = reprounzip.plugins.vistrails:setup_vistrails']},
-      namespace_packages=['reprounzip', 'reprounzip.plugins'],
+              'vistrails = reprounzip_vistrails:setup_vistrails']},
       install_requires=req,
       description="Integrates the ReproZip unpacker with the VisTrails "
                   "workflow management system",
