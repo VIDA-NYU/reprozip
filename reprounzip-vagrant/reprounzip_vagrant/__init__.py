@@ -33,8 +33,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler
-from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
-    run_interactive
+from reprounzip_vagrant.run_command import IgnoreMissingKey, run_interactive
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
