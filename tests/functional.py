@@ -343,7 +343,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Run using reprounzip-vistrails
         check_simple(
             sudo + rpuz_python +
-            ['-m', 'reprounzip.plugins.vistrails', '1',
+            ['-m', 'reprounzip_vistrails', '1',
              'chroot', 'simplechroot_vt', '0',
              '--input-file', 'arg1:%s' % (tests / 'simple_input2.txt'),
              '--output-file', 'arg2:output_vt.txt'],
