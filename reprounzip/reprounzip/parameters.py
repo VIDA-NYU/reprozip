@@ -35,7 +35,8 @@ def update_parameters():
 
     url = 'https://reprozip-stats.poly.edu/parameters/'
     env_var = os.environ.get('REPROZIP_PARAMETERS')
-    if env_var.startswith('http://') or env_var.startswith('https://'):
+    if env_var and (
+            env_var.startswith('http://') or env_var.startswith('https://')):
         # This is only used for testing
         # Note that this still expects the ReproZip CA
         url = env_var
