@@ -59,9 +59,11 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('i686', 'Ubuntu', '1.1'),
                          ('ubuntu', 'ubuntu/wily32'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
-        self.assertEqual(get('x86_64', 'Fedora', '12'),
+        self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
                          ('debian', 'remram/debian-8-amd64'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'remram/debian-8-amd64'))
         self.assertEqual(get('x86_64', 'CentOS', '1'),
                          ('centos', 'bento/centos-6.7'))
+        self.assertEqual(get('x86_64', 'Fedora', '22'),
+                         ('fedora', 'remram/fedora-22-amd64'))
