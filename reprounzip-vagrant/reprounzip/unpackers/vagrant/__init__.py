@@ -363,7 +363,8 @@ mkdir -p /experimentroot/bin
         # Meta-data for reprounzip
         write_dict(target,
                    metadata_initial_iofiles(config,
-                                            {'use_chroot': use_chroot}))
+                                            {'use_chroot': use_chroot,
+                                             'gui': args.gui}))
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
@@ -771,6 +772,8 @@ def setup(parser, **kwargs):
         opts.add_argument('--memory', nargs=1,
                           help="Amount of RAM to allocate to VM (megabytes, "
                                "default: box default)")
+        opts.add_argument('--use-gui', action='store_true', default=False,
+                          dest='gui', help="Use the VM's X server")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
