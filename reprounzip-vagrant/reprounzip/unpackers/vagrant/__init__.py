@@ -98,7 +98,7 @@ def read_dict(path):
     return metadata_read(path, 'vagrant')
 
 
-def machine_setup(target, use_chroot):
+def machine_setup(target):
     """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
     try:
@@ -144,6 +144,9 @@ def machine_setup(target, use_chroot):
     logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
                   info['username'], info['hostname'], info['port'],
                   info['key_filename'])
+
+    unpacked_info = read_dict(target)
+    use_chroot = unpacked_info['use_chroot']
 
     if use_chroot:
         # Mount directories
@@ -383,11 +386,10 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
-    use_chroot = read_dict(target)['use_chroot']
 
     check_vagrant_version()
 
-    machine_setup(target, use_chroot)
+    machine_setup(target)
 
 
 class LocalX11Handler(BaseX11Handler):
@@ -475,7 +477,7 @@ def vagrant_run(args):
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
-    info = machine_setup(target, unpacked_info['use_chroot'])
+    info = machine_setup(target)
 
     signals.pre_run(target=target)
 
@@ -502,7 +504,7 @@ class SSHUploader(FileUploader):
     def prepare_upload(self, files):
         # Checks whether the VM is running
         try:
-            ssh_info = machine_setup(self.target, self.use_chroot)
+            ssh_info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
@@ -579,7 +581,7 @@ class SSHDownloader(FileDownloader):
     def prepare_download(self, files):
         # Checks whether the VM is running
         try:
-            info = machine_setup(self.target, self.use_chroot)
+            info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
