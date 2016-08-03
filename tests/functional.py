@@ -277,6 +277,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
         with output_in_chroot.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
+        # Replace input file via path
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
+                                  '%s:%s' % (tests / 'simple_input2.txt',
+                                             tests / 'simple_input.txt')])
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
+        # Run again
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err', 2)
         # Delete with wrong command (should fail)
         p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
                              stderr=subprocess.PIPE)
@@ -364,6 +371,15 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:voutput1.txt'])
             with Path('voutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Replace input file via path
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               '%s:%s' % (tests / 'simple_input2.txt',
+                                          tests / 'simple_input.txt')])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrantchroot').path],
+                         'out', 2)
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrantchroot').path])
@@ -472,6 +488,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:doutput1.txt'])
             with Path('doutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Replace input file via path
+            check_call(rpuz + ['docker', 'upload', 'simpledocker',
+                               '%s:%s' % (tests / 'simple_input2.txt',
+                                          tests / 'simple_input.txt')])
+            # Run again
+            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
             # Destroy
             check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
         elif interactive:
