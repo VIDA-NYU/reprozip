@@ -339,6 +339,10 @@ def load_iofiles(config, runs):
                 not keys.issuperset(required_keys)):
             raise InvalidConfig("File #%d has invalid keys")
         name = f['name']
+        if name.startswith('/'):
+            logging.warning("File name looks like a path: %s, prefixing with "
+                            ".", name)
+            name = '.%s' % name
         path = PosixPath(f['path'])
         readers = sorted(f.get('read_by_runs', []))
         writers = sorted(f.get('written_by_runs', []))
