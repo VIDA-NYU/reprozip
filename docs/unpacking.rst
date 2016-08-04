@@ -344,6 +344,9 @@ Note that the ``upload`` command takes the file id on the right side of the colo
 ..  versionadded:: 1.0.4
     Allow ``download <output-id>`` (no explicit destination), and add ``--all``.
 
+..  versionadded:: 1.1.0
+    Allow uploading and downloading any file via its full path, instead of a input/output file id.
+
 ..  seealso:: :ref:`Why can’t 'reprounzip' get my output files after reproducing an experiment? <moving-outputs>`
 
 Running the Experiment in VisTrails
