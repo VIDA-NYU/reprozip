@@ -101,6 +101,35 @@ char *get_wd(void)
     }
 }
 
+char *read_link(const char *path)
+{
+    /* PATH_MAX has issues, don't use it */
+    size_t size = 1024;
+    char *target;
+    for(;;)
+    {
+        ssize_t ret;
+        target = malloc(size);
+        ret = readlink(path, target, size - 1);
+        if(ret == -1)
+        {
+            free(path);
+            log_error(0, "read_link failed: %s", strerror(errno));
+            return strdup("/UNKNOWN");
+        }
+        else if(ret < size - 1)
+        {
+            target[size - 1] = '\0';
+            return target;
+        }
+        else
+        {
+            free(path);
+            size <<= 1;
+        }
+    }
+}
+
 char *read_line(char *buffer, size_t *size, FILE *fp)
 {
     size_t pos = 0;

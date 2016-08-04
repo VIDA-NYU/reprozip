@@ -15,6 +15,8 @@ char *abspath(const char *wd, const char *path);
 
 char *get_wd(void);
 
+char *read_link(const char *path);
+
 char *read_line(char *buffer, size_t *size, FILE *fp);
 
 int path_is_dir(const char *pathname);
