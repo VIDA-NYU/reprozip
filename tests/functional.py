@@ -91,6 +91,21 @@ def build(target, sources, args=[]):
                args)
 
 
+def same_files(file1, file2, CHUNK_SIZE=4096):
+    """Compare two files.
+    """
+    with Path(file1).open('rb') as f1:
+        with Path(file2).open('rb') as f2:
+            while True:
+                c1 = f1.read(CHUNK_SIZE)
+                c2 = f2.read(CHUNK_SIZE)
+                if c1 != c2:
+                    return False
+                if len(c1) != CHUNK_SIZE:
+                    break
+            return True
+
+
 @in_temp_dir
 def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     rpz_python = [os.environ.get('REPROZIP_PYTHON', sys.executable)]
@@ -205,7 +220,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     assert found == 0x03
     # Pack
     check_call(rpz + ['pack', '-d', 'rpz-simple', 'simple.rpz'])
-    Path('simple').remove()
+    Path('simple').rename('simple.orig')
     # Info
     check_call(rpuz + ['info', 'simple.rpz'])
     # Show files
@@ -244,6 +259,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                   'arg2:output1.txt'])
         with Path('output1.txt').open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
+        # Get random file
+        check_call(sudo + rpuz + ['chroot', 'download', 'simplechroot',
+                                  '%s:binc.bin' % (Path.cwd() / 'simple')])
+        assert same_files('simple.orig', 'binc.bin')
         # Replace input file
         check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
                                   '%s:arg1' % (tests / 'simple_input2.txt')])
@@ -258,6 +277,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
         with output_in_chroot.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
+        # Replace input file via path
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot',
+                                  '%s:%s' % (tests / 'simple_input2.txt',
+                                             tests / 'simple_input.txt')])
+        check_call(sudo + rpuz + ['chroot', 'upload', 'simplechroot'])
+        # Run again
+        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err', 2)
         # Delete with wrong command (should fail)
         p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
                              stderr=subprocess.PIPE)
@@ -310,6 +336,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:voutput1.txt'])
             with Path('voutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Get random file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               '%s:binvc.bin' % (Path.cwd() / 'simple')])
+            assert same_files('simple.orig', 'binvc.bin')
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrantchroot').path,
@@ -340,6 +371,15 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:voutput1.txt'])
             with Path('voutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Replace input file via path
+            check_call(rpuz + ['vagrant', 'upload',
+                               (tests / 'vagrant/simplevagrantchroot').path,
+                               '%s:%s' % (tests / 'simple_input2.txt',
+                                          tests / 'simple_input.txt')])
+            # Run again
+            check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
+                                 (tests / 'vagrant/simplevagrantchroot').path],
+                         'out', 2)
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrantchroot').path])
@@ -365,6 +405,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:woutput1.txt'])
             with Path('woutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Get random file
+            check_call(rpuz + ['vagrant', 'download',
+                               (tests / 'vagrant/simplevagrant').path,
+                               '%s:binvs.bin' % (Path.cwd() / 'simple')])
+            assert same_files('simple.orig', 'binvs.bin')
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
                                (tests / 'vagrant/simplevagrant').path,
@@ -417,6 +462,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:doutput1.txt'])
             with Path('doutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Get random file
+            check_call(rpuz + ['docker', 'download', 'simpledocker',
+                               '%s:bind.bin' % (Path.cwd() / 'simple')])
+            assert same_files('simple.orig', 'bind.bin')
             # Replace input file
             check_call(rpuz + ['docker', 'upload', 'simpledocker',
                                '%s:arg1' % (tests / 'simple_input2.txt')])
@@ -439,6 +488,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                'arg2:doutput1.txt'])
             with Path('doutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
+            # Replace input file via path
+            check_call(rpuz + ['docker', 'upload', 'simpledocker',
+                               '%s:%s' % (tests / 'simple_input2.txt',
+                                          tests / 'simple_input.txt')])
+            # Run again
+            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
             # Destroy
             check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
         elif interactive:

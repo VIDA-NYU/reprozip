@@ -9,6 +9,7 @@ Behavior change:
 
 Features:
 * Configuration file contains the walltime taken by each run
+* It is now possible to upload or download any file via its full path
 
 1.0.7 (???)
 -----------
