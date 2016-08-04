@@ -855,7 +855,7 @@ struct syscall_table *process_table(struct syscall_table *table,
 void syscall_build_table(void)
 {
     if(syscall_tables != NULL)
-        return ;
+        return;
 
 #if defined(I386)
     syscall_tables = malloc(1 * sizeof(struct syscall_table));
