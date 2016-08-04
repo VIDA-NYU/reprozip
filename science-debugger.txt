@@ -2,24 +2,47 @@ SQLite3 database:
 
 run
   . id
-    date
-    command-line
-    wd,uid,gid
-    exitcode
     comment
 
-file access
-  * run id
-  * file id
-    what (read, write, exec)
-    data (execvp | NULL)
-
-file
+processes
   . id
+  * run id
+  * parent
+    timestamp
+    exit_timestamp
+    cpu_time
+    is_thread
+    exitcode
+
+file access
+  . id
+  * run id
     path
-    perms,uid,gid
+    timestamp
+  * process
     type (dir, link, file)
-    data (NULL | target | content hash)
+    what (read, write, exec)
+    working_dir (NULL)
+    data (NULL | link target | content hash)
+
+argv
+  * id file access (what=exec)
+    nb
+    value
+
+envp
+  * id file access
+    name
+    value
+
+connections
+    id
+    process
+    timestamp
+    inbound
+    family
+    protocol
+    address
 
 
 File storage:
@@ -36,10 +59,3 @@ Operations:
     get a file by run + path
     recreate whole environment of a run
     extract some runs into an RPZ file
-
-
-Problems:
-    file writes are not always associated with a file, since we only pack files at the end
-        add file path to file access table?
-        add partial files to file table?
-    new RPZ file format?

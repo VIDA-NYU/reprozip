@@ -91,49 +91,50 @@ int db_init(const char *filename)
     if(!tables_exist)
     {
         const char *sql[] = {
+            "CREATE TABLE runs("
+            "    id INTEGER NOT NULL PRIMARY KEY,"
+            "    comment TEXT NULL"
+            "    );",
             "CREATE TABLE processes("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    run_id INTEGER NOT NULL,"
-            "    parent INTEGER,"
+            "    parent INTEGER NULL,"
             "    timestamp INTEGER NOT NULL,"
-            "    exit_timestamp INTEGER,"
-            "    cpu_time INTEGER,"
+            "    exit_timestamp INTEGER NULL,"
+            "    cpu_time INTEGER NULL,"
             "    is_thread BOOLEAN NOT NULL,"
-            "    exitcode INTEGER"
+            "    exitcode INTEGER NULL"
             "    );",
-            "CREATE INDEX proc_parent_idx ON processes(parent);",
-            "CREATE TABLE opened_files("
+            "CREATE TABLE files("
             "    id INTEGER NOT NULL PRIMARY KEY,"
             "    run_id INTEGER NOT NULL,"
-            "    name TEXT NOT NULL,"
-            "    timestamp INTEGER NOT NULL,"
-            "    mode INTEGER NOT NULL,"
-            "    is_directory BOOLEAN NOT NULL,"
-            "    process INTEGER NOT NULL"
-            "    );",
-            "CREATE INDEX open_proc_idx ON opened_files(process);",
-            "CREATE TABLE executed_files("
-            "    id INTEGER NOT NULL PRIMARY KEY,"
-            "    name TEXT NOT NULL,"
-            "    run_id INTEGER NOT NULL,"
+            "    path TEXT NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
-            "    argv TEXT NOT NULL,"
-            "    envp TEXT NOT NULL,"
-            "    workingdir TEXT NOT NULL"
+            "    type INTEGER NOT NULL,"
+            "    what INTEGER NOT NULL,"
+            "    working_dir TEXT NULL,"
+            "    data TEXT NULL"
             "    );",
-            "CREATE INDEX exec_proc_idx ON executed_files(process);",
+            "CREATE TABLE argv("
+            "    file INTEGER NOT NULL,"
+            "    nb INTEGER NOT NULL,"
+            "    value TEXT NOT NULL"
+            "    );",
+            "CREATE TABLE envp("
+            "    file INTEGER NOT NULL,"
+            "    name TEXT NOT NULL,"
+            "    value TEXT NOT NULL"
+            "    );",
             "CREATE TABLE connections("
             "    id INTEGER NOT NULL PRIMARY KEY,"
-            "    run_id INTEGER NOT NULL,"
-            "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
+            "    timestamp INTEGER NOT NULL,"
             "    inbound INTEGER NOT NULL,"
             "    family TEXT NULL,"
             "    protocol TEXT NULL,"
             "    address TEXT NULL"
             "    );",
-            "CREATE INDEX connections_proc_idx ON connections(process);",
         };
         size_t i;
         for(i = 0; i < count(sql); ++i)
