@@ -256,6 +256,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
     log_info(tid, "parsing %s", procfile);
 #endif
     fp = fopen(procfile, "r");
+    free(procfile);
 
     while((line = read_line(line, &length, fp)) != NULL)
     {
