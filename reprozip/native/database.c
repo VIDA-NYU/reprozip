@@ -32,7 +32,6 @@ static sqlite3_uint64 gettime(void)
 }
 
 static sqlite3 *db;
-static sqlite3_stmt *stmt_last_rowid;
 static sqlite3_stmt *stmt_insert_process;
 static sqlite3_stmt *stmt_set_exitcode;
 static sqlite3_stmt *stmt_insert_file;
@@ -163,12 +162,6 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "SELECT last_insert_rowid()";
-        check(sqlite3_prepare_v2(db, sql, -1, &stmt_last_rowid, NULL));
-    }
-
-    {
-        const char *sql = ""
                 "INSERT INTO processes(run_id, parent, timestamp, is_thread) "
                 "VALUES(?, ?, ?, ?)";
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_process, NULL));
@@ -224,7 +217,6 @@ int db_close(int rollback)
         check(sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL));
     }
     log_debug(0, "database file closed%s", rollback?" (rolled back)":"");
-    check(sqlite3_finalize(stmt_last_rowid));
     check(sqlite3_finalize(stmt_insert_process));
     check(sqlite3_finalize(stmt_set_exitcode));
     check(sqlite3_finalize(stmt_insert_file));
@@ -262,12 +254,7 @@ int db_add_process(unsigned int *id, unsigned int parent_id,
     sqlite3_reset(stmt_insert_process);
 
     /* Get id */
-    if(sqlite3_step(stmt_last_rowid) != SQLITE_ROW)
-        goto sqlerror;
-    *id = sqlite3_column_int(stmt_last_rowid, 0);
-    if(sqlite3_step(stmt_last_rowid) != SQLITE_DONE)
-        goto sqlerror;
-    sqlite3_reset(stmt_last_rowid);
+    *id = sqlite3_last_insert_rowid(db);
 
     return db_add_file_open(*id, working_dir, FILE_WDIR, 1);
 
