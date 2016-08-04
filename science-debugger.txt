@@ -14,15 +14,18 @@ processes
     is_thread
     exitcode
 
-file access
+files
   . id
   * run id
     path
     timestamp
   * process
-    type (dir, link, file)
     what (read, write, exec)
     working_dir (NULL)
+    permissions
+    uid
+    gid
+    type (dir, link, file)
     data (NULL | link target | content hash)
 
 argv

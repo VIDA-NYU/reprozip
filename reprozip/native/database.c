@@ -110,9 +110,12 @@ int db_init(const char *filename)
             "    path TEXT NOT NULL,"
             "    timestamp INTEGER NOT NULL,"
             "    process INTEGER NOT NULL,"
-            "    type INTEGER NOT NULL,"
             "    what INTEGER NOT NULL,"
             "    working_dir TEXT NULL,"
+            "    permissions INTEGER NOT NULL,"
+            "    uid INTEGER NOT NULL,"
+            "    gid INTEGER NOT NULL,"
+            "    type INTEGER NOT NULL,"
             "    data TEXT NULL"
             "    );",
             "CREATE TABLE argv("
