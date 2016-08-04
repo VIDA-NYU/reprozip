@@ -1,0 +1,45 @@
+SQLite3 database:
+
+run
+  . id
+    date
+    command-line
+    wd,uid,gid
+    exitcode
+    comment
+
+file access
+  * run id
+  * file id
+    what (read, write, exec)
+    data (execvp | NULL)
+
+file
+  . id
+    path
+    perms,uid,gid
+    type (dir, link, file)
+    data (NULL | target | content hash)
+
+
+File storage:
+
+files/
+    NN/
+        nnnnnnnn...
+            Git-like storage, with files stored under their hash
+            no metadata on file (perm/id stored in database)
+
+
+Operations:
+    while tracing, create a run, then add file access (basically what ReproZip records now) as they happen. Also at first access, hash file and insert in storage (further accesses will assume file was not modified externally while run is still going). Files written get stored at the end of the run
+    get a file by run + path
+    recreate whole environment of a run
+    extract some runs into an RPZ file
+
+
+Problems:
+    file writes are not always associated with a file, since we only pack files at the end
+        add file path to file access table?
+        add partial files to file table?
+    new RPZ file format?
