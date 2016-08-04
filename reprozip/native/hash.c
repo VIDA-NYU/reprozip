@@ -40,11 +40,11 @@ int hash_file(FILE *fp, char *hexdigest)
     }
 
     // Hash file
-    len = fread(buffer, 1, 4096, fp);
+    len = fread(buffer, 1, CHUNK_SIZE, fp);
     hash_chunk(hash_method, buffer, len);
-    while(len == 4096)
+    while(len == CHUNK_SIZE)
     {
-        len = fread(buffer, 1, 4096, fp);
+        len = fread(buffer, 1, CHUNK_SIZE, fp);
         hash_chunk(hash_method, buffer, len);
     }
 
