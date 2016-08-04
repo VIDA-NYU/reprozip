@@ -27,11 +27,11 @@ int hash_file(FILE *fp, char *hexdigest)
     {
         PyObject *hashlib_module = PyImport_ImportModule("hashlib");
         if(hashlib_module == NULL)
-            return 1;
+            return -1;
         PyObject *sha1_func = PyObject_GetAttrString(hashlib_module, "sha1");
         Py_DECREF(hashlib_module);
         if(sha1_func == NULL)
-            return 1;
+            return -1;
         empty_tuple = PyTuple_New(0);
         hasher = PyObject_CallObject(sha1_func, empty_tuple);
         hash_method = PyObject_GetAttrString(hasher, "update");
@@ -69,5 +69,5 @@ error:
     Py_XDECREF(hasher);
     Py_XDECREF(hash_method);
     Py_XDECREF(empty_tuple);
-    return 1;
+    return -1;
 }

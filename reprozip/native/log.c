@@ -21,7 +21,7 @@ int log_open_file(const char *filename)
     if(logfile == NULL)
     {
         log_critical(0, "couldn't open log file: %s", strerror(errno));
-        return 1;
+        return -1;
     }
     return 0;
 }
