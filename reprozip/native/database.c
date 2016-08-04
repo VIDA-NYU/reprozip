@@ -10,6 +10,8 @@
 #include "database.h"
 #include "log.h"
 
+#define CHUNK_SIZE 4096
+
 #define count(x) (sizeof((x))/sizeof(*(x)))
 #define check(r) do { if((r) != SQLITE_OK) { goto sqlerror; } } while(0)
 
@@ -39,13 +41,21 @@ static sqlite3_stmt *stmt_insert_exec;
 static sqlite3_stmt *stmt_insert_connection;
 
 static int run_id = -1;
+static char *database_dir = NULL;
 
-int db_init(const char *filename)
+int db_init(const char *dirname)
 {
     int tables_exist;
 
-    check(sqlite3_open(filename, &db));
+    const char *filename = malloc(strlen(dirname) + 15);
+    snprintf(filename, "%s/trace.sqlite3", dirname);
+    {
+        int ret = sqlite3_open(filename, &db);
+        free(filename);
+        check(ret);
+    }
     log_debug(0, "database file opened: %s", filename);
+    database_dir = dirname;
 
     check(sqlite3_exec(db, "BEGIN IMMEDIATE;", NULL, NULL, NULL));
 
@@ -61,20 +71,26 @@ int db_init(const char *filename)
         {
             const char *colname = (const char*)sqlite3_column_text(
                     stmt_get_tables, 0);
-            if(strcmp("processes", colname) == 0)
+            else if(strcmp("runs", colname) == 0)
                 found |= 0x01;
-            else if(strcmp("opened_files", colname) == 0)
+            else if(strcmp("processes", colname) == 0)
                 found |= 0x02;
-            else if(strcmp("executed_files", colname) == 0)
+            else if(strcmp("file_accesses", colname) == 0)
                 found |= 0x04;
-            else if(strcmp("connections", colname) == 0)
+            else if(strcmp("files", colname) == 0)
                 found |= 0x08;
+            else if(strcmp("argv", colname) == 0)
+                found |= 0x10;
+            else if(strcmp("envp", colname) == 0)
+                found |= 0x20;
+            else if(strcmp("connections", colname) == 0)
+                found |= 0x40;
             else
                 goto wrongschema;
         }
         if(found == 0x00)
             tables_exist = 0;
-        else if(found == 0x0F)
+        else if(found == 0x7F)
             tables_exist = 1;
         else
         {
@@ -143,25 +159,13 @@ int db_init(const char *filename)
             check(sqlite3_exec(db, sql[i], NULL, NULL, NULL));
     }
 
-    /* Get the first unused run_id */
+    /* Create the run */
     {
-        sqlite3_stmt *stmt_get_run_id;
-        const char *sql = "SELECT max(run_id) + 1 FROM processes;";
-        check(sqlite3_prepare_v2(db, sql, -1, &stmt_get_run_id, NULL));
-        if(sqlite3_step(stmt_get_run_id) != SQLITE_ROW)
-        {
-            sqlite3_finalize(stmt_get_run_id);
-            goto sqlerror;
-        }
-        run_id = sqlite3_column_int(stmt_get_run_id, 0);
-        if(sqlite3_step(stmt_get_run_id) != SQLITE_DONE)
-        {
-            sqlite3_finalize(stmt_get_run_id);
-            goto sqlerror;
-        }
-        sqlite3_finalize(stmt_get_run_id);
+        const char *sql = "INSERT INTO runs DEFAULT VALUES;";
+        check(sqlite3_exec(db, sql, NULL, NULL, NULL));
+        run_id = sqlite3_last_insert_rowid(db);
     }
-    log_debug(0, "This is run %d", run_id);
+    log_debug(0, "Created run %d", run_id);
 
     {
         const char *sql = ""
@@ -180,18 +184,17 @@ int db_init(const char *filename)
 
     {
         const char *sql = ""
-                "INSERT INTO opened_files(run_id, name, timestamp, "
-                "        mode, is_directory, process) "
-                "VALUES(?, ?, ?, ?, ?, ?)";
-        check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
+                "SELECT id FROM file_accesses"
+                "WHERE path=? AND run_id=?";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_file_in_run, NULL));
     }
 
     {
         const char *sql = ""
-                "INSERT INTO executed_files(run_id, name, timestamp, process, "
-                "        argv, envp, workingdir) "
-                "VALUES(?, ?, ?, ?, ?, ?, ?)";
-        check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_exec, NULL));
+                "INSERT INTO files(run_id, path, timestamp, process, what, ""
+                "        working_dir, permissions, uid, gid, type, data) "
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        check(sqlite3_prepare_v2(db, sql, -1, &stmt_insert_file, NULL));
     }
 
     {
@@ -293,16 +296,123 @@ sqlerror:
     /* LCOV_EXCL_END */
 }
 
-int db_add_file_open(unsigned int process, const char *name,
-                     unsigned int mode, int is_dir)
+void store_file(const char *path, const char *hexdigest)
 {
+    FILE *orig, *stored;
+    {
+        char dummy;
+        const char *fmt = "%s/files/%.2s/%s";
+        int len = snprintf(&dummy, 1, fmt, database_dir,
+                           hexdigest, hexdigest + 2);
+        char *filename = malloc(len + 1);
+        snprintf(filename, len + 1, fmt, database_dir,
+                 hexdigest, hexdigest + 2);
+        if(access(path, F_OK) != -1)
+        {
+            log_debug(0, "file content already stored %s %s",
+                      path, hexdigest);
+            free(filename);
+            return;
+        }
+        stored = fopen(path, "wb");
+        free(filename);
+    }
+
+    orig = fopen(path, "rb");
+    log_debug(0, "storing file content %s %s", path, hexdigest);
+
+    {
+        char buffer[CHUNK_SIZE];
+        size_t len = fread(buffer, 1, CHUNK_SIZE, orig);
+        fwrite(buffer, 1, CHUNK_SIZE, stored);
+        while(len == CHUNK_SIZE)
+        {
+            len = fread(buffer, 1, CHUNK_SIZE, orig);
+            fwrite(buffer, 1, CHUNK_SIZE, stored);
+        }
+    }
+    fclose(stored);
+    fclose(orig);
+}
+
+int db_add_file_open(unsigned int process, const char *path,
+                     unsigned int mode)
+{
+    struct stat buf;
+    if(lstat(path, &buf) != 0)
+    {
+        /* LCOV_EXCL_START : shouldn't happen because a traced process just
+         * accessed it */
+        log_error(0, "error stat()ing %s: %s", path, strerror(errno));
+        return -1;
+        /* LCOV_EXCL_END */
+    }
+
+    sqlite3_clear_bindings(stmt_insert_file);
     check(sqlite3_bind_int(stmt_insert_file, 1, run_id));
-    check(sqlite3_bind_text(stmt_insert_file, 2, name, -1, SQLITE_TRANSIENT));
+    check(sqlite3_bind_text(stmt_insert_file, 2, path, -1, SQLITE_TRANSIENT));
     /* This assumes that we won't go over 2^32 seconds (~135 years) */
     check(sqlite3_bind_int64(stmt_insert_file, 3, gettime()));
-    check(sqlite3_bind_int(stmt_insert_file, 4, mode));
-    check(sqlite3_bind_int(stmt_insert_file, 5, is_dir));
-    check(sqlite3_bind_int(stmt_insert_file, 6, process));
+    check(sqlite3_bind_int(stmt_insert_file, 4, process));
+    check(sqlite3_bind_int(stmt_insert_file, 5, mode));
+
+    if(mode != FILE_WRITE)
+    {
+        /* Check if we already accessed it during this run */
+        int file_in_run;
+        check(sqlite3_bind_text(stmt_file_in_run, 1, path, -1,
+                                SQLITE_TRANSIENT));
+        check(sqlite3_bind_int(stmt_file_in_run, 2, run_id));
+        if(sqlite3_step(stmt_file_in_run) != SQLITE_ROW)
+            goto sqlerror;
+        file_in_run = sqlite3_column_int(stmt_file_in_run, 0);
+        if(sqlite3_step(stmt_file_in_run) != SQLITE_DONE)
+            goto sqlerror;
+        sqlite3_reset(stmt_file_in_run);
+
+        if(file_in_run)
+            log_debug(0, "file already stored %s", path);
+        else
+        {
+            log_debug(0, "file accessed for the first time, storing: %s",
+                      path);
+            check(sqlite3_bind_int(stmt_insert_file, 7, buf.st_mode & 07777));
+            check(sqlite3_bind_int(stmt_insert_file, 8, buf.st_uid));
+            check(sqlite3_bind_int(stmt_insert_file, 9, buf.st_gid));
+            if(S_ISLNK(buf.st_mode))
+            {
+                char *target = read_link(path);
+                check(sqlite3_bind_int(stmt_new_file, 10, TYPE_SYMLINK));
+                check(sqlite3_bind_text(stmt_new_file, 11, target, -1,
+                                        SQLITE_TRANSIENT));
+            }
+            else if(S_ISDIR(buf.st_mode))
+                check(sqlite3_bind_int(stmt_new_file, 10, TYPE_DIR));
+            else if(S_ISREG(buf.st_mode))
+            {
+                char hexdigest[41];
+                FILE *fp = fopen(path, "rb");
+                int ret = hash_file(fp, hexdigest);
+                fclose(fp);
+                if(ret != 0)
+                {
+                    log_critical(0, "error hashing file %s", path);
+                    return -1;
+                }
+                check(sqlite3_bind_text(stmt_insert_file, 11, hexdigest, 40,
+                                        SQLITE_TRANSIENT));
+                check(sqlite3_bind_int(stmt_new_file, 10, TYPE_REG));
+
+                /* Copy the file to the store */
+                store_file(path, hexdigest);
+            }
+            else
+            {
+                log_error(0, "error: don't know the type of %s", path);
+                return 0;
+            }
+        }
+    }
 
     if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
         goto sqlerror;

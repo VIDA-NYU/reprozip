@@ -166,20 +166,3 @@ char *read_line(char *buffer, size_t *size, FILE *fp)
         }
     }
 }
-
-int path_is_dir(const char *pathname)
-{
-    struct stat buf;
-    if(lstat(pathname, &buf) != 0)
-    {
-        if(trace_verbosity >= 1)
-        {
-            /* LCOV_EXCL_START : shouldn't happen because a tracer process just
-             * accessed it */
-            log_error(0, "error stat()ing %s: %s", pathname, strerror(errno));
-            /* LCOV_EXCL_END */
-        }
-        return 0;
-    }
-    return S_ISDIR(buf.st_mode)?1:0;
-}
