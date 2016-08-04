@@ -68,11 +68,11 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
     size_t argv_len;
     int verbosity;
     PyObject *py_binary, *py_argv, *py_databasepath;
-    if(!(PyArg_ParseTuple(args, "OO!Oi",
-                          &py_binary,
-                          &PyList_Type, &py_argv,
-                          &py_databasepath,
-                          &verbosity)))
+    if(!PyArg_ParseTuple(args, "OO!Oi",
+                         &py_binary,
+                         &PyList_Type, &py_argv,
+                         &py_databasepath,
+                         &verbosity))
         return NULL;
 
     if(verbosity < 0)
