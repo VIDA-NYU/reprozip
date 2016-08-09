@@ -1,6 +1,6 @@
 # This is paramiko/demos/interactive.py
 # Part of the Paramiko project; https://github.com/paramiko/paramiko/
-# Adapted by Remi Rampin
+# Adapted by Remi Rampin, New York University for ReproZip, 2015
 
 # Copyright (C) 2003-2007  Robey Pointer <robeypointer@gmail.com>
 #
