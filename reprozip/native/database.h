@@ -6,6 +6,7 @@
 #define FILE_WDIR   0x04  /* File is used as a process's working dir */
 #define FILE_STAT   0x08  /* File is stat()d (only metadata is read) */
 #define FILE_LINK   0x10  /* The link itself is accessed, no dereference */
+#define FILE_EXEC   0x20
 
 #define TYPE_REG    1
 #define TYPE_DIR    2

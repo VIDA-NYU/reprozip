@@ -303,8 +303,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
 #ifdef DEBUG_PROC_PARSER
                 log_info(tid, "    adding to database");
 #endif
-                if(db_add_file_open(process, pathname,
-                                    FILE_READ, path_is_dir(pathname)) != 0)
+                if(db_add_file_open(process, pathname, FILE_READ) != 0)
                     return -1;
                 strncpy(previous_path, pathname, 4096);
             }
@@ -734,7 +733,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         if( (db_add_first_process(&process->identifier,
                                   process->threadgroup->wd) != 0)
          || (db_add_file_open(process->identifier, process->threadgroup->wd,
-                              FILE_WDIR, 1) != 0) )
+                              FILE_WDIR) != 0) )
         {
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             db_close(1);

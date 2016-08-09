@@ -191,10 +191,7 @@ static int syscall_fileopening(const char *name, struct Process *process,
 
     if(process->retvalue.i >= 0)
     {
-        if(db_add_file_open(process->identifier,
-                            pathname,
-                            mode,
-                            path_is_dir(pathname)) != 0)
+        if(db_add_file_open(process->identifier, pathname, mode) != 0)
             return -1;
     }
 
@@ -213,22 +210,19 @@ static int syscall_filecreating(const char *name, struct Process *process,
     if(process->retvalue.i >= 0)
     {
         char *written_path = abs_path_arg(process, 1);
-        int is_dir = path_is_dir(written_path);
         /* symlink doesn't actually read the source */
         if(!is_symlink)
         {
             char *read_path = abs_path_arg(process, 0);
             if(db_add_file_open(process->identifier,
                                 read_path,
-                                FILE_READ | FILE_LINK,
-                                is_dir) != 0)
+                                FILE_READ | FILE_LINK) != 0)
                 return -1;
             free(read_path);
         }
         if(db_add_file_open(process->identifier,
                             written_path,
-                            FILE_WRITE | FILE_LINK,
-                            is_dir) != 0)
+                            FILE_WRITE | FILE_LINK) != 0)
             return -1;
         free(written_path);
     }
@@ -244,22 +238,19 @@ static int syscall_filecreating_at(const char *name, struct Process *process,
          && (process->params[2].i == AT_FDCWD) )
         {
             char *written_path = abs_path_arg(process, 3);
-            int is_dir = path_is_dir(written_path);
             /* symlink doesn't actually read the source */
             if(!is_symlink)
             {
                 char *read_path = abs_path_arg(process, 1);
                 if(db_add_file_open(process->identifier,
                                     read_path,
-                                    FILE_READ | FILE_LINK,
-                                    is_dir) != 0)
+                                    FILE_READ | FILE_LINK) != 0)
                     return -1;
                 free(read_path);
             }
             if(db_add_file_open(process->identifier,
                                 written_path,
-                                FILE_WRITE | FILE_LINK,
-                                is_dir) != 0)
+                                FILE_WRITE | FILE_LINK) != 0)
                 return -1;
             free(written_path);
         }
@@ -282,8 +273,7 @@ static int syscall_filestat(const char *name, struct Process *process,
         char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_STAT | (no_deref?FILE_LINK:0),
-                            path_is_dir(pathname)) != 0)
+                            FILE_STAT | (no_deref?FILE_LINK:0)) != 0)
             return -1;
         free(pathname);
     }
@@ -303,8 +293,7 @@ static int syscall_readlink(const char *name, struct Process *process,
         char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_STAT,
-                            0) != 0)
+                            FILE_STAT) != 0)
             return -1;
         free(pathname);
     }
@@ -325,8 +314,7 @@ static int syscall_mkdir(const char *name, struct Process *process,
         log_debug(process->tid, "mkdir(\"%s\")", pathname);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_WRITE,
-                            1) != 0)
+                            FILE_WRITE) != 0)
             return -1;
         free(pathname);
     }
@@ -348,8 +336,7 @@ static int syscall_chdir(const char *name, struct Process *process,
         process->threadgroup->wd = pathname;
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_WDIR,
-                            1) != 0)
+                            FILE_WDIR) != 0)
             return -1;
     }
     return 0;
@@ -411,16 +398,14 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                 char *pathname = abspath(wd, start);
                 if(db_add_file_open(process->identifier,
                                     pathname,
-                                    FILE_READ,
-                                    0) != 0)
+                                    FILE_READ) != 0)
                     return -1;
                 free(pathname);
             }
             else
                 if(db_add_file_open(process->identifier,
                                     start,
-                                    FILE_READ,
-                                    0) != 0)
+                                    FILE_READ) != 0)
                     return -1;
             exec_target = strcpy(target_buffer, start);
         }
