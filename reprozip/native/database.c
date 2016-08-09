@@ -365,20 +365,10 @@ void store_file(const char *path, const char *hexdigest)
     fclose(orig);
 }
 
-static int add_file_open(unsigned int process, const char *path,
-                         unsigned int mode, const char *workingdir,
-                         sqlite3_int64 *rowid)
+static int add_file_open_nolink(unsigned int process, const char *path,
+                                unsigned int mode, const char *workingdir,
+                                struct stat *buf, sqlite3_int64 *rowid)
 {
-    struct stat buf;
-    if(lstat(path, &buf) != 0)
-    {
-        /* LCOV_EXCL_START : shouldn't happen because a traced process just
-         * accessed it */
-        log_error(0, "error stat()ing %s: %s", path, strerror(errno));
-        return -1;
-        /* LCOV_EXCL_END */
-    }
-
     sqlite3_clear_bindings(stmt_insert_file);
     check(sqlite3_bind_int(stmt_insert_file, 1, run_id));
     check(sqlite3_bind_text(stmt_insert_file, 2, path,
@@ -393,7 +383,7 @@ static int add_file_open(unsigned int process, const char *path,
     else
         check(sqlite3_bind_null(stmt_insert_file, 6));
 
-    if(mode != FILE_WRITE)
+    if((mode & FILE_WRITE) == 0)
     {
         /* Check if we already accessed it during this run */
         int file_in_run;
@@ -413,19 +403,19 @@ static int add_file_open(unsigned int process, const char *path,
         {
             log_debug(0, "file accessed for the first time, storing: %s",
                       path);
-            check(sqlite3_bind_int(stmt_insert_file, 7, buf.st_mode & 07777));
-            check(sqlite3_bind_int(stmt_insert_file, 8, buf.st_uid));
-            check(sqlite3_bind_int(stmt_insert_file, 9, buf.st_gid));
-            if(S_ISLNK(buf.st_mode))
+            check(sqlite3_bind_int(stmt_insert_file, 7, buf->st_mode & 07777));
+            check(sqlite3_bind_int(stmt_insert_file, 8, buf->st_uid));
+            check(sqlite3_bind_int(stmt_insert_file, 9, buf->st_gid));
+            if(S_ISLNK(buf->st_mode))
             {
                 char *target = read_link(path);
                 check(sqlite3_bind_int(stmt_insert_file, 10, TYPE_LINK));
                 check(sqlite3_bind_text(stmt_insert_file, 11, target,
                                         -1, SQLITE_TRANSIENT));
             }
-            else if(S_ISDIR(buf.st_mode))
+            else if(S_ISDIR(buf->st_mode))
                 check(sqlite3_bind_int(stmt_insert_file, 10, TYPE_DIR));
-            else if(S_ISREG(buf.st_mode))
+            else if(S_ISREG(buf->st_mode))
             {
                 char hexdigest[41];
                 FILE *fp = fopen(path, "rb");
@@ -465,10 +455,74 @@ sqlerror:
     /* LCOV_EXCL_END */
 }
 
-int db_add_file_open(unsigned int process, const char *path,
-                     unsigned int mode)
+static int add_file_open(unsigned int process, const char *path,
+                         unsigned int mode, const char *workingdir,
+                         int linkonly, sqlite3_int64 *rowid)
 {
-    return add_file_open(process, path, mode, NULL, NULL);
+    struct stat buf;
+    if(lstat(path, &buf) != 0)
+    {
+        /* LCOV_EXCL_START : shouldn't happen because a traced process just
+         * accessed it */
+        log_error(0, "error stat()ing %s: %s", path, strerror(errno));
+        return -1;
+        /* LCOV_EXCL_END */
+    }
+
+    /* If 'linkonly' is set, only FILE_READ or FILE_WRITE should happen */
+    assert(!linkonly || mode & ~(FILE_READ | FILE_WRITE) == 0);
+
+    /* Add intermediate symlinks as read */
+    if(!linkonly && S_ISLNK(buf.st_mode))
+    {
+        int ret;
+        char *newpath = read_link(path);
+        if(add_read_link(process, path, &buf) != 0)
+            return -1;
+        if(lstat(newpath, &buf) != 0)
+        {
+            /* LCOV_EXCL_START : shouldn't happen because a traced process just
+             * accessed it */
+            log_error(0, "error stat()ing %s: %s",
+                      newpath, strerror(errno));
+            return -1;
+            /* LCOV_EXCL_END */
+        }
+        while(S_ISLNK(buf.st_mode))
+        {
+            if(add_read_link(process, newpath, &buf) != 0)
+                return -1;
+            {
+                char *newnewpath = read_link(newpath);
+                free(newpath);
+                newpath = newnewpath;
+            }
+            if(lstat(newpath, &buf) != 0)
+            {
+                /* LCOV_EXCL_START : shouldn't happen because a traced process just
+                 * accessed it */
+                log_error(0, "error stat()ing %s: %s",
+                          newpath, strerror(errno));
+                return -1;
+                /* LCOV_EXCL_END */
+            }
+        }
+        ret = add_file_open_nolink(process, newpath,
+                                   mode, workingdir,
+                                   &buf, rowid);
+        free(newpath);
+        return ret;
+    }
+    else
+        return add_file_open_nolink(process, path,
+                                    mode, workingdir,
+                                    &buf, rowid);
+}
+
+int db_add_file_open(unsigned int process, const char *path,
+                     unsigned int mode, int linkonly)
+{
+    return add_file_open(process, path, mode, NULL, linkonly, NULL);
 }
 
 int db_add_exec(unsigned int process, const char *binary,
@@ -477,7 +531,7 @@ int db_add_exec(unsigned int process, const char *binary,
 {
     size_t i;
     sqlite3_int64 rowid;
-    if(add_file_open(process, binary, FILE_EXEC, workingdir, &rowid) != 0)
+    if(add_file_open(process, binary, FILE_EXEC, workingdir, 0, &rowid) != 0)
         return -1;
 
     check(sqlite3_bind_int(stmt_insert_argv, 1, rowid));
