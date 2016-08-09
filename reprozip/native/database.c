@@ -365,6 +365,38 @@ void store_file(const char *path, const char *hexdigest)
     fclose(orig);
 }
 
+static int add_read_link(unsigned int process, const char *path,
+                         struct stat *buf)
+{
+    char *target = read_link(path);
+    sqlite3_clear_bindings(stmt_insert_file);
+    check(sqlite3_bind_int(stmt_insert_file, 1, run_id));
+    check(sqlite3_bind_text(stmt_insert_file, 2, path,
+                            -1, SQLITE_TRANSIENT));
+    /* This assumes that we won't go over 2^32 seconds (~135 years) */
+    check(sqlite3_bind_int64(stmt_insert_file, 3, gettime()));
+    check(sqlite3_bind_int(stmt_insert_file, 4, process));
+    check(sqlite3_bind_int(stmt_insert_file, 5, FILE_READ | FILE_LINK));
+    check(sqlite3_bind_null(stmt_insert_file, 6));
+    check(sqlite3_bind_int(stmt_insert_file, 7, buf->st_mode & 07777));
+    check(sqlite3_bind_int(stmt_insert_file, 8, buf->st_uid));
+    check(sqlite3_bind_int(stmt_insert_file, 9, buf->st_gid));
+    check(sqlite3_bind_int(stmt_insert_file, 10, TYPE_LINK));
+    check(sqlite3_bind_text(stmt_insert_file, 11, target,
+                            -1, SQLITE_TRANSIENT));
+
+    if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
+        goto sqlerror;
+    sqlite3_reset(stmt_insert_file);
+    return 0;
+
+sqlerror:
+    /* LCOV_EXCL_START : Insertions shouldn't fail */
+    log_critical(0, "sqlite3 error inserting link: %s", sqlite3_errmsg(db));
+    return -1;
+    /* LCOV_EXCL_END */
+}
+
 static int add_file_open_nolink(unsigned int process, const char *path,
                                 unsigned int mode, const char *workingdir,
                                 struct stat *buf, sqlite3_int64 *rowid)
