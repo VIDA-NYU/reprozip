@@ -369,6 +369,8 @@ static int add_file_open_nolink(unsigned int process, const char *path,
                                 unsigned int mode, const char *workingdir,
                                 struct stat *buf, sqlite3_int64 *rowid)
 {
+    assert(mode & FILE_LINK == 0);
+
     sqlite3_clear_bindings(stmt_insert_file);
     check(sqlite3_bind_int(stmt_insert_file, 1, run_id));
     check(sqlite3_bind_text(stmt_insert_file, 2, path,
@@ -457,7 +459,7 @@ sqlerror:
 
 static int add_file_open(unsigned int process, const char *path,
                          unsigned int mode, const char *workingdir,
-                         int linkonly, sqlite3_int64 *rowid)
+                         sqlite3_int64 *rowid)
 {
     struct stat buf;
     if(lstat(path, &buf) != 0)
@@ -469,11 +471,12 @@ static int add_file_open(unsigned int process, const char *path,
         /* LCOV_EXCL_END */
     }
 
-    /* If 'linkonly' is set, only FILE_READ or FILE_WRITE should happen */
-    assert(!linkonly || mode & ~(FILE_READ | FILE_WRITE) == 0);
+    /* If FILE_LINK is set, only FILE_READ or FILE_WRITE should be set */
+    assert(mode & FILE_LINK == 0 ||
+           mode & ~(FILE_LINK | FILE_READ | FILE_WRITE) == 0);
 
     /* Add intermediate symlinks as read */
-    if(!linkonly && S_ISLNK(buf.st_mode))
+    if((mode & FILE_LINK) == 0 && S_ISLNK(buf.st_mode))
     {
         int ret;
         char *newpath = read_link(path);
@@ -508,21 +511,21 @@ static int add_file_open(unsigned int process, const char *path,
             }
         }
         ret = add_file_open_nolink(process, newpath,
-                                   mode, workingdir,
+                                   mode & ~FILE_LINK, workingdir,
                                    &buf, rowid);
         free(newpath);
         return ret;
     }
     else
         return add_file_open_nolink(process, path,
-                                    mode, workingdir,
+                                    mode & ~FILE_LINK, workingdir,
                                     &buf, rowid);
 }
 
 int db_add_file_open(unsigned int process, const char *path,
-                     unsigned int mode, int linkonly)
+                     unsigned int mode)
 {
-    return add_file_open(process, path, mode, NULL, linkonly, NULL);
+    return add_file_open(process, path, mode, NULL, NULL);
 }
 
 int db_add_exec(unsigned int process, const char *binary,
@@ -531,7 +534,7 @@ int db_add_exec(unsigned int process, const char *binary,
 {
     size_t i;
     sqlite3_int64 rowid;
-    if(add_file_open(process, binary, FILE_EXEC, workingdir, 0, &rowid) != 0)
+    if(add_file_open(process, binary, FILE_EXEC, workingdir, &rowid) != 0)
         return -1;
 
     check(sqlite3_bind_int(stmt_insert_argv, 1, rowid));
