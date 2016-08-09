@@ -303,7 +303,7 @@ static int syscall_readlink(const char *name, struct Process *process,
         char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_STAT,
+                            FILE_STAT | FILE_LINK,
                             0) != 0)
             return -1;
         free(pathname);
@@ -409,12 +409,18 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             if(*start != '/')
             {
                 char *pathname = abspath(wd, start);
-                if(db_add_file_open(process->identifier, pathname, FILE_READ, 0) != 0)
+                if(db_add_file_open(process->identifier,
+                                    pathname,
+                                    FILE_READ,
+                                    0) != 0)
                     return -1;
                 free(pathname);
             }
             else
-                if(db_add_file_open(process->identifier, start, FILE_READ, 0) != 0)
+                if(db_add_file_open(process->identifier,
+                                    start,
+                                    FILE_READ,
+                                    0) != 0)
                     return -1;
             exec_target = strcpy(target_buffer, start);
         }
