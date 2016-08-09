@@ -7,7 +7,6 @@ env:
   - TEST_MODE=run_program
 python:
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
