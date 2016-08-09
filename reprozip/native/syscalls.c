@@ -292,7 +292,7 @@ static int syscall_readlink(const char *name, struct Process *process,
         char *pathname = abs_path_arg(process, 0);
         if(db_add_file_open(process->identifier,
                             pathname,
-                            FILE_STAT,
+                            FILE_STAT | FILE_LINK,
                             0) != 0)
             return -1;
         free(pathname);
