@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.7 (???)
------------
+1.0.7 (2016-08-22)
+------------------
 
 Bugfixes:
 * Correctly show an error message if ptrace is unavailable
