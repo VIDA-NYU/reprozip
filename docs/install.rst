@@ -46,14 +46,14 @@ Debian and Ubuntu
 
 You can get all the required dependencies using APT::
 
-    apt-get install python python-dev gcc libsqlite-3
+    apt-get install python python-dev python-pip gcc libsqlite3-dev
 
 Fedora & CentOS
 ```````````````
 
 You can get the dependencies using the Yum packaging manager::
 
-    yum install python python-devel sqlite-devel
+    yum install python python-devel gcc sqlite-devel
 
 ..  [#bug] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
 ..  [#pycrypto] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
