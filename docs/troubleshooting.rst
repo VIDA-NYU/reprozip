@@ -38,6 +38,16 @@ Please feel free to contact us at reprozip-users@vgc.poly.edu if you encounter i
 
 ------------
 
+..  _ptrace:
+
+:Issue: **"** `reprozip` **fails with** ``couldn't use ptrace`` **"**
+:Diagnosis: ``ptrace`` is the mechanism that ReproZip uses to attach to another process and follow its system calls. Because it is so powerful, some security policies, environments or isolation mechanism may disable it.
+:Solution:
+
+ * If you are using Docker, you can use the Docker option ``--security-opt seccomp:unconfined`` (or write your own seccomp profile that allows ptrace); see `the Docker documentation on seccomp <https://docs.docker.com/engine/security/seccomp/>`__.
+
+------------
+
 ..  _moving-outputs:
 
 :Issue: **"** `reprounzip` **cannot get an output file using** ``download`` **after reproducing the experiment."**

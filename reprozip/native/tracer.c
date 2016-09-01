@@ -689,7 +689,15 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         args[argc] = NULL;
         /* Trace this process */
         if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) != 0)
-            log_critical(0, "couldn't use ptrace: %s", strerror(errno));
+        {
+            log_critical(
+                0,
+                "couldn't use ptrace: %s\n"
+                "This could be caused by a security policy or isolation "
+                "mechanism (such as\n Docker), see http://bit.ly/2bZd8Fa",
+                strerror(errno));
+            exit(1);
+        }
         /* Stop this once so tracer can set options */
         kill(getpid(), SIGSTOP);
         /* Execute the target */
