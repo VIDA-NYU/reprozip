@@ -18,6 +18,7 @@ import os
 import platform
 from rpaths import Path
 import sqlite3
+import sys
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
@@ -225,6 +226,48 @@ def get_files(conn):
     return files, inputs, outputs
 
 
+def tty_prompt(prompt, chars):
+    """Get input from the terminal.
+
+    On Linux, this will find the controlling terminal and ask there.
+
+    :param prompt: String to be displayed on the terminal before reading the
+        input.
+    :param chars: Accepted character responses.
+    """
+    try:
+        import termios
+
+        fd = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
+        stream = os.fdopen(fd, 'w+', 1)
+        old = termios.tcgetattr(fd)
+    except (ImportError, AttributeError, IOError, OSError):
+        ostream = sys.stdout
+        istream = sys.stdin
+
+        while True:
+            ostream.write(prompt)
+            ostream.flush()
+            line = istream.readline()
+            if line[0] in chars:
+                return line[0]
+    else:
+        new = old[:]
+        new[3] &= ~termios.ICANON  # 3 == 'lflags'
+        tcsetattr_flags = termios.TCSAFLUSH | getattr(termios, 'TCSASOFT', 0)
+        try:
+            termios.tcsetattr(fd, tcsetattr_flags, new)
+            stream.write(prompt)
+            stream.flush()
+            while True:
+                char = stream.read(1)
+                if char in chars:
+                    return char
+        finally:
+            termios.tcsetattr(fd, tcsetattr_flags, old)
+            stream.flush()
+
+
 def trace(binary, argv, directory, append, verbosity=1):
     """Main function for the trace subcommand.
     """
@@ -237,16 +280,29 @@ def trace(binary, argv, directory, append, verbosity=1):
             "intended")
 
     # Trace directory
-    if not append:
-        if directory.exists():
-            logging.warning("Removing existing directory %s", directory)
+    if directory.exists():
+        if append is None:
+            r = tty_prompt(
+                "Trace directory %s exists\n"
+                "(a)ppend run to the trace, (d)elete it or (s)top? [a/d/s] " %
+                directory,
+                'aAdDsS')
+            if r in 'sS':
+                sys.exit(1)
+            elif r in 'dD':
+                directory.rmtree()
+                directory.mkdir()
+            logging.warning(
+                "You can use --overwrite to replace the existing trace "
+                "(or --continue to append\nwithout prompt)")
+        elif append is False:
+            logging.info("Removing existing trace directory %s", directory)
             directory.rmtree()
-        directory.mkdir(parents=True)
-    else:
-        if not directory.exists():
-            logging.warning("--continue was specified but %s does not exist "
-                            "-- creating", directory)
             directory.mkdir(parents=True)
+    else:
+        if append is True:
+            logging.warning("--continue was set but trace doesn't exist yet")
+        directory.mkdir()
 
     # Runs the trace
     database = directory / 'trace.sqlite3'
