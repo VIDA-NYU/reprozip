@@ -131,9 +131,11 @@ class DpkgManager(PkgManager):
         # Remaining files are not from packages
         self.unknown_files.update(
             f for f in files
-            if f.path in requested and f.path not in found)
+            if f.path in requested and found.get(f.path) is None)
 
         for path, pkgname in iteritems(found):
+            if pkgname is None:
+                continue
             if pkgname in self.packages:
                 package = self.packages[pkgname]
             else:
