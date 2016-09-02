@@ -244,12 +244,16 @@ def tty_prompt(prompt, chars):
     except (ImportError, AttributeError, IOError, OSError):
         ostream = sys.stdout
         istream = sys.stdin
+        if not os.isatty(sys.stdin.fileno()):
+            return None
 
         while True:
             ostream.write(prompt)
             ostream.flush()
             line = istream.readline()
-            if line[0] in chars:
+            if not line:
+                return None
+            elif line[0] in chars:
                 return line[0]
     else:
         new = old[:]
@@ -287,7 +291,13 @@ def trace(binary, argv, directory, append, verbosity=1):
                 "(a)ppend run to the trace, (d)elete it or (s)top? [a/d/s] " %
                 directory,
                 'aAdDsS')
-            if r in 'sS':
+            if r is None:
+                logging.critical(
+                    "Trace directory %s exists\n"
+                    "Please use either --continue or --overwrite\n",
+                    directory)
+                sys.exit(1)
+            elif r in 'sS':
                 sys.exit(1)
             elif r in 'dD':
                 directory.rmtree()
