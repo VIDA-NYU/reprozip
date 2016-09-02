@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.8 (???)
+-----------
+
+Behavior changes:
+* No longer default to overwriting trace directories. ReproZip will ask what to do or exit with an error if one of --continue/--overwrite is not provided
+
+Bugfixes:
+* Fix an issue identifying Debian packages when a file's in two packages
+
 1.0.7 (2016-08-22)
 ------------------
 
