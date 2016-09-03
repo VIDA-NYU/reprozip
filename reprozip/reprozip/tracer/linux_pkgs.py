@@ -167,8 +167,10 @@ class DpkgManager(PkgManager):
                     version = fields[1].decode('ascii')
                     size = int(fields[2].decode('ascii')) * 1024    # kbytes
                     break
+            for l in p.stdout:  # finish draining stdout
+                pass
         finally:
-            p.communicate()
+            p.wait()
         if p.returncode == 0:
             return Package(pkgname, version, size=size)
         else:

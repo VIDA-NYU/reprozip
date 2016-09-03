@@ -9,6 +9,7 @@ Behavior changes:
 
 Bugfixes:
 * Fix an issue identifying Debian packages when a file's in two packages
+* Fix Python error `Mixing iteration and read methods would lose data`
 
 1.0.7 (2016-08-22)
 ------------------
