@@ -151,7 +151,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                       'cat ../../../../../etc/passwd;'
                       'cd /var/lib;'
                       'cat ../../etc/group'])
-    check_call(rpz + ['trace',
+    check_call(rpz + ['trace', '--overwrite',
                       'bash', '-c', 'cat /etc/passwd;echo'])
     check_call(rpz + ['trace', '--continue',
                       'sh', '-c', 'cat /etc/group;/usr/bin/id'])
@@ -182,7 +182,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('simple', ['simple.c'])
     # Trace
-    check_call(rpz + ['trace', '-d', 'rpz-simple',
+    check_call(rpz + ['trace', '--overwrite', '-d', 'rpz-simple',
                       './simple',
                       (tests / 'simple_input.txt').path,
                       'simple_output.txt'])
@@ -541,7 +541,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('exec_echo', ['exec_echo.c'])
     # Trace
-    check_call(rpz + ['trace', './exec_echo', 'originalexecechooutput'])
+    check_call(rpz + ['trace', '--overwrite',
+                      './exec_echo', 'originalexecechooutput'])
     # Pack
     check_call(rpz + ['pack', 'exec_echo.rpz'])
     # Unpack chroot
@@ -616,7 +617,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Build
     build('rename', ['rename.c'])
     # Trace
-    check_call(rpz + ['trace', '-d', 'rename-trace', './rename'])
+    check_call(rpz + ['trace', '--overwrite', '-d', 'rename-trace',
+                      './rename'])
     with Path('rename-trace/config.yml').open(encoding='utf-8') as fp:
         config = yaml.safe_load(fp)
     # Check that written files were logged
@@ -659,8 +661,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     Path('e').chmod(0o744)
 
     # Trace
-    out = check_output(rpz + ['trace', '--dont-identify-packages',
-                              '-d', 'shebang-trace', './a', '1', '2'])
+    out = check_output(rpz + ['trace', '--overwrite', '-d', 'shebang-trace',
+                              '--dont-identify-packages', './a', '1', '2'])
     out = out.splitlines()[0]
     assert out == ('e %s 0 ./a 1 2' % (Path.cwd() / 'c')).encode('ascii')
 

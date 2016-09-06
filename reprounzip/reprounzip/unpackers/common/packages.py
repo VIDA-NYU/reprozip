@@ -74,7 +74,7 @@ class AptInstaller(object):
                     pkg, _ = pkgs_dict[name]
                     pkgs_dict[name] = pkg, status
         finally:
-            p.communicate()
+            p.wait()
 
         return pkgs_dict
 
@@ -130,7 +130,7 @@ class YumInstaller(object):
                         pkg, _ = pkgs_dict[name]
                         pkgs_dict[name] = pkg, status
         finally:
-            p.communicate()
+            p.wait()
 
         return pkgs_dict
 

@@ -212,10 +212,19 @@ def trace(args):
         argv = [args.arg0] + args.cmdline[1:]
     else:
         argv = args.cmdline
+    if args.append and args.overwrite:
+        logging.critical("You can't use both --continue and --overwrite")
+        sys.exit(2)
+    elif args.append:
+        append = True
+    elif args.overwrite:
+        append = False
+    else:
+        append = None
     reprozip.tracer.trace.trace(args.cmdline[0],
                                 argv,
                                 Path(args.dir),
-                                args.append,
+                                append,
                                 args.verbosity)
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
@@ -344,7 +353,10 @@ def main():
         help="argument 0 to program, if different from program path")
     parser_trace.add_argument(
         '-c', '--continue', action='store_true', dest='append',
-        help="add to the previous run instead of replacing it")
+        help="add to the previous trace, don't replace it")
+    parser_trace.add_argument(
+        '-w', '--overwrite', action='store_true', dest='overwrite',
+        help="overwrite the previous trace, don't add to it")
     parser_trace.add_argument('cmdline', nargs=argparse.REMAINDER,
                               help="command-line to run under trace")
     parser_trace.set_defaults(func=trace)

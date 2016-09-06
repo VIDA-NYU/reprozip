@@ -305,7 +305,8 @@ def run_from_vistrails():
     config = load_config(Path(args.directory) / 'config.yml', canonical=True)
 
     python = sys.executable
-    rpuz = [python, '-m', 'reprounzip.main', args.unpacker]
+    rpuz = [python, '-c', 'from reprounzip.main import main; main()',
+            args.unpacker]
 
     os.environ['REPROUNZIP_NON_INTERACTIVE'] = 'y'
 

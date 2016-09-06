@@ -209,7 +209,7 @@ def directory_run(args):
             if l.endswith(b':\n'):
                 lib_dirs.append(Path(l[:-2]))
     finally:
-        p.communicate()
+        p.wait()
     lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
                 shell_escape(unicode_(join_root(root, d)))
                 for d in lib_dirs))
