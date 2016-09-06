@@ -49,6 +49,8 @@ class PkgManager(object):
                 seen_files.add(f.path)
 
     def search_for_files(self, files):
+        nb_pkg_files = 0
+
         for f in self.filter_files(files):
             pkgnames = self._get_packages_for_file(f.path)
 
@@ -67,6 +69,7 @@ class PkgManager(object):
                             pkgs.append(self.packages[pkgname])
                 if len(pkgs) == 1:
                     pkgs[0].add_file(f)
+                    nb_pkg_files += 1
                 else:
                     self.unknown_files.add(f)
 
@@ -74,6 +77,11 @@ class PkgManager(object):
         self.packages = {pkgname: pkg
                          for pkgname, pkg in iteritems(self.packages)
                          if pkg.files}
+
+        logging.info("%d packages with %d files, and %d other files",
+                     len(self.packages),
+                     nb_pkg_files,
+                     len(self.unknown_files))
 
     def _filter(self, f):
         # Special files
@@ -133,6 +141,8 @@ class DpkgManager(PkgManager):
             f for f in files
             if f.path in requested and found.get(f.path) is None)
 
+        nb_pkg_files = 0
+
         for path, pkgname in iteritems(found):
             if pkgname is None:
                 continue
@@ -142,6 +152,12 @@ class DpkgManager(PkgManager):
                 package = self._create_package(pkgname)
                 self.packages[pkgname] = package
             package.add_file(requested.pop(path))
+            nb_pkg_files += 1
+
+        logging.info("%d packages with %d files, and %d other files",
+                     len(self.packages),
+                     nb_pkg_files,
+                     len(self.unknown_files))
 
     def _get_packages_for_file(self, filename):
         # This method is no longer used for dpkg: instead of querying each file
@@ -172,7 +188,9 @@ class DpkgManager(PkgManager):
         finally:
             p.wait()
         if p.returncode == 0:
-            return Package(pkgname, version, size=size)
+            pkg = Package(pkgname, version, size=size)
+            logging.debug("Found package %s", pkg)
+            return pkg
         else:
             return None
 
@@ -201,7 +219,9 @@ class RpmManager(PkgManager):
         if p.returncode == 0:
             version, size = out.strip().decode('iso-8859-1').rsplit(' ', 1)
             size = int(size)
-            return Package(pkgname, version, size=size)
+            pkg = Package(pkgname, version, size=size)
+            logging.debug("Found package %s", pkg)
+            return pkg
         else:
             return None
 
@@ -211,14 +231,15 @@ def identify_packages(files):
     """
     distribution = platform.linux_distribution()[0].lower()
     if distribution in ('debian', 'ubuntu'):
-        logging.info("Identifying Debian packages...")
+        logging.info("Identifying Debian packages for %d files...", len(files))
         manager = DpkgManager()
     elif (distribution in ('centos', 'centos linux',
                            'fedora', 'scientific linux') or
             distribution.startswith('red hat')):
-        logging.info("Identifying RPM packages...")
+        logging.info("Identifying RPM packages for %d files...", len(files))
         manager = RpmManager()
     else:
+        logging.info("Unknown distribution, can't identify packages")
         return files, []
 
     begin = time.time()
