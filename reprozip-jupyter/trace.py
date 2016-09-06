@@ -154,6 +154,7 @@ def main():
     setup_logging('REPROZIP-JUPYTER-TRACE', args.verbosity)
     if not args.notebook:
         parser.error("missing notebook")
+        sys.exit(1)
     trace_notebook(args)
     sys.exit(0)
 
