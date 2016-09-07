@@ -15,6 +15,7 @@ and Docker images for various operating systems.
 
 from __future__ import division, print_function, unicode_literals
 
+from distutils.version import LooseVersion
 import json
 import logging
 import os
@@ -58,7 +59,6 @@ def update_parameters():
         try:
             with filename.open() as fp:
                 parameters = json.load(fp)
-            return
         except ValueError:
             logging.info("Downloaded parameters.json doesn't load, using "
                          "bundled parameters")
@@ -66,6 +66,13 @@ def update_parameters():
                 filename.remove()
             except OSError:
                 pass
+        else:
+            ver = LooseVersion(parameters.get('version', '1.0'))
+            if LooseVersion('1.0') <= ver < LooseVersion('1.1'):
+                return
+            else:
+                logging.info("parameters.json has incompatible version %s, "
+                             "using bundled parameters", ver)
 
     parameters = json.loads(bundled_parameters)
 
