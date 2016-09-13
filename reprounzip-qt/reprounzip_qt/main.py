@@ -11,11 +11,24 @@ import sys
 from reprounzip_qt import __version__
 
 
+def qt_init():
+    import sip
+
+    sip.setapi('QString', 2)
+    sip.setapi('QVariant', 2)
+
+    from PyQt4 import QtGui
+
+    return QtGui.QApplication(sys.argv)
+
+
 def main():
     """Entry point when called on the command-line.
     """
     # Locale
     locale.setlocale(locale.LC_ALL, '')
+
+    app = qt_init()
 
     parser = argparse.ArgumentParser(
         description="Graphical user interface for reprounzip",
@@ -23,23 +36,30 @@ def main():
     parser.add_argument('--version', action='version',
                         version="reprounzip-qt version %s" % __version__)
     parser.add_argument('package', nargs=argparse.OPTIONAL)
-    parser.add_argument('--unpacked', action='append')
+    parser.add_argument('--unpacked', action='append', default=[])
 
     args = parser.parse_args()
+
+    from reprounzip_qt.gui import RunWindow, UnpackWindow
 
     if args.package and args.unpacked:
         sys.stderr.write("You can't pass both a package and a unpacked "
                          "directory\n")
         sys.exit(2)
     elif args.package:
-        unpack_then_run(args.package)
+        window = UnpackWindow(package=args.package)
+        window.setVisible(True)
     elif len(args.unpacked) == 1:
-        unpack(args.unpacked[0])
+        window = RunWindow(unpacked_directory=args.unpacked[0])
+        window.setVisible(True)
     elif args.unpacked:
         sys.stderr.write("You may only use --unpacked once\n")
         sys.exit(2)
     else:
-        empty_gui()
+        window = RunWindow()
+        window.setVisible(True)
+
+    app.exec_()
     sys.exit(0)
 
 
