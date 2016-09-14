@@ -57,15 +57,20 @@ def check_directory(directory):
     return None
 
 
+def find_command(cmd):
+    for path in os.environ.get('PATH', '').split(os.pathsep):
+        filename = os.path.join(path, cmd)
+        if os.path.exists(filename):
+            return filename
+    return None
+
+
 def run(directory, unpacker=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
-    for path in os.environ.get('PATH', '').split(os.pathsep):
-        reprounzip = os.path.join(path, 'reprounzip')
-        if os.path.exists(reprounzip):
-            break
-    else:
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
@@ -98,14 +103,23 @@ tell application "Terminal"
 end tell
 """ % shell_escape(cmd + ';exit'))
         proc.wait()
+        return None
     elif system == 'windows':
-        proc = subprocess.Popen('start /wait cmd /c %s' %
-                                win_escape(cmd + ' & pause'),
-                                shell=True)
-        proc.wait()
-    else:
-        return "Couldn't start a terminal", 'critical'
-    return None
+        subprocess.check_call('start /wait cmd /c %s' %
+                              win_escape(cmd + ' & pause'),
+                              shell=True)
+        return None
+    elif system == 'linux':
+        for cmd, arg_factory in [('konsole', lambda a: ['-e', a]),
+                                 ('gnome-terminal', lambda a: ['-x', 'a']),
+                                 ('lxterminal', lambda a: ['--command=' + a]),
+                                 ('rxvt', lambda a: ['-e', a]),
+                                 ('xterm', lambda a: ['-e', a])]:
+            if find_command(cmd) is not None:
+                args = arg_factory(cmd)
+                subprocess.check_call([cmd] + args, stdin=subprocess.PIPE)
+                return None
+    return "Couldn't start a terminal", 'critical'
 
 
 def destroy(directory, unpacker=None):
