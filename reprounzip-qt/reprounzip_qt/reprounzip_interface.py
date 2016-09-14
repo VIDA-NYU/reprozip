@@ -12,7 +12,7 @@ import subprocess
 safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"
-                       "-+=/:.,%_")
+                       "-+=/:.,_%")
 
 
 def shell_escape(s):
@@ -24,6 +24,25 @@ def shell_escape(s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
+    else:
+        return s
+
+
+safe_win_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                     "abcdefghijklmnopqrstuvwxyz"
+                     "0123456789"
+                     "-+=/:.,_\\$")
+
+
+def win_escape(s):
+    r"""Given bl"a, returns "bl^"a".
+    """
+    if isinstance(s, bytes):
+        s = s.decode('utf-8')
+    if any(c not in safe_win_chars for c in s):
+        return '"%s"' % (s.replace('^', '^^')
+                          .replace('"', '^"')
+                          .replace('%', '^%'))
     else:
         return s
 
@@ -78,6 +97,11 @@ tell application "Terminal"
     end tell*)
 end tell
 """ % shell_escape(cmd + ';exit'))
+        proc.wait()
+    elif system == 'windows':
+        proc = subprocess.Popen('start /wait cmd /c %s' %
+                                win_escape(cmd + ' & pause'),
+                                shell=True)
         proc.wait()
     else:
         return "Couldn't start a terminal", 'critical'
