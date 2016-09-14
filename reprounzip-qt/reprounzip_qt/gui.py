@@ -4,6 +4,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import os
+
 from PyQt4 import QtCore, QtGui
 
 import reprounzip_interface as reprounzip
@@ -16,15 +18,18 @@ def createComboBox(initial_text=''):
     return box
 
 
-def error_msg(parent, message, severity='critical'):
+def error_msg(parent, message, severity, details=None):
     if severity == 'information':
-        msgbox = QtGui.QMessageBox.information
+        icon = QtGui.QMessageBox.Information
     elif severity == 'warning':
-        msgbox = QtGui.QMessageBox.warning
+        icon = QtGui.QMessageBox.Warning
     else:
-        msgbox = QtGui.QMessageBox.critical
+        icon = QtGui.QMessageBox.Critical
 
-    msgbox(parent, "Error", message)
+    msgbox = QtGui.QMessageBox(icon, "Error", message, QtGui.QMessageBox.Ok,
+                               parent, detailedText=details,
+                               textFormat=QtCore.Qt.PlainText)
+    msgbox.exec_()
 
 
 class RunWindow(QtGui.QDialog):
@@ -129,10 +134,13 @@ class RunWindow(QtGui.QDialog):
             error_msg(self, *error)
 
     def _destroy(self):
+        # TODO: Run in built-in terminal
         error = reprounzip.destroy(self.directory, unpacker=self.unpacker)
         if error:
             error_msg(self, *error)
         self._directory_changed(force=True)
+        error_msg(self, "Experiment directory removed successfully",
+                  'information')
 
 
 class UnpackWindow(QtGui.QDialog):
@@ -205,8 +213,11 @@ class UnpackWindow(QtGui.QDialog):
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:
-            self.directory_widget.setText(picked)
-            self._directory_changed()
+            if os.path.exists(picked):
+                error_msg(self, "This directory already exists", 'warning')
+            else:
+                self.directory_widget.setText(picked)
+                self._directory_changed()
 
     def _directory_changed(self, new_dir=None):
         self.unpack_widget.setEnabled(bool(self.directory_widget.text()))
@@ -217,6 +228,7 @@ class UnpackWindow(QtGui.QDialog):
             return
         unpacker = self.unpackers.checkedButton()
         if unpacker:
+            # TODO: Run in built-in terminal
             error = reprounzip.unpack(self.package_widget.text(),
                                       unpacker.text(),
                                       directory)
@@ -225,6 +237,7 @@ class UnpackWindow(QtGui.QDialog):
         if error:
             error_msg(self, *error)
         else:
+            error_msg(self, "Successfully unpacked experiment", 'information')
             if self.unpacked_out is not None:
                 self.unpacked_out[:] = [directory]
             else:

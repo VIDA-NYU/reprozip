@@ -134,7 +134,7 @@ def destroy(directory, unpacker=None):
     if proc.returncode == 0:
         return None
     else:
-        return "Error destroying experiment:\n%s" % out, 'critical'
+        return "Error destroying experiment", 'critical', out
 
 
 def unpack(package, unpacker, directory):
@@ -147,4 +147,4 @@ def unpack(package, unpacker, directory):
     if proc.returncode == 0:
         return None
     else:
-        return "Error setting up experiment:\n%s" % out, 'critical'
+        return "Error setting up experiment", 'critical', out
