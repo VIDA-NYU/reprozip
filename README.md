@@ -7,6 +7,7 @@
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=latest)]
 (http://reprozip.readthedocs.io/en/latest/)
 [![Matrix](https://remram44.github.io/matrix-appservice-gitter-twisted/img/matrix-badge.svg)](https://vector.im/beta/#/room/#reprozip:matrix.org)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.60654.svg)](https://doi.org/10.5281/zenodo.60654)
 
 ReproZip
 ========
