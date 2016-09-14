@@ -40,24 +40,24 @@ def main():
 
     args = parser.parse_args()
 
-    from reprounzip_qt.gui import RunWindow, UnpackWindow
+    from reprounzip_qt.gui import MainWindow
 
+    window_args = {}
     if args.package and args.unpacked:
         sys.stderr.write("You can't pass both a package and a unpacked "
                          "directory\n")
         sys.exit(2)
     elif args.package:
-        window = UnpackWindow(package=args.package)
-        window.setVisible(True)
+        window_args = dict(unpack=dict(package=args.package))
     elif len(args.unpacked) == 1:
-        window = RunWindow(unpacked_directory=args.unpacked[0])
-        window.setVisible(True)
+        window_args = dict(run=dict(unpacked_directory=args.unpacked[0]),
+                           tab=1)
     elif args.unpacked:
         sys.stderr.write("You may only use --unpacked once\n")
         sys.exit(2)
-    else:
-        window = RunWindow()
-        window.setVisible(True)
+
+    window = MainWindow(**window_args)
+    window.setVisible(True)
 
     app.exec_()
     sys.exit(0)

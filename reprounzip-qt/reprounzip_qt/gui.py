@@ -68,7 +68,8 @@ class RunWindow(QtGui.QDialog):
 
         layout.addWidget(QtGui.QLabel("Input/output files:"), 4, 0,
                          QtCore.Qt.AlignTop)
-        layout.addWidget(QtGui.QLabel("(TODO)"), 4, 1, 1, 2)
+        files_button = QtGui.QPushButton("(TODO)", enabled=False)
+        layout.addWidget(files_button, 4, 1, 1, 2)
 
         layout.addWidget(QtGui.QLabel("X11 display:"), 5, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
@@ -243,3 +244,15 @@ class UnpackWindow(QtGui.QDialog):
             else:
                 RunWindow(unpacked_directory=directory).setVisible(True)
             self.accept()
+
+
+class MainWindow(QtGui.QMainWindow):
+    def __init__(self, unpack={}, run={}, tab=None, **kwargs):
+        super(MainWindow, self).__init__(**kwargs)
+
+        self.tabs = QtGui.QTabWidget()
+        self.tabs.addTab(UnpackWindow(**unpack), "Open package")
+        self.tabs.addTab(RunWindow(**run), "Run unpacked experiment")
+        if tab is not None:
+            self.tabs.setCurrentIndex(tab)
+        self.setCentralWidget(self.tabs)
