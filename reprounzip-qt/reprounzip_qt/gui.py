@@ -32,14 +32,14 @@ def error_msg(parent, message, severity, details=None):
     msgbox.exec_()
 
 
-class RunWindow(QtGui.QDialog):
+class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
     directory = None
     unpacker = None
 
     def __init__(self, unpacked_directory='', **kwargs):
-        super(RunWindow, self).__init__(**kwargs)
+        super(RunTab, self).__init__(**kwargs)
 
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel("Experiment directory:"), 0, 0)
@@ -53,32 +53,28 @@ class RunWindow(QtGui.QDialog):
         browse.clicked.connect(self._browse)
         layout.addWidget(browse, 0, 2)
 
-        unpack = QtGui.QPushButton("Unpack .rpz file")
-        unpack.clicked.connect(self._unpack)
-        layout.addWidget(unpack, 1, 1, 1, 2)
-
-        layout.addWidget(QtGui.QLabel("Unpacker:"), 2, 0,
+        layout.addWidget(QtGui.QLabel("Unpacker:"), 1, 0,
                          QtCore.Qt.AlignTop)
         self.unpacker_widget = QtGui.QLabel("-")
-        layout.addWidget(self.unpacker_widget, 2, 1, 1, 2)
+        layout.addWidget(self.unpacker_widget, 1, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Runs:"), 3, 0,
+        layout.addWidget(QtGui.QLabel("Runs:"), 2, 0,
                          QtCore.Qt.AlignTop)
-        layout.addWidget(QtGui.QLabel("(TODO)"), 3, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel("(TODO)"), 2, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Input/output files:"), 4, 0,
+        layout.addWidget(QtGui.QLabel("Input/output files:"), 3, 0,
                          QtCore.Qt.AlignTop)
         files_button = QtGui.QPushButton("(TODO)", enabled=False)
-        layout.addWidget(files_button, 4, 1, 1, 2)
+        layout.addWidget(files_button, 3, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("X11 display:"), 5, 0)
+        layout.addWidget(QtGui.QLabel("X11 display:"), 4, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
-        layout.addWidget(self.x11_enabled, 5, 1, 1, 2)
-        layout.addWidget(QtGui.QLabel("X11 location:"), 6, 0)
+        layout.addWidget(self.x11_enabled, 4, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel("X11 location:"), 5, 0)
         self.x11_display = QtGui.QLineEdit(placeholderText=":0")
-        layout.addWidget(self.x11_display, 6, 1, 1, 2)
+        layout.addWidget(self.x11_display, 5, 1, 1, 2)
 
-        layout.setRowStretch(7, 1)
+        layout.setRowStretch(6, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -88,7 +84,7 @@ class RunWindow(QtGui.QDialog):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 8, 0, 1, 3)
+        layout.addLayout(buttons, 7, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -122,13 +118,6 @@ class RunWindow(QtGui.QDialog):
             self.unpacker = None
             self.unpacker_widget.setText("-")
 
-    def _unpack(self):
-        unpacked_out = []
-        dialog = UnpackWindow(parent=self, unpacked_out=unpacked_out)
-        if dialog.exec_():
-            self.directory_widget.setEditText(unpacked_out[0])
-            self._directory_changed()
-
     def _run(self):
         error = reprounzip.run(self.directory, unpacker=self.unpacker)
         if error:
@@ -143,14 +132,16 @@ class RunWindow(QtGui.QDialog):
         error_msg(self, "Experiment directory removed successfully",
                   'information')
 
+    def set_directory(self, directory):
+        self.directory_widget.setText(directory)
+        self._directory_changed()
 
-class UnpackWindow(QtGui.QDialog):
+
+class UnpackTab(QtGui.QWidget):
     """The unpack window, that sets up a .RPZ file in a directory.
     """
-    def __init__(self, package='', unpacked_out=None, **kwargs):
-        super(UnpackWindow, self).__init__(**kwargs)
-
-        self.unpacked_out = unpacked_out
+    def __init__(self, package='', **kwargs):
+        super(UnpackTab, self).__init__(**kwargs)
 
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel("RPZ package:"), 0, 0)
@@ -186,9 +177,6 @@ class UnpackWindow(QtGui.QDialog):
                                                enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
         buttons.addWidget(self.unpack_widget)
-        cancel_widget = QtGui.QPushButton("Cancel")
-        cancel_widget.clicked.connect(self.reject)
-        buttons.addWidget(cancel_widget)
         layout.addLayout(buttons, 4, 0, 1, 3)
 
         self.setLayout(layout)
@@ -239,11 +227,8 @@ class UnpackWindow(QtGui.QDialog):
             error_msg(self, *error)
         else:
             error_msg(self, "Successfully unpacked experiment", 'information')
-            if self.unpacked_out is not None:
-                self.unpacked_out[:] = [directory]
-            else:
-                RunWindow(unpacked_directory=directory).setVisible(True)
-            self.accept()
+            self.parent().tabs.widget(1).set_directory(directory)
+            self.parent().tabs.setCurrentTab(1)
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -251,8 +236,8 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow, self).__init__(**kwargs)
 
         self.tabs = QtGui.QTabWidget()
-        self.tabs.addTab(UnpackWindow(**unpack), "Open package")
-        self.tabs.addTab(RunWindow(**run), "Run unpacked experiment")
+        self.tabs.addTab(UnpackTab(**unpack), "Open package")
+        self.tabs.addTab(RunTab(**run), "Run unpacked experiment")
         if tab is not None:
             self.tabs.setCurrentIndex(tab)
         self.setCentralWidget(self.tabs)
