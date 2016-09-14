@@ -197,7 +197,7 @@ class UnpackWindow(QtGui.QDialog):
     def _browse_pkg(self):
         picked = QtGui.QFileDialog.getOpenFileName(
             self, "Pick package file",
-            QtCore.QDir.currentPath())
+            QtCore.QDir.currentPath(), "ReproZip Packages (*.rpz)")
         if picked:
             self.package_widget.setText(picked)
             self._package_changed()
