@@ -119,7 +119,9 @@ class RunTab(QtGui.QWidget):
             self.unpacker_widget.setText("-")
 
     def _run(self):
-        error = reprounzip.run(self.directory, unpacker=self.unpacker)
+        error = reprounzip.run(self.directory, unpacker=self.unpacker,
+                               x11_enabled=self.x11_enabled.isChecked(),
+                               x11_display=self.x11_display.text() or None)
         if error:
             error_msg(self, *error)
 

@@ -65,7 +65,7 @@ def find_command(cmd):
     return None
 
 
-def run(directory, unpacker=None):
+def run(directory, unpacker=None, x11_enabled=False, x11_display=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -74,8 +74,11 @@ def run(directory, unpacker=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
-    _run_in_terminal('%s %s run %s' % (
-        shell_escape(reprounzip), unpacker, shell_escape(directory)))
+    _run_in_terminal('%s %s%s%s run %s' % (
+        shell_escape(reprounzip), unpacker,
+        ' --enable-x11' if x11_enabled else '',
+        (' --x11-display %s' % x11_display) if x11_display is not None else '',
+        shell_escape(directory)))
 
 
 def _run_in_terminal(cmd):
