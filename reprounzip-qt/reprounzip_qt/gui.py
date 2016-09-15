@@ -52,10 +52,11 @@ class RunTab(QtGui.QWidget):
                          QtCore.Qt.AlignTop)
         layout.addWidget(QtGui.QLabel("(TODO)"), 2, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Input/output files:"), 3, 0,
-                         QtCore.Qt.AlignTop)
-        files_button = QtGui.QPushButton("(TODO)", enabled=False)
-        layout.addWidget(files_button, 3, 1, 1, 2)
+        if False:  # TODO
+            layout.addWidget(QtGui.QLabel("Input/output files:"), 3, 0,
+                             QtCore.Qt.AlignTop)
+            files_button = QtGui.QPushButton("(TODO)", enabled=False)
+            layout.addWidget(files_button, 3, 1, 1, 2)
 
         layout.addWidget(QtGui.QLabel("X11 display:"), 4, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
