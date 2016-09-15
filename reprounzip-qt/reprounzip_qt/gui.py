@@ -11,13 +11,6 @@ from PyQt4 import QtCore, QtGui
 import reprounzip_interface as reprounzip
 
 
-def createComboBox(initial_text=''):
-    box = QtGui.QComboBox(editable=True)
-    box.addItem(initial_text)
-    box.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
-    return box
-
-
 def error_msg(parent, message, severity, details=None):
     if severity == 'information':
         icon = QtGui.QMessageBox.Information
@@ -43,11 +36,8 @@ class RunTab(QtGui.QWidget):
 
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel("Experiment directory:"), 0, 0)
-        self.directory_widget = createComboBox(unpacked_directory)
-        self.directory_widget.lineEdit().editingFinished.connect(
-            self._directory_changed)
-        self.directory_widget.currentIndexChanged[str].connect(
-            self._directory_changed)
+        self.directory_widget = QtGui.QLineEdit(unpacked_directory)
+        self.directory_widget.editingFinished.connect(self._directory_changed)
         layout.addWidget(self.directory_widget, 0, 1)
         browse = QtGui.QPushButton("Browse")
         browse.clicked.connect(self._browse)
@@ -95,13 +85,13 @@ class RunTab(QtGui.QWidget):
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:
-            self.directory_widget.setEditText(picked)
+            self.directory_widget.setText(picked)
             self._directory_changed()
 
     def _directory_changed(self, new_dir=None, force=False):
-        if not force and self.directory_widget.currentText() == self.directory:
+        if not force and self.directory_widget.text() == self.directory:
             return
-        self.directory = self.directory_widget.currentText()
+        self.directory = self.directory_widget.text()
 
         unpacker = reprounzip.check_directory(self.directory)
 
@@ -130,7 +120,7 @@ class RunTab(QtGui.QWidget):
         self._directory_changed(force=True)
 
     def set_directory(self, directory):
-        self.directory_widget.setEditText(directory)
+        self.directory_widget.setText(directory)
         self._directory_changed()
 
 
