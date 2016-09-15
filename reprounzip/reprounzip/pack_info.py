@@ -91,6 +91,21 @@ def print_info(args):
     current_distribution = platform.linux_distribution()[0:2]
     current_distribution = ' '.join(t for t in current_distribution if t)
 
+    # Unpacker compatibility
+    unpacker_status = {}
+    for name, upk in iteritems(unpackers):
+        if 'test_compatibility' in upk:
+            compat = upk['test_compatibility']
+            if callable(compat):
+                compat = compat(pack, config=config)
+            if isinstance(compat, (tuple, list)):
+                compat, msg = compat
+            else:
+                msg = None
+            unpacker_status.setdefault(compat, []).append((name, msg))
+        else:
+            unpacker_status.setdefault(None, []).append((name, None))
+
     print("Pack file: %s" % pack)
     print("\n----- Pack information -----")
     print("Compressed size: %s" % hsize(pack.size()))
@@ -151,21 +166,7 @@ def print_info(args):
                     t.append("out")
                 print("    %s (%s): %s" % (name, ' '.join(t), f.path))
 
-    # Unpacker compatibility
     print("\n----- Unpackers -----")
-    unpacker_status = {}
-    for name, upk in iteritems(unpackers):
-        if 'test_compatibility' in upk:
-            compat = upk['test_compatibility']
-            if callable(compat):
-                compat = compat(pack, config=config)
-            if isinstance(compat, (tuple, list)):
-                compat, msg = compat
-            else:
-                msg = None
-            unpacker_status.setdefault(compat, []).append((name, msg))
-        else:
-            unpacker_status.setdefault(None, []).append((name, None))
     for s, n in [(COMPAT_OK, "Compatible"), (COMPAT_MAYBE, "Unknown"),
                  (COMPAT_NO, "Incompatible")]:
         if s != COMPAT_OK and args.verbosity < 2:
