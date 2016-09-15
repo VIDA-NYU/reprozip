@@ -126,16 +126,11 @@ class RunTab(QtGui.QWidget):
             error_msg(self, *error)
 
     def _destroy(self):
-        # TODO: Run in built-in terminal
-        error = reprounzip.destroy(self.directory, unpacker=self.unpacker)
-        if error:
-            error_msg(self, *error)
+        reprounzip.destroy(self.directory, unpacker=self.unpacker)
         self._directory_changed(force=True)
-        error_msg(self, "Experiment directory removed successfully",
-                  'information')
 
     def set_directory(self, directory):
-        self.directory_widget.setText(directory)
+        self.directory_widget.setEditText(directory)
         self._directory_changed()
 
 
@@ -219,18 +214,14 @@ class UnpackTab(QtGui.QWidget):
             return
         unpacker = self.unpackers.checkedButton()
         if unpacker:
-            # TODO: Run in built-in terminal
-            error = reprounzip.unpack(self.package_widget.text(),
-                                      unpacker.text(),
-                                      directory)
+            if reprounzip.unpack(self.package_widget.text(),
+                                 unpacker.text(),
+                                 directory):
+                self.parent().parent().widget(1).set_directory(directory)
+                self.parent().parent().setCurrentIndex(1)
+            # else: error already seen in terminal
         else:
-            error = "No unpacker selected", 'warning'
-        if error:
-            error_msg(self, *error)
-        else:
-            error_msg(self, "Successfully unpacked experiment", 'information')
-            self.parent().tabs.widget(1).set_directory(directory)
-            self.parent().tabs.setCurrentTab(1)
+            error_msg(self, "No unpacker selected", 'warning')
 
 
 class MainWindow(QtGui.QMainWindow):

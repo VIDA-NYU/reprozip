@@ -9,6 +9,9 @@ import pickle
 import platform
 import subprocess
 
+from reprounzip_qt.qt_terminal import run_in_builtin_terminal
+
+
 safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"
@@ -74,27 +77,57 @@ def run(directory, unpacker=None, x11_enabled=False, x11_display=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
-    _run_in_terminal('%s %s%s%s run %s' % (
-        shell_escape(reprounzip), unpacker,
-        ' --enable-x11' if x11_enabled else '',
-        (' --x11-display %s' % x11_display) if x11_display is not None else '',
-        shell_escape(directory)))
+    run_in_system_terminal(
+        [shell_escape(reprounzip), unpacker, 'run'] +
+        ([' --enable-x11'] if x11_enabled else []) +
+        ([' --x11-display', x11_display] if x11_display is not None else []) +
+        [shell_escape(directory)])
 
 
-def _run_in_terminal(cmd):
+def unpack(package, unpacker, directory):
+    code = run_in_builtin_terminal(
+        ['reprounzip', unpacker, 'setup', package, directory],
+        text="Unpacking experiment...",
+        success_msg="Successfully setup experiment",
+        fail_msg="Error setting up experiment")
+    return code == 0
+
+
+def destroy(directory, unpacker=None):
+    if unpacker is None:
+        unpacker = check_directory(directory)
+
+    code = run_in_builtin_terminal(
+        ['reprounzip', unpacker, 'destroy', directory],
+        text="Destroying experiment directory...",
+        success_msg="Successfully destroyed experiment directory",
+        fail_msg="Error destroying experiment")
+    return code == 0
+
+
+def run_in_system_terminal(cmd, wait=True, close_on_success=False):
+    cmd = ' '.join(shell_escape(c) for c in cmd)
+
     system = platform.system().lower()
     if system == 'darwin':
         proc = subprocess.Popen(['/usr/bin/osascript', '-'],
                                 stdin=subprocess.PIPE)
-        proc.communicate("""\
+        run_script = """\
 tell application "Terminal"
     activate
     set w to do script %s
+%s
+%s
+end tell
+"""
+        wait_script = """\
     repeat
         delay 1
         if not busy of w then exit repeat
     end repeat
-    (*activate
+"""
+        close_script = """\
+    activate
     tell (first window whose tabs contain w)
         set selected tab to w
         tell application "System Events"
@@ -102,9 +135,21 @@ tell application "Terminal"
                 keystroke "w" using {command down}
             end tell
         end tell
-    end tell*)
-end tell
-""" % shell_escape(cmd + ';exit'))
+    end tell
+"""
+
+        if not wait:
+            wait_script = ''
+        if close_on_success:
+            cmd = cmd + ' && exit'
+        else:
+            cmd = cmd + '; exit'
+            close_script = ''
+        run_script = run_script % (shell_escape(cmd),
+                                   wait_script,
+                                   close_script)
+
+        proc.communicate(run_script)
         proc.wait()
         return None
     elif system == 'windows':
@@ -123,31 +168,3 @@ end tell
                 subprocess.check_call([cmd] + args, stdin=subprocess.PIPE)
                 return None
     return "Couldn't start a terminal", 'critical'
-
-
-def destroy(directory, unpacker=None):
-    if unpacker is None:
-        unpacker = check_directory(directory)
-
-    proc = subprocess.Popen(['reprounzip', unpacker, 'destroy', directory],
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    out, _ = proc.communicate()
-
-    if proc.returncode == 0:
-        return None
-    else:
-        return "Error destroying experiment", 'critical', out
-
-
-def unpack(package, unpacker, directory):
-    proc = subprocess.Popen(['reprounzip', unpacker, 'setup',
-                             package, directory],
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    out, _ = proc.communicate()
-
-    if proc.returncode == 0:
-        return None
-    else:
-        return "Error setting up experiment", 'critical', out
