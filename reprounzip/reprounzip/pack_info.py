@@ -94,8 +94,9 @@ def print_info(args):
     print("Pack file: %s" % pack)
     print("\n----- Pack information -----")
     print("Compressed size: %s" % hsize(pack.size()))
-    print("Unpacked size: %s" % hsize(pack_total_size))
-    print("Total packed paths: %d" % pack_total_paths)
+    if args.verbosity >= 2:
+        print("Unpacked size: %s" % hsize(pack_total_size))
+        print("Total packed paths: %d" % pack_total_paths)
     if args.verbosity >= 3:
         print("    Files: %d" % pack_files)
         print("    Directories: %d" % pack_dirs)
