@@ -112,8 +112,12 @@ def run_in_system_terminal(cmd, wait=True, close_on_success=False):
 
     system = platform.system().lower()
     if system == 'darwin':
+        # Dodge py2app issues
+        env = dict(os.environ)
+        env.pop('PYTHONPATH', None)
+        env.pop('PYTHONHOME', None)
         proc = subprocess.Popen(['/usr/bin/osascript', '-'],
-                                stdin=subprocess.PIPE)
+                                stdin=subprocess.PIPE, env=env)
         run_script = """\
 tell application "Terminal"
     activate

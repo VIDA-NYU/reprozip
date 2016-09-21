@@ -32,6 +32,11 @@ class Terminal(QtGui.QWidget):
         self.setLayout(layout)
 
         self.process = QtCore.QProcess(self)
+        # Dodge py2app issues
+        env = QtCore.QProcessEnvironment.systemEnvironment()
+        env.remove('PYTHONPATH')
+        env.remove('PYTHONHOME')
+        self.process.setProcessEnvironment(env)
         self.process.setProcessChannelMode(QtCore.QProcess.SeparateChannels)
         if input_enabled:
             mode = QtCore.QIODevice.ReadWrite
