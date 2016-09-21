@@ -53,22 +53,28 @@ class RunTab(QtGui.QWidget):
                          QtCore.Qt.AlignTop)
         self.runs_widget = QtGui.QListWidget(
             selectionMode=QtGui.QListWidget.MultiSelection)
-        layout.addWidget(self.runs_widget, 2, 1, 1, 2)
+        layout.addWidget(self.runs_widget, 2, 1, 3, 1)
+        select_all = QtGui.QPushButton("Select All")
+        select_all.clicked.connect(self.runs_widget.selectAll)
+        layout.addWidget(select_all, 2, 2)
+        deselect_all = QtGui.QPushButton("Deselect All")
+        deselect_all.clicked.connect(self.runs_widget.clearSelection)
+        layout.addWidget(deselect_all, 3, 2)
 
         if False:  # TODO
-            layout.addWidget(QtGui.QLabel("Input/output files:"), 3, 0,
+            layout.addWidget(QtGui.QLabel("Input/output files:"), 5, 0,
                              QtCore.Qt.AlignTop)
             files_button = QtGui.QPushButton("(TODO)", enabled=False)
-            layout.addWidget(files_button, 3, 1, 1, 2)
+            layout.addWidget(files_button, 5, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("X11 display:"), 4, 0)
+        layout.addWidget(QtGui.QLabel("X11 display:"), 6, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
-        layout.addWidget(self.x11_enabled, 4, 1, 1, 2)
-        layout.addWidget(QtGui.QLabel("X11 location:"), 5, 0)
+        layout.addWidget(self.x11_enabled, 6, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel("X11 location:"), 7, 0)
         self.x11_display = QtGui.QLineEdit(placeholderText=":0")
-        layout.addWidget(self.x11_display, 5, 1, 1, 2)
+        layout.addWidget(self.x11_display, 7, 1, 1, 2)
 
-        layout.setRowStretch(6, 1)
+        layout.setRowStretch(8, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -78,7 +84,7 @@ class RunTab(QtGui.QWidget):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 7, 0, 1, 3)
+        layout.addLayout(buttons, 9, 0, 1, 3)
 
         self.setLayout(layout)
 
