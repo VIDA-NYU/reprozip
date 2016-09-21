@@ -13,6 +13,10 @@ See http://www.vistrails.org/
 
 from __future__ import division, print_function, unicode_literals
 
+if __name__ == '__main__':  # noqa
+    from reprounzip.plugins.vistrails import run_from_vistrails
+    run_from_vistrails()
+
 import argparse
 from datetime import datetime
 import itertools
@@ -352,7 +356,3 @@ def run_from_vistrails():
         output_name, filename = output_file.split(':', 1)
         cmd(['download', '.',
              '%s:%s' % (output_name, filename)])
-
-
-if __name__ == '__main__':
-    run_from_vistrails()

@@ -22,9 +22,9 @@ in
         sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         if [ $TEST_MODE = "coverage" ]; then
             pip install coverage codecov
-            pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails
+            pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt
         else
-            pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails
+            pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt
         fi
         ;;
     checks)
