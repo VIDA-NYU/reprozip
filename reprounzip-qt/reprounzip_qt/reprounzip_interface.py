@@ -80,6 +80,8 @@ def run(directory, unpacker=None, runs=None,
 
     run_in_system_terminal(
         [shell_escape(reprounzip), unpacker, 'run'] +
+        (['--docker-option=-p', '--docker-option=8000:8000']
+         if unpacker == 'docker' else []) +
         ([' --enable-x11'] if x11_enabled else []) +
         ([' --x11-display', x11_display] if x11_display is not None else []) +
         [shell_escape(directory)] +
