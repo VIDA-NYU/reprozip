@@ -5,6 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
+import yaml
 
 from PyQt4 import QtCore, QtGui
 
@@ -50,7 +51,9 @@ class RunTab(QtGui.QWidget):
 
         layout.addWidget(QtGui.QLabel("Runs:"), 2, 0,
                          QtCore.Qt.AlignTop)
-        layout.addWidget(QtGui.QLabel("(TODO)"), 2, 1, 1, 2)
+        self.runs_widget = QtGui.QListWidget(
+            selectionMode=QtGui.QListWidget.MultiSelection)
+        layout.addWidget(self.runs_widget, 2, 1, 1, 2)
 
         if False:  # TODO
             layout.addWidget(QtGui.QLabel("Input/output files:"), 3, 0,
@@ -96,13 +99,18 @@ class RunTab(QtGui.QWidget):
 
         unpacker = reprounzip.check_directory(self.directory)
 
+        self.runs_widget.clear()
         if unpacker is not None:
-            if unpacker == 'directory':
-                self.unpackers.button(0).click()
+            with open(self.directory + '/config.yml') as fp:
+                self.config = yaml.load(fp)
             self.run_widget.setEnabled(True)
             self.destroy_widget.setEnabled(True)
             self.unpacker = unpacker
             self.unpacker_widget.setText(unpacker)
+            for run in self.config['runs']:
+                self.runs_widget.addItem(' '.join(reprounzip.shell_escape(arg)
+                                                  for arg in run['argv']))
+            self.runs_widget.selectAll()
         else:
             self.run_widget.setEnabled(False)
             self.destroy_widget.setEnabled(False)
@@ -110,7 +118,9 @@ class RunTab(QtGui.QWidget):
             self.unpacker_widget.setText("-")
 
     def _run(self):
-        error = reprounzip.run(self.directory, unpacker=self.unpacker,
+        runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
+        error = reprounzip.run(self.directory, runs=runs,
+                               unpacker=self.unpacker,
                                x11_enabled=self.x11_enabled.isChecked(),
                                x11_display=self.x11_display.text() or None)
         if error:
