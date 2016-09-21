@@ -1,10 +1,21 @@
 import io
 import os
 from setuptools import setup
+import sys
 
 
 # pip workaround
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
+
+# MacOS .app with py2app
+if sys.platform == 'darwin':
+    extra_options = dict(
+        setup_requires=['py2app'],
+        app=['reprounzip_qt/main.py'],
+        options=dict(py2app=dict(argv_emulation=True)))
+else:
+    extra_options = {}
 
 
 # Need to specify encoding for PY3, which has the worst unicode handling ever
@@ -33,4 +44,5 @@ setup(name='reprounzip-qt',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 2.7',
           'Topic :: Scientific/Engineering',
-          'Topic :: System :: Archiving'])
+          'Topic :: System :: Archiving'],
+      **extra_options)
