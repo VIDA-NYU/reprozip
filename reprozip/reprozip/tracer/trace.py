@@ -15,6 +15,7 @@ from collections import defaultdict
 from itertools import count
 import logging
 import os
+from pkg_resources import iter_entry_points
 import platform
 from rpaths import Path
 import sqlite3
@@ -88,6 +89,15 @@ class TracedFile(File):
                 self.runs[run] = TracedFile.WRITTEN
             elif self.runs[run] == TracedFile.ONLY_READ:
                 self.runs[run] = TracedFile.READ_THEN_WRITTEN
+
+
+def run_filter_plugins(files):
+    for entry_point in iter_entry_points('reprozip.filters'):
+        func = entry_point.load()
+        name = entry_point.name
+
+        logging.info("Running filter plugin %s", name)
+        func(files)
 
 
 def get_files(conn):
@@ -175,11 +185,15 @@ def get_files(conn):
             access_files[-1].add(f)
     cur.close()
 
+    # Run the list of files through the filter plugins
+    run_filter_plugins(files)
+
     # Further filters input files
     inputs = [[fi.path
                for fi in lst
+               if fi.path in files and
                # Input files are regular files,
-               if fi.path.is_file() and
+               fi.path.is_file() and
                # ONLY_READ,
                fi.runs[r] == TracedFile.ONLY_READ and
                # not executable,
