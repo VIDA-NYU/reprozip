@@ -91,13 +91,13 @@ class TracedFile(File):
                 self.runs[run] = TracedFile.READ_THEN_WRITTEN
 
 
-def run_filter_plugins(files):
+def run_filter_plugins(files, inputs):
     for entry_point in iter_entry_points('reprozip.filters'):
         func = entry_point.load()
         name = entry_point.name
 
         logging.info("Running filter plugin %s", name)
-        func(files)
+        func(files, inputs)
 
 
 def get_files(conn):
@@ -185,15 +185,11 @@ def get_files(conn):
             access_files[-1].add(f)
     cur.close()
 
-    # Run the list of files through the filter plugins
-    run_filter_plugins(files)
-
     # Further filters input files
     inputs = [[fi.path
                for fi in lst
-               if fi.path in files and
                # Input files are regular files,
-               fi.path.is_file() and
+               if fi.path.is_file() and
                # ONLY_READ,
                fi.runs[r] == TracedFile.ONLY_READ and
                # not executable,
@@ -216,6 +212,13 @@ def get_files(conn):
                 not any(fi.path.lies_under(m)
                         for m in magic_dirs + system_dirs)]
                for r, lst in enumerate(access_files)]
+
+    # Run the list of files through the filter plugins
+    run_filter_plugins(files, inputs)
+
+    # Files removed from plugins should be removed from inputs as well
+    inputs = [[path for path in lst if path in files]
+              for lst in inputs]
 
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
