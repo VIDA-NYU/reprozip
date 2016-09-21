@@ -41,7 +41,7 @@ absolutepathname(){
 }
 
 for PYTHONVER in 2.7 3.5; do
-    for PKGNAME in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails; do
+    for PKGNAME in reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails reprounzip-qt; do
         TEMP_DIR="$(mktemp -d /tmp/rr_conda_XXXXXXXX)"
 
         PKGDIR="$TOPLEVEL/$PKGNAME"
