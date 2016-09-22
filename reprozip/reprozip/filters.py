@@ -33,7 +33,7 @@ def python(files, inputs):
     for i in range(len(inputs)):
         lst = []
         for path in inputs[i]:
-            if path.ext in ('.py', '.pyc'):
+            if path.ext in ('.py', '.pyc', '.so'):
                 logging.info("Removing input %s", path)
             else:
                 lst.append(path)
