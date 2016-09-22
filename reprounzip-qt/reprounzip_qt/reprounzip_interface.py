@@ -88,9 +88,11 @@ def run(directory, unpacker=None, runs=None,
         ([','.join('%d' % r for r in runs)] if runs is not None else []))
 
 
-def unpack(package, unpacker, directory):
+def unpack(package, unpacker, directory, use_gui=False):
     code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'setup', package, directory],
+        ['reprounzip', unpacker, 'setup'] +
+        (['--use-gui'] if use_gui and unpacker == 'vagrant' else []) +
+        [package, directory],
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")

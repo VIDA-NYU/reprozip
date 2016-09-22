@@ -165,15 +165,19 @@ class UnpackTab(QtGui.QWidget):
             ulayout.addWidget(radio)
         layout.addLayout(ulayout, 1, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Destination directory:"), 2, 0)
+        layout.addWidget(QtGui.QLabel("GUI (vagrant only)"), 2, 0)
+        self.use_gui = QtGui.QCheckBox("enabled", checked=False)
+        layout.addWidget(self.use_gui, 2, 1, 1, 2)
+
+        layout.addWidget(QtGui.QLabel("Destination directory:"), 3, 0)
         self.directory_widget = QtGui.QLineEdit()
         self.directory_widget.editingFinished.connect(self._directory_changed)
-        layout.addWidget(self.directory_widget, 2, 1)
+        layout.addWidget(self.directory_widget, 3, 1)
         browse_dir = QtGui.QPushButton("Browse")
         browse_dir.clicked.connect(self._browse_dir)
-        layout.addWidget(browse_dir, 2, 2)
+        layout.addWidget(browse_dir, 3, 2)
 
-        layout.setRowStretch(3, 1)
+        layout.setRowStretch(4, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -181,7 +185,7 @@ class UnpackTab(QtGui.QWidget):
                                                enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
         buttons.addWidget(self.unpack_widget)
-        layout.addLayout(buttons, 4, 0, 1, 3)
+        layout.addLayout(buttons, 5, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -223,7 +227,8 @@ class UnpackTab(QtGui.QWidget):
         if unpacker:
             if reprounzip.unpack(self.package_widget.text(),
                                  unpacker.text(),
-                                 directory):
+                                 directory,
+                                 use_gui=self.use_gui.isChecked()):
                 self.parent().parent().widget(1).set_directory(directory)
                 self.parent().parent().setCurrentIndex(1)
             # else: error already seen in terminal
