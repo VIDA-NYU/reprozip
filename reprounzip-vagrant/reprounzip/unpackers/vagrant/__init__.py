@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
-from reprounzip.unpackers.common.x11 import X11Handler
+from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
@@ -98,7 +98,7 @@ def read_dict(path):
     return metadata_read(path, 'vagrant')
 
 
-def machine_setup(target, use_chroot):
+def machine_setup(target):
     """Prepare the machine and get SSH parameters from ``vagrant ssh``.
     """
     try:
@@ -145,6 +145,10 @@ def machine_setup(target, use_chroot):
                   info['username'], info['hostname'], info['port'],
                   info['key_filename'])
 
+    unpacked_info = read_dict(target)
+    use_chroot = unpacked_info['use_chroot']
+    gui = unpacked_info['gui']
+
     if use_chroot:
         # Mount directories
         ssh = paramiko.SSHClient()
@@ -161,6 +165,20 @@ def machine_setup(target, use_chroot):
         if chan.recv_exit_status() != 0:
             logging.critical("Couldn't mount directories in chroot")
             sys.exit(1)
+        if gui:
+            # Mount X11 socket
+            chan = ssh.get_transport().open_session()
+            chan.exec_command(
+                '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
+                    'if [ -d /tmp/.X11-unix ]; then '
+                    '[ -d /experimentroot/tmp/.X11-unix ] || '
+                    'mkdir /experimentroot/tmp/.X11-unix; '
+                    'mount -o bind '
+                    '/tmp/.X11-unix /experimentroot/tmp/.X11-unix; '
+                    'fi; exit 0'))
+            if chan.recv_exit_status() != 0:
+                logging.critical("Couldn't mount X11 sockets in chroot")
+                sys.exit(1)
         ssh.close()
 
     return info
@@ -221,6 +239,8 @@ def vagrant_setup_create(args):
             target_distribution = args.distribution[0]
         else:
             target_distribution = None
+    elif args.gui:
+        target_distribution, box = 'debian', 'remram/debian-8-amd64-x'
     else:
         target_distribution, box = select_box(runs)
     logging.info("Using box %s", box)
@@ -354,17 +374,21 @@ mkdir -p /experimentroot/bin
             fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
 
             # Memory size
-            if memory is not None:
-                fp.write('  config.vm.provider "virtualbox" do |v|\n'
-                         '    v.memory = %d\n'
-                         '  end\n' % memory)
+            if memory is not None or args.gui:
+                fp.write('  config.vm.provider "virtualbox" do |v|\n')
+                if memory is not None:
+                    fp.write('    v.memory = %d\n' % memory)
+                if args.gui:
+                    fp.write('    v.gui = true\n')
+                fp.write('  end\n')
 
             fp.write('end\n')
 
         # Meta-data for reprounzip
         write_dict(target,
                    metadata_initial_iofiles(config,
-                                            {'use_chroot': use_chroot}))
+                                            {'use_chroot': use_chroot,
+                                             'gui': args.gui}))
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
@@ -377,11 +401,24 @@ def vagrant_setup_start(args):
     """Starts the vagrant-built virtual machine.
     """
     target = Path(args.target[0])
-    use_chroot = read_dict(target)['use_chroot']
 
     check_vagrant_version()
 
-    machine_setup(target, use_chroot)
+    machine_setup(target)
+
+
+class LocalX11Handler(BaseX11Handler):
+    port_forward = []
+    init_cmds = []
+
+    @staticmethod
+    def fix_env(env):
+        """Sets ``$XAUTHORITY`` and ``$DISPLAY`` in the environment.
+        """
+        new_env = dict(env)
+        new_env.pop('XAUTHORITY', None)
+        new_env['DISPLAY'] = ':0'
+        return new_env
 
 
 @target_must_exist
@@ -404,7 +441,10 @@ def vagrant_run(args):
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
     # X11 handler
-    x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
+    if unpacked_info['gui']:
+        x11 = LocalX11Handler()
+    else:
+        x11 = X11Handler(args.x11, ('local', hostname), args.x11_display)
 
     cmds = []
     for run_number in selected_runs:
@@ -452,7 +492,7 @@ def vagrant_run(args):
     cmds = '/usr/bin/sudo /bin/sh -c %s' % shell_escape(cmds)
 
     # Gets vagrant SSH parameters
-    info = machine_setup(target, unpacked_info['use_chroot'])
+    info = machine_setup(target)
 
     signals.pre_run(target=target)
 
@@ -479,7 +519,7 @@ class SSHUploader(FileUploader):
     def prepare_upload(self, files):
         # Checks whether the VM is running
         try:
-            ssh_info = machine_setup(self.target, self.use_chroot)
+            ssh_info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
@@ -556,7 +596,7 @@ class SSHDownloader(FileDownloader):
     def prepare_download(self, files):
         # Checks whether the VM is running
         try:
-            info = machine_setup(self.target, self.use_chroot)
+            info = machine_setup(self.target)
         except subprocess.CalledProcessError:
             logging.critical("Failed to get the status of the machine -- is "
                              "it running?")
@@ -772,6 +812,8 @@ def setup(parser, **kwargs):
         opts.add_argument('--memory', nargs=1,
                           help="Amount of RAM to allocate to VM (megabytes, "
                                "default: box default)")
+        opts.add_argument('--use-gui', action='store_true', default=False,
+                          dest='gui', help="Use the VM's X server")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
