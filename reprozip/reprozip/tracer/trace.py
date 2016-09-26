@@ -91,13 +91,13 @@ class TracedFile(File):
                 self.runs[run] = TracedFile.READ_THEN_WRITTEN
 
 
-def run_filter_plugins(files, inputs):
+def run_filter_plugins(files, input_files):
     for entry_point in iter_entry_points('reprozip.filters'):
         func = entry_point.load()
         name = entry_point.name
 
         logging.info("Running filter plugin %s", name)
-        func(files, inputs)
+        func(files=files, input_files=input_files)
 
 
 def get_files(conn):

@@ -10,7 +10,21 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import irange, iteritems
 
 
-def python(files, inputs):
+def builtin(input_files, **kwargs):
+    """Default heuristics for input files.
+    """
+    for i in irange(len(input_files)):
+        lst = []
+        for path in input_files[i]:
+            if path.unicodename[0] == '.' or path.ext in ('.pyc', '.so'):
+                logging.info("Removing input %s", path)
+            else:
+                lst.append(path)
+
+        input_files[i] = lst
+
+
+def python(files, input_files, **kwargs):
     remove = []
     add = []
     for path, fi in iteritems(files):
@@ -30,12 +44,12 @@ def python(files, inputs):
     for fi in add:
         files[fi.path] = fi
 
-    for i in irange(len(inputs)):
+    for i in irange(len(input_files)):
         lst = []
-        for path in inputs[i]:
+        for path in input_files[i]:
             if path.ext in ('.py', '.pyc'):
                 logging.info("Removing input %s", path)
             else:
                 lst.append(path)
 
-        inputs[i] = lst
+        input_files[i] = lst
