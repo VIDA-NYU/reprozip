@@ -70,11 +70,8 @@ class RunTab(QtGui.QWidget):
         layout.addWidget(QtGui.QLabel("X11 display:"), 6, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
         layout.addWidget(self.x11_enabled, 6, 1, 1, 2)
-        layout.addWidget(QtGui.QLabel("X11 location:"), 7, 0)
-        self.x11_display = QtGui.QLineEdit(placeholderText=":0")
-        layout.addWidget(self.x11_display, 7, 1, 1, 2)
 
-        layout.setRowStretch(8, 1)
+        layout.setRowStretch(7, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -84,7 +81,7 @@ class RunTab(QtGui.QWidget):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 9, 0, 1, 3)
+        layout.addLayout(buttons, 8, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -127,8 +124,7 @@ class RunTab(QtGui.QWidget):
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
         error = reprounzip.run(self.directory, runs=runs,
                                unpacker=self.unpacker,
-                               x11_enabled=self.x11_enabled.isChecked(),
-                               x11_display=self.x11_display.text() or None)
+                               x11_enabled=self.x11_enabled.isChecked())
         if error:
             error_msg(self, *error)
 
