@@ -135,11 +135,11 @@ class YumInstaller(object):
         return pkgs_dict
 
     @staticmethod
-    def update_script(self):
+    def update_script():
         return ''
 
     @staticmethod
-    def install_script(self, packages):
+    def install_script(packages):
         return 'yum install -y %s' % ' '.join(pkg.name for pkg in packages)
 
 
