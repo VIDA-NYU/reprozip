@@ -283,6 +283,7 @@ def tty_prompt(prompt, chars):
             while True:
                 char = stream.read(1)
                 if char in chars:
+                    stream.write("\n")
                     return char
         finally:
             termios.tcsetattr(fd, tcsetattr_flags, old)
