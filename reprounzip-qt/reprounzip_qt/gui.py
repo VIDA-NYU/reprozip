@@ -26,6 +26,26 @@ def error_msg(parent, message, severity, details=None):
     msgbox.exec_()
 
 
+class ResizableStack(QtGui.QStackedWidget):
+    # See http://stackoverflow.com/a/14485901/711380
+    def __init__(self, **kwargs):
+        super(ResizableStack, self).__init__(**kwargs)
+
+        self.currentChanged[int].connect(self._current_changed)
+
+    def addWidget(self, widget):
+        widget.setSizePolicy(QtGui.QSizePolicy.Ignored,
+                             QtGui.QSizePolicy.Ignored)
+        super(ResizableStack, self).addWidget(widget)
+
+    def _current_changed(self, idx):
+        widget = self.widget(idx)
+        widget.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
+        widget.adjustSize()
+        self.adjustSize()
+
+
 class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
@@ -314,7 +334,7 @@ class UnpackTab(QtGui.QWidget):
 
         group = QtGui.QGroupBox(title="Unpacker options")
         group_layout = QtGui.QVBoxLayout()
-        self.unpacker_options = QtGui.QStackedWidget()
+        self.unpacker_options = ResizableStack()
         self.unpackers.buttonClicked[int].connect(
             self.unpacker_options.setCurrentIndex)
         scroll = QtGui.QScrollArea(widgetResizable=True)
