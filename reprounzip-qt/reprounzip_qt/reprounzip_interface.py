@@ -85,10 +85,16 @@ def run(directory, unpacker=None, runs=None,
         ([','.join('%d' % r for r in runs)] if runs is not None else []))
 
 
-def unpack(package, unpacker, directory):
+def unpack(package, unpacker, directory, options=None):
+    if options is None:
+        options = {}
+    # TODO: sudo
+    if options.get('root', None) is not None:
+        raise NotImplementedError
     code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'setup', os.path.abspath(package),
-         os.path.abspath(directory)],
+        (['reprounzip', unpacker, 'setup'] +
+         options.get('args', []) +
+         [os.path.abspath(package), os.path.abspath(directory)]),
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")
