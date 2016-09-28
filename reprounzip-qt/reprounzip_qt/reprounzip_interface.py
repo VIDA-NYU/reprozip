@@ -8,6 +8,7 @@ import os
 import pickle
 import platform
 import subprocess
+import time
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
@@ -88,17 +89,28 @@ def run(directory, unpacker=None, runs=None,
 def unpack(package, unpacker, directory, options=None):
     if options is None:
         options = {}
-    # TODO: sudo
-    if options.get('root', None) is not None:
-        raise NotImplementedError
-    code = run_in_builtin_terminal(
-        (['reprounzip', unpacker, 'setup'] +
-         options.get('args', []) +
-         [os.path.abspath(package), os.path.abspath(directory)]),
-        text="Unpacking experiment...",
-        success_msg="Successfully setup experiment",
-        fail_msg="Error setting up experiment")
-    return code == 0
+
+    cmd = (['reprounzip', unpacker, 'setup'] +
+           options.get('args', []) +
+           [os.path.abspath(package), os.path.abspath(directory)])
+
+    root = options.get('root', None)
+    if root is None:
+        code = run_in_builtin_terminal(
+            cmd,
+            text="Unpacking experiment...",
+            success_msg="Successfully setup experiment",
+            fail_msg="Error setting up experiment")
+        return code == 0
+    elif root == 'sudo':
+        run_in_system_terminal(['sudo'] + cmd)
+        return os.path.exists(directory)
+    elif root == 'su':
+        run_in_system_terminal(['su', '-c',
+                                ' '.join(shell_escape(a) for a in cmd)])
+        return os.path.exists(directory)
+    else:
+        assert False
 
 
 def destroy(directory, unpacker=None):
@@ -163,6 +175,8 @@ end tell
 
         proc.communicate(run_script)
         proc.wait()
+        if wait:
+            time.sleep(0.5)
         return None
     elif system == 'windows':
         subprocess.check_call('start /wait cmd /c %s' %
