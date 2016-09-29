@@ -30,6 +30,7 @@ our `documentation <https://reprozip.readthedocs.io/>`_.
 ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. The team includes:
 
 * `Fernando Chirigati <https://vgc.poly.edu/~fchirigati/>`_
+* `Juliana Freire <https://vgc.poly.edu/~juliana/>`_
 * `Remi Rampin <https://remram.fr/>`_
 * `Dennis Shasha <http://cs.nyu.edu/shasha/>`_
-* `Juliana Freire <https://vgc.poly.edu/~juliana/>`_
+* `Vicky Steeves <http://vickysteeves.com/>`_

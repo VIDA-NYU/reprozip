@@ -139,9 +139,10 @@ to our [documentation][docs].
 ReproZip is currently being developed at [NYU][nyu]. The team includes:
 
 * [Fernando Chirigati][fc]
+* [Juliana Freire][jf]
 * [Rémi Rampin][rr]
 * [Dennis Shasha][ds]
-* [Juliana Freire][jf]
+* [Vicky Steeves][vs]
 
 [vagrant]: https://www.vagrantup.com/
 [docker]: https://www.docker.com/
@@ -152,7 +153,8 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 [puzd]: https://pypi.python.org/pypi/reprounzip-docker
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
 [fc]: https://vgc.poly.edu/~fchirigati/
-[rr]: https://remram.fr/
 [jf]: https://vgc.poly.edu/~juliana/
+[rr]: https://remram.fr/
 [ds]: http://cs.nyu.edu/shasha/
+[vs]: http://vickysteeves.com/
 [nyu]: http://engineering.nyu.edu/
