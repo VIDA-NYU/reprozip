@@ -81,13 +81,14 @@ def run(directory, unpacker=None, runs=None,
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
         (['--enable-x11'] if x11_enabled else []) +
-        [directory] +
+        [os.path.abspath(directory)] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []))
 
 
 def unpack(package, unpacker, directory):
     code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'setup', package, directory],
+        ['reprounzip', unpacker, 'setup', os.path.abspath(package),
+         os.path.abspath(directory)],
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")
@@ -99,7 +100,7 @@ def destroy(directory, unpacker=None):
         unpacker = check_directory(directory)
 
     code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'destroy', directory],
+        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)],
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")

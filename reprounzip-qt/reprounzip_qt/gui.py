@@ -220,7 +220,8 @@ class UnpackTab(QtGui.QWidget):
             if reprounzip.unpack(self.package_widget.text(),
                                  unpacker.text(),
                                  directory):
-                self.parent().parent().widget(1).set_directory(directory)
+                self.parent().parent().widget(1).set_directory(
+                    os.path.abspath(directory))
                 self.parent().parent().setCurrentIndex(1)
             # else: error already seen in terminal
         else:
