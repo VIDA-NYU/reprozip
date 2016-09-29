@@ -79,9 +79,9 @@ def run(directory, unpacker=None, runs=None,
                 'critical')
 
     run_in_system_terminal(
-        [shell_escape(reprounzip), unpacker, 'run'] +
+        [reprounzip, unpacker, 'run'] +
         (['--enable-x11'] if x11_enabled else []) +
-        [shell_escape(directory)] +
+        [directory] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []))
 
 
