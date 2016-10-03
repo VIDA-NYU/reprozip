@@ -89,7 +89,7 @@ class Xauth(object):
                 ascii(self.data))
 
 
-class X11Handler(object):
+class BaseX11Handler(object):
     """X11 handler.
 
     This selects a way to connect to the local X server and an authentication
@@ -97,6 +97,15 @@ class X11Handler(object):
     the experiment, `init_cmds` to setup X before running the experiment's main
     commands, and `port_forward` which describes the reverse port tunnels from
     the experiment to the local X server.
+    """
+
+
+class X11Handler(BaseX11Handler):
+    """X11 handler that will connect to a server outside on the host.
+
+    This connects out of the created environment using the network. It is used
+    by Vagrant (through SSH) and Docker (TCP connection), and may have
+    significant latency.
     """
     DISPLAY_NUMBER = 15
 

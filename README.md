@@ -1,11 +1,11 @@
 [![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=master)]
 (https://travis-ci.org/ViDA-NYU/reprozip)
 [![Coverage Status]
-(http://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=master)]
-(http://codecov.io/github/ViDA-NYU/reprozip?branch=master)
+(https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=master)]
+(https://codecov.io/github/ViDA-NYU/reprozip?branch=master)
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=latest)]
-(http://reprozip.readthedocs.io/en/latest/)
+(https://reprozip.readthedocs.io/en/latest/)
 [![Matrix](https://remram44.github.io/matrix-appservice-gitter-twisted/img/matrix-badge.svg)](https://vector.im/beta/#/room/#reprozip:matrix.org)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.60654.svg)](https://doi.org/10.5281/zenodo.60654)
 
@@ -139,20 +139,22 @@ to our [documentation][docs].
 ReproZip is currently being developed at [NYU][nyu]. The team includes:
 
 * [Fernando Chirigati][fc]
+* [Juliana Freire][jf]
 * [Rémi Rampin][rr]
 * [Dennis Shasha][ds]
-* [Juliana Freire][jf]
+* [Vicky Steeves][vs]
 
-[vagrant]: http://www.vagrantup.com/
+[vagrant]: https://www.vagrantup.com/
 [docker]: https://www.docker.com/
-[docs]: http://reprozip.readthedocs.io/
-[web]: http://vida-nyu.github.io/reprozip/
+[docs]: https://reprozip.readthedocs.io/
+[web]: https://vida-nyu.github.io/reprozip/
 [pz]: https://pypi.python.org/pypi/reprozip
 [puz]: https://pypi.python.org/pypi/reprounzip
 [puzd]: https://pypi.python.org/pypi/reprounzip-docker
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
-[fc]: http://vgc.poly.edu/~fchirigati/
-[rr]: http://remram.fr/
-[jf]: http://vgc.poly.edu/~juliana/
+[fc]: https://vgc.poly.edu/~fchirigati/
+[jf]: https://vgc.poly.edu/~juliana/
+[rr]: https://remram.fr/
 [ds]: http://cs.nyu.edu/shasha/
+[vs]: http://vickysteeves.com/
 [nyu]: http://engineering.nyu.edu/

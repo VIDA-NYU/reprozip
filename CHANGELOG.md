@@ -20,6 +20,13 @@ Behavior changes:
 Bugfixes:
 * Fix an issue identifying Debian packages when a file's in two packages
 * Fix Python error `Mixing iteration and read methods would lose data`
+* Fix reprounzip info showing some numbers as 0 instead of hiding them in non-verbose mode
+
+Enhancements:
+* New GUI for reprounzip, allowing one to unpack without using the command-line
+* Add filters to remove some common files types from packed files (.pyc) or detected input files (.py, .so, ...)
+* Add JSON output format to `reprounzip info`
+* Allow using the Virtualbox display to reproduce X11-enabled experiments
 
 1.0.7 (2016-08-22)
 ------------------
@@ -37,7 +44,7 @@ Enhancements:
 (reprounzip-vistrails didn't change)
 
 Bugfixes:
-* Fixes error using Docker with`--enable-x11` on Python 3
+* Fixes error using Docker with `--enable-x11` on Python 3
 
 Enhancements:
 * `docker run` gets a `--detach` command, to keep the container running (useful for starting servers on remote machines)

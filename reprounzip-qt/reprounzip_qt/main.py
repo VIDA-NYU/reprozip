@@ -40,7 +40,7 @@ def main():
 
     args = parser.parse_args()
 
-    from reprounzip_qt.gui import MainWindow
+    from reprounzip_qt.gui import ReprounzipUi
 
     window_args = {}
     if args.package and args.unpacked:
@@ -56,7 +56,7 @@ def main():
         sys.stderr.write("You may only use --unpacked once\n")
         sys.exit(2)
 
-    window = MainWindow(**window_args)
+    window = ReprounzipUi(**window_args)
     window.setVisible(True)
 
     app.exec_()

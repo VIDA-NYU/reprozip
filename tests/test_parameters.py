@@ -48,9 +48,10 @@ class TestSelection(unittest.TestCase):
                          ('fedora', 'fedora:21'))
 
     def test_vagrant(self):
-        def get(architecture, distribution, version):
+        def get(architecture, distribution, version, gui=False):
             return select_box([{'architecture': architecture,
-                                'distribution': (distribution, version)}])
+                                'distribution': (distribution, version)}],
+                              gui=gui)
 
         self.assertEqual(get('i686', 'Ubuntu', '14.04'),
                          ('ubuntu', 'ubuntu/trusty32'))
@@ -67,3 +68,7 @@ class TestSelection(unittest.TestCase):
                          ('centos', 'bento/centos-6.7'))
         self.assertEqual(get('x86_64', 'Fedora', '22'),
                          ('fedora', 'remram/fedora-22-amd64'))
+        self.assertEqual(get('x86_64', 'Fedora', '22', gui=True),
+                         ('debian', 'remram/debian-8-amd64-x'))
+        self.assertEqual(get('x86_64', 'Ubuntu', '14.04', gui=True),
+                         ('ubuntu', 'remram/ubuntu-1604-amd64-x'))

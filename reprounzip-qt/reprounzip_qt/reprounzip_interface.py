@@ -8,6 +8,7 @@ import os
 import pickle
 import platform
 import subprocess
+import time
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
@@ -69,7 +70,7 @@ def find_command(cmd):
 
 
 def run(directory, unpacker=None, runs=None,
-        x11_enabled=False, x11_display=None):
+        x11_enabled=False, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -79,41 +80,76 @@ def run(directory, unpacker=None, runs=None,
                 'critical')
 
     run_in_system_terminal(
-        [shell_escape(reprounzip), unpacker, 'run'] +
-        ([' --enable-x11'] if x11_enabled else []) +
-        ([' --x11-display', x11_display] if x11_display is not None else []) +
-        [shell_escape(directory)] +
-        ([','.join('%d' % r for r in runs)] if runs is not None else []))
+        [reprounzip, unpacker, 'run'] +
+        (['--enable-x11'] if x11_enabled else []) +
+        [os.path.abspath(directory)] +
+        ([','.join('%d' % r for r in runs)] if runs is not None else []),
+        root=root)
 
 
-def unpack(package, unpacker, directory):
-    code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'setup', package, directory],
+def unpack(package, unpacker, directory, options=None):
+    if options is None:
+        options = {}
+
+    cmd = (['reprounzip', unpacker, 'setup'] +
+           options.get('args', []) +
+           [os.path.abspath(package), os.path.abspath(directory)])
+
+    code = run_in_builtin_terminal_maybe(
+        cmd, options.get('root', None),
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")
-    return code == 0
+    if code is None:
+        return os.path.exists(directory)
+    else:
+        return code == 0
 
 
-def destroy(directory, unpacker=None):
+def destroy(directory, unpacker=None, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
-    code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'destroy', directory],
+    code = run_in_builtin_terminal_maybe(
+        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)], root,
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")
-    return code == 0
+    if code is None:
+        return not os.path.exists(directory)
+    else:
+        return code == 0
 
 
-def run_in_system_terminal(cmd, wait=True, close_on_success=False):
+def run_in_builtin_terminal_maybe(cmd, root, **kwargs):
+    if root is None:
+        code = run_in_builtin_terminal(cmd, **kwargs)
+        return code
+    else:
+        run_in_system_terminal(cmd, root=root)
+        return None
+
+
+def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
+    if root is None:
+        pass
+    elif root == 'sudo':
+        cmd = ['sudo'] + cmd
+    elif root == 'su':
+        cmd = ['su', '-c', ' '.join(shell_escape(a) for a in cmd)]
+    else:
+        assert False
+
     cmd = ' '.join(shell_escape(c) for c in cmd)
 
     system = platform.system().lower()
     if system == 'darwin':
+        # Dodge py2app issues
+        env = dict(os.environ)
+        env.pop('PYTHONPATH', None)
+        env.pop('PYTHONHOME', None)
         proc = subprocess.Popen(['/usr/bin/osascript', '-'],
-                                stdin=subprocess.PIPE)
+                                stdin=subprocess.PIPE, env=env)
         run_script = """\
 tell application "Terminal"
     activate
@@ -153,6 +189,8 @@ end tell
 
         proc.communicate(run_script)
         proc.wait()
+        if wait:
+            time.sleep(0.5)
         return None
     elif system == 'windows':
         subprocess.check_call('start /wait cmd /c %s' %

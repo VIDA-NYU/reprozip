@@ -45,8 +45,12 @@ setup(name='reprozip',
       version='1.1.0',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
-      entry_points={'console_scripts': [
-          'reprozip = reprozip.main:main']},
+      entry_points={
+          'console_scripts': [
+              'reprozip = reprozip.main:main'],
+          'reprozip.filters': [
+              'python = reprozip.filters:python',
+              'builtin = reprozip.filters:builtin']},
       install_requires=req,
       description="Linux tool enabling reproducible experiments (packer)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",

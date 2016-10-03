@@ -26,6 +26,32 @@ def error_msg(parent, message, severity, details=None):
     msgbox.exec_()
 
 
+class ResizableStack(QtGui.QStackedWidget):
+    # See http://stackoverflow.com/a/14485901/711380
+    def __init__(self, **kwargs):
+        super(ResizableStack, self).__init__(**kwargs)
+
+        self.currentChanged[int].connect(self._current_changed)
+
+    def addWidget(self, widget):
+        widget.setSizePolicy(QtGui.QSizePolicy.Ignored,
+                             QtGui.QSizePolicy.Ignored)
+        super(ResizableStack, self).addWidget(widget)
+
+    def _current_changed(self, idx):
+        widget = self.widget(idx)
+        widget.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
+        widget.adjustSize()
+        self.adjustSize()
+
+
+class ROOT(object):
+    OPTION_TO_INDEX = {None: 0, 'sudo': 1, 'su': 2}
+    INDEX_TO_OPTION = {0: None, 1: 'sudo', 2: 'su'}
+    TEXT = ["no", "with sudo", "with su"]
+
+
 class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
@@ -67,12 +93,14 @@ class RunTab(QtGui.QWidget):
             files_button = QtGui.QPushButton("(TODO)", enabled=False)
             layout.addWidget(files_button, 5, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("X11 display:"), 6, 0)
+        layout.addWidget(QtGui.QLabel("Elevate privileges:"), 6, 0)
+        self.root = QtGui.QComboBox(editable=False)
+        self.root.addItems(ROOT.TEXT)
+        layout.addWidget(self.root, 6, 1, 1, 2)
+
+        layout.addWidget(QtGui.QLabel("X11 display:"), 7, 0)
         self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
-        layout.addWidget(self.x11_enabled, 6, 1, 1, 2)
-        layout.addWidget(QtGui.QLabel("X11 location:"), 7, 0)
-        self.x11_display = QtGui.QLineEdit(placeholderText=":0")
-        layout.addWidget(self.x11_display, 7, 1, 1, 2)
+        layout.addWidget(self.x11_enabled, 7, 1, 1, 2)
 
         layout.setRowStretch(8, 1)
 
@@ -125,25 +153,182 @@ class RunTab(QtGui.QWidget):
 
     def _run(self):
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
-        error = reprounzip.run(self.directory, runs=runs,
-                               unpacker=self.unpacker,
-                               x11_enabled=self.x11_enabled.isChecked(),
-                               x11_display=self.x11_display.text() or None)
+        error = reprounzip.run(
+            self.directory, runs=runs,
+            unpacker=self.unpacker,
+            x11_enabled=self.x11_enabled.isChecked(),
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
         if error:
             error_msg(self, *error)
 
     def _destroy(self):
-        reprounzip.destroy(self.directory, unpacker=self.unpacker)
+        reprounzip.destroy(self.directory, unpacker=self.unpacker,
+                           root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
         self._directory_changed(force=True)
 
-    def set_directory(self, directory):
+    def set_directory(self, directory, root=None):
+        self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])
         self.directory_widget.setText(directory)
         self._directory_changed()
+
+
+class UnpackerOptions(QtGui.QWidget):
+    def __init__(self):
+        super(UnpackerOptions, self).__init__()
+        self.setLayout(QtGui.QGridLayout())
+
+    def add_row(self, label, widget):
+        layout = self.layout()
+        row = layout.rowCount()
+        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addWidget(widget, row, 1)
+
+
+class DirectoryOptions(UnpackerOptions):
+    def __init__(self):
+        super(DirectoryOptions, self).__init__()
+        self.layout().addWidget(
+            QtGui.QLabel("(directory unpacker has no option)"),
+            0, 0, 1, 2)
+
+    def options(self):
+        return {}
+
+
+class ChrootOptions(UnpackerOptions):
+    def __init__(self):
+        super(ChrootOptions, self).__init__()
+
+        self.root = QtGui.QComboBox(editable=False)
+        self.root.addItems(ROOT.TEXT)
+        self.add_row("Elevate privileges:", self.root)
+
+        self.preserve_owner = QtGui.QCheckBox("enabled", tristate=True)
+        self.preserve_owner.setCheckState(QtCore.Qt.PartiallyChecked)
+        self.add_row("Preserve file ownership:", self.preserve_owner)
+
+        self.magic_dirs = QtGui.QCheckBox(
+            "mount /dev and /proc inside the chroot", tristate=True)
+        self.magic_dirs.setCheckState(QtCore.Qt.PartiallyChecked)
+        self.add_row("Mount magic dirs:", self.magic_dirs)
+
+    def options(self):
+        options = {'args': []}
+
+        options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
+
+        if self.preserve_owner.checkState() == QtCore.Qt.Unchecked:
+            options['args'].append('--dont-preserve-owner')
+        elif self.preserve_owner.checkState() == QtCore.Qt.Checked:
+            options['args'].append('--preserve-owner')
+
+        if self.magic_dirs.checkState() == QtCore.Qt.Unchecked:
+            options['args'].append('--dont-bind-magic-dirs')
+        elif self.magic_dirs.checkState() == QtCore.Qt.Checked:
+            options['args'].append('--bind-magic-dirs')
+
+        return options
+
+
+class DockerOptions(UnpackerOptions):
+    def __init__(self):
+        super(DockerOptions, self).__init__()
+
+        self.root = QtGui.QComboBox(editable=False)
+        self.root.addItems(ROOT.TEXT)
+        self.add_row("Elevate privileges:", self.root)
+
+        self.image = QtGui.QLineEdit(placeholderText='detect')
+        self.add_row("Base image:", self.image)
+
+        self.distribution = QtGui.QLineEdit(placeholderText='detect')
+        self.add_row("Distribution:", self.distribution)
+
+        self.install_pkgs = QtGui.QCheckBox("install packages rather than "
+                                            "extracting them from RPZ")
+        self.add_row("Install packages:", self.install_pkgs)
+
+    def options(self):
+        options = {'args': []}
+
+        options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
+
+        if self.image.text():
+            options['args'].extend(['--base-image', self.image.text()])
+
+        if self.distribution.text():
+            options['args'].extend(['--distribution',
+                                    self.distribution.text()])
+
+        if self.install_pkgs.isChecked():
+            options['args'].append('--install-pkgs')
+
+        return options
+
+
+class VagrantOptions(UnpackerOptions):
+    def __init__(self):
+        super(VagrantOptions, self).__init__()
+
+        self.image = QtGui.QLineEdit(placeholderText='detect')
+        self.add_row("Base box:", self.image)
+
+        self.distribution = QtGui.QLineEdit(placeholderText='detect')
+        self.add_row("Distribution:", self.distribution)
+
+        self.memory = QtGui.QSpinBox(suffix="MB", minimum=99, maximum=64000,
+                                     specialValueText="(default)", value=99)
+        self.add_row("Memory:", self.memory)
+
+        self.gui = QtGui.QCheckBox("Enable local GUI")
+        self.add_row("GUI:", self.gui)
+
+        self.use_chroot = QtGui.QCheckBox("use chroot and prefer packed files "
+                                          "over the virtual machines' files",
+                                          checked=True)
+        self.add_row("Chroot:", self.use_chroot)
+
+        self.magic_dirs = QtGui.QCheckBox("mount /dev and /proc inside the "
+                                          "chroot", checked=True)
+        self.add_row("Mount magic dirs:", self.magic_dirs)
+
+    def options(self):
+        options = {'args': []}
+
+        if self.image.text():
+            options['args'].extend(['--base-image', self.image.text()])
+
+        if self.distribution.text():
+            options['args'].extend(['--distribution',
+                                    self.distribution.text()])
+
+        if self.memory.value() != 99:
+            options['args'].extend(['--memory', '%d' % self.memory.value()])
+
+        if self.gui.isChecked():
+            options['args'].append('--use-gui')
+
+        if not self.use_chroot.isChecked():
+            options['args'].append('--dont-use-chroot')
+
+        if not self.magic_dirs.isChecked():
+            options['args'].append('--dont-bind-magic-dirs')
+
+        return options
 
 
 class UnpackTab(QtGui.QWidget):
     """The unpack window, that sets up a .RPZ file in a directory.
     """
+    UNPACKERS = [
+        ('directory', DirectoryOptions),
+        ('chroot', ChrootOptions),
+        ('docker', DockerOptions),
+        ('vagrant', VagrantOptions),
+    ]
+
+    unpacked = QtCore.pyqtSignal(str, object)
+
     def __init__(self, package='', **kwargs):
         super(UnpackTab, self).__init__(**kwargs)
 
@@ -159,21 +344,40 @@ class UnpackTab(QtGui.QWidget):
                          QtCore.Qt.AlignTop)
         ulayout = QtGui.QVBoxLayout()
         self.unpackers = QtGui.QButtonGroup()
-        for i, name in enumerate(['directory', 'chroot', 'docker', 'vagrant']):
+        for i, name in enumerate(n for n, c in self.UNPACKERS):
             radio = QtGui.QRadioButton(name)
             self.unpackers.addButton(radio, i)
             ulayout.addWidget(radio)
         layout.addLayout(ulayout, 1, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Destination directory:"), 2, 0)
+        group = QtGui.QGroupBox(title="Unpacker options")
+        group_layout = QtGui.QVBoxLayout()
+        self.unpacker_options = ResizableStack()
+        self.unpackers.buttonClicked[int].connect(
+            self.unpacker_options.setCurrentIndex)
+        scroll = QtGui.QScrollArea(widgetResizable=True)
+        scroll.setWidget(self.unpacker_options)
+        group_layout.addWidget(scroll)
+        group.setLayout(group_layout)
+        layout.addWidget(group, 2, 0, 1, 3)
+
+        for i, (name, WidgetClass) in enumerate(self.UNPACKERS):
+            widget = WidgetClass()
+            self.unpacker_options.addWidget(widget)
+
+        self.unpacker_options.addWidget(QtGui.QLabel("Select an unpacker to "
+                                                     "display options..."))
+        self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
+
+        layout.addWidget(QtGui.QLabel("Destination directory:"), 3, 0)
         self.directory_widget = QtGui.QLineEdit()
         self.directory_widget.editingFinished.connect(self._directory_changed)
-        layout.addWidget(self.directory_widget, 2, 1)
+        layout.addWidget(self.directory_widget, 3, 1)
         browse_dir = QtGui.QPushButton("Browse")
         browse_dir.clicked.connect(self._browse_dir)
-        layout.addWidget(browse_dir, 2, 2)
+        layout.addWidget(browse_dir, 3, 2)
 
-        layout.setRowStretch(3, 1)
+        layout.setRowStretch(4, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -181,7 +385,7 @@ class UnpackTab(QtGui.QWidget):
                                                enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
         buttons.addWidget(self.unpack_widget)
-        layout.addLayout(buttons, 4, 0, 1, 3)
+        layout.addLayout(buttons, 5, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -221,23 +425,31 @@ class UnpackTab(QtGui.QWidget):
             return
         unpacker = self.unpackers.checkedButton()
         if unpacker:
-            if reprounzip.unpack(self.package_widget.text(),
-                                 unpacker.text(),
-                                 directory):
-                self.parent().parent().widget(1).set_directory(directory)
-                self.parent().parent().setCurrentIndex(1)
+            options = self.unpacker_options.currentWidget().options()
+            if reprounzip.unpack(
+                    self.package_widget.text(),
+                    unpacker.text(),
+                    directory,
+                    options):
+                self.unpacked.emit(os.path.abspath(directory),
+                                   options.get('root'))
             # else: error already seen in terminal
         else:
             error_msg(self, "No unpacker selected", 'warning')
 
 
-class MainWindow(QtGui.QMainWindow):
+class ReprounzipUi(QtGui.QMainWindow):
     def __init__(self, unpack={}, run={}, tab=None, **kwargs):
-        super(MainWindow, self).__init__(**kwargs)
+        super(ReprounzipUi, self).__init__(**kwargs)
 
         self.tabs = QtGui.QTabWidget()
         self.tabs.addTab(UnpackTab(**unpack), "Open package")
         self.tabs.addTab(RunTab(**run), "Run unpacked experiment")
+        self.tabs.widget(0).unpacked.connect(self._unpacked)
         if tab is not None:
             self.tabs.setCurrentIndex(tab)
         self.setCentralWidget(self.tabs)
+
+    def _unpacked(self, directory, root):
+        self.tabs.widget(1).set_directory(directory, root=root)
+        self.tabs.setCurrentIndex(1)
