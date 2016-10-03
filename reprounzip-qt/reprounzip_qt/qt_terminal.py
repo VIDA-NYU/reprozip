@@ -59,6 +59,8 @@ body {
 }
 </style>
 ''')
+        self.text.append('<span style="color: blue;">%s</span>' %
+                         cgi.escape(' '.join(cmdline)))
 
     def _enter(self):
         cmd = self.input.text()
