@@ -75,12 +75,14 @@ body {
 
     def _read_stdout(self):
         out = self.process.readAllStandardOutput()
-        out = bytes(out).decode(locale.getpreferredencoding(), 'replace')
+        out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
+                                'replace')
         self.text.append('<span>%s</span>' % cgi.escape(out))
 
     def _read_stderr(self):
         out = self.process.readAllStandardError()
-        out = bytes(out).decode(locale.getpreferredencoding(), 'replace')
+        out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
+                                'replace')
         self.text.append('<span class="err">%s</span>' % cgi.escape(out))
 
     def _finished(self, code, status):
