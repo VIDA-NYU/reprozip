@@ -146,9 +146,6 @@ def get_files(conn):
             r_mode = FILE_READ
         r_name = Path(normalize_path(r_name))
 
-        if event_type == 'exec':
-            executed.add(r_name)
-
         # Stays on the current run
         while run_timestamps and r_timestamp > run_timestamps[0]:
             del run_timestamps[0]
@@ -165,6 +162,8 @@ def get_files(conn):
         # Go to final target
         if not r_mode & FILE_LINK:
             r_name = r_name.resolve()
+        if event_type == 'exec':
+            executed.add(r_name)
         if r_name not in files:
             f = TracedFile(r_name)
             files[f.path] = f
