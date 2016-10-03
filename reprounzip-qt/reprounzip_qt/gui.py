@@ -206,9 +206,9 @@ class ChrootOptions(UnpackerOptions):
             options['root'] = 'su'
 
         if self.preserve_owner.checkState() == QtCore.Qt.Unchecked:
-            options['args'].append('--preserve-owner')
-        elif self.preserve_owner.checkState() == QtCore.Qt.Checked:
             options['args'].append('--dont-preserve-owner')
+        elif self.preserve_owner.checkState() == QtCore.Qt.Checked:
+            options['args'].append('--preserve-owner')
 
         if self.magic_dirs.checkState() == QtCore.Qt.Unchecked:
             options['args'].append('--dont-bind-magic-dirs')
@@ -272,7 +272,8 @@ class VagrantOptions(UnpackerOptions):
         self.add_row("Memory:", self.memory)
 
         self.use_chroot = QtGui.QCheckBox("use chroot and prefer packed files "
-                                          "over the virtual machines' files")
+                                          "over the virtual machines' files",
+                                          checked=True)
         self.add_row("Chroot:", self.use_chroot)
 
         self.magic_dirs = QtGui.QCheckBox("mount /dev and /proc inside the "
