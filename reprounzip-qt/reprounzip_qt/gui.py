@@ -321,6 +321,8 @@ class UnpackTab(QtGui.QWidget):
         ('vagrant', VagrantOptions),
     ]
 
+    unpacked = QtCore.pyqtSignal(str, object)
+
     def __init__(self, package='', **kwargs):
         super(UnpackTab, self).__init__(**kwargs)
 
@@ -423,21 +425,25 @@ class UnpackTab(QtGui.QWidget):
                     unpacker.text(),
                     directory,
                     options):
-                self.parent().parent().widget(1).set_directory(
-                    os.path.abspath(directory), root=options.get('root'))
-                self.parent().parent().setCurrentIndex(1)
+                self.unpacked.emit(os.path.abspath(directory),
+                                   options.get('root'))
             # else: error already seen in terminal
         else:
             error_msg(self, "No unpacker selected", 'warning')
 
 
-class MainWindow(QtGui.QMainWindow):
+class ReprounzipUi(QtGui.QMainWindow):
     def __init__(self, unpack={}, run={}, tab=None, **kwargs):
-        super(MainWindow, self).__init__(**kwargs)
+        super(ReprounzipUi, self).__init__(**kwargs)
 
         self.tabs = QtGui.QTabWidget()
         self.tabs.addTab(UnpackTab(**unpack), "Open package")
         self.tabs.addTab(RunTab(**run), "Run unpacked experiment")
+        self.tabs.widget(0).unpacked.connect(self._unpacked)
         if tab is not None:
             self.tabs.setCurrentIndex(tab)
         self.setCentralWidget(self.tabs)
+
+    def _unpacked(self, directory, root):
+        self.tabs.widget(1).set_directory(directory, root=root)
+        self.tabs.setCurrentIndex(1)
