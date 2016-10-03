@@ -91,7 +91,12 @@ def unpack(package, unpacker, directory, options=None):
     if options is None:
         options = {}
 
-    cmd = (['reprounzip', unpacker, 'setup'] +
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    cmd = ([reprounzip, unpacker, 'setup'] +
            options.get('args', []) +
            [os.path.abspath(package), os.path.abspath(directory)])
 
@@ -110,8 +115,13 @@ def destroy(directory, unpacker=None, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
     code = run_in_builtin_terminal_maybe(
-        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)], root,
+        [reprounzip, unpacker, 'destroy', os.path.abspath(directory)], root,
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")
