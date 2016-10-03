@@ -167,6 +167,7 @@ class RPZPack(object):
         member.name = str(target.components[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
+        target.chmod(0o644)
         assert target.is_file()
 
     @contextlib.contextmanager
@@ -198,6 +199,7 @@ class RPZPack(object):
         member.name = str(target.components[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
+        target.chmod(0o644)
         assert target.is_file()
 
     @contextlib.contextmanager
