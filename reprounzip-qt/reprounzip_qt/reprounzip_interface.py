@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import itertools
 import os
 import pickle
 import platform
@@ -62,7 +63,8 @@ def check_directory(directory):
 
 
 def find_command(cmd):
-    for path in os.environ.get('PATH', '').split(os.pathsep):
+    for path in itertools.chain(os.environ.get('PATH', '').split(os.pathsep),
+                                ['/usr/local/bin', '/opt/reprounzip']):
         filename = os.path.join(path, cmd)
         if os.path.exists(filename):
             return filename
