@@ -280,6 +280,9 @@ class VagrantOptions(UnpackerOptions):
                                      specialValueText="(default)", value=99)
         self.add_row("Memory:", self.memory)
 
+        self.gui = QtGui.QCheckBox("Enable local GUI")
+        self.add_row("GUI:", self.gui)
+
         self.use_chroot = QtGui.QCheckBox("use chroot and prefer packed files "
                                           "over the virtual machines' files",
                                           checked=True)
@@ -301,6 +304,9 @@ class VagrantOptions(UnpackerOptions):
 
         if self.memory.value() != 99:
             options['args'].extend(['--memory', '%d' % self.memory.value()])
+
+        if self.gui.isChecked():
+            options['args'].append('--use-gui')
 
         if not self.use_chroot.isChecked():
             options['args'].append('--dont-use-chroot')
