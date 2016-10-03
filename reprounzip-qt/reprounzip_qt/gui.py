@@ -93,11 +93,16 @@ class RunTab(QtGui.QWidget):
             files_button = QtGui.QPushButton("(TODO)", enabled=False)
             layout.addWidget(files_button, 5, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("X11 display:"), 6, 0)
-        self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
-        layout.addWidget(self.x11_enabled, 6, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel("Elevate privileges:"), 6, 0)
+        self.root = QtGui.QComboBox(editable=False)
+        self.root.addItems(ROOT.TEXT)
+        layout.addWidget(self.root, 6, 1, 1, 2)
 
-        layout.setRowStretch(7, 1)
+        layout.addWidget(QtGui.QLabel("X11 display:"), 7, 0)
+        self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
+        layout.addWidget(self.x11_enabled, 7, 1, 1, 2)
+
+        layout.setRowStretch(8, 1)
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -107,7 +112,7 @@ class RunTab(QtGui.QWidget):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 8, 0, 1, 3)
+        layout.addLayout(buttons, 9, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -148,17 +153,21 @@ class RunTab(QtGui.QWidget):
 
     def _run(self):
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
-        error = reprounzip.run(self.directory, runs=runs,
-                               unpacker=self.unpacker,
-                               x11_enabled=self.x11_enabled.isChecked())
+        error = reprounzip.run(
+            self.directory, runs=runs,
+            unpacker=self.unpacker,
+            x11_enabled=self.x11_enabled.isChecked(),
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
         if error:
             error_msg(self, *error)
 
     def _destroy(self):
-        reprounzip.destroy(self.directory, unpacker=self.unpacker)
+        reprounzip.destroy(self.directory, unpacker=self.unpacker,
+                           root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
         self._directory_changed(force=True)
 
-    def set_directory(self, directory):
+    def set_directory(self, directory, root=None):
+        self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])
         self.directory_widget.setText(directory)
         self._directory_changed()
 
@@ -408,13 +417,14 @@ class UnpackTab(QtGui.QWidget):
             return
         unpacker = self.unpackers.checkedButton()
         if unpacker:
+            options = self.unpacker_options.currentWidget().options()
             if reprounzip.unpack(
                     self.package_widget.text(),
                     unpacker.text(),
                     directory,
-                    self.unpacker_options.currentWidget().options()):
+                    options):
                 self.parent().parent().widget(1).set_directory(
-                    os.path.abspath(directory))
+                    os.path.abspath(directory), root=options.get('root'))
                 self.parent().parent().setCurrentIndex(1)
             # else: error already seen in terminal
         else:

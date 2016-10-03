@@ -70,7 +70,7 @@ def find_command(cmd):
 
 
 def run(directory, unpacker=None, runs=None,
-        x11_enabled=False):
+        x11_enabled=False, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -83,7 +83,8 @@ def run(directory, unpacker=None, runs=None,
         [reprounzip, unpacker, 'run'] +
         (['--enable-x11'] if x11_enabled else []) +
         [os.path.abspath(directory)] +
-        ([','.join('%d' % r for r in runs)] if runs is not None else []))
+        ([','.join('%d' % r for r in runs)] if runs is not None else []),
+        root=root)
 
 
 def unpack(package, unpacker, directory, options=None):
@@ -94,38 +95,51 @@ def unpack(package, unpacker, directory, options=None):
            options.get('args', []) +
            [os.path.abspath(package), os.path.abspath(directory)])
 
-    root = options.get('root', None)
-    if root is None:
-        code = run_in_builtin_terminal(
-            cmd,
-            text="Unpacking experiment...",
-            success_msg="Successfully setup experiment",
-            fail_msg="Error setting up experiment")
-        return code == 0
-    elif root == 'sudo':
-        run_in_system_terminal(['sudo'] + cmd)
-        return os.path.exists(directory)
-    elif root == 'su':
-        run_in_system_terminal(['su', '-c',
-                                ' '.join(shell_escape(a) for a in cmd)])
+    code = run_in_builtin_terminal_maybe(
+        cmd, options.get('root', None),
+        text="Unpacking experiment...",
+        success_msg="Successfully setup experiment",
+        fail_msg="Error setting up experiment")
+    if code is None:
         return os.path.exists(directory)
     else:
-        assert False
+        return code == 0
 
 
-def destroy(directory, unpacker=None):
+def destroy(directory, unpacker=None, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
-    code = run_in_builtin_terminal(
-        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)],
+    code = run_in_builtin_terminal_maybe(
+        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)], root,
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")
-    return code == 0
+    if code is None:
+        return not os.path.exists(directory)
+    else:
+        return code == 0
 
 
-def run_in_system_terminal(cmd, wait=True, close_on_success=False):
+def run_in_builtin_terminal_maybe(cmd, root, **kwargs):
+    if root is None:
+        code = run_in_builtin_terminal(cmd, **kwargs)
+        return code
+    else:
+        run_in_system_terminal(cmd, root=root)
+        return None
+
+
+def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
+    if root is None:
+        pass
+    elif root == 'sudo':
+        cmd = ['sudo'] + cmd
+    elif root == 'su':
+        cmd = ['su', '-c', ' '.join(shell_escape(a) for a in cmd)]
+    else:
+        assert False
+
     cmd = ' '.join(shell_escape(c) for c in cmd)
 
     system = platform.system().lower()
