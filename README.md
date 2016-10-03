@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=master)]
+[![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=1.0.x)]
 (https://travis-ci.org/ViDA-NYU/reprozip)
 [![Coverage Status]
-(https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=master)]
-(https://codecov.io/github/ViDA-NYU/reprozip?branch=master)
-[![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
+(https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=1.0.x)]
+(https://codecov.io/github/ViDA-NYU/reprozip?branch=1.0.x)
+[![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)]
 (https://reprozip.readthedocs.io/en/1.0.x/)
 [![Matrix](https://remram44.github.io/matrix-appservice-gitter-twisted/img/matrix-badge.svg)](https://vector.im/beta/#/room/#reprozip:matrix.org)
