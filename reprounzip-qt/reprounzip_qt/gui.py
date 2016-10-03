@@ -26,6 +26,14 @@ def error_msg(parent, message, severity, details=None):
     msgbox.exec_()
 
 
+def handle_error(parent, result):
+    if result in (True, False):
+        return result
+    else:
+        error_msg(parent, *result)
+        return False
+
+
 class ResizableStack(QtGui.QStackedWidget):
     # See http://stackoverflow.com/a/14485901/711380
     def __init__(self, **kwargs):
@@ -153,17 +161,16 @@ class RunTab(QtGui.QWidget):
 
     def _run(self):
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
-        error = reprounzip.run(
+        handle_error(self, reprounzip.run(
             self.directory, runs=runs,
             unpacker=self.unpacker,
             x11_enabled=self.x11_enabled.isChecked(),
-            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
-        if error:
-            error_msg(self, *error)
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()]))
 
     def _destroy(self):
-        reprounzip.destroy(self.directory, unpacker=self.unpacker,
-                           root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
+        handle_error(self, reprounzip.destroy(
+            self.directory, unpacker=self.unpacker,
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()]))
         self._directory_changed(force=True)
 
     def set_directory(self, directory, root=None):
@@ -426,14 +433,13 @@ class UnpackTab(QtGui.QWidget):
         unpacker = self.unpackers.checkedButton()
         if unpacker:
             options = self.unpacker_options.currentWidget().options()
-            if reprounzip.unpack(
+            if handle_error(self, reprounzip.unpack(
                     self.package_widget.text(),
                     unpacker.text(),
                     directory,
-                    options):
+                    options)):
                 self.unpacked.emit(os.path.abspath(directory),
                                    options.get('root'))
-            # else: error already seen in terminal
         else:
             error_msg(self, "No unpacker selected", 'warning')
 
