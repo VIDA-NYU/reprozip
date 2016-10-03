@@ -375,7 +375,7 @@ def chroot_create(args):
         logging.critical("Target directory exists")
         sys.exit(1)
 
-    if DefaultAbstractPath is not PosixPath:
+    if not issubclass(DefaultAbstractPath, PosixPath):
         logging.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
