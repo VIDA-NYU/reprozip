@@ -38,15 +38,15 @@ from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
-def select_box(runs):
+def select_box(runs, gui=False):
     """Selects a box for the experiment, with the correct distribution.
     """
     distribution, version = runs[0]['distribution']
     distribution = distribution.lower()
     architecture = runs[0]['architecture']
 
-    record_usage(vagrant_select_box='%s;%s;%s' % (distribution, version,
-                                                  architecture))
+    record_usage(vagrant_select_box='%s;%s;%s;gui=%s' % (distribution, version,
+                                                         architecture, gui))
 
     if architecture not in ('i686', 'x86_64'):
         logging.critical("Error: unsupported architecture %s", architecture)
@@ -81,7 +81,14 @@ def select_box(runs):
         if result is not None:
             return box['distribution'], result
 
-    result = find_distribution(get_parameter('vagrant_boxes'),
+    if gui:
+        vagrant_param = get_parameter('vagrant_boxes_x')
+        if vagrant_param is None:  # Compatibility with old parameters
+            return 'debian', 'remram/debian-8-amd64-x'
+    else:
+        vagrant_param = get_parameter('vagrant_boxes')
+
+    result = find_distribution(vagrant_param,
                                distribution, version, architecture)
     if result is None:
         logging.critical("Error: couldn't find a base box for required "
@@ -239,10 +246,8 @@ def vagrant_setup_create(args):
             target_distribution = args.distribution[0]
         else:
             target_distribution = None
-    elif args.gui:
-        target_distribution, box = 'debian', 'remram/debian-8-amd64-x'
     else:
-        target_distribution, box = select_box(runs)
+        target_distribution, box = select_box(runs, gui=args.gui)
     logging.info("Using box %s", box)
     logging.debug("Distribution: %s", target_distribution or "unknown")
 
