@@ -46,6 +46,12 @@ class ResizableStack(QtGui.QStackedWidget):
         self.adjustSize()
 
 
+class ROOT(object):
+    OPTION_TO_INDEX = {None: 0, 'sudo': 1, 'su': 2}
+    INDEX_TO_OPTION = {0: None, 1: 'sudo', 2: 'su'}
+    TEXT = ["no", "with sudo", "with su"]
+
+
 class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
@@ -185,7 +191,7 @@ class ChrootOptions(UnpackerOptions):
         super(ChrootOptions, self).__init__()
 
         self.root = QtGui.QComboBox(editable=False)
-        self.root.addItems(['no', "with sudo", "with su"])
+        self.root.addItems(ROOT.TEXT)
         self.add_row("Elevate privileges:", self.root)
 
         self.preserve_owner = QtGui.QCheckBox("enabled", tristate=True)
@@ -200,10 +206,7 @@ class ChrootOptions(UnpackerOptions):
     def options(self):
         options = {'args': []}
 
-        if self.root.currentIndex() == 1:
-            options['root'] = 'sudo'
-        elif self.root.currentIndex() == 2:
-            options['root'] = 'su'
+        options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
         if self.preserve_owner.checkState() == QtCore.Qt.Unchecked:
             options['args'].append('--dont-preserve-owner')
@@ -223,7 +226,7 @@ class DockerOptions(UnpackerOptions):
         super(DockerOptions, self).__init__()
 
         self.root = QtGui.QComboBox(editable=False)
-        self.root.addItems(['no', "with sudo", "with su"])
+        self.root.addItems(ROOT.TEXT)
         self.add_row("Elevate privileges:", self.root)
 
         self.image = QtGui.QLineEdit(placeholderText='detect')
@@ -239,10 +242,7 @@ class DockerOptions(UnpackerOptions):
     def options(self):
         options = {'args': []}
 
-        if self.root.currentIndex() == 1:
-            options['root'] = 'sudo'
-        elif self.root.currentIndex() == 2:
-            options['root'] = 'su'
+        options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
         if self.image.text():
             options['args'].extend(['--base-image', self.image.text()])
