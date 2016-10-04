@@ -9,6 +9,7 @@ import os
 import pickle
 import platform
 import subprocess
+import sys
 import time
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
@@ -52,6 +53,12 @@ def win_escape(s):
         return s
 
 
+if sys.platform.startswith('win'):
+    native_escape = win_escape
+else:
+    native_escape = shell_escape
+
+
 def check_directory(directory):
     if os.path.isdir(directory):
         filename = os.path.join(directory, '.reprounzip')
@@ -63,11 +70,19 @@ def check_directory(directory):
 
 
 def find_command(cmd):
-    for path in itertools.chain(os.environ.get('PATH', '').split(os.pathsep),
-                                ['/usr/local/bin', '/opt/reprounzip']):
-        filename = os.path.join(path, cmd)
-        if os.path.exists(filename):
-            return filename
+    if sys.platform.startswith('win'):
+        for path in os.environ.get('PATH', '').split(os.pathsep):
+            for ext in ('.bat', '.exe', '.cmd'):
+                filename = os.path.join(path, cmd + ext)
+                if os.path.exists(filename):
+                    return filename
+    else:
+        for path in itertools.chain(
+                os.environ.get('PATH', '').split(os.pathsep),
+                ['/usr/local/bin', '/opt/reprounzip']):
+            filename = os.path.join(path, cmd)
+            if os.path.exists(filename):
+                return filename
     return None
 
 
@@ -87,6 +102,7 @@ def run(directory, unpacker=None, runs=None,
         [os.path.abspath(directory)] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []),
         root=root)
+    return True
 
 
 def unpack(package, unpacker, directory, options=None):
@@ -148,11 +164,11 @@ def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
     elif root == 'sudo':
         cmd = ['sudo'] + cmd
     elif root == 'su':
-        cmd = ['su', '-c', ' '.join(shell_escape(a) for a in cmd)]
+        cmd = ['su', '-c', ' '.join(native_escape(a) for a in cmd)]
     else:
         assert False
 
-    cmd = ' '.join(shell_escape(c) for c in cmd)
+    cmd = ' '.join(native_escape(c) for c in cmd)
 
     system = platform.system().lower()
     if system == 'darwin':
