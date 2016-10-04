@@ -227,10 +227,11 @@ end tell
         return None
     elif system == 'linux':
         for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),
-                                  ('gnome-terminal', lambda a: ['-x', 'a']),
                                   ('lxterminal', lambda a: ['--command=' + a]),
                                   ('rxvt', lambda a: ['-e', a]),
-                                  ('xterm', lambda a: ['-e', a])]:
+                                  ('xterm', lambda a: ['-e', a]),
+                                  # gnome-terminal needs some kind of --nofork
+                                  ('gnome-terminal', lambda a: ['-x', 'a'])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
                 print([term] + args)
