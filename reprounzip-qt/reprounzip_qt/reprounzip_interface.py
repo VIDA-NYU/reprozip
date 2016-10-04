@@ -226,13 +226,14 @@ end tell
                               shell=True)
         return None
     elif system == 'linux':
-        for cmd, arg_factory in [('konsole', lambda a: ['-e', a]),
-                                 ('gnome-terminal', lambda a: ['-x', 'a']),
-                                 ('lxterminal', lambda a: ['--command=' + a]),
-                                 ('rxvt', lambda a: ['-e', a]),
-                                 ('xterm', lambda a: ['-e', a])]:
-            if find_command(cmd) is not None:
+        for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),
+                                  ('gnome-terminal', lambda a: ['-x', 'a']),
+                                  ('lxterminal', lambda a: ['--command=' + a]),
+                                  ('rxvt', lambda a: ['-e', a]),
+                                  ('xterm', lambda a: ['-e', a])]:
+            if find_command(term) is not None:
                 args = arg_factory(cmd)
-                subprocess.check_call([cmd] + args, stdin=subprocess.PIPE)
+                print([term] + args)
+                subprocess.check_call([term] + args, stdin=subprocess.PIPE)
                 return None
     return "Couldn't start a terminal", 'critical'
