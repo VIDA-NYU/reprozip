@@ -367,6 +367,7 @@ class UnpackTab(QtGui.QWidget):
         group_layout.addWidget(scroll)
         group.setLayout(group_layout)
         layout.addWidget(group, 2, 0, 1, 3)
+        layout.setRowStretch(2, 1)
 
         for i, (name, WidgetClass) in enumerate(self.UNPACKERS):
             widget = WidgetClass()
@@ -384,15 +385,13 @@ class UnpackTab(QtGui.QWidget):
         browse_dir.clicked.connect(self._browse_dir)
         layout.addWidget(browse_dir, 3, 2)
 
-        layout.setRowStretch(4, 1)
-
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
         self.unpack_widget = QtGui.QPushButton("Unpack experiment",
                                                enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
         buttons.addWidget(self.unpack_widget)
-        layout.addLayout(buttons, 5, 0, 1, 3)
+        layout.addLayout(buttons, 4, 0, 1, 3)
 
         self.setLayout(layout)
 
