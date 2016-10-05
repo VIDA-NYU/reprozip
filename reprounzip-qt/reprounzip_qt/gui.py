@@ -60,6 +60,115 @@ class ROOT(object):
     TEXT = ["no", "with sudo", "with su"]
 
 
+class FilesManager(QtGui.QDialog):
+    def __init__(self, directory, unpacker=None, root=None, **kwargs):
+        super(FilesManager, self).__init__(**kwargs)
+        self.directory = directory
+        self.unpacker = unpacker
+        self.root = root
+
+        layout = QtGui.QHBoxLayout()
+
+        self.files_widget = QtGui.QListWidget(
+            selectionMode=QtGui.QListWidget.SingleSelection)
+        self.files_widget.itemSelectionChanged.connect(self._file_changed)
+        layout.addWidget(self.files_widget)
+
+        right_layout = QtGui.QGridLayout()
+        right_layout.addWidget(QtGui.QLabel("name:"), 0, 0)
+        self.f_name = QtGui.QLineEdit('', readOnly=True)
+        right_layout.addWidget(self.f_name, 0, 1)
+        right_layout.addWidget(QtGui.QLabel("Path:"), 1, 0)
+        self.f_path = QtGui.QLineEdit('', readOnly=True)
+        right_layout.addWidget(self.f_path, 1, 1)
+        right_layout.addWidget(QtGui.QLabel("Current:"), 2, 0)
+        self.f_status = QtGui.QLineEdit('', readOnly=True)
+        right_layout.addWidget(self.f_status, 2, 1)
+        self.b_upload = QtGui.QPushButton("Upload a replacement",
+                                          enabled=False)
+        self.b_upload.clicked.connect(self._upload)
+        right_layout.addWidget(self.b_upload, 3, 0, 1, 2)
+        self.b_download = QtGui.QPushButton("Download to disk", enabled=False)
+        self.b_download.clicked.connect(self._download)
+        right_layout.addWidget(self.b_download, 4, 0, 1, 2)
+        self.b_reset = QtGui.QPushButton("Reset file", enabled=False)
+        self.b_reset.clicked.connect(self._reset)
+        right_layout.addWidget(self.b_reset, 5, 0, 1, 2)
+        right_layout.setRowStretch(6, 1)
+        layout.addLayout(right_layout)
+
+        self.setLayout(layout)
+
+        self.files_status = reprounzip.FilesStatus(directory)
+
+        for file_status in self.files_status:
+            text = "[%s%s] %s" % (("I" if file_status.is_input else ''),
+                                  ("O" if file_status.is_output else ''),
+                                  file_status.name)
+            self.files_widget.addItem(text)
+
+    def _file_changed(self):
+        selected = [i.row() for i in self.files_widget.selectedIndexes()]
+        if not selected:
+            self.f_name.setText('')
+            self.f_path.setText('')
+            self.f_status.setText('')
+            self.b_upload.setEnabled(False)
+            self.b_download.setEnabled(False)
+            self.b_reset.setEnabled(False)
+        else:
+            file_status = self.files_status[selected[0]]
+            self.b_upload.setEnabled(True)
+            self.b_download.setEnabled(True)
+            self.b_reset.setEnabled(False)
+            self.f_name.setText(file_status.name)
+            self.f_path.setText(file_status.path)
+            self.f_status.setEnabled(False)
+            if file_status.assigned is None:
+                self.f_status.setText("(original)")
+                self.b_reset.setEnabled(False)
+            elif file_status.assigned is False:
+                self.f_status.setText("(not created)")
+                self.b_download.setEnabled(False)
+            elif file_status.assigned is True:
+                self.f_status.setText("(generated)")
+            else:
+                self.f_status.setText(file_status.assigned)
+                self.f_status.setEnabled(True)
+
+    def _upload(self):
+        selected = self.files_widget.selectedIndexes()[0].row()
+        file_status = self.files_status[selected]
+        picked = QtGui.QFileDialog.getOpenFileName(
+            self, "Pick file to upload",
+            QtCore.QDir.currentPath())
+        if picked:
+            handle_error(self, reprounzip.upload(
+                self.directory, file_status.name, picked,
+                unpacker=self.unpacker, root=self.root))
+            self._file_changed()
+
+    def _download(self):
+        selected = self.files_widget.selectedIndexes()[0].row()
+        file_status = self.files_status[selected]
+        picked = QtGui.QFileDialog.getSaveFileName(
+            self, "Pick destination",
+            QtCore.QDir.currentPath() + '/' + file_status.name)
+        if picked:
+            handle_error(self, reprounzip.download(
+                self.directory, file_status.name, picked,
+                unpacker=self.unpacker, root=self.root))
+            self._file_changed()
+
+    def _reset(self):
+        selected = self.files_widget.selectedIndexes()[0].row()
+        file_status = self.files_status[selected]
+        handle_error(self, reprounzip.upload(
+            self.directory, file_status.name, None,
+            unpacker=self.unpacker, root=self.root))
+        self._file_changed()
+
+
 class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
@@ -95,11 +204,11 @@ class RunTab(QtGui.QWidget):
         deselect_all.clicked.connect(self.runs_widget.clearSelection)
         layout.addWidget(deselect_all, 3, 2)
 
-        if False:  # TODO
-            layout.addWidget(QtGui.QLabel("Input/output files:"), 5, 0,
-                             QtCore.Qt.AlignTop)
-            files_button = QtGui.QPushButton("(TODO)", enabled=False)
-            layout.addWidget(files_button, 5, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel("Input/output files:"), 5, 0,
+                         QtCore.Qt.AlignTop)
+        self.files_button = QtGui.QPushButton("Manage files", enabled=False)
+        self.files_button.clicked.connect(self._open_files_manager)
+        layout.addWidget(self.files_button, 5, 1, 1, 2)
 
         layout.addWidget(QtGui.QLabel("Elevate privileges:"), 6, 0)
         self.root = QtGui.QComboBox(editable=False)
@@ -147,6 +256,7 @@ class RunTab(QtGui.QWidget):
                 self.config = yaml.load(fp)
             self.run_widget.setEnabled(True)
             self.destroy_widget.setEnabled(True)
+            self.files_button.setEnabled(True)
             self.unpacker = unpacker
             self.unpacker_widget.setText(unpacker)
             for run in self.config['runs']:
@@ -156,6 +266,7 @@ class RunTab(QtGui.QWidget):
         else:
             self.run_widget.setEnabled(False)
             self.destroy_widget.setEnabled(False)
+            self.files_button.setEnabled(False)
             self.unpacker = None
             self.unpacker_widget.setText("-")
 
@@ -172,6 +283,14 @@ class RunTab(QtGui.QWidget):
             self.directory, unpacker=self.unpacker,
             root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()]))
         self._directory_changed(force=True)
+
+    def _open_files_manager(self):
+        manager = FilesManager(
+            parent=self,
+            directory=self.directory_widget.text(),
+            unpacker=self.unpacker,
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()])
+        manager.exec_()
 
     def set_directory(self, directory, root=None):
         self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])

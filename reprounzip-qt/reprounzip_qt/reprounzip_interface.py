@@ -11,6 +11,7 @@ import platform
 import subprocess
 import sys
 import time
+import yaml
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
@@ -26,7 +27,7 @@ def shell_escape(s):
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
-    if any(c not in safe_shell_chars for c in s):
+    if not s or any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
@@ -64,9 +65,46 @@ def check_directory(directory):
         filename = os.path.join(directory, '.reprounzip')
         if os.path.isfile(filename):
             with open(filename, 'rb') as fp:
-                dct = pickle.load(fp)
-            return dct['unpacker']
+                unpacked_info = pickle.load(fp)
+            return unpacked_info['unpacker']
     return None
+
+
+class FileStatus(object):
+    def __init__(self, name, path, is_input, is_output):
+        self.name = name
+        self.path = path
+        self.assigned = None
+        self.is_input = is_input
+        self.is_output = is_output
+
+
+class FilesStatus(object):
+    def __init__(self, directory):
+        self.directory = directory
+        with open(os.path.join(directory, 'config.yml')) as fp:
+            config = yaml.safe_load(fp)
+
+        self.files = [FileStatus(f['name'], f['path'],
+                                 f.get('read_by_runs'),
+                                 f.get('written_by_runs'))
+                      for f in config.get('inputs_outputs') or []]
+        self._refresh()
+
+    def _refresh(self):
+        with open(os.path.join(self.directory, '.reprounzip'), 'rb') as fp:
+            unpacked_info = pickle.load(fp)
+        assigned_input_files = unpacked_info.get('input_files', {})
+        for f in self.files:
+            f.assigned = assigned_input_files.get(f.name)
+
+    def __getitem__(self, item):
+        self._refresh()
+        return self.files[item]
+
+    def __iter__(self):
+        self._refresh()
+        return iter(self.files)
 
 
 def find_command(cmd):
@@ -145,6 +183,55 @@ def destroy(directory, unpacker=None, root=None):
         fail_msg="Error destroying experiment")
     if code is None:
         return not os.path.exists(directory)
+    else:
+        return code == 0
+
+
+def upload(directory, name, path, unpacker=None, root=None):
+    if unpacker is None:
+        unpacker = check_directory(directory)
+
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    if path is None:
+        spec = ':%s' % name
+    else:
+        spec = '%s:%s' % (path, name)
+
+    code = run_in_builtin_terminal_maybe(
+        [reprounzip, unpacker, 'upload', os.path.abspath(directory), spec],
+        root,
+        text="Uploading file...",
+        success_msg="Successfully replaced file",
+        fail_msg="Error uploading file")
+    if code is None:
+        return True
+    else:
+        return code == 0
+
+
+def download(directory, name, path, unpacker=None, root=None):
+    if unpacker is None:
+        unpacker = check_directory(directory)
+
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    spec = '%s:%s' % (name, path)
+
+    code = run_in_builtin_terminal_maybe(
+        [reprounzip, unpacker, 'download', os.path.abspath(directory), spec],
+        root,
+        text="Downloading file...",
+        success_msg="Successfully downloaded file",
+        fail_msg="Error downloading file")
+    if code is None:
+        return True
     else:
         return code == 0
 
