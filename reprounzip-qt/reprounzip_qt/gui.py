@@ -129,7 +129,6 @@ class FilesManager(QtGui.QDialog):
                 self.b_reset.setEnabled(False)
             elif file_status.assigned is False:
                 self.f_status.setText("(not created)")
-                self.b_download.setEnabled(False)
             elif file_status.assigned is True:
                 self.f_status.setText("(generated)")
             else:
