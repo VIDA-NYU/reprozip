@@ -125,7 +125,7 @@ def find_command(cmd):
 
 
 def run(directory, unpacker=None, runs=None,
-        x11_enabled=False, root=None):
+        root=None, args=[]):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -136,7 +136,7 @@ def run(directory, unpacker=None, runs=None,
 
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
-        (['--enable-x11'] if x11_enabled else []) +
+        args +
         [os.path.abspath(directory)] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []),
         root=root)

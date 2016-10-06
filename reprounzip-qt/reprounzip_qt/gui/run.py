@@ -4,12 +4,125 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import re
 import yaml
 
 from PyQt4 import QtCore, QtGui
 
 import reprounzip_qt.reprounzip_interface as reprounzip
-from reprounzip_qt.gui.common import ROOT, handle_error
+from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
+    error_msg
+
+
+class RunOptions(QtGui.QWidget):
+    x11 = None
+
+    def __init__(self):
+        super(RunOptions, self).__init__()
+        self.setLayout(QtGui.QGridLayout())
+
+    def add_row(self, label, widget):
+        layout = self.layout()
+        row = layout.rowCount()
+        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addWidget(widget, row, 1)
+
+    def add_row_layout(self, label, rowlayout):
+        layout = self.layout()
+        row = layout.rowCount()
+        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addLayout(rowlayout, row, 1)
+
+    def add_x11(self):
+        self.x11 = QtGui.QCheckBox("enabled", checked=False)
+        self.add_row("X11 display:", self.x11)
+
+    def options(self):
+        options = {'args': []}
+
+        if self.x11 is not None and self.x11.isChecked():
+            options['args'].append('--enable-x11')
+
+        return options
+
+
+class DirectoryOptions(RunOptions):
+    def __init__(self):
+        super(DirectoryOptions, self).__init__()
+        self.add_x11()
+
+
+class ChrootOptions(RunOptions):
+    def __init__(self):
+        super(ChrootOptions, self).__init__()
+        self.add_x11()
+
+
+class DockerOptions(RunOptions):
+    _port_re = re.compile('^(?:([0-9]+):)?([0-9]+)(?:/([a-z]+))?$')
+
+    def __init__(self):
+        super(DockerOptions, self).__init__()
+
+        self.x11 = QtGui.QCheckBox("enabled", checked=False)
+        self.tunneled_x11 = QtGui.QCheckBox("use tunnel", checked=False)
+        row = QtGui.QVBoxLayout()
+        row.addWidget(self.x11)
+        row.addWidget(self.tunneled_x11)
+        row.addStretch(1)
+        self.add_row_layout("X11 display:", row)
+
+        self.detach = QtGui.QCheckBox("start background container and leave "
+                                      "it running",
+                                      checked=False)
+        self.add_row("Detach:", self.detach)
+
+        self.raw_options = QtGui.QLineEdit('')
+        self.add_row("Raw Docker options:", self.raw_options)
+
+        self.ports = QtGui.QLineEdit('')
+        self.add_row("Publish ports:", self.ports)
+
+    def options(self):
+        options = super(DockerOptions, self).options()
+
+        if self.tunneled_x11.isChecked():
+            options['args'].append('--tunneled-x11')
+
+        if self.detach.isChecked():
+            options['args'].append('--detach')
+
+        for opt in self.raw_options.text().split():
+            opt = opt.strip()
+            if opt:
+                options['args'].append('--docker-option=%s' % opt)
+
+        for port in self.ports.text().split():
+            port = port.strip()
+            if port:
+                m = self._port_re.match(port)
+                if m is None:
+                    error_msg(self, "Invalid port specification: '%s'" % port,
+                              'warning')
+                else:
+                    host, container, proto = m.groups()
+                    if not host:
+                        host = container
+                    if proto:
+                        proto = '/' + proto
+                    else:
+                        proto = ''
+                    options['args'].extend(
+                        ['--docker-option=-p',
+                         '--docker-option=%s:%s%s' % (host, container, proto)])
+
+        return options
+
+
+class VagrantOptions(RunOptions):
+    def __init__(self):
+        super(VagrantOptions, self).__init__()
+        self.add_x11()
 
 
 class FilesManager(QtGui.QDialog):
@@ -123,6 +236,13 @@ class FilesManager(QtGui.QDialog):
 class RunTab(QtGui.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
+    UNPACKERS = [
+        ('directory', DirectoryOptions),
+        ('chroot', ChrootOptions),
+        ('docker', DockerOptions),
+        ('vagrant', VagrantOptions),
+    ]
+
     directory = None
     unpacker = None
 
@@ -166,11 +286,23 @@ class RunTab(QtGui.QWidget):
         self.root.addItems(ROOT.TEXT)
         layout.addWidget(self.root, 6, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("X11 display:"), 7, 0)
-        self.x11_enabled = QtGui.QCheckBox("enabled", checked=False)
-        layout.addWidget(self.x11_enabled, 7, 1, 1, 2)
+        group = QtGui.QGroupBox(title="Unpacker options")
+        group_layout = QtGui.QVBoxLayout()
+        self.unpacker_options = ResizableStack()
+        scroll = QtGui.QScrollArea(widgetResizable=True)
+        scroll.setWidget(self.unpacker_options)
+        group_layout.addWidget(scroll)
+        group.setLayout(group_layout)
+        layout.addWidget(group, 7, 0, 1, 3)
+        layout.setRowStretch(7, 1)
 
-        layout.setRowStretch(8, 1)
+        for i, (name, WidgetClass) in enumerate(self.UNPACKERS):
+            widget = WidgetClass()
+            self.unpacker_options.addWidget(widget)
+
+        self.unpacker_options.addWidget(QtGui.QLabel("Select an directory to "
+                                                     "display options..."))
+        self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
@@ -180,7 +312,7 @@ class RunTab(QtGui.QWidget):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 9, 0, 1, 3)
+        layout.addLayout(buttons, 8, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -214,20 +346,30 @@ class RunTab(QtGui.QWidget):
                 self.runs_widget.addItem(' '.join(reprounzip.shell_escape(arg)
                                                   for arg in run['argv']))
             self.runs_widget.selectAll()
+            self.unpacker_options.setCurrentIndex(
+                dict((n, i) for i, (n, w) in enumerate(self.UNPACKERS))
+                .get(unpacker, 4))
         else:
             self.run_widget.setEnabled(False)
             self.destroy_widget.setEnabled(False)
             self.files_button.setEnabled(False)
             self.unpacker = None
             self.unpacker_widget.setText("-")
+            self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
     def _run(self):
+        options = self.unpacker_options.currentWidget().options()
+        if options is None:
+            return
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
+        if not runs:
+            error_msg(self, "No run selected", 'warning')
+            return
         handle_error(self, reprounzip.run(
             self.directory, runs=runs,
             unpacker=self.unpacker,
-            x11_enabled=self.x11_enabled.isChecked(),
-            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()]))
+            root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()],
+            **options))
 
     def _destroy(self):
         handle_error(self, reprounzip.destroy(

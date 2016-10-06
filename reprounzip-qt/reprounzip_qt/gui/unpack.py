@@ -24,6 +24,9 @@ class UnpackerOptions(QtGui.QWidget):
         layout.addWidget(QtGui.QLabel(label), row, 0)
         layout.addWidget(widget, row, 1)
 
+    def options(self):
+        return {'args': []}
+
 
 class DirectoryOptions(UnpackerOptions):
     def __init__(self):
@@ -31,9 +34,6 @@ class DirectoryOptions(UnpackerOptions):
         self.layout().addWidget(
             QtGui.QLabel("(directory unpacker has no option)"),
             0, 0, 1, 2)
-
-    def options(self):
-        return {}
 
 
 class ChrootOptions(UnpackerOptions):
@@ -54,7 +54,7 @@ class ChrootOptions(UnpackerOptions):
         self.add_row("Mount magic dirs:", self.magic_dirs)
 
     def options(self):
-        options = {'args': []}
+        options = super(ChrootOptions, self).options()
 
         options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
@@ -90,7 +90,7 @@ class DockerOptions(UnpackerOptions):
         self.add_row("Install packages:", self.install_pkgs)
 
     def options(self):
-        options = {'args': []}
+        options = super(DockerOptions, self).options()
 
         options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
@@ -134,7 +134,7 @@ class VagrantOptions(UnpackerOptions):
         self.add_row("Mount magic dirs:", self.magic_dirs)
 
     def options(self):
-        options = {'args': []}
+        options = super(VagrantOptions, self).options()
 
         if self.image.text():
             options['args'].extend(['--base-image', self.image.text()])
@@ -266,6 +266,8 @@ class UnpackTab(QtGui.QWidget):
         unpacker = self.unpackers.checkedButton()
         if unpacker:
             options = self.unpacker_options.currentWidget().options()
+            if options is None:
+                return
             if handle_error(self, reprounzip.unpack(
                     self.package_widget.text(),
                     unpacker.text(),
