@@ -493,11 +493,11 @@ def metadata_write(path, dct, type_):
 
 
 def metadata_initial_iofiles(config, dct=None):
-    """Add the initial state of the input files to the unpacker metadata.
+    """Add the initial state of the {in/out}put files to the unpacker metadata.
 
     :param config: The configuration as returned by `load_config()`, which will
-    be used to list the input files and to determine which ones have been
-    packed (and therefore exist initially).
+    be used to list the input and output files and to determine which ones have
+    been packed (and therefore exist initially).
 
     The `input_files` key contains a dict mapping the name to either:
       * None (or inexistent): original file and exists
@@ -511,8 +511,7 @@ def metadata_initial_iofiles(config, dct=None):
         dct = {}
 
     path2iofile = {f.path: n
-                   for n, f in iteritems(config.inputs_outputs)
-                   if f.read_runs}
+                   for n, f in iteritems(config.inputs_outputs)}
 
     def packed_files():
         yield config.other_files
@@ -534,11 +533,11 @@ def metadata_update_run(config, dct, runs):
 
     :param runs: An iterable of run numbers that were probably executed.
 
-    This maintains a crude idea of the status of input files by updating the
-    files that are outputs of the runs that were just executed. This means that
-    files that were uploaded by the user will no longer be shown as uploaded
-    (they have been overwritten by the experiment) and files that weren't
-    packed exist from now on.
+    This maintains a crude idea of the status of input and output files by
+    updating the files that are outputs of the runs that were just executed.
+    This means that files that were uploaded by the user will no longer be
+    shown as uploaded (they have been overwritten by the experiment) and files
+    that weren't packed exist from now on.
 
     This is not very reliable because a run might have created a file that is
     not designated as its output anyway, or might have failed and thus not
@@ -548,5 +547,5 @@ def metadata_update_run(config, dct, runs):
     input_files = dct.setdefault('input_files', {})
 
     for name, fi in iteritems(config.inputs_outputs):
-        if fi.read_runs and any(r in runs for r in fi.write_runs):
+        if any(r in runs for r in fi.write_runs):
             input_files[name] = True
