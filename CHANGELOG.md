@@ -11,6 +11,7 @@ Bugfixes:
 * Fix an issue identifying Debian packages when a file's in two packages
 * Fix Python error `Mixing iteration and read methods would lose data`
 * Fix reprounzip info showing some numbers as 0 instead of hiding them in non-verbose mode
+* Another fix to X server IP determination for Docker
 
 Enhancements:
 * New GUI for reprounzip, allowing one to unpack without using the command-line
