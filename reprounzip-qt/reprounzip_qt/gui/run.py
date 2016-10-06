@@ -143,23 +143,23 @@ class RunTab(QtGui.QWidget):
         self.unpacker_widget = QtGui.QLabel("-")
         layout.addWidget(self.unpacker_widget, 1, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Runs:"), 2, 0,
-                         QtCore.Qt.AlignTop)
-        self.runs_widget = QtGui.QListWidget(
-            selectionMode=QtGui.QListWidget.MultiSelection)
-        layout.addWidget(self.runs_widget, 2, 1, 3, 1)
-        select_all = QtGui.QPushButton("Select All")
-        select_all.clicked.connect(self.runs_widget.selectAll)
-        layout.addWidget(select_all, 2, 2)
-        deselect_all = QtGui.QPushButton("Deselect All")
-        deselect_all.clicked.connect(self.runs_widget.clearSelection)
-        layout.addWidget(deselect_all, 3, 2)
-
-        layout.addWidget(QtGui.QLabel("Input/output files:"), 5, 0,
+        layout.addWidget(QtGui.QLabel("Input/output files:"), 2, 0,
                          QtCore.Qt.AlignTop)
         self.files_button = QtGui.QPushButton("Manage files", enabled=False)
         self.files_button.clicked.connect(self._open_files_manager)
-        layout.addWidget(self.files_button, 5, 1, 1, 2)
+        layout.addWidget(self.files_button, 2, 1, 1, 2)
+
+        layout.addWidget(QtGui.QLabel("Runs:"), 3, 0,
+                         QtCore.Qt.AlignTop)
+        self.runs_widget = QtGui.QListWidget(
+            selectionMode=QtGui.QListWidget.MultiSelection)
+        layout.addWidget(self.runs_widget, 3, 1, 3, 1)
+        select_all = QtGui.QPushButton("Select All")
+        select_all.clicked.connect(self.runs_widget.selectAll)
+        layout.addWidget(select_all, 3, 2)
+        deselect_all = QtGui.QPushButton("Deselect All")
+        deselect_all.clicked.connect(self.runs_widget.clearSelection)
+        layout.addWidget(deselect_all, 4, 2)
 
         layout.addWidget(QtGui.QLabel("Elevate privileges:"), 6, 0)
         self.root = QtGui.QComboBox(editable=False)
