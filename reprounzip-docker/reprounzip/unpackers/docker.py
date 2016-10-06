@@ -326,33 +326,44 @@ def get_local_addr():
     >>> get_local_addr()
     '172.17.42.1'
     """
+    # This function works by creating a socket and connecting to a remote IP.
+    # The local address of this socket is assumed to be the address of this
+    # machine, that the Docker container can reach.
+    target = None
+
     # Find hostname or IP address in DOCKER_HOST
     if 'DOCKER_HOST' in os.environ:
         m = _addr_re.match(os.environ['DOCKER_HOST'])
         if m is not None:
-            ip = m.group(1)
+            target = m.group(1)
+            if target.startswith('127.'):
+                target = None
 
+    # Else, use whatever local interface lets you connect to google.com
+    if target is None:
+        target = 'google.com'
+
+    try:
+        addresses = socket.getaddrinfo(target, 9, socket.AF_UNSPEC,
+                                       socket.SOCK_STREAM)
+    except socket.gaierror:
+        pass
+    else:
+        for address in addresses:
+            sock = None
             try:
-                addresses = socket.getaddrinfo(ip, 9, socket.AF_UNSPEC,
-                                               socket.SOCK_STREAM)
-            except socket.gaierror:
+                af, socktype, proto, canonname, sa = address
+                sock = socket.socket(af, socktype, proto)
+                sock.settimeout(1)
+                sock.connect(sa)
+                sock.close()
+            except socket.error:
                 pass
-            else:
-                for address in addresses:
-                    sock = None
-                    try:
-                        af, socktype, proto, canonname, sa = address
-                        sock = socket.socket(af, socktype, proto)
-                        sock.settimeout(1)
-                        sock.connect(sa)
-                        sock.close()
-                    except socket.error:
-                        pass
-                    if sock is not None:
-                        addr = sock.getsockname()[0]
-                        if isinstance(addr, bytes):
-                            addr = addr.decode('ascii')
-                        return addr
+            if sock is not None:
+                addr = sock.getsockname()[0]
+                if isinstance(addr, bytes):
+                    addr = addr.decode('ascii')
+                return addr
 
     return '127.0.0.1'
 
