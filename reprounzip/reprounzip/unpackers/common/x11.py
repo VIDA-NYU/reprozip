@@ -121,7 +121,8 @@ class X11Handler(BaseX11Handler):
         self.target = target
 
         self.xauth = PosixPath('/.reprounzip_xauthority')
-        self.display = display if display is not None else self.DISPLAY_NUMBER
+        self.display = (int(display) if display is not None
+                        else self.DISPLAY_NUMBER)
         logging.debug("X11 support enabled; will create Xauthority file %s "
                       "for experiment. Display number is %d", self.xauth,
                       self.display)

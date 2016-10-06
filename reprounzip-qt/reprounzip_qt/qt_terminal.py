@@ -34,8 +34,14 @@ class Terminal(QtGui.QWidget):
         self.process = QtCore.QProcess(self)
         # Dodge py2app issues
         env = QtCore.QProcessEnvironment.systemEnvironment()
-        env.remove('PYTHONPATH')
-        env.remove('PYTHONHOME')
+        if env.contains('PYTHONHOME'):
+            env.remove('PYTHONPATH')
+            env.remove('PYTHONHOME')
+            env.insert(
+                'PATH',
+                (env.value('PATH', '/usr/bin:/bin:/usr/sbin:/sbin') +
+                 ':/usr/local/bin:/opt/reprounzip'))
+
         self.process.setProcessEnvironment(env)
         self.process.setProcessChannelMode(QtCore.QProcess.SeparateChannels)
         if input_enabled:
@@ -59,6 +65,8 @@ body {
 }
 </style>
 ''')
+        self.text.append('<span style="color: blue;">%s</span>' %
+                         cgi.escape(' '.join(cmdline)))
 
     def _enter(self):
         cmd = self.input.text()
@@ -67,12 +75,14 @@ body {
 
     def _read_stdout(self):
         out = self.process.readAllStandardOutput()
-        out = bytes(out).decode(locale.getpreferredencoding(), 'replace')
+        out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
+                                'replace')
         self.text.append('<span>%s</span>' % cgi.escape(out))
 
     def _read_stderr(self):
         out = self.process.readAllStandardError()
-        out = bytes(out).decode(locale.getpreferredencoding(), 'replace')
+        out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
+                                'replace')
         self.text.append('<span class="err">%s</span>' % cgi.escape(out))
 
     def _finished(self, code, status):

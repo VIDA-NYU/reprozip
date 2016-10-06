@@ -23,7 +23,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-qt',
       version='0.1',
-      packages=['reprounzip_qt'],
+      packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       entry_points={
           'console_scripts': [
               'reprounzip-qt = reprounzip_qt.main:main']},
@@ -39,7 +39,8 @@ setup(name='reprounzip-qt',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'gui'],
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 4 - Beta',
+          'Environment :: X11 Applications :: Qt',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 2.7',

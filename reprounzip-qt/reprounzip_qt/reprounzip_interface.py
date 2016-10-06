@@ -4,11 +4,14 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import itertools
 import os
 import pickle
 import platform
 import subprocess
+import sys
 import time
+import yaml
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
@@ -24,7 +27,7 @@ def shell_escape(s):
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
-    if any(c not in safe_shell_chars for c in s):
+    if not s or any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
@@ -51,26 +54,78 @@ def win_escape(s):
         return s
 
 
+if sys.platform.startswith('win'):
+    native_escape = win_escape
+else:
+    native_escape = shell_escape
+
+
 def check_directory(directory):
     if os.path.isdir(directory):
         filename = os.path.join(directory, '.reprounzip')
         if os.path.isfile(filename):
             with open(filename, 'rb') as fp:
-                dct = pickle.load(fp)
-            return dct['unpacker']
+                unpacked_info = pickle.load(fp)
+            return unpacked_info['unpacker']
     return None
 
 
+class FileStatus(object):
+    def __init__(self, name, path, is_input, is_output):
+        self.name = name
+        self.path = path
+        self.assigned = None
+        self.is_input = is_input
+        self.is_output = is_output
+
+
+class FilesStatus(object):
+    def __init__(self, directory):
+        self.directory = directory
+        with open(os.path.join(directory, 'config.yml')) as fp:
+            config = yaml.safe_load(fp)
+
+        self.files = [FileStatus(f['name'], f['path'],
+                                 f.get('read_by_runs'),
+                                 f.get('written_by_runs'))
+                      for f in config.get('inputs_outputs') or []]
+        self._refresh()
+
+    def _refresh(self):
+        with open(os.path.join(self.directory, '.reprounzip'), 'rb') as fp:
+            unpacked_info = pickle.load(fp)
+        assigned_input_files = unpacked_info.get('input_files', {})
+        for f in self.files:
+            f.assigned = assigned_input_files.get(f.name)
+
+    def __getitem__(self, item):
+        self._refresh()
+        return self.files[item]
+
+    def __iter__(self):
+        self._refresh()
+        return iter(self.files)
+
+
 def find_command(cmd):
-    for path in os.environ.get('PATH', '').split(os.pathsep):
-        filename = os.path.join(path, cmd)
-        if os.path.exists(filename):
-            return filename
+    if sys.platform.startswith('win'):
+        for path in os.environ.get('PATH', '').split(os.pathsep):
+            for ext in ('.bat', '.exe', '.cmd'):
+                filename = os.path.join(path, cmd + ext)
+                if os.path.exists(filename):
+                    return filename
+    else:
+        for path in itertools.chain(
+                os.environ.get('PATH', '').split(os.pathsep),
+                ['/usr/local/bin', '/opt/reprounzip']):
+            filename = os.path.join(path, cmd)
+            if os.path.exists(filename):
+                return filename
     return None
 
 
 def run(directory, unpacker=None, runs=None,
-        x11_enabled=False, root=None):
+        root=None, args=[]):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -81,17 +136,23 @@ def run(directory, unpacker=None, runs=None,
 
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
-        (['--enable-x11'] if x11_enabled else []) +
+        args +
         [os.path.abspath(directory)] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []),
         root=root)
+    return True
 
 
 def unpack(package, unpacker, directory, options=None):
     if options is None:
         options = {}
 
-    cmd = (['reprounzip', unpacker, 'setup'] +
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    cmd = ([reprounzip, unpacker, 'setup'] +
            options.get('args', []) +
            [os.path.abspath(package), os.path.abspath(directory)])
 
@@ -110,13 +171,67 @@ def destroy(directory, unpacker=None, root=None):
     if unpacker is None:
         unpacker = check_directory(directory)
 
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
     code = run_in_builtin_terminal_maybe(
-        ['reprounzip', unpacker, 'destroy', os.path.abspath(directory)], root,
+        [reprounzip, unpacker, 'destroy', os.path.abspath(directory)], root,
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")
     if code is None:
         return not os.path.exists(directory)
+    else:
+        return code == 0
+
+
+def upload(directory, name, path, unpacker=None, root=None):
+    if unpacker is None:
+        unpacker = check_directory(directory)
+
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    if path is None:
+        spec = ':%s' % name
+    else:
+        spec = '%s:%s' % (path, name)
+
+    code = run_in_builtin_terminal_maybe(
+        [reprounzip, unpacker, 'upload', os.path.abspath(directory), spec],
+        root,
+        text="Uploading file...",
+        success_msg="Successfully replaced file",
+        fail_msg="Error uploading file")
+    if code is None:
+        return True
+    else:
+        return code == 0
+
+
+def download(directory, name, path, unpacker=None, root=None):
+    if unpacker is None:
+        unpacker = check_directory(directory)
+
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    spec = '%s:%s' % (name, path)
+
+    code = run_in_builtin_terminal_maybe(
+        [reprounzip, unpacker, 'download', os.path.abspath(directory), spec],
+        root,
+        text="Downloading file...",
+        success_msg="Successfully downloaded file",
+        fail_msg="Error downloading file")
+    if code is None:
+        return True
     else:
         return code == 0
 
@@ -136,11 +251,11 @@ def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
     elif root == 'sudo':
         cmd = ['sudo'] + cmd
     elif root == 'su':
-        cmd = ['su', '-c', ' '.join(shell_escape(a) for a in cmd)]
+        cmd = ['su', '-c', ' '.join(native_escape(a) for a in cmd)]
     else:
         assert False
 
-    cmd = ' '.join(shell_escape(c) for c in cmd)
+    cmd = ' '.join(native_escape(c) for c in cmd)
 
     system = platform.system().lower()
     if system == 'darwin':
@@ -198,13 +313,15 @@ end tell
                               shell=True)
         return None
     elif system == 'linux':
-        for cmd, arg_factory in [('konsole', lambda a: ['-e', a]),
-                                 ('gnome-terminal', lambda a: ['-x', 'a']),
-                                 ('lxterminal', lambda a: ['--command=' + a]),
-                                 ('rxvt', lambda a: ['-e', a]),
-                                 ('xterm', lambda a: ['-e', a])]:
-            if find_command(cmd) is not None:
+        for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),
+                                  ('lxterminal', lambda a: ['--command=' + a]),
+                                  ('rxvt', lambda a: ['-e', a]),
+                                  ('xterm', lambda a: ['-e', a]),
+                                  # gnome-terminal needs some kind of --nofork
+                                  ('gnome-terminal', lambda a: ['-x', 'a'])]:
+            if find_command(term) is not None:
                 args = arg_factory(cmd)
-                subprocess.check_call([cmd] + args, stdin=subprocess.PIPE)
+                print([term] + args)
+                subprocess.check_call([term] + args, stdin=subprocess.PIPE)
                 return None
     return "Couldn't start a terminal", 'critical'
