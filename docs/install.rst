@@ -192,7 +192,7 @@ Or you can install *reprounzip* and choose components manually::
 Anaconda
 ========
 
-*reprozip* and *reprounzip* can also be installed on the `Anaconda <https://store.continuum.io/cshop/anaconda>`__ Python distribution, from Binstar::
+*reprozip* and *reprounzip* can also be installed on the `Anaconda <https://store.continuum.io/cshop/anaconda>`__ Python distribution, from anaconda.org::
 
     $ conda install --channel vida-nyu reprozip reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails
 

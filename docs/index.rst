@@ -24,6 +24,7 @@ Contents
     unpacking
     graph
     vistrails
+    gui
     faq
     troubleshooting
     unpacked-format
