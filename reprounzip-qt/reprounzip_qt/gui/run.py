@@ -66,7 +66,7 @@ class DockerOptions(RunOptions):
 
         self.x11 = QtGui.QCheckBox("enabled", checked=False)
         self.tunneled_x11 = QtGui.QCheckBox("use tunnel", checked=False)
-        row = QtGui.QVBoxLayout()
+        row = QtGui.QHBoxLayout()
         row.addWidget(self.x11)
         row.addWidget(self.tunneled_x11)
         row.addStretch(1)
