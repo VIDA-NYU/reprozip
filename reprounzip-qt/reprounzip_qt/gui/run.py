@@ -388,4 +388,4 @@ class RunTab(QtGui.QWidget):
     def set_directory(self, directory, root=None):
         self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])
         self.directory_widget.setText(directory)
-        self._directory_changed()
+        self._directory_changed(force=True)
