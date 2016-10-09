@@ -389,3 +389,14 @@ class RunTab(QtGui.QWidget):
         self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])
         self.directory_widget.setText(directory)
         self._directory_changed(force=True)
+
+    def should_exit(self):
+        if self.unpacker:
+            r = QtGui.QMessageBox.question(
+                self, "Close Confirmation",
+                "The experiment is still unpacked with '%s'. Are you sure you "
+                "want to exit without removing it?" % self.unpacker,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            return r == QtGui.QMessageBox.Yes
+        else:
+            return True
