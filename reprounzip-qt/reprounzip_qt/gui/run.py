@@ -104,6 +104,7 @@ class DockerOptions(RunOptions):
                 if m is None:
                     error_msg(self, "Invalid port specification: '%s'" % port,
                               'warning')
+                    return None
                 else:
                     host, container, proto = m.groups()
                     if not host:
