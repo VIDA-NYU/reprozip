@@ -25,7 +25,7 @@ setup(name='reprounzip-qt',
       version='0.1',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       entry_points={
-          'console_scripts': [
+          'gui_scripts': [
               'reprounzip-qt = reprounzip_qt.main:main']},
       install_requires=['PyYAML'],
       description="Graphical user interface for reprounzip, using Qt",
