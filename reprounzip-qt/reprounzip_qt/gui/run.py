@@ -135,13 +135,18 @@ class FilesManager(QtGui.QDialog):
 
         layout = QtGui.QHBoxLayout()
 
+        left_layout = QtGui.QVBoxLayout()
+        self.searchbar = QtGui.QLineEdit(placeholderText="Search...")
+        self.searchbar.textChanged.connect(self._search_changed)
+        left_layout.addWidget(self.searchbar)
         self.files_widget = QtGui.QListWidget(
             selectionMode=QtGui.QListWidget.SingleSelection)
         self.files_widget.itemSelectionChanged.connect(self._file_changed)
-        layout.addWidget(self.files_widget)
+        left_layout.addWidget(self.files_widget)
+        layout.addLayout(left_layout)
 
         right_layout = QtGui.QGridLayout()
-        right_layout.addWidget(QtGui.QLabel("name:"), 0, 0)
+        right_layout.addWidget(QtGui.QLabel("Name:"), 0, 0)
         self.f_name = QtGui.QLineEdit('', readOnly=True)
         right_layout.addWidget(self.f_name, 0, 1)
         right_layout.addWidget(QtGui.QLabel("Path:"), 1, 0)
@@ -167,11 +172,20 @@ class FilesManager(QtGui.QDialog):
 
         self.files_status = reprounzip.FilesStatus(directory)
 
+        class FileItem(QtGui.QListWidgetItem):
+            def __init__(self, file_status):
+                text = "[%s%s] %s" % (("I" if file_status.is_input else ''),
+                                      ("O" if file_status.is_output else ''),
+                                      file_status.name)
+                super(FileItem, self).__init__(text)
+
+                self.file_name = file_status.name
+
         for file_status in self.files_status:
-            text = "[%s%s] %s" % (("I" if file_status.is_input else ''),
-                                  ("O" if file_status.is_output else ''),
-                                  file_status.name)
-            self.files_widget.addItem(text)
+            self.files_widget.addItem(FileItem(file_status))
+
+    def _search_changed(self):
+        TODO
 
     def _file_changed(self):
         selected = [i.row() for i in self.files_widget.selectedIndexes()]

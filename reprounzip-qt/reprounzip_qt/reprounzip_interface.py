@@ -78,6 +78,11 @@ class FileStatus(object):
         self.is_input = is_input
         self.is_output = is_output
 
+    def __cmp__(self, other):
+        if not isinstance(other, FileStatus):
+            raise TypeError
+        return cmp(self.name, other.name)
+
 
 class FilesStatus(object):
     def __init__(self, directory):
@@ -85,26 +90,30 @@ class FilesStatus(object):
         with open(os.path.join(directory, 'config.yml')) as fp:
             config = yaml.safe_load(fp)
 
-        self.files = [FileStatus(f['name'], f['path'],
-                                 f.get('read_by_runs'),
-                                 f.get('written_by_runs'))
-                      for f in config.get('inputs_outputs') or []]
+        self.files = dict((f['name'], FileStatus(f['name'], f['path'],
+                                                 f.get('read_by_runs'),
+                                                 f.get('written_by_runs')))
+                          for f in config.get('inputs_outputs') or [])
         self._refresh()
 
     def _refresh(self):
         with open(os.path.join(self.directory, '.reprounzip'), 'rb') as fp:
             unpacked_info = pickle.load(fp)
         assigned_input_files = unpacked_info.get('input_files', {})
-        for f in self.files:
+        for f in self.files.itervalues():
             f.assigned = assigned_input_files.get(f.name)
 
     def __getitem__(self, item):
-        self._refresh()
+        f = self.files[item]
+        with open(os.path.join(self.directory, '.reprounzip'), 'rb') as fp:
+            unpacked_info = pickle.load(fp)
+        assigned_input_files = unpacked_info.get('input_files', {})
+        f.assigned = assigned_input_files.get(f.name)
         return self.files[item]
 
     def __iter__(self):
         self._refresh()
-        return iter(self.files)
+        return iter(sorted(self.files.itervalues()))
 
 
 def find_command(cmd):
