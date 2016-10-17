@@ -88,7 +88,7 @@ For Mac OS X, only the *reprounzip* component is available.
 Binaries
 --------
 
-An installer containing Python 2.7, *reprounzip*, and all the plugins can be `downloaded from GitHub <https://github.com/ViDA-NYU/reprozip/releases/latest>`__.
+An installer containing Python 2.7, *reprounzip*, and all the plugins can be `downloaded from GitHub <http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer>`__.
 
 Required Software Packages
 --------------------------
@@ -146,7 +146,7 @@ For Windows, only the *reprounzip* component is available.
 Binaries
 --------
 
-A 32-bit installer containing Python 2.7, *reprounzip*, and all the plugins can be `downloaded from GitHub <https://github.com/ViDA-NYU/reprozip/releases/latest>`__.
+A 32-bit installer containing Python 2.7, *reprounzip*, and all the plugins can be `downloaded from GitHub <http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer>`__.
 
 Required Software Packages
 --------------------------
