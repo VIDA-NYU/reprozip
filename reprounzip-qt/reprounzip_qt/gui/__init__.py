@@ -25,3 +25,9 @@ class ReprounzipUi(QtGui.QMainWindow):
     def _unpacked(self, directory, root):
         self.tabs.widget(1).set_directory(directory, root=root)
         self.tabs.setCurrentIndex(1)
+
+    def closeEvent(self, event):
+        if self.tabs.widget(1).should_exit():
+            event.accept()
+        else:
+            event.ignore()

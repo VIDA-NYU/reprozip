@@ -11,8 +11,8 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
-1.0.8 (???)
------------
+1.0.8 (2016-10-07)
+------------------
 
 Behavior changes:
 * No longer default to overwriting trace directories. ReproZip will ask what to do or exit with an error if one of --continue/--overwrite is not provided

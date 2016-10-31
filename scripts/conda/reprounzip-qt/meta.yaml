@@ -30,8 +30,7 @@ requirements:
 
   run:
     - python
-    - setuptools  # for pkg_resources
-    - pyqt
+    - pyqt <5
 
 test:
   # Python imports
