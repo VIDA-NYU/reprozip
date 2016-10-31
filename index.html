@@ -8,17 +8,15 @@
     <meta name="author" content="ViDA at NYU">
     <link rel="icon" href="favicon.ico">
 
-    <title>ReproZip - About</title>
+    <title>ReproZip: About</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap theme -->
-    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Docs extras -->
     <link href="css/docs.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="css/theme.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
 
     <style type="text/css" rel="stylesheet">
 /* Sample code areas */
@@ -149,13 +147,15 @@ iframe {
     </script>
   </head>
 
+  <div class="container" role="main">
+  
   <body role="document">
 
     <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -163,8 +163,8 @@ iframe {
           </button>
           <a class="navbar-brand" href="#">ReproZip</a>
         </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+        <ul class="nav navbar-nav">        
             <li class="active"><a href="#">About</a></li>
             <li class="dropdown">
                 <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News<span class="caret"></span></a>
@@ -177,39 +177,49 @@ iframe {
             </li>
             <li><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
             <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-            <li><a href="https://github.com/ViDA-NYU/reprozip-examples">Examples</a></li>
+            <li><a href="https://vida-nyu.github.io/reprozip-examples/">Examples</a></li>
+          </ul>
+
+          <ul class="nav navbar-nav navbar-right">
+          <!--dropdown-->
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="https://pypi.python.org/pypi/reprozip" target="_blank" rel="noopener">reprozip</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip" target="_blank" rel="noopener">reprounzip</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-docker" target="_blank" rel="noopener">reprounzip-docker</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" target="_blank" rel="noopener">reprounzip-vagrant</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" target="_blank" rel="noopener">reprounzip-vistrails</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprozip"  rel="noopener">reprozip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip"  rel="noopener">reprounzip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-docker"  rel="noopener">reprounzip-docker</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant"  rel="noopener">reprounzip-vagrant</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails"  rel="noopener">reprounzip-vistrails</a></li>
               </ul>
-            </li>
-            <li class="dropdown">
+            </li><!--end dropdown-->
+            
+           <!--dropdown-->
+           <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
                     <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8-setup.exe">Windows</a></li>
                     <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8.pkg">Mac OS X</a></li>
-                    <li><a href="https://anaconda.org/ViDA-NYU" target="_blank" rel="noopener">Anaconda</a></li>
+                    <li><a href="https://anaconda.org/ViDA-NYU"  rel="noopener">Anaconda</a></li>
                 </ul>
-            </li>
-          </ul>
+            </li><!--end dropdown-->
+          </ul><!--end right nav bar-->
+
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
-    <div class="container" role="main">
-
-
 <div class="page-header" id="about">
-  <h2>Automatically pack your entire experiment to be run elsewhere!</h2>
+  <h2>Automatically pack your research to be run elsewhere!</h2>
 </div>
 
-<p>ReproZip allows you to pack your experiment along with all necessary data files, libraries, environment variables and options.<br/>
-Anybody can then reproduce the experiment on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
+<p>ReproZip allows you to pack your research along with all necessary data files, libraries, environment variables and options.<br/>
+Then anybody can reproduce the research on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
+    
+<div class="page-header" id="how">
+    <h3>How It Works</h3>
+</div>
+    
+<p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file. Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins.</p>
 
 <div class="codesample-left">
 <span class="code-title">On the original machine</span>
@@ -253,98 +263,92 @@ result: -17.814</span></code></pre></div>
 
 </div>
 
-<p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file.</p>
-
-<p>Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins.</p>
-
-<p>For more information, check out the <a href="https://reprozip.readthedocs.io/">full documentation</a>.</p>
-
 <div class="page-header" id="why">
-    <h2>Why ReproZip?</h2>
+    <h3>Why ReproZip?</h3>
 </div>
 
 <p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
 
 <p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
 
-<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell" target="_blank" rel="noopener">dependency hell</a>.</p>
+<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell"  rel="noopener">dependency hell</a>.</p>
 
 <p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
+    
+  <div class="row">
+    <div class="col-sm-7">
+        <div class="page-header" id="examples">
+          <h3>Examples</h3>
+        </div>
+      
+        <p>Various examples of ReproZip packages, including instructions on how to reproduce them, are available in the <a href="https://vida-nyu.github.io/reprozip-examples/" rel="noopener">reprozip-examples</a> GitHub repository.</p>
 
-<div>
-<div class="left" id="one">
+        <p>The following video shows how to use ReproZip to make your experiment reproducible. The example used in the video is based on <a href="http://hanzratech.in/2015/02/24/handwritten-digit-recognition-using-opencv-sklearn-and-python.html"  rel="noopener">this blog post from B. Hanzra</a> on digit recognition using OpenCV and scikit-learn, and is available for <a href="https://github.com/ViDA-NYU/reprozip-examples/tree/master/digits-sklearn-opencv"  rel="noopener">download here</a>.</p>
 
-<div class="page-header" id="examples">
-  <h2>Examples</h2>
-</div>
+        <div class="video-container">
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div><!--end examples column-->
+      
+        <div class="col-sm-5">
+             <div class="page-header" id="citing">
+              <h3>References</h3>
+            </div>
 
-<p>Various examples of ReproZip packages, including instructions on how to reproduce them, are available in the <a href="https://github.com/ViDA-NYU/reprozip-examples" target="_blank" rel="noopener">reprozip-examples</a> GitHub repository.</p>
+            <p>If you wish to cite ReproZip in a paper, please use the following:</p>
 
-<p>The following video shows how to use ReproZip to make your experiment reproducible. The example used in the video is based on <a href="http://hanzratech.in/2015/02/24/handwritten-digit-recognition-using-opencv-sklearn-and-python.html" target="_blank" rel="noopener">this blog post from B. Hanzra</a> on digit recognition using OpenCV and scikit-learn, and is available for <a href="https://github.com/ViDA-NYU/reprozip-examples/tree/master/digits-sklearn-opencv" target="_blank" rel="noopener">download here</a>.</p>
+            <div class="highlight">
+              <p id="sigmod-demo-2016"><i><b>ReproZip: Computational Reproducibility With Ease</b></i>,
+              F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
+              In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016</p>
+            </div>
 
-<div class="video-container">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
-</div>
+            <p>A preprint version is available <a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" >here</a>. For a complete list of publications, posters, and presentations, please visit <a href="news.html"  rel="noopener">News</a>. To reference our Web site, please use <a href="https://vida-nyu.github.io/reprozip/" rel="noopener">https://vida-nyu.github.io/reprozip</a>.</p>
+        </div><!--end references column-->
+        
+        <div class="row">
+        <div class="col-sm-5">          
+            <div class="page-header" id="feedback">
+              <h3>Feedback</h3>
+            </div>
 
-</div>
-<div class="right" id="one">
+            <p>Contact us at <a href="mailto:reprozip-users@vgc.poly.edu">reprozip-users@vgc.poly.edu</a> for feedback, questions, concerns, and issues. Also, please use this mailing list to <b>share your use cases</b> with us, as well as to report on best practices and lessons learned for reproducibility!</p>
+        
+        </div><!--end feedback column-->
+    
+    </div><!--end nested row-->
+   </div><!--outer row-->
+    
+    <div class="row">
+      <div class="col-sm-6"> 
+            <div class="page-header" id="citing">
+              <h3><a class="twitter-timeline"  href="https://twitter.com/search?q=ReproZip" data-widget-id="708053642100789249">Tweets About ReproZip</a></h3>
+            </div>
+      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+      </div>
+      
+      <div class="col-sm-6">     
+          <div class="page-header" id="people">
+            <h3>People</h3>
+          </div>
 
-<p>&nbsp;</p>
-
-            <a class="twitter-timeline"  href="https://twitter.com/search?q=reprozip" data-widget-id="708053642100789249">Tweets about reprozip</a>
-            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-
-</div>
-
-</div>
-
-<p>&nbsp;</p>
-
-<div class="page-header" id="feedback">
-  <h2>Feedback</h2>
-</div>
-
-<p>Contact us at <em>reprozip-users@vgc.poly.edu</em> for feedback, questions, concerns, and issues.
-        Also, please use this mailing list to <b>share your use cases</b> with us, as well as to report on
-        best practices and lessons learned for reproducibility!</p>
-
-<div class="page-header" id="citing">
-  <h2>References</h2>
-</div>
-
-If you wish to cite ReproZip in a paper, please use the following:
-<br/><br/>
-
-<div class="highlight">
-<p id="sigmod-demo-2016"><i><b>ReproZip: Computational Reproducibility With Ease</b></i>,
-F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
-In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016</p>
-</div>
-
-<p>A preprint version is available <a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" target="_blank">here</a>. For a complete list of publications, posters, and presentations, please visit
-<a href="news.html" target="_blank" rel="noopener">News</a>.</p>
-
-<p>To reference our Web site, please use <a href="https://vida-nyu.github.io/reprozip/" target="_blank" rel="noopener">https://vida-nyu.github.io/reprozip</a>.</p>
-
-<div class="page-header" id="people">
-  <h2>People</h2>
-</div>
-
-<p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
-<ul>
-  <li><a href="http://bigdata.poly.edu/~fchirigati/" target="_blank" rel="noopener">Fernando Chirigati</a></li>
-  <li><a href="http://bigdata.poly.edu/~juliana/" target="_blank" rel="noopener">Juliana Freire</a></li>
-  <li><a href="https://remram.fr/" target="_blank" rel="noopener">R&eacute;mi Rampin</a></li>
-  <li><a href="http://cs.nyu.edu/shasha/" target="_blank" rel="noopener">Dennis Shasha</a></li>
-  <li><a href="http://vickysteeves.com/" target="_blank" rel="noopener">Vicky Steeves</a></li>
-</ul>
+        <p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
+        <ul>
+          <li><a href="http://bigdata.poly.edu/~fchirigati/"  rel="noopener">Fernando Chirigati</a></li>
+          <li><a href="http://bigdata.poly.edu/~juliana/"  rel="noopener">Juliana Freire</a></li>
+          <li><a href="https://remram.fr/"  rel="noopener">R&eacute;mi Rampin</a></li>
+          <li><a href="http://cs.nyu.edu/shasha/"  rel="noopener">Dennis Shasha</a></li>
+          <li><a href="http://vickysteeves.com/"  rel="noopener">Vicky Steeves</a></li>
+        </ul>
+      </div>
+    </div>
 
     </div> <!-- /container -->
 
 <footer class="footer">
   <div class="container">
-    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/" target="_blank" rel="noopener">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
-    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt" target="_blank" rel="noopener">BSD</a>.</p>
+    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/"  rel="noopener">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
+    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt"  rel="noopener">BSD</a>.</p>
   </div>
 </footer>
 
