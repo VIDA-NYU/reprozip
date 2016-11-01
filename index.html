@@ -146,14 +146,14 @@ iframe {
   ga('send', 'pageview');
     </script>
   </head>
-
-  <div class="container" role="main">
   
   <body role="document">
-
+   <div class="container" role="main">
+    
     <!-- Fixed navbar -->
     <nav class="navbar navbar-inverse">
       <div class="container-fluid">
+        
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
             <span class="sr-only">Toggle navigation</span>
@@ -162,7 +162,8 @@ iframe {
             <span class="icon-bar"></span>
           </button>
           <a class="navbar-brand" href="#">ReproZip</a>
-        </div>
+        </div><!--end navbar-header-->
+        
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
         <ul class="nav navbar-nav">        
             <li class="active"><a href="#">About</a></li>
@@ -204,79 +205,82 @@ iframe {
             </li><!--end dropdown-->
           </ul><!--end right nav bar-->
 
-        </div><!--/.nav-collapse -->
-      </div>
+        </div><!--end nav-collapse -->
+     
+      </div> <!-- end container-fluid-->  
     </nav>
 
-<div class="page-header" id="about">
-  <h2>Automatically pack your research to be run elsewhere!</h2>
-</div>
+    <div class="row">
+      <div class="col-md-9">
+          <div class="page-header" id="about">
+            <h2>Automatically pack your research to be run elsewhere!</h2>
+          </div>
 
-<p>ReproZip allows you to pack your research along with all necessary data files, libraries, environment variables and options.<br/>
-Then anybody can reproduce the research on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
-    
-<div class="page-header" id="how">
-    <h3>How It Works</h3>
-</div>
-    
-<p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file. Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins.</p>
+          <p>ReproZip allows you to pack your research along with all necessary data files, libraries, environment variables and options.<br/>
+          Then anybody can reproduce the research on a different machine, without tracking down and installing the dependencies, or even having to run the same operating system!</p>
 
-<div class="codesample-left">
-<span class="code-title">On the original machine</span>
-<div class="highlight">
-<pre><code class="console">$ pip install reprozip
-$ reprozip <span class="s">trace</span> <span class="na">./myexperiment -my --options inputs/somefile.csv other_file_here.bin</span>
-<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
-result: 42.137</span>
-<span class="c">Configuration file written in .reprozip/config.yml
-Edit that file then run the packer -- use 'reprozip pack -h' for help</span>
-$ reprozip <span class="s">pack</span> my_experiment.rpz
-<span class="c">[REPROZIP] 17:26:42.588 INFO: Creating pack my_experiment.rpz...
-[REPROZIP] 17:26:42.589 INFO: Adding files from package coreutils...
-[REPROZIP] 17:26:42.601 INFO: Adding files from package libc6...
-[REPROZIP] 17:26:42.906 INFO: Adding other files...
-[REPROZIP] 17:26:43.450 INFO: Adding metadata...</span></code></pre></div>
-</div>
+          <div class="page-header" id="how">
+              <h3>How It Works</h3>
+          </div>
 
-<div class="codesample-bottom">
+          <p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file. Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins.</p>
 
-<div class="codesample-arrow"></div>
+          <div class="codesample-left">
+          <span class="code-title">On the original machine</span>
+          <div class="highlight">
+          <pre><code class="console">$ pip install reprozip
+          $ reprozip <span class="s">trace</span> <span class="na">./myexperiment -my --options inputs/somefile.csv other_file_here.bin</span>
+          <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+          result: 42.137</span>
+          <span class="c">Configuration file written in .reprozip/config.yml
+          Edit that file then run the packer -- use 'reprozip pack -h' for help</span>
+          $ reprozip <span class="s">pack</span> my_experiment.rpz
+          <span class="c">[REPROZIP] 17:26:42.588 INFO: Creating pack my_experiment.rpz...
+          [REPROZIP] 17:26:42.589 INFO: Adding files from package coreutils...
+          [REPROZIP] 17:26:42.601 INFO: Adding files from package libc6...
+          [REPROZIP] 17:26:42.906 INFO: Adding other files...
+          [REPROZIP] 17:26:43.450 INFO: Adding metadata...</span></code></pre></div>
+          </div>
 
-<div class="codesample-right">
-<span class="code-title">On another machine</span>
-<div class="highlight">
-<pre><code class="console">$ pip install reprounzip[all]
-$ reprounzip vagrant <span class="s">setup</span> my_experiment.rpz mydirectory
-<span class="c">Bringing machine 'default' up with 'virtualbox' provider...
-==> default: Importing base box 'remram/debian-7-amd64'...
-==> default: Booting VM...
-==> default: Machine booted and ready!
-==> default: Running provisioner: shell...</span>
-$ reprounzip vagrant <span class="s">run</span> mydirectory
-<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
-result: 42.137</span>
-$ reprounzip vagrant <span class="s">upload</span> /tmp/new_config:global-config
-$ reprounzip vagrant <span class="s">run</span> mydirectory --cmdline <span class="na">./myexperiment --other --options inputs/somefile.csv</span>
-<span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
-result: -17.814</span></code></pre></div>
-</div>
+          <div class="codesample-bottom">
 
-</div>
+          <div class="codesample-arrow"></div>
 
-<div class="page-header" id="why">
-    <h3>Why ReproZip?</h3>
-</div>
+          <div class="codesample-right">
+          <span class="code-title">On another machine</span>
+          <div class="highlight">
+          <pre><code class="console">$ pip install reprounzip[all]
+          $ reprounzip vagrant <span class="s">setup</span> my_experiment.rpz mydirectory
+          <span class="c">Bringing machine 'default' up with 'virtualbox' provider...
+          ==> default: Importing base box 'remram/debian-7-amd64'...
+          ==> default: Booting VM...
+          ==> default: Machine booted and ready!
+          ==> default: Running provisioner: shell...</span>
+          $ reprounzip vagrant <span class="s">run</span> mydirectory
+          <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+          result: 42.137</span>
+          $ reprounzip vagrant <span class="s">upload</span> /tmp/new_config:global-config
+          $ reprounzip vagrant <span class="s">run</span> mydirectory --cmdline <span class="na">./myexperiment --other --options inputs/somefile.csv</span>
+          <span class="nt">experiment: 0%... 25%... 50%... 75%... 100%
+          result: -17.814</span></code></pre></div>
+          </div>
+          
+          </div>
 
-<p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
+          <div class="page-header" id="why">
+              <h3>Why ReproZip?</h3>
+          </div>
 
-<p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
+          <p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
 
-<p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell"  rel="noopener">dependency hell</a>.</p>
+          <p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
 
-<p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
-    
-  <div class="row">
-    <div class="col-sm-7">
+          <p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell"  rel="noopener">dependency hell</a>.</p>
+
+          <p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
+        
+        <div class="row">
+        <div class="col-sm-7">
         <div class="page-header" id="examples">
           <h3>Examples</h3>
         </div>
@@ -305,43 +309,38 @@ result: -17.814</span></code></pre></div>
 
             <p>A preprint version is available <a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" >here</a>. For a complete list of publications, posters, and presentations, please visit <a href="news.html"  rel="noopener">News</a>. To reference our Web site, please use <a href="https://vida-nyu.github.io/reprozip/" rel="noopener">https://vida-nyu.github.io/reprozip</a>.</p>
         </div><!--end references column-->
-        
-        <div class="row">
-        <div class="col-sm-5">          
-            <div class="page-header" id="feedback">
+   </div><!--outer row-->
+         
+        <div class="page-header" id="feedback">
               <h3>Feedback</h3>
             </div>
 
-            <p>Contact us at <a href="mailto:reprozip-users@vgc.poly.edu">reprozip-users@vgc.poly.edu</a> for feedback, questions, concerns, and issues. Also, please use this mailing list to <b>share your use cases</b> with us, as well as to report on best practices and lessons learned for reproducibility!</p>
+            <p>Contact us at <a href="mailto:reprozip-users@vgc.poly.edu">reprozip-users@vgc.poly.edu</a> for feedback, questions, concerns, and issues. Also, please use this mailing list to <b>share your use cases</b> with us, as well as to report on best practices and lessons learned for reproducibility!</p>       
         
-        </div><!--end feedback column-->
-    
-    </div><!--end nested row-->
-   </div><!--outer row-->
-    
-    <div class="row">
-      <div class="col-sm-6"> 
-            <div class="page-header" id="citing">
-              <h3><a class="twitter-timeline"  href="https://twitter.com/search?q=ReproZip" data-widget-id="708053642100789249">Tweets About ReproZip</a></h3>
-            </div>
-      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-      </div>
-      
-      <div class="col-sm-6">     
-          <div class="page-header" id="people">
-            <h3>People</h3>
-          </div>
+         <div class="page-header" id="people">
+              <h3>People</h3>
+         </div>
 
-        <p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
-        <ul>
-          <li><a href="http://bigdata.poly.edu/~fchirigati/"  rel="noopener">Fernando Chirigati</a></li>
-          <li><a href="http://bigdata.poly.edu/~juliana/"  rel="noopener">Juliana Freire</a></li>
-          <li><a href="https://remram.fr/"  rel="noopener">R&eacute;mi Rampin</a></li>
-          <li><a href="http://cs.nyu.edu/shasha/"  rel="noopener">Dennis Shasha</a></li>
-          <li><a href="http://vickysteeves.com/"  rel="noopener">Vicky Steeves</a></li>
-        </ul>
-      </div>
-    </div>
+          <p>ReproZip is currently being developed at <a href="http://engineering.nyu.edu/">NYU</a>. The team includes:</p>
+          <ul>
+            <li><a href="http://bigdata.poly.edu/~fchirigati/"  rel="noopener">Fernando Chirigati</a></li>
+            <li><a href="http://bigdata.poly.edu/~juliana/"  rel="noopener">Juliana Freire</a></li>
+            <li><a href="https://remram.fr/"  rel="noopener">R&eacute;mi Rampin</a></li>
+            <li><a href="http://cs.nyu.edu/shasha/"  rel="noopener">Dennis Shasha</a></li>
+            <li><a href="http://vickysteeves.com/"  rel="noopener">Vicky Steeves</a></li>
+          </ul>
+              
+      </div><!--end center content-->
+
+     <div class="col-md-3" style="">
+            <a class="twitter-timeline"  href="https://twitter.com/search?q=ReproZip" data-widget-id="793266031187877888">Tweets about ReproZip</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          
+          
+          
+     </div><!--end sidebar-->
+      
+    </div><!--end row-->    
 
     </div> <!-- /container -->
 
