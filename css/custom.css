@@ -52,7 +52,7 @@ body p {
   background-color: transparent;
 }
 .navbar-inverse .navbar-toggle .icon-bar {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: white;
 }
 .navbar-inverse .navbar-collapse,
 .navbar-inverse .navbar-form {
