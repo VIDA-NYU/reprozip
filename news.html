@@ -21,51 +21,6 @@
     <link href="css/custom.css" rel="stylesheet">
 
     <style type="text/css" rel="stylesheet">
-/* Sample code areas */
-@media(min-width:768px) {
-    .codesample-left {
-        width: 75%;
-        margin: 2em auto 1em 0;
-    }
-    .codesample-right {
-        float: left;
-        width: 75%;
-        padding-left: 1em;
-    }
-    .codesample-arrow {
-        float: left;
-        width: 25%;
-        background-image: url(arrow.png);
-        background-size: 100%;
-        background-repeat: no-repeat;
-        height: 320px;
-    }
-    .codesample-bottom:after {
-        visibility: hidden;
-        display: block;
-        content: " ";
-        clear: both;
-        height: 0;
-    }
-}
-/* Sample titles */
-.code-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #959595;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding-left: 2em;
-    line-height: 2em;
-
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
 /* Footer */
 body > .container {
     padding-bottom: 65px;
@@ -87,15 +42,15 @@ body > .container {
 /* table */
 
 .date {
-    width:10px;
-    vertical-align:top;
-    padding-bottom:10px;
+    width: 10px;
+    vertical-align: top;
+    padding-bottom: 10px;
 }
 
 .news {
-    width:250px;
-    vertical-align:top;
-    padding-bottom:10px;
+    width: 250px;
+    vertical-align: top;
+    padding-bottom: 10px;
 }
 
 tt {
@@ -111,336 +66,297 @@ tt {
 
     <!-- Google Analytics -->
     <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-54723441-1', 'auto');
-  ga('send', 'pageview');
+ga('create', 'UA-54723441-1', 'auto');
+ga('send', 'pageview');
     </script>
   </head>
 
   <body role="document">
-    
-  <div class="container" role="main">
+    <div class="container" role="main">
 
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">ReproZip</a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
-        <ul class="nav navbar-nav">        
-            <li><a href="index.html">About</a></li>
-            <li class="active" class="dropdown">
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">ReproZip</a>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+            <ul class="nav navbar-nav">
+              <li><a href="index.html">About</a></li>
+              <li class="active" class="dropdown">
                 <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a href="news.html#news">What's New</a></li>
-                    <li><a href="news.html#presentations">Presentations</a></li>
-                    <li><a href="news.html#publications">Publications</a></li>
-                    <li><a href="news.html#posters">Posters</a></li>
+                  <li><a href="news.html#news">What's New</a></li>
+                  <li><a href="news.html#presentations">Presentations</a></li>
+                  <li><a href="news.html#publications">Publications</a></li>
+                  <li><a href="news.html#posters">Posters</a></li>
                 </ul>
-            </li>
-            <li><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
-            <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-            <li><a href="https://vida-nyu.github.io/reprozip-examples/">Examples</a></li>
-          </ul>
+              </li>
+              <li><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
+              <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
+              <li><a href="https://vida-nyu.github.io/reprozip-examples/">Examples</a></li>
+            </ul>
 
-          <ul class="nav navbar-nav navbar-right">
-          <!--dropdown-->
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="https://pypi.python.org/pypi/reprozip" target="_blank" rel="noopener">reprozip</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip" target="_blank" rel="noopener">reprounzip</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-docker" target="_blank" rel="noopener">reprounzip-docker</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" target="_blank" rel="noopener">reprounzip-vagrant</a></li>
-                <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" target="_blank" rel="noopener">reprounzip-vistrails</a></li>
-              </ul>
-            </li><!--end dropdown-->
-            
-           <!--dropdown-->
-           <li class="dropdown">
+            <ul class="nav navbar-nav navbar-right">
+              <!--dropdown-->
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="https://pypi.python.org/pypi/reprozip" target="_blank" rel="noopener">reprozip</a></li>
+                  <li><a href="https://pypi.python.org/pypi/reprounzip" target="_blank" rel="noopener">reprounzip</a></li>
+                  <li><a href="https://pypi.python.org/pypi/reprounzip-docker" target="_blank" rel="noopener">reprounzip-docker</a></li>
+                  <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" target="_blank" rel="noopener">reprounzip-vagrant</a></li>
+                  <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" target="_blank" rel="noopener">reprounzip-vistrails</a></li>
+                </ul>
+              </li><!--end dropdown-->
+
+              <!--dropdown-->
+              <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                    <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8-setup.exe">Windows</a></li>
-                    <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8.pkg">Mac OS X</a></li>
-                    <li><a href="https://anaconda.org/ViDA-NYU" target="_blank" rel="noopener">Anaconda</a></li>
+                  <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8-setup.exe">Windows</a></li>
+                  <li><a href="https://github.com/ViDA-NYU/reprozip/releases/download/1.0.8/reprounzip-1.0.8.pkg">Mac OS X</a></li>
+                  <li><a href="https://anaconda.org/ViDA-NYU" target="_blank" rel="noopener">Anaconda</a></li>
                 </ul>
-            </li><!--end dropdown-->
-          </ul><!--end right nav bar-->
+              </li><!--end dropdown-->
+            </ul><!--end right nav bar-->
 
-        </div><!--/.nav-collapse -->
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+
+      <div class="page-header" id="news">
+        <h2>What's New</h2>
       </div>
-    </nav>
 
-<div class="page-header" id="news">
-  <h2>What's New</h2>
-</div>
+      <table style="width: 90%">
+        <tr>
+          <td class="date"><b>[Oct 07, 2016]</b></td>
+          <td class="news">ReproZip v1.0.8 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.8" target="_blank" rel="noopener">released</a>. Adds a Qt GUI, support for <i>docker-native</i>, file filters, and VirtualBox display.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Aug 22, 2016]</b></td>
+          <td class="news">ReproZip v1.0.7 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.7" target="_blank" rel="noopener">released</a>. Adds missing message if <i>ptrace</i> fails, faster setup for Docker and Vagrant, and support for RPM.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[July 27, 2016]</b></td>
+          <td class="news">ReproZip will be demoed at <a href="http://www.summit.nycmedialab.org/" target="_blank" rel="noopener">NYC Media Lab 2016</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[July 01, 2016]</b></td>
+          <td class="news">ReproZip will be presented at the <a href="http://www.pasignyc.org/" target="_blank" rel="noopener">PASIG Fall 2016 meeting</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Jun 25, 2016]</b></td>
+          <td class="news">ReproZip v1.0.6 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.6" target="_blank" rel="noopener">released</a>. Adds <tt>docker --detach</tt>, <tt>reprozip combine</tt>, and faster metadata access with <tt>reprounzip info</tt>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Apr 07, 2016]</b></td>
+          <td class="news">ReproZip v1.0.5 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.5" target="_blank" rel="noopener">released</a>. Fixes download of parameters from our server.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Mar 10, 2016]</b></td>
+          <td class="news">ReproZip v1.0.4 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.4" target="_blank" rel="noopener">released</a>. Uses <a href="http://www.python-requests.org/en/master/" target="_blank" rel="noopener"><i>requests</i></a>, downloads parameters from our server, tweaks run/download CLI, and adds <tt>--docker-option</tt></td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Mar 10, 2016]</b></td>
+          <td class="news">We now have a <a href="https://github.com/ViDA-NYU/reprozip-examples" target="_blank" rel="noopener">GitHub repository</a> with examples of ReproZip packages! Check it out!</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Mar 02, 2016]</b></td>
+          <td class="news">The ReproZip team has been invited to participate in <a href="https://daspos.crc.nd.edu/index.php/workshops/container-strategies-for-data-software-preservation-that-promote-open-science" target="_blank" rel="noopener">Container Strategies for Data & Software Preservation that Promote Open Science</a>, a workshop held at Notre Dame by the NSF-funded <a href="https://daspos.crc.nd.edu/" target="_blank" rel="noopener">DASPOS</a> team.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Feb 27, 2016]</b></td>
+          <td class="news">ReproZip will be demoed at <a href="http://sigmod2016.org/" target="_blank" rel="noopener">SIGMOD 2016</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Jan 27, 2016]</b></td>
+          <td class="news">ReproZip will be presented at <a href="https://www.force11.org/meetings/force2016" target="_blank" rel="noopener">FORCE2016</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Dec 02, 2015]</b></td>
+          <td class="news">ReproZip v1.0.3 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.3" target="_blank" rel="noopener">released</a>. Bugfixes; adds cleanup if unpack fails, and <tt>--set-env</tt> and <tt>--pass-env</tt> options.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Nov 06, 2015]</b></td>
+          <td class="news">ReproZip is listed on the <a href="http://www.artifact-eval.org/guidelines.html" target="_blank" rel="noopener">Artifact Evaluation Process guidelines</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[Oct 26, 2015]</b></td>
+          <td class="news">ReproZip v1.0.2 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.2" target="_blank" rel="noopener">released</a>. Docker and Vagrant fixes.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[June, 2015]</b></td>
+          <td class="news">ReproZip is the recommended tool for the Reproducibility Section of the <a href="http://www.journals.elsevier.com/information-systems/" target="_blank" rel="noopener">Information Systems Journal, Elsevier</a>.</td>
+        </tr>
+        <tr>
+          <td class="date"><b>[May, 2015]</b></td>
+          <td class="news">ReproZip is the recommended tool for the <a href="http://db-reproducibility.seas.harvard.edu/" target="_blank" rel="noopener">ACM SIGMOD 2015 Reproducibility Review</a>.</td>
+        </tr>
+      </table>
 
-<table style="width:90%">
-  <tr>
-    <td class="date"><b>[Oct 07, 2016]</b></td>
-    <td class="news">ReproZip v1.0.8 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.8" target="_blank" rel="noopener">released</a>. Adds a Qt GUI, support for <i>docker-native</i>, file filters, and VirtualBox display.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Aug 22, 2016]</b></td>
-    <td class="news">ReproZip v1.0.7 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.7" target="_blank" rel="noopener">released</a>. Adds missing message if <i>ptrace</i> fails, faster setup for Docker and Vagrant, and support for RPM.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[July 27, 2016]</b></td>
-    <td class="news">ReproZip will be demoed at <a href="http://www.summit.nycmedialab.org/" target="_blank" rel="noopener">NYC Media Lab 2016</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[July 01, 2016]</b></td>
-    <td class="news">ReproZip will be presented at the <a href="http://www.pasignyc.org/" target="_blank" rel="noopener">PASIG Fall 2016 meeting</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Jun 25, 2016]</b></td>
-    <td class="news">ReproZip v1.0.6 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.6" target="_blank" rel="noopener">released</a>. Adds <tt>docker --detach</tt>, <tt>reprozip combine</tt>, and faster metadata access with <tt>reprounzip info</tt>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Apr 07, 2016]</b></td>
-    <td class="news">ReproZip v1.0.5 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.5" target="_blank" rel="noopener">released</a>. Fixes download of parameters from our server.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Mar 10, 2016]</b></td>
-    <td class="news">ReproZip v1.0.4 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.4" target="_blank" rel="noopener">released</a>. Uses <a href="http://www.python-requests.org/en/master/" target="_blank" rel="noopener"><i>requests</i></a>, downloads parameters from our server, tweaks run/download CLI, and adds <tt>--docker-option</tt></td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Mar 10, 2016]</b></td>
-    <td class="news">We now have a <a href="https://github.com/ViDA-NYU/reprozip-examples" target="_blank" rel="noopener">GitHub repository</a> with examples of ReproZip packages! Check it out!</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Mar 02, 2016]</b></td>
-    <td class="news">The ReproZip team has been invited to participate in <a href="https://daspos.crc.nd.edu/index.php/workshops/container-strategies-for-data-software-preservation-that-promote-open-science" target="_blank" rel="noopener">Container Strategies for Data & Software Preservation that Promote Open Science</a>, a workshop held at Notre Dame by the NSF-funded <a href="https://daspos.crc.nd.edu/" target="_blank" rel="noopener">DASPOS</a> team.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Feb 27, 2016]</b></td>
-    <td class="news">ReproZip will be demoed at <a href="http://sigmod2016.org/" target="_blank" rel="noopener">SIGMOD 2016</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Jan 27, 2016]</b></td>
-    <td class="news">ReproZip will be presented at <a href="https://www.force11.org/meetings/force2016" target="_blank" rel="noopener">FORCE2016</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Dec 02, 2015]</b></td>
-    <td class="news">ReproZip v1.0.3 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.3" target="_blank" rel="noopener">released</a>. Bugfixes; adds cleanup if unpack fails, and <tt>--set-env</tt> and <tt>--pass-env</tt> options.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Nov 06, 2015]</b></td>
-    <td class="news">ReproZip is listed on the <a href="http://www.artifact-eval.org/guidelines.html" target="_blank" rel="noopener">Artifact Evaluation Process guidelines</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[Oct 26, 2015]</b></td>
-    <td class="news">ReproZip v1.0.2 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.2" target="_blank" rel="noopener">released</a>. Docker and Vagrant fixes.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[June, 2015]</b></td>
-    <td class="news">ReproZip is the recommended tool for the Reproducibility Section of the <a href="http://www.journals.elsevier.com/information-systems/" target="_blank" rel="noopener">Information Systems Journal, Elsevier</a>.</td>
-  </tr>
-  <tr>
-    <td class="date"><b>[May, 2015]</b></td>
-    <td class="news">ReproZip is the recommended tool for the <a href="http://db-reproducibility.seas.harvard.edu/" target="_blank" rel="noopener">ACM SIGMOD 2015 Reproducibility Review</a>.</td>
-  </tr>
-</table>
+      <div class="page-header" id="presentations">
+          <h2>Presentations</h2>
+      </div>
 
-<div class="page-header" id="presentations">
-    <h2>Presentations</h2>
-</div>
+      <h4>2016</h4>
 
-<h4>2016</h4>
+      <p><i><a href="https://mfr.osf.io/render?url=https://osf.io/qbu6s/?action=download%26mode=render" target="_blank" rel="noopener">Preserving and Reproducing Research with ReproZip</a></i><br/>
+      Preservation and Archiving Special Interest Group (PASIG), <a href="http://www.pasignyc.org/" target="_blank">Fall 2016 Meeting</a><br/>
+      Presented by Fernando Chirigati<br/>
+      New York City, NY, October 2016</p>
 
-<p>
+      <p><i><a href="https://mfr.osf.io/render?url=https://osf.io/p8pjd/?action=download%26mode=render" target="_blank" rel="noopener">Provenance for Computational Reproducibility and Beyond</a></i><br/>
+      <a href="http://rdi2.rutgers.edu/event/rdi2-workshop-reproducibility-experimental-and-computational-science-resarch-1" target="_blank" rel="noopener">RDI2 Workshop: Reproducibility in Experimental and Computational Science Research</a><br/>
+      Presented by Juliana Freire<br/>
+      Rutgers University, October 2016</p>
 
-<i><a href="https://mfr.osf.io/render?url=https://osf.io/qbu6s/?action=download%26mode=render" target="_blank" rel="noopener">Preserving and Reproducing Research with ReproZip</a></i><br/>
-Preservation and Archiving Special Interest Group (PASIG), <a href="http://www.pasignyc.org/" target="_blank">Fall 2016 Meeting</a><br/>
-Presented by Fernando Chirigati<br/>
-New York City, NY, October 2016
+      <p><i><a href="https://drive.google.com/file/d/0B6FhhXhXzfj_dXZjTXFYam9mVjQ/view?usp=sharing" target="_blank" rel="noopener">ReproZip: Reproducibility with Ease</a></i><br/>
+      Workshop on Container Strategies for Data and Software Preservation that Promote Open Science<br/>
+      Presented by R&eacute;mi Rampin and Vicky Steeves<br/>
+      University of Notre Dame, May 2016</p>
 
-<br/><br/>
+      <p><i>ReproZip: Computational Reproducibility with Ease</i><br/>
+      <a href="http://www.dagstuhl.de/de/programm/kalender/semhp/?semnr=16041" target="_blank" rel="noopener">Dagstuhl Seminar 16041</a>, Reproducibility of Data-Oriented Experiments in e-Science<br/>
+      Presented by Fernando Chirigati<br/>
+      Wadern, Germany, January 2016</p>
 
-<i><a href="https://mfr.osf.io/render?url=https://osf.io/p8pjd/?action=download%26mode=render" target="_blank" rel="noopener">Provenance for Computational Reproducibility and Beyond</a></i><br/>
-<a href="http://rdi2.rutgers.edu/event/rdi2-workshop-reproducibility-experimental-and-computational-science-resarch-1" target="_blank" rel="noopener">RDI2 Workshop: Reproducibility in Experimental and Computational Science Research</a><br/>
-Presented by Juliana Freire<br/>
-Rutgers University, October 2016
+      <h4>2015</h4>
 
-<br/><br/>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-tutorial-columbia.pdf" target="_blank" rel="noopener">Achieving Reproducibility with ReproZip</a></i><br/>
+      CS Colloquium/Tutorial, Columbia University<br/>
+      Presented by Fernando Chirigati and R&eacute;mi Rampin<br/>
+      New York City, NY, October 2015</p>
 
-<i><a href="https://drive.google.com/file/d/0B6FhhXhXzfj_dXZjTXFYam9mVjQ/view?usp=sharing" target="_blank" rel="noopener">ReproZip: Reproducibility with Ease</a></i><br/>
-Workshop on Container Strategies for Data and Software Preservation that Promote Open Science<br/>
-Presented by R&eacute;mi Rampin and Vicky Steeves<br/>
-University of Notre Dame, May 2016
+      <p><i><a href="https://docs.google.com/file/d/0B3ucPz7GSthBUmRKTlEwRFB6U1U/edit" target="_blank" rel="noopener">Reproducible Experiments as an Afterthought</a></i><br/>
+      Moore-Sloan Data Science Environment Summit<br/>
+      Presented by R&eacute;mi Rampin<br/>
+      Suncadia, WA, October 2015</p>
 
-<br/><br/>
+      <p><i><a href="http://cs.nyu.edu/cs/faculty/shasha/papers/att_shasha_oct10_2015_dennis.ppt" target="_blank" rel="noopener">Liquid Version Climber: a Reproducibility-based Approach for Upgrading Complex Software</a></i><br/>
+      AT&amp;T Labs Research<br/>
+      Presented by Dennis Shasha<br/>
+      New York City, NY, October 2015</p>
 
-<i>ReproZip: Computational Reproducibility with Ease</i><br/>
-<a href="http://www.dagstuhl.de/de/programm/kalender/semhp/?semnr=16041" target="_blank" rel="noopener">Dagstuhl Seminar 16041</a>, Reproducibility of Data-Oriented Experiments in e-Science<br/>
-Presented by Fernando Chirigati<br/>
-Wadern, Germany, January 2016
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-berkeley.pdf" target="_blank" rel="noopener">Facilitating Reproducibility After the Fact</a></i><br/>
+      BIDS Reproducibility Conference, University of California, Berkeley<br/>
+      Presented by Fernando Chirigati<br/>
+      Berkeley, CA, May 2015</p>
 
-<br/><br/></p>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-uw.pdf" target="_blank" rel="noopener">Facilitating Reproducibility After the Fact</a></i><br/>
+      Reproducibility Seminar, University of Washington<br/>
+      Presented by Fernando Chirigati
+      [<a href="https://panopto.uw.edu/Panopto/Pages/Viewer.aspx?id=2b52fcef-65ed-7649-ad8e-7b4d07dbc341" target="_blank" rel="noopener">video</a>]<br/>
+      Seattle, WA, May 2015</p>
 
-<h4>2015</h4>
+      <p><i><a href="http://cs.nyu.edu/cs/faculty/shasha/papers/shasha_digicosme.pptx" target="_blank" rel="noopener">Computational Reproducibility: Why Needed, First Tools, Open Problems</a></i><br/>
+      DigiCosme, ENSTA ParisTech<br/>
+      Presented by Dennis Shasha<br/>
+      Paris, France, May 2015</p>
 
-<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-tutorial-columbia.pdf" target="_blank" rel="noopener">Achieving Reproducibility with ReproZip</a></i><br/>
-CS Colloquium/Tutorial, Columbia University<br/>
-Presented by Fernando Chirigati and R&eacute;mi Rampin<br/>
-New York City, NY, October 2015
+      <h4>2013</h4>
 
-<br/><br/>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-WorkshopReproducibleScience.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+      Workshop on Software Infrastructure for Reproducibility in Science<br/>
+      Presented by Fernando Chirigati<br/>
+      Brooklyn, NY, May 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<i><a href="https://docs.google.com/file/d/0B3ucPz7GSthBUmRKTlEwRFB6U1U/edit" target="_blank" rel="noopener">Reproducible Experiments as an Afterthought</a></i><br/>
-Moore-Sloan Data Science Environment Summit<br/>
-Presented by R&eacute;mi Rampin<br/>
-Suncadia, WA, October 2015
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/chirigati-tapp2013.pdf" target="_blank" rel="noopener">ReproZip: Using Provenance to Support Computational Reproducibility</a></i><br/>
+      The 5th USENIX conference on Theory and Practice of Provenance (TaPP)<br/>
+      Presented by Juliana Freire
+      [<a href="https://www.usenix.org/conference/tapp13/technical-sessions/presentation/chirigati" target="_blank" rel="noopener">video</a>]<br/>
+      Lombard, IL, April 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<br/><br/>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/BTPDF2-2013.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+      Beyond the PDF 2 Conference - Visions for the Future Session<br/>
+      Presented by Fernando Chirigati<br/>
+      Amsterdam, Netherlands, March 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<i><a href="http://cs.nyu.edu/cs/faculty/shasha/papers/att_shasha_oct10_2015_dennis.ppt" target="_blank" rel="noopener">Liquid Version Climber: a Reproducibility-based Approach for Upgrading Complex Software</a></i><br/>
-AT&amp;T Labs Research<br/>
-Presented by Dennis Shasha<br/>
-New York City, NY, October 2015
+      <h4>2012</h4>
 
-<br/><br/>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-ICERM.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
+      ICERM Workshop on Reproducibility in Computational and Experimental Mathematics - Lightning Talk<br/>
+      Presented by Fernando Chirigati<br/>
+      Providence, RI, December 2012
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-berkeley.pdf" target="_blank" rel="noopener">Facilitating Reproducibility After the Fact</a></i><br/>
-BIDS Reproducibility Conference, University of California, Berkeley<br/>
-Presented by Fernando Chirigati<br/>
-Berkeley, CA, May 2015
+      <div class="page-header" id="publications">
+          <h2>Publications</h2>
+      </div>
 
-<br/><br/>
+      <h4>2016</h4>
 
-<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/2015-talk-uw.pdf" target="_blank" rel="noopener">Facilitating Reproducibility After the Fact</a></i><br/>
-Reproducibility Seminar, University of Washington<br/>
-Presented by Fernando Chirigati
-[<a href="https://panopto.uw.edu/Panopto/Pages/Viewer.aspx?id=2b52fcef-65ed-7649-ad8e-7b4d07dbc341" target="_blank" rel="noopener">video</a>]<br/>
-Seattle, WA, May 2015
+      <p id="sigmod-demo-2016"><i><a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" target="_blank" rel="noopener">ReproZip: Computational Reproducibility With Ease</a></i>,
+      F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
+      In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016</p>
 
-<br/><br/>
+      <h4>2013</h4>
 
-<i><a href="http://cs.nyu.edu/cs/faculty/shasha/papers/shasha_digicosme.pptx" target="_blank" rel="noopener">Computational Reproducibility: Why Needed, First Tools, Open Problems</a></i><br/>
-DigiCosme, ENSTA ParisTech<br/>
-Presented by Dennis Shasha<br/>
-Paris, France, May 2015
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-sigmod2013.pdf" target="_blank" rel="noopener">Packing Experiments for Sharing and Publication</a></i>,
+      F. Chirigati, D. Shasha, and J. Freire.
+      In Proceedings of the 2013 International Conference on Management of Data (SIGMOD), pp. 977-980, 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<br/><br/></p>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-tapp2013.pdf" target="_blank" rel="noopener">ReproZip: Using Provenance to Support Computational Reproducibility</a></i>,
+      F. Chirigati, D. Shasha, and J. Freire.
+      In Proceedings of the 5th USENIX conference on Theory and Practice of Provenance (TaPP), 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<h4>2013</h4>
+      <div class="page-header" id="posters">
+          <h2>Posters</h2>
+      </div>
 
-<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-WorkshopReproducibleScience.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
-Workshop on Software Infrastructure for Reproducibility in Science<br/>
-Presented by Fernando Chirigati<br/>
-Brooklyn, NY, May 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
+      <h4>2016</h4>
 
-<br/><br/>
+      <p><i><a href="https://mfr.osf.io/render?url=https://osf.io/hp8p7/?action=download%26mode=render" target="_blank" rel="noopener">Preserving and Reproducing Research with ReproZip</a></i>,
+      F. Chirigati, R. Rampin, V. Steeves, D. Shasha, and J. Freire.
+      MSDSE Summit, 2016</p>
 
-<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/chirigati-tapp2013.pdf" target="_blank" rel="noopener">ReproZip: Using Provenance to Support Computational Reproducibility</a></i><br/>
-The 5th USENIX conference on Theory and Practice of Provenance (TaPP)<br/>
-Presented by Juliana Freire
-[<a href="https://www.usenix.org/conference/tapp13/technical-sessions/presentation/chirigati" target="_blank" rel="noopener">video</a>]<br/>
-Lombard, IL, April 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
+      <p><i id="sigmod-poster-2016"><a href="http://bigdata.poly.edu/~fchirigati/posters/reprozip-sigmod16.pdf" target="_blank" rel="noopener">ReproZip: Computational Reproducibility With Ease</a></i>,
+      F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
+      International Conference on Management of Data (SIGMOD), 2016</p>
 
-<br/><br/>
+      <p><i id="force2016"><a href="http://bigdata.poly.edu/~fchirigati/posters/chirigati-force2016.pdf" target="_blank" rel="noopener">Enhancing Scholarly Communication with ReproZip</a></i>,
+      F. Chirigati, R. Rampin, V. Steeves, D. Shasha, and J. Freire.
+      FORCE2016 Conference, 2016</p>
 
-<i><a href="http://bigdata.poly.edu/~fchirigati/presentations/BTPDF2-2013.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
-Beyond the PDF 2 Conference - Visions for the Future Session<br/>
-Presented by Fernando Chirigati<br/>
-Amsterdam, Netherlands, March 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
+      <h4>2013</h4>
 
-<br/><br/></p>
+      <p><i><a href="http://bigdata.poly.edu/~fchirigati/posters/chirigati-sigmod2013.pdf" target="_blank" rel="noopener">Packing Experiments for Sharing and Publication</a></i>,
+      F. Chirigati, D. Shasha, and J. Freire.
+      International Conference on Management of Data (SIGMOD), 2013
+      <br/>
+      <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
 
-<h4>2012</h4>
-
-<p><i><a href="http://bigdata.poly.edu/~fchirigati/presentations/ReproZip-ICERM.pdf" target="_blank" rel="noopener">ReproZip: Packing Experiments for Sharing and Publication</a></i><br/>
-ICERM Workshop on Reproducibility in Computational and Experimental Mathematics - Lightning Talk<br/>
-Presented by Fernando Chirigati<br/>
-Providence, RI, December 2012
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
-
-<br/></p>
-
-<div class="page-header" id="publications">
-    <h2>Publications</h2>
-</div>
-
-<h4>2016</h4>
-
-<p id="sigmod-demo-2016"><i><a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" target="_blank" rel="noopener">ReproZip: Computational Reproducibility With Ease</a></i>,
-F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
-In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016
-<br/><br/></p>
-
-<h4>2013</h4>
-
-<p><i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-sigmod2013.pdf" target="_blank" rel="noopener">Packing Experiments for Sharing and Publication</a></i>,
-F. Chirigati, D. Shasha, and J. Freire.
-In Proceedings of the 2013 International Conference on Management of Data (SIGMOD), pp. 977-980, 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
-
-<br/><br/>
-
-<i><a href="http://bigdata.poly.edu/~fchirigati/papers/chirigati-tapp2013.pdf" target="_blank" rel="noopener">ReproZip: Using Provenance to Support Computational Reproducibility</a></i>,
-F. Chirigati, D. Shasha, and J. Freire.
-In Proceedings of the 5th USENIX conference on Theory and Practice of Provenance (TaPP), 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
-
-<br/></p>
-
-<div class="page-header" id="posters">
-    <h2>Posters</h2>
-</div>
-
-<h4>2016</h4>
-
-<p><i><a href="https://mfr.osf.io/render?url=https://osf.io/hp8p7/?action=download%26mode=render" target="_blank" rel="noopener">Preserving and Reproducing Research with ReproZip</a></i>,
-F. Chirigati, R. Rampin, V. Steeves, D. Shasha, and J. Freire.
-MSDSE Summit, 2016
-<br/><br/>
-
-<i id="sigmod-poster-2016"><a href="http://bigdata.poly.edu/~fchirigati/posters/reprozip-sigmod16.pdf" target="_blank" rel="noopener">ReproZip: Computational Reproducibility With Ease</a></i>,
-F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
-International Conference on Management of Data (SIGMOD), 2016
-<br/><br/>
-
-<i id="force2016"><a href="http://bigdata.poly.edu/~fchirigati/posters/chirigati-force2016.pdf" target="_blank" rel="noopener">Enhancing Scholarly Communication with ReproZip</a></i>,
-F. Chirigati, R. Rampin, V. Steeves, D. Shasha, and J. Freire.
-FORCE2016 Conference, 2016
-<br/><br/></p>
-
-<h4>2013</h4>
-
-<p><i><a href="http://bigdata.poly.edu/~fchirigati/posters/chirigati-sigmod2013.pdf" target="_blank" rel="noopener">Packing Experiments for Sharing and Publication</a></i>,
-F. Chirigati, D. Shasha, and J. Freire.
-International Conference on Management of Data (SIGMOD), 2013
-<br/>
-<b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b>
-  
     </div> <!-- /container -->
 
-<footer class="footer">
-  <div class="container">
-    <p>ReproZip is under development at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
-    <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
-  </div>
-</footer>
+    <footer class="footer">
+      <div class="container">
+        <p>ReproZip is under development at <a href="http://engineering.nyu.edu/">NYU</a> by the <acronym title="Visualization and Data Analytics">ViDA group</acronym>.</p>
+        <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
+      </div>
+    </footer>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
