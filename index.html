@@ -103,6 +103,32 @@ iframe {
     width: 100%;
     height: 100%;
 }
+
+#twitter-wrapper {
+    display: none;
+}
+#twitter-wrapper.affix {
+    position: fixed;
+    top: 2px;
+}
+@media(min-width:768px) {
+    #twitter-wrapper {
+        display: block;
+        width: 187.5px;
+    }
+}
+@media(min-width:992px) {
+    #twitter-wrapper {
+        display: block;
+        width: 242.5px;
+    }
+}
+@media(min-width:1200px) {
+    #twitter-wrapper {
+        display: block;
+        width: 292.5px;
+    }
+}
     </style>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -195,7 +221,7 @@ ga('send', 'pageview');
       </nav>
 
       <div class="row">
-        <div class="col-md-9">
+        <div class="col-sm-9">
           <div class="page-header" id="about">
             <h2>Automatically pack your research to be run elsewhere!</h2>
           </div>
@@ -316,10 +342,11 @@ result: -17.814</span></code></pre>
 
         </div><!--end center content-->
 
-        <div class="col-md-3">
-          <a class="twitter-timeline" href="https://twitter.com/search?q=ReproZip" data-widget-id="793266031187877888">Tweets about ReproZip</a>
-          <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-
+        <div class="col-sm-3" style="position: relative; padding: 0;">
+          <div id="twitter-wrapper">
+            <a class="twitter-timeline" href="https://twitter.com/search?q=ReproZip" data-widget-id="793266031187877888" style="0.5vh;">Tweets about ReproZip</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
         </div><!--end twitter sidebar-->
 
       </div><!--end row-->
@@ -340,5 +367,13 @@ result: -17.814</span></code></pre>
     <script src="js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="js/ie10-viewport-bug-workaround.js"></script>
+
+    <script>
+$('#twitter-wrapper').affix({
+    offset: {
+        top: 110
+    }
+});
+    </script>
   </body>
 </html>
