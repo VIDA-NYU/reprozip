@@ -105,7 +105,7 @@ body p {
     .codesample-arrow {
         float: left;
         width: 25%;
-        background-image: url(arrow.png);
+        background-image: url(../arrow.png);
         background-size: 100%;
         background-repeat: no-repeat;
         height: 320px;
