@@ -51,9 +51,10 @@ ReproZip has two steps:
 We have a [repository of examples](https://github.com/ViDA-NYU/reprozip-examples) with explicit instructions on how to reproduce a subset of use cases. This repository provides documentation, `.rpz` files, and also a Vagrantfile that automatically configures a machine with six of the eleven case studies in the examples repository.
 
 # References
-* [Archive on Zenodo](https://zenodo.org/record/159604)
-* [Documentation](https://reprozip.readthedocs.io/en/1.0.x/)
-* [Repository of examples](https://github.com/ViDA-NYU/reprozip-examples)
-* [Website](https://vida-nyu.github.io/reprozip/) 
-* [Most recent paper](http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf)
-* [YouTube Demo Video](https://www.youtube.com/watch?v=-zLPuwCHXo0)
+* [Archive on Zenodo](https://doi.org/10.5281/zenodo.159604); Rémi Rampin, Fernando Chirigati, Vicky Steeves, Dennis Shasha, Juliana Freire
+* [Documentation](https://reprozip.readthedocs.io/en/1.0.x/); Rémi Rampin, Fernando Chirigati, Vicky Steeves
+* [Main website](https://vida-nyu.github.io/reprozip/); Fernando Chirigati, Rémi Rampin, Vicky Steeves
+* [Repository of examples](http://doi.org/10.17605/OSF.IO/JB2UV); Vicky Steeves, Rémi Rampin, Fernando Chirigati
+* [Visual guide to examples](https://vida-nyu.github.io/reprozip-examples/); Vicky Steeves, Rémi Rampin
+* [Most recent paper](https://doi.org/10.1145/2882903.2899401); Rémi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire
+* [YouTube Demo Video](https://www.youtube.com/watch?v=-zLPuwCHXo0); Fernando Chirigati, Vicky Steeves
