@@ -130,6 +130,36 @@ Then, assuming that you want to create the container under directory
 Remember that you can open the help message and learn more about other
 available flags and options by using the flag *-h* for any reprounzip command.
 
+Contribute
+----------
+
+Please subscribe to and contact the
+[reprozip-users](https://vgc.poly.edu/mailman/listinfo/reprozip-users) mailing
+list for questions, suggestions and discussions about using reprozip.
+
+Use the [reprozip-dev](https://vgc.poly.edu/mailman/listinfo/reprozip-dev)
+mailing list for any questions about reprozip source code.
+
+Bugs and feature plannings are tracked in the
+[GitHub issues](https://github.com/ViDA-NYU/reprozip/issues). Feel free to add
+an issue!
+
+To suggest changes to this source code, feel free to raise a
+[GitHub pull request](https://github.com/ViDA-NYU/reprozip/pulls).
+Any contributions received are assumed to be covered by the
+[BSD 3-Clause license](LICENSE.txt). We might ask you to sign a
+_Contributor License Agreement_ before accepting a larger contribution.
+
+
+License
+-------
+
+* (c) Copyright (c) 2014-2016, New York University
+
+Licensed under a **BSD-3 Clause license**. See the file
+[LICENSE.txt](LICENSE.txt) for details.
+
+
 Links and References
 --------------------
 
