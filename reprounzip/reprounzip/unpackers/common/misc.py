@@ -76,6 +76,8 @@ def unique_names():
     while True:
         letters = [rng.choice(characters) for i in irange(10)]
         yield b''.join(letters)
+
+
 unique_names = unique_names()
 
 

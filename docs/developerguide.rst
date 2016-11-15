@@ -10,7 +10,7 @@ Development happens on `GitHub <https://github.com/ViDA-NYU/reprozip>`__; bug re
 
 Continuous testing is provided by `Travis CI <https://travis-ci.org/ViDA-NYU/reprozip>`__. Note that ReproZip supports both Python 2 and 3. Test coverage is not very high because there are a lot of operations that are difficult to cover on Travis (for instance, Vagrant VMs cannot be used over there).
 
-If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `reprozip-dev@vgc.poly.edu`.
+If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `reprozip-dev@vgc.poly.edu <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__.
 
 Writing Unpackers
 -----------------
