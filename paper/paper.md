@@ -1,35 +1,35 @@
- ---
-  title: 'ReproZip: The Reproducibility Packer'
-  tags:
-    - reproducibility
-    - reproducible research
-    - provenance
-    - archive sharing
-  authors:
-   - name: Rémi Rampin
-     orcid: 0000-0002-0524-2282
-     affiliation: 1
-   - name: Fernando Chirigati
-     orcid: 0000-0002-9566-5835
-     affiliation: 1
-   - name: Dennis Shasha
-     orcid: 0000-0002-7036-3312
-     affiliation: 2
-   - name: Juliana Freire
-     orcid: 0000-0003-3915-7075
-     affiliation: 1
-   - name: Vicky Steeves
-     orcid: 0000-0003-4298-168X
-     affiliation: 3
-  affiliations:
-   - name: NYU Tandon School of Engineering
-     index: 1
-   - name: Courant Institute of Mathematical Sciences
-     index: 2
-   - name: NYU Division of Libraries & Center for Data Science
-     index: 3
-  date: 25 October 2016
-  ---
+---
+title: 'ReproZip: The Reproducibility Packer'
+tags:
+  - reproducibility
+  - reproducible research
+  - provenance
+  - archive sharing
+authors:
+  - name: Rémi Rampin
+    orcid: 0000-0002-0524-2282
+    affiliation: 1
+  - name: Fernando Chirigati
+    orcid: 0000-0002-9566-5835
+    affiliation: 1
+  - name: Dennis Shasha
+    orcid: 0000-0002-7036-3312
+    affiliation: 2
+  - name: Juliana Freire
+    orcid: 0000-0003-3915-7075
+    affiliation: 1
+  - name: Vicky Steeves
+    orcid: 0000-0003-4298-168X
+    affiliation: 3
+affiliations:
+  - name: NYU Tandon School of Engineering
+    index: 1
+  - name: Courant Institute of Mathematical Sciences
+    index: 2
+  - name: NYU Division of Libraries & Center for Data Science
+    index: 3
+date: 25 October 2016
+---
 
 # Summary
 ReproZip is a tool aimed at simplifying the process of creating reproducible experiments. After finishing an experiment, writing a website, constructing a database, or  creating an interactive environment, users can run ReproZip to create reproducible packages, archival snapshots, and an easy way for reviewers to validate their work. 
