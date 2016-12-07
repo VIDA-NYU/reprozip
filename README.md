@@ -6,7 +6,7 @@
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)]
 (https://reprozip.readthedocs.io/en/1.0.x/)
-[![Matrix](https://remram44.github.io/matrix-appservice-gitter-twisted/img/matrix-badge.svg)](https://vector.im/beta/#/room/#reprozip:matrix.org)
+[![Matrix](https://remram44.github.io/matrix-appservice-gitter-twisted/img/matrix-badge.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.60654.svg)](https://doi.org/10.5281/zenodo.60654)
 
 ReproZip
