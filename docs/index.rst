@@ -38,6 +38,6 @@ Links
 * `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__
 * Mailing lists:
 
-  * `reprozip-users@vgc.poly.edu <http://vgc.poly.edu/mailman/listinfo/reprozip-users>`__ (users)
+  * `reprozip-users@vgc.poly.edu <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__ (users)
 
-  * `reprozip-dev@vgc.poly.edu <http://vgc.poly.edu/mailman/listinfo/reprozip-dev>`__ (developers)
+  * `reprozip-dev@vgc.poly.edu <https://vgc.poly.edu/mailman/listinfo/reprozip-dev>`__ (developers)

@@ -183,7 +183,7 @@ Users may use flag *y* or *assume-yes* to automatically confirm all the question
 The `vagrant` Unpacker: Building a Virtual Machine
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The *vagrant* unpacker (``reprounzip vagrant``) allows an experiment to be unpacked and reproduced using a virtual machine created through `Vagrant <https://www.vagrantup.com/>`__. Therefore, the experiment can be reproduced in any environment supported by this tool, i.e., Linux, Mac OS X, and Windows. Note that the plugin assumes that Vagrant is installed in the current environment.
+The *vagrant* unpacker (``reprounzip vagrant``) allows an experiment to be unpacked into a Virtual Machine and reproduced in that emulated environment, by automatically using `Vagrant <https://www.vagrantup.com/>`__. Therefore, the experiment can be reproduced in any environment supported by this tool, i.e., Linux, Mac OS X, and Windows. Note that the plugin assumes that Vagrant and VirtualBox are installed on your machine.
 
 In addition to the commands listed in :ref:`unpacker-commands`, you can use ``suspend`` to save the virtual machine state to disk, and ``setup/start`` to restart a previously-created machine::
 

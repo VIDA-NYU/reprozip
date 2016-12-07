@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.8 (???)
------------
+1.0.8 (2016-10-07)
+------------------
 
 Behavior changes:
 * No longer default to overwriting trace directories. ReproZip will ask what to do or exit with an error if one of --continue/--overwrite is not provided

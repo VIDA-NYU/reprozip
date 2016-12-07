@@ -104,6 +104,7 @@ class DockerOptions(RunOptions):
                 if m is None:
                     error_msg(self, "Invalid port specification: '%s'" % port,
                               'warning')
+                    return None
                 else:
                     host, container, proto = m.groups()
                     if not host:
@@ -388,4 +389,15 @@ class RunTab(QtGui.QWidget):
     def set_directory(self, directory, root=None):
         self.root.setCurrentIndex(ROOT.OPTION_TO_INDEX[root])
         self.directory_widget.setText(directory)
-        self._directory_changed()
+        self._directory_changed(force=True)
+
+    def should_exit(self):
+        if self.unpacker:
+            r = QtGui.QMessageBox.question(
+                self, "Close Confirmation",
+                "The experiment is still unpacked with '%s'. Are you sure you "
+                "want to exit without removing it?" % self.unpacker,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            return r == QtGui.QMessageBox.Yes
+        else:
+            return True
