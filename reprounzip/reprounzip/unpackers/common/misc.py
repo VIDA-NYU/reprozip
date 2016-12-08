@@ -99,7 +99,7 @@ def shell_escape(s):
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
-    if any(c not in safe_shell_chars for c in s):
+    if not s or any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))

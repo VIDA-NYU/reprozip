@@ -19,7 +19,7 @@ from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"
-                       "-+=/:.,_%")
+                       "-+=/:.,%_")
 
 
 def shell_escape(s):
