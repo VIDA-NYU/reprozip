@@ -16,7 +16,7 @@ Any contributions received are assumed to be covered by the BSD 3-Clause license
 # Contributing
 [Contributing]: #contributing
 
-Please note we use the [Citizen Code of Conduct](https://github.com/stumpsyn/policies/blob/master/citizen_code_of_conduct.md), please follow it in all your interactions with the project. If you would like to contribute to this project by modifying/adding to the code, please read the [Best Practices for Contributing] below and feel free to follow the standard Github workflow:
+Please follow the [Citizen Code of Conduct](https://github.com/stumpsyn/policies/blob/master/citizen_code_of_conduct.md) in all your interactions with the project. If you would like to contribute to this project by modifying/adding to the code, please read the [Best Practices for Contributing] below and feel free to follow the standard GitHub workflow:
 
 1. Fork the project.
 2. Clone your fork to your computer.
@@ -36,7 +36,7 @@ Please note we use the [Citizen Code of Conduct](https://github.com/stumpsyn/pol
  * `git fetch upstream`
  * `git merge upstream/master`
 9. Test. Run the program and do something related to your feature/fix.
-10. Push the branch, uploading it to Github.
+10. Push the branch, uploading it to GitHub.
   * `git push origin my-feature-branch-name`
 11. Make a "Pull Request" from your branch here on GitHub.
 
@@ -80,7 +80,7 @@ The pull request should automatically update to reflect your changes.
 
 * Pull Requests represent final code. Please ensure they are:
      * Well tested by the author. It is the author's job to ensure their code works as expected.
-     * Be free of unnecessary log calls. Logging is great for debugging, but when a PR is made, log calls should only be present when there is an actual error or to warn of an unimplemented feature.
+     * Free of unnecessary log calls. Logging is great for debugging, but when a PR is made, log calls should only be present when there is an actual error or to warn of an unimplemented feature.
 
 * If your code is untested, log heavy, or incomplete, prefix your PR with "[WIP]", so others know it is still being tested and shouldn't be considered for merging yet. This way we can still give you feedback or help finalize the feature even if it's not ready for prime time.
 
