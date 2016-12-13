@@ -22,7 +22,6 @@ import logging
 import os
 from rpaths import Path
 import sqlite3
-import string
 import sys
 
 from reprozip import __version__ as reprozip_version
@@ -36,12 +35,18 @@ import reprozip.traceutils
 from reprozip.utils import PY3, unicode_, stderr
 
 
+safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                       "abcdefghijklmnopqrstuvwxyz"
+                       "0123456789"
+                       "-+=/:.,%_")
+
+
 def shell_escape(s):
-    """Given bl"a, returns "bl\\"a".
+    r"""Given bl"a, returns "bl\\"a".
     """
     if isinstance(s, bytes):
         s = s.decode('utf-8')
-    if any(c in s for c in string.whitespace + '*$\\"\''):
+    if not s or any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
                           .replace('$', '\\$'))
