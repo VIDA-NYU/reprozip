@@ -5,7 +5,7 @@
 (https://codecov.io/github/ViDA-NYU/reprozip?branch=master)
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=latest)]
-(https://reprozip.readthedocs.io/en/latest/)
+(https://docs.reprozip.org/en/latest/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-brightgreen.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![status](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0/status.svg)]
 (http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
@@ -178,8 +178,8 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 
 [vagrant]: https://www.vagrantup.com/
 [docker]: https://www.docker.com/
-[docs]: https://reprozip.readthedocs.io/
-[web]: https://vida-nyu.github.io/reprozip/
+[docs]: https://docs.reprozip.org/
+[web]: https://www.reprozip.org/
 [pz]: https://pypi.python.org/pypi/reprozip
 [puz]: https://pypi.python.org/pypi/reprounzip
 [puzd]: https://pypi.python.org/pypi/reprounzip-docker
