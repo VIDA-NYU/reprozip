@@ -310,6 +310,9 @@ def vagrant_setup_create(args):
                         fp.write('cp -L %s %s\n' % (
                                  shell_escape(unicode_(f)),
                                  shell_escape(unicode_(dest))))
+                fp.write(
+                    '\n'
+                    'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
             else:
                 fp.write('\ncd /\n')
                 paths = set()
