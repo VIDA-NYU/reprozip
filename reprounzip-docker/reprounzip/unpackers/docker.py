@@ -220,6 +220,11 @@ def docker_setup_create(args):
             data_files = rpz_pack.data_filenames()
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
+                if f.path.name == 'resolv.conf' and (
+                        f.path.lies_under('/etc') or
+                        f.path.lies_under('/run') or
+                        f.path.lies_under('/var')):
+                    continue
                 path = PosixPath('/')
                 for c in rpz_pack.remove_data_prefix(f.path).components:
                     path = path / c
