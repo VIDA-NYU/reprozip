@@ -22,7 +22,7 @@ else:
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-qt',
-      version='0.1',
+      version='0.2',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       entry_points={
           'gui_scripts': [
