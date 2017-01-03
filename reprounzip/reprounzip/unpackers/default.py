@@ -444,6 +444,13 @@ def chroot_create(args):
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
 
+        resolvconf_src = Path('/etc/resolv.conf')
+        if resolvconf_src.exists():
+            try:
+                resolvconf_src.copy(root / 'etc/resolv.conf')
+            except IOError:
+                pass
+
         # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
         sh_path = join_root(root, Path('/bin/sh'))
         env_path = join_root(root, Path('/usr/bin/env'))

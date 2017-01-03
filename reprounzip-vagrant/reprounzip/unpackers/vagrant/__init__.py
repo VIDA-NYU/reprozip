@@ -310,6 +310,9 @@ def vagrant_setup_create(args):
                         fp.write('cp -L %s %s\n' % (
                                  shell_escape(unicode_(f)),
                                  shell_escape(unicode_(dest))))
+                fp.write(
+                    '\n'
+                    'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
             else:
                 fp.write('\ncd /\n')
                 paths = set()
@@ -318,6 +321,11 @@ def vagrant_setup_create(args):
                 # the tar
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
+                    if f.path.name == 'resolv.conf' and (
+                            f.path.lies_under('/etc') or
+                            f.path.lies_under('/run') or
+                            f.path.lies_under('/var')):
+                        continue
                     path = PosixPath('/')
                     for c in rpz_pack.remove_data_prefix(f.path).components:
                         path = path / c
