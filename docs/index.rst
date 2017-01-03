@@ -3,7 +3,7 @@ ReproZip's Documentation
 
 Welcome to ReproZip's documentation!
 
-`ReproZip <https://vida-nyu.github.io/reprozip/>`__ is a tool aimed at simplifying the process of creating reproducible experiments from *command-line executions*. It tracks operating system calls and creates a package that contains all the binaries, files, and dependencies required to run a given command on the author's computational environment. A reviewer can then extract the experiment in his own environment to reproduce the results, even if the environment has a different operating system from the original one.
+`ReproZip <https://www.reprozip.org/>`__ is a tool aimed at simplifying the process of creating reproducible experiments from *command-line executions*. It tracks operating system calls and creates a package that contains all the binaries, files, and dependencies required to run a given command on the author's computational environment. A reviewer can then extract the experiment in his own environment to reproduce the results, even if the environment has a different operating system from the original one.
 
 Currently, ReproZip can only pack experiments that originally run on Linux.
 
@@ -34,7 +34,7 @@ Contents
 Links
 -----
 
-* `Project website <https://vida-nyu.github.io/reprozip/>`__
+* `Project website <https://www.reprozip.org/>`__
 * `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__
 * Mailing lists:
 
