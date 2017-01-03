@@ -8,6 +8,7 @@ Bugfixes:
 * Fix CentOS Docker image versions
 * Remove Fedora Docker images, they don't have tar
 * Do include .pyc files in packages, so reproduction take same code path
+* Don't use the experiment's resolv.conf file
 
 1.0.8 (2016-10-07)
 ------------------
