@@ -43,9 +43,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'debian:jessie'))
         self.assertEqual(get('x86_64', 'CentOS', '1'),
-                         ('centos', 'centos7'))
-        self.assertEqual(get('x86_64', 'Fedora', '21'),
-                         ('fedora', 'fedora:21'))
+                         ('centos', 'centos:centos7'))
 
     def test_vagrant(self):
         def get(architecture, distribution, version, gui=False):
