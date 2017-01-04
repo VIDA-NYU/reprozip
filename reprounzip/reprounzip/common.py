@@ -638,7 +638,7 @@ def setup_usage_report(name, version):
         usagestats.Prompt(enable='%s usage_report --enable' % name,
                           disable='%s usage_report --disable' % name),
         os.environ.get('REPROZIP_USAGE_URL',
-                       'https://reprozip-stats.poly.edu/'),
+                       'https://stats.reprozip.org/'),
         version='%s %s' % (name, version),
         unique_user_id=True,
         env_var='REPROZIP_USAGE_STATS',

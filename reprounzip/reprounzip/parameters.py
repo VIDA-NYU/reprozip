@@ -34,7 +34,7 @@ def update_parameters():
     if parameters is not None:
         return
 
-    url = 'https://reprozip-stats.poly.edu/parameters/'
+    url = 'https://stats.reprozip.org/parameters/'
     env_var = os.environ.get('REPROZIP_PARAMETERS')
     if env_var and (
             env_var.startswith('http://') or env_var.startswith('https://')):
