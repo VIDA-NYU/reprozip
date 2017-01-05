@@ -59,12 +59,12 @@ static char *get_string(PyObject *obj)
 
 static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 {
-    PyObject *ret;
+    PyObject *ret = NULL;
     int exit_status;
 
     /* Reads arguments */
-    const char *binary, *databasepath;
-    char **argv;
+    const char *binary = NULL, *databasepath = NULL;
+    char **argv = NULL;
     size_t argv_len;
     int verbosity;
     PyObject *py_binary, *py_argv, *py_databasepath;
@@ -84,10 +84,10 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 
     binary = get_string(py_binary);
     if(binary == NULL)
-        return NULL;
+        goto done;
     databasepath = get_string(py_databasepath);
     if(databasepath == NULL)
-        return NULL;
+        goto done;
 
     /* Converts argv from Python list to char[][] */
     {
@@ -100,7 +100,10 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
             PyObject *arg = PyList_GetItem(py_argv, i);
             char *str = get_string(arg);
             if(str == NULL)
+            {
+                bad = 1;
                 break;
+            }
             argv[i] = str;
         }
         if(bad)
@@ -109,7 +112,8 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
             for(j = 0; j < i; ++j)
                 free(argv[j]);
             free(argv);
-            return NULL;
+            argv = NULL;
+            goto done;
         }
         argv[argv_len] = NULL;
     }
@@ -124,7 +128,12 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
         ret = NULL;
     }
 
+done:
+    free(binary);
+    free(databasepath);
+
     /* Deallocs argv */
+    if(argv)
     {
         size_t i;
         for(i = 0; i < argv_len; ++i)
