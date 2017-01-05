@@ -215,6 +215,7 @@ def docker_setup_create(args):
             paths = set()
             pathlist = []
             # Add intermediate directories, and check for existence in the tar
+            logging.info("Generating file list...")
             missing_files = chain.from_iterable(pkg.files
                                                 for pkg in missing_packages)
             data_files = rpz_pack.data_filenames()

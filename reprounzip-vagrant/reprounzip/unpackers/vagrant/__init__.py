@@ -319,6 +319,7 @@ def vagrant_setup_create(args):
                 pathlist = []
                 # Adds intermediate directories, and checks for existence in
                 # the tar
+                logging.info("Generating file list...")
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
                     if f.path.name == 'resolv.conf' and (
