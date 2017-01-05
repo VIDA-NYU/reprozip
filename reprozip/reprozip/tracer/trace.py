@@ -169,6 +169,8 @@ def get_files(conn):
             files[f.path] = f
         else:
             f = files[r_name]
+        if r_mode & FILE_READ:
+            f.read(run)
         if r_mode & FILE_WRITE:
             f.write(run)
             # Mark the parent directory as read
@@ -176,8 +178,6 @@ def get_files(conn):
                 fp = TracedFile(r_name.parent)
                 fp.read(run)
                 files[fp.path] = fp
-        elif r_mode & FILE_READ:
-            f.read(run)
 
         # Identifies input files
         if r_name.is_file() and r_name not in executed:

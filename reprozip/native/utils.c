@@ -48,6 +48,9 @@ unsigned int flags2mode(int flags)
             mode |= FILE_WRITE;
         if(flags & O_RDWR)
             mode |= FILE_READ | FILE_WRITE;
+        if( (mode & FILE_READ) && (mode & FILE_WRITE) && (flags & O_TRUNC) )
+            /* If O_TRUNC is set, consider this a write */
+            mode &= ~FILE_READ;
     }
     return mode;
 }
