@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
-    metadata_initial_iofiles, metadata_update_run
+    metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -239,6 +239,8 @@ def vagrant_setup_create(args):
             logging.critical("Invalid value for memory size: %r", args.memory)
             sys.exit(1)
 
+    ports = parse_ports(args.expose_port)
+
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
         box = args.base_image[0]
@@ -395,6 +397,11 @@ mkdir -p /experimentroot/bin
                 if args.gui:
                     fp.write('    v.gui = true\n')
                 fp.write('  end\n')
+
+            # Port forwarding
+            for port in ports:
+                fp.write('  config.vm.network "forwarded_port", host: '
+                         '%s, guest: %s, protocol: "%s"\n' % port)
 
             fp.write('end\n')
 
@@ -828,6 +835,9 @@ def setup(parser, **kwargs):
                                "default: box default)")
         opts.add_argument('--use-gui', action='store_true', default=False,
                           dest='gui', help="Use the VM's X server")
+        opts.add_argument('--expose-port', '-p', action='append', default=[],
+                          help="Expose a network port, "
+                               "host[:experiment[/proto]]. Example: 8000:80")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)

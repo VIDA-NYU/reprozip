@@ -557,3 +557,24 @@ def metadata_update_run(config, dct, runs):
     for name, fi in iteritems(config.inputs_outputs):
         if any(r in runs for r in fi.write_runs):
             input_files[name] = True
+
+
+_port_re = re.compile('^(?:([0-9]+):)?([0-9]+)(?:/([a-z]+))?$')
+
+
+def parse_ports(specifications):
+    ports = []
+
+    for port in specifications:
+        m = _port_re.match(port)
+        if m is None:
+            logging.critical("Invalid port specification: '%s'", port)
+            sys.exit(1)
+        host, experiment, proto = m.groups()
+        if not host:
+            host = experiment
+        if not proto:
+            proto = 'tcp'
+        ports.append((int(host), int(experiment), proto))
+
+    return ports
