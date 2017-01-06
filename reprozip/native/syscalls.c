@@ -143,7 +143,12 @@ static int syscall_fileopening(const char *name, struct Process *process,
         mode = flags2mode(process->params[1].u |
                           O_CREAT | O_WRONLY | O_TRUNC);
     else /* syscall == SYSCALL_OPENING_OPEN */
+    {
         mode = flags2mode(process->params[1].u);
+        if( (access(name, F_OK) != 0)
+         && (mode & FILE_READ) && (mode & FILE_WRITE) )
+            mode &= ~FILE_READ;
+    }
 
     if(verbosity >= 3)
     {
