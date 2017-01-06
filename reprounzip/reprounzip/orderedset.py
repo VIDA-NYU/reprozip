@@ -1,7 +1,7 @@
 # From http://code.activestate.com/recipes/576694/
 # With added update()
 
-# Copyright (c) 2009 Raymond Hettinger
+# Copyright (C) 2009 Raymond Hettinger
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

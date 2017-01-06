@@ -156,7 +156,7 @@ _Contributor License Agreement_ before accepting a larger contribution.
 License
 -------
 
-* (c) Copyright (c) 2014-2016, New York University
+* Copyright (C) 2014-2017, New York University
 
 Licensed under a **BSD-3 Clause license**. See the file
 [LICENSE.txt](LICENSE.txt) for details.
