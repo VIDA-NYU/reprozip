@@ -63,7 +63,7 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
     int exit_status;
 
     /* Reads arguments */
-    const char *binary = NULL, *databasepath = NULL;
+    char *binary = NULL, *databasepath = NULL;
     char **argv = NULL;
     size_t argv_len;
     int verbosity;
