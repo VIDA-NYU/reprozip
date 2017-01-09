@@ -15,6 +15,7 @@ import subprocess
 import sys
 import yaml
 
+from reprounzip.common import FILE_READ, FILE_WRITE
 from reprounzip.unpackers.common import join_root
 from reprounzip.utils import PY3, stderr_bytes, stderr, download_file
 
@@ -588,6 +589,62 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         if 'dir2' in Path(f).parent.components:
             raise AssertionError("Created file shouldn't be packed: %s" %
                                  Path(f))
+
+    # ########################################
+    # 'readwrite' program: trace
+
+    # Build
+    build('readwrite', ['readwrite.c'])
+    # Create test folder
+    Path('readwrite_test').mkdir()
+    with Path('readwrite_test/existing').open('w'):
+        pass
+
+    # Trace existing one
+    check_call(rpz + ['trace', '--overwrite', '-d', 'readwrite-E-trace',
+                      './readwrite', 'readwrite_test/existing'])
+    # Check that file was logged as read and written
+    database = Path.cwd() / 'readwrite-E-trace/trace.sqlite3'
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+    rows = list(conn.execute(
+        '''
+        SELECT mode FROM opened_files
+        WHERE name = ?
+        ''',
+        (str(Path('readwrite_test/existing').absolute()),)))
+    conn.close()
+    assert rows
+    assert rows[0][0] == FILE_READ | FILE_WRITE
+
+    # Trace non-existing one
+    check_call(rpz + ['trace', '--overwrite', '-d', 'readwrite-N-trace',
+                      './readwrite', 'readwrite_test/nonexisting'])
+    # Check that file was logged as written only
+    database = Path.cwd() / 'readwrite-N-trace/trace.sqlite3'
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+    rows = list(conn.execute(
+        '''
+        SELECT mode FROM opened_files
+        WHERE name = ?
+        ''',
+        (str(Path('readwrite_test/nonexisting').absolute()),)))
+    conn.close()
+    assert rows
+    assert rows[0][0] == FILE_WRITE
+
+    # Trace a failure: inaccessible file
+    check_call(rpz + ['trace', '--overwrite', '-d', 'readwrite-F-trace',
+                      './readwrite', 'readwrite_test/non/existing/file'])
 
     # ########################################
     # Test shebang corner-cases
