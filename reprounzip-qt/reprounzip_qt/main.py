@@ -28,8 +28,6 @@ def main():
     # Locale
     locale.setlocale(locale.LC_ALL, '')
 
-    app = qt_init()
-
     parser = argparse.ArgumentParser(
         description="Graphical user interface for reprounzip",
         epilog="Please report issues to reprozip-users@vgc.poly.edu")
@@ -39,6 +37,8 @@ def main():
     parser.add_argument('--unpacked', action='append', default=[])
 
     args = parser.parse_args()
+
+    app = qt_init()
 
     from reprounzip_qt.gui import ReprounzipUi
 
