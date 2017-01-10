@@ -1,6 +1,6 @@
 package:
   name: reprounzip-qt
-  version: !!str 0.1
+  version: !!str 0.2
 
 source:
   fn: reprounzip-qt.tar.gz
