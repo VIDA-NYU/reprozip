@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.9 (???)
------------
+1.0.9 (2017-01-10)
+------------------
 
 Bugfixes:
 * Fix CentOS Docker image versions
