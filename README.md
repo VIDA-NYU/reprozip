@@ -132,6 +132,15 @@ Then, assuming that you want to create the container under directory
 Remember that you can open the help message and learn more about other
 available flags and options by using the flag *-h* for any reprounzip command.
 
+Citing ReproZip
+---------------
+
+Please use the following when citing ReproZip:
+
+    ReproZip: Computational Reproducibility With Ease
+    F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
+    In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016
+
 Contribute
 ----------
 
