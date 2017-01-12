@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -34,7 +34,7 @@ def update_parameters():
     if parameters is not None:
         return
 
-    url = 'https://reprozip-stats.poly.edu/parameters/'
+    url = 'https://stats.reprozip.org/parameters/'
     env_var = os.environ.get('REPROZIP_PARAMETERS')
     if env_var and (
             env_var.startswith('http://') or env_var.startswith('https://')):
@@ -156,25 +156,25 @@ bundled_parameters = (
     '        "name": "^debian$",\n'
     '        "versions": [\n'
     '          {\n'
-    '            "version": "^(6(\\\\.|$))|(squeeze$)",\n'
+    '            "version": "^(6(\\\\.|$))|(squeeze)",\n'
     '            "distribution": "debian",\n'
     '            "image": "debian:squeeze",\n'
     '            "name": "Debian 6 \'Squeeze\'"\n'
     '          },\n'
     '          {\n'
-    '            "version": "^(7(\\\\.|$))|(wheezy$)",\n'
+    '            "version": "^(7(\\\\.|$))|(wheezy)",\n'
     '            "distribution": "debian",\n'
     '            "image": "debian:wheezy",\n'
     '            "name": "Debian 7 \'Wheezy\'"\n'
     '          },\n'
     '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie$)",\n'
+    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
     '            "distribution": "debian",\n'
     '            "image": "debian:jessie",\n'
     '            "name": "Debian 8 \'Jessie\'"\n'
     '          },\n'
     '          {\n'
-    '            "version": "^(9(\\\\.|$))|(stretch$)",\n'
+    '            "version": "^(9(\\\\.|$))|(stretch)",\n'
     '            "distribution": "debian",\n'
     '            "image": "debian:stretch",\n'
     '            "name": "Debian 9 \'Stretch\'"\n'
@@ -288,7 +288,7 @@ bundled_parameters = (
     '        "name": "^debian$",\n'
     '        "versions": [\n'
     '          {\n'
-    '            "version": "^(7(\\\\.|$))|(wheezy$)",\n'
+    '            "version": "^(7(\\\\.|$))|(wheezy)",\n'
     '            "distribution": "debian",\n'
     '            "architectures": {\n'
     '              "i686": "remram/debian-7-i386",\n'
@@ -297,7 +297,7 @@ bundled_parameters = (
     '            "name": "Debian 7 \'Wheezy\'"\n'
     '          },\n'
     '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie$)",\n'
+    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
     '            "distribution": "debian",\n'
     '            "architectures": {\n'
     '              "i686": "remram/debian-8-i386",\n'
@@ -306,7 +306,7 @@ bundled_parameters = (
     '            "name": "Debian 8 \'Jessie\'"\n'
     '          },\n'
     '          {\n'
-    '            "version": "^(9(\\\\.|$))|(stretch$)",\n'
+    '            "version": "^(9(\\\\.|$))|(stretch)",\n'
     '            "distribution": "debian",\n'
     '            "architectures": {\n'
     '              "i686": "remram/debian-9-i386",\n'
@@ -441,7 +441,7 @@ bundled_parameters = (
     '        "name": "^debian$",\n'
     '        "versions": [\n'
     '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie$)",\n'
+    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
     '            "distribution": "debian",\n'
     '            "architectures": {\n'
     '              "i686": "remram/debian-8-amd64-x",\n'

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -142,8 +143,30 @@ static int syscall_unhandled_other(const char *name, struct Process *process,
 #define SYSCALL_OPENING_ACCESS  2
 #define SYSCALL_OPENING_CREAT   3
 
-static int syscall_fileopening(const char *name, struct Process *process,
-                               unsigned int syscall)
+static int syscall_fileopening_in(const char *name, struct Process *process,
+                                  unsigned int udata)
+{
+    unsigned int mode = flags2mode(process->params[1].u);
+    if( (mode & FILE_READ) && (mode & FILE_WRITE) )
+    {
+        char *pathname = abs_path_arg(process, 0);
+        if(access(pathname, F_OK) != 0 && errno == ENOENT)
+        {
+            log_debug(process->tid, "Doing RW open, file exists: no");
+            process->flags &= ~PROCFLAG_OPEN_EXIST;
+        }
+        else
+        {
+            log_debug(process->tid, "Doing RW open, file exists: yes");
+            process->flags |= PROCFLAG_OPEN_EXIST;
+        }
+        free(pathname);
+    }
+    return 0;
+}
+
+static int syscall_fileopening_out(const char *name, struct Process *process,
+                                   unsigned int syscall)
 {
     unsigned int mode;
     char *pathname = abs_path_arg(process, 0);
@@ -154,7 +177,17 @@ static int syscall_fileopening(const char *name, struct Process *process,
         mode = flags2mode(process->params[1].u |
                           O_CREAT | O_WRONLY | O_TRUNC);
     else /* syscall == SYSCALL_OPENING_OPEN */
+    {
         mode = flags2mode(process->params[1].u);
+        if( (process->retvalue.i >= 0) /* Open succeeded */
+         && (mode & FILE_READ) && (mode & FILE_WRITE) ) /* In readwrite mode */
+        {
+            /* But the file doesn't exist */
+            if(!(process->flags & PROCFLAG_OPEN_EXIST))
+                /* Consider this a simple write */
+                mode &= ~FILE_READ;
+        }
+    }
 
     if(verbosity >= 3)
     {
@@ -874,9 +907,10 @@ void syscall_build_table(void)
     /* i386 */
     {
         struct unprocessed_table_entry list[] = {
-            {  5, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
-            {  8, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
-            { 33, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+            {  5, "open", syscall_fileopening_in, syscall_fileopening_out,
+                     SYSCALL_OPENING_OPEN},
+            {  8, "creat", NULL, syscall_fileopening_out, SYSCALL_OPENING_CREAT},
+            { 33, "access", NULL, syscall_fileopening_out, SYSCALL_OPENING_ACCESS},
 
             {106, "stat", NULL, syscall_filestat, 0},
             {107, "lstat", NULL, syscall_filestat, 1},
@@ -951,9 +985,10 @@ void syscall_build_table(void)
     /* x64 */
     {
         struct unprocessed_table_entry list[] = {
-            {  2, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
-            { 85, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
-            { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+            {  2, "open", syscall_fileopening_in, syscall_fileopening_out,
+                     SYSCALL_OPENING_OPEN},
+            { 85, "creat", NULL, syscall_fileopening_out, SYSCALL_OPENING_CREAT},
+            { 21, "access", NULL, syscall_fileopening_out, SYSCALL_OPENING_ACCESS},
 
             {  4, "stat", NULL, syscall_filestat, 0},
             {  6, "lstat", NULL, syscall_filestat, 1},
@@ -1022,9 +1057,10 @@ void syscall_build_table(void)
     /* x32 */
     {
         struct unprocessed_table_entry list[] = {
-            {  2, "open", NULL, syscall_fileopening, SYSCALL_OPENING_OPEN},
-            { 85, "creat", NULL, syscall_fileopening, SYSCALL_OPENING_CREAT},
-            { 21, "access", NULL, syscall_fileopening, SYSCALL_OPENING_ACCESS},
+            {  2, "open", syscall_fileopening_in, syscall_fileopening_out,
+                     SYSCALL_OPENING_OPEN},
+            { 85, "creat", NULL, syscall_fileopening_out, SYSCALL_OPENING_CREAT},
+            { 21, "access", NULL, syscall_fileopening_out, SYSCALL_OPENING_ACCESS},
 
             {  4, "stat", NULL, syscall_filestat, 0},
             {  6, "lstat", NULL, syscall_filestat, 1},

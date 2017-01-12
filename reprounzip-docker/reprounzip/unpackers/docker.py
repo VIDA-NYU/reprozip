@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -214,11 +214,17 @@ def docker_setup_create(args):
             paths = set()
             pathlist = []
             # Add intermediate directories, and check for existence in the tar
+            logging.info("Generating file list...")
             missing_files = chain.from_iterable(pkg.files
                                                 for pkg in missing_packages)
             data_files = rpz_pack.data_filenames()
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
+                if f.path.name == 'resolv.conf' and (
+                        f.path.lies_under('/etc') or
+                        f.path.lies_under('/run') or
+                        f.path.lies_under('/var')):
+                    continue
                 path = PosixPath('/')
                 for c in rpz_pack.remove_data_prefix(f.path).components:
                     path = path / c

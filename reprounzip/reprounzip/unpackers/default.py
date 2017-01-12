@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -443,6 +443,13 @@ def chroot_create(args):
         logging.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
+
+        resolvconf_src = Path('/etc/resolv.conf')
+        if resolvconf_src.exists():
+            try:
+                resolvconf_src.copy(root / 'etc/resolv.conf')
+            except IOError:
+                pass
 
         # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
         sh_path = join_root(root, Path('/bin/sh'))

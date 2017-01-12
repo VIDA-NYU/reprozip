@@ -22,7 +22,7 @@ else:
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-qt',
-      version='0.1',
+      version='0.2',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       entry_points={
           'gui_scripts': [
@@ -35,7 +35,7 @@ setup(name='reprounzip-qt',
       maintainer_email='remirampin@gmail.com',
       url='http://vida-nyu.github.io/reprozip/',
       long_description=description,
-      license='BSD',
+      license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'gui'],
       classifiers=[

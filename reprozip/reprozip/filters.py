@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -25,21 +25,14 @@ def builtin(input_files, **kwargs):
 
 
 def python(files, input_files, **kwargs):
-    remove = []
     add = []
     for path, fi in iteritems(files):
         if path.ext == '.pyc':
             pyfile = path.parent / path.stem + '.py'
             if pyfile.is_file():
-                logging.info("Removing %s", path)
-                remove.append(path)
-                pyfile = path.parent / path.stem + '.py'
                 if pyfile not in files:
                     logging.info("Adding %s", pyfile)
                     add.append(TracedFile(pyfile))
-
-    for path in remove:
-        files.pop(path, None)
 
     for fi in add:
         files[fi.path] = fi

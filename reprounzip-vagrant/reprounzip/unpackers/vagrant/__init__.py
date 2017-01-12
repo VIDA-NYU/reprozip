@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -305,14 +305,23 @@ def vagrant_setup_create(args):
                         fp.write('cp -L %s %s\n' % (
                                  shell_escape(unicode_(f)),
                                  shell_escape(unicode_(dest))))
+                fp.write(
+                    '\n'
+                    'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
             else:
                 fp.write('\ncd /\n')
                 paths = set()
                 pathlist = []
                 # Adds intermediate directories, and checks for existence in
                 # the tar
+                logging.info("Generating file list...")
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
+                    if f.path.name == 'resolv.conf' and (
+                            f.path.lies_under('/etc') or
+                            f.path.lies_under('/run') or
+                            f.path.lies_under('/var')):
+                        continue
                     path = PosixPath('/')
                     for c in rpz_pack.remove_data_prefix(f.path).components:
                         path = path / c

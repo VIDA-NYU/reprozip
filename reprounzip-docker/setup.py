@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-docker',
-      version='1.0.8',
+      version='1.0.9',
       packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
@@ -27,7 +27,7 @@ setup(name='reprounzip-docker',
       maintainer_email='remirampin@gmail.com',
       url='http://vida-nyu.github.io/reprozip/',
       long_description=description,
-      license='BSD',
+      license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'docker'],
       classifiers=[

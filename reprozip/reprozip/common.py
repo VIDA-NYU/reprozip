@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2016 New York University
+# Copyright (C) 2014-2017 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
@@ -646,7 +646,7 @@ def setup_usage_report(name, version):
         usagestats.Prompt(enable='%s usage_report --enable' % name,
                           disable='%s usage_report --disable' % name),
         os.environ.get('REPROZIP_USAGE_URL',
-                       'https://reprozip-stats.poly.edu/'),
+                       'https://stats.reprozip.org/'),
         version='%s %s' % (name, version),
         unique_user_id=True,
         env_var='REPROZIP_USAGE_STATS',

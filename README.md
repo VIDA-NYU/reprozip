@@ -132,6 +132,15 @@ Then, assuming that you want to create the container under directory
 Remember that you can open the help message and learn more about other
 available flags and options by using the flag *-h* for any reprounzip command.
 
+Citing ReproZip
+---------------
+
+Please use the following when citing ReproZip:
+
+    ReproZip: Computational Reproducibility With Ease
+    F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
+    In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016
+
 Contribute
 ----------
 
@@ -156,9 +165,9 @@ _Contributor License Agreement_ before accepting a larger contribution.
 License
 -------
 
-* (c) Copyright (c) 2014-2016, New York University
+* Copyright (C) 2014-2017, New York University
 
-Licensed under a **BSD-3 Clause license**. See the file
+Licensed under a **BSD 3-Clause license**. See the file
 [LICENSE.txt](LICENSE.txt) for details.
 
 

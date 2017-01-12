@@ -11,6 +11,16 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
+1.0.9 (2017-01-10)
+------------------
+
+Bugfixes:
+* Fix CentOS Docker image versions
+* Remove Fedora Docker images, they don't have tar
+* Do include .pyc files in packages, so reproduction take same code path
+* Don't use the experiment's resolv.conf file
+* Fix handling of files opened in read-write mode
+
 1.0.8 (2016-10-07)
 ------------------
 
