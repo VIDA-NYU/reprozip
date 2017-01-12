@@ -167,7 +167,7 @@ License
 
 * Copyright (C) 2014-2017, New York University
 
-Licensed under a **BSD-3 Clause license**. See the file
+Licensed under a **BSD 3-Clause license**. See the file
 [LICENSE.txt](LICENSE.txt) for details.
 
 

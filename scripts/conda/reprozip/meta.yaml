@@ -56,7 +56,8 @@ test:
 
 about:
   home: http://vida-nyu.github.io/reprozip/
-  license: BSD License
+  license: BSD-3-Clause
+  license_family: BSD
   summary: 'Linux tool enabling reproducible experiments (packer)'
 
 # See

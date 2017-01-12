@@ -29,7 +29,7 @@ setup(name='reprounzip-vagrant',
       maintainer_email='remirampin@gmail.com',
       url='http://vida-nyu.github.io/reprozip/',
       long_description=description,
-      license='BSD',
+      license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
                 'vida', 'nyu', 'vagrant'],
       classifiers=[

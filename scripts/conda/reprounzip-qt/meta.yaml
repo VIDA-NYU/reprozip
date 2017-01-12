@@ -52,7 +52,8 @@ test:
 
 about:
   home: http://vida-nyu.github.io/reprozip/
-  license: BSD License
+  license: BSD-3-Clause
+  license_family: BSD
   summary: 'Graphical user interface for reprounzip, using Qt'
 
 # See
