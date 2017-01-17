@@ -284,8 +284,8 @@ def docker_setup_build(args):
             sys.exit(1)
     logging.info("Initial image created: %s", image.decode('ascii'))
 
-    unpacked_info['initial_image'] = image
-    unpacked_info['current_image'] = image
+    unpacked_info['initial_image'] = image.decode('ascii')
+    unpacked_info['current_image'] = image.decode('ascii')
     write_dict(target, unpacked_info)
 
 
@@ -301,8 +301,8 @@ def docker_reset(args):
     if 'initial_image' not in unpacked_info:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
-    image = unpacked_info['current_image']
-    initial = unpacked_info['initial_image']
+    image = unpacked_info['current_image'].encode('ascii')
+    initial = unpacked_info['initial_image'].encode('ascii')
 
     if image == initial:
         logging.warning("Image is already in the initial state, nothing to "
@@ -313,7 +313,7 @@ def docker_reset(args):
         if retcode != 0:
             logging.warning("Can't remove previous image, docker returned %d",
                             retcode)
-        unpacked_info['current_image'] = initial
+        unpacked_info['current_image'] = initial.decode('ascii')
         write_dict(target, unpacked_info)
 
 
@@ -397,7 +397,7 @@ def docker_run(args):
 
     # Get current image name
     if 'current_image' in unpacked_info:
-        image = unpacked_info['current_image']
+        image = unpacked_info['current_image'].encode('ascii')
         logging.debug("Running from image %s", image.decode('ascii'))
     else:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
@@ -517,7 +517,7 @@ def docker_run(args):
     subprocess.check_call(['docker', 'commit', container, new_image])
 
     # Update image name
-    unpacked_info['current_image'] = new_image
+    unpacked_info['current_image'] = new_image.decode('ascii')
     write_dict(target, unpacked_info)
 
     # Remove the container
@@ -527,7 +527,7 @@ def docker_run(args):
         logging.error("Error deleting container %s", container.decode('ascii'))
 
     # Untag previous image, unless it is the initial_image
-    if image != unpacked_info['initial_image']:
+    if image != unpacked_info['initial_image'].encode('ascii'):
         logging.info("Untagging previous image %s", image.decode('ascii'))
         subprocess.check_call(['docker', 'rmi', image])
 
@@ -569,7 +569,7 @@ class ContainerUploader(FileUploader):
             self.build_directory.rmtree()
             return
 
-        from_image = self.unpacked_info['current_image']
+        from_image = self.unpacked_info['current_image'].encode('ascii')
 
         with self.build_directory.open('w', 'Dockerfile',
                                        encoding='utf-8',
@@ -598,14 +598,15 @@ class ContainerUploader(FileUploader):
             sys.exit(1)
         else:
             logging.info("New image created: %s", image.decode('ascii'))
-            if from_image != self.unpacked_info['initial_image']:
+            if (from_image !=
+                    self.unpacked_info['initial_image'].encode('ascii')):
                 logging.info("Untagging previous image %s",
                              from_image.decode('ascii'))
                 retcode = subprocess.call(['docker', 'rmi', from_image])
                 if retcode != 0:
                     logging.warning("Can't remove previous image, docker "
                                     "returned %d", retcode)
-            self.unpacked_info['current_image'] = image
+            self.unpacked_info['current_image'] = image.decode('ascii')
             write_dict(self.target, self.unpacked_info)
 
         self.build_directory.rmtree()
@@ -674,7 +675,7 @@ def docker_download(args):
     if 'current_image' not in unpacked_info:
         logging.critical("Image doesn't exist yet, have you run setup/build?")
         sys.exit(1)
-    image = unpacked_info['current_image']
+    image = unpacked_info['current_image'].encode('ascii')
     logging.debug("Downloading from image %s", image.decode('ascii'))
 
     ContainerDownloader(target, files, image, all_=args.all)
@@ -690,10 +691,10 @@ def docker_destroy_docker(args):
         logging.critical("Image not created")
         sys.exit(1)
 
-    initial_image = unpacked_info.pop('initial_image')
+    initial_image = unpacked_info.pop('initial_image').encode('ascii')
 
     if 'current_image' in unpacked_info:
-        image = unpacked_info.pop('current_image')
+        image = unpacked_info.pop('current_image').encode('ascii')
         if image != initial_image:
             logging.info("Destroying image %s...", image.decode('ascii'))
             retcode = subprocess.call(['docker', 'rmi', image])
