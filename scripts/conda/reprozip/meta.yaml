@@ -30,6 +30,7 @@ requirements:
 
   run:
     - python
+    - setuptools  # for pkg_resources
     - pyyaml
     - requests
     - rpaths >=0.8
