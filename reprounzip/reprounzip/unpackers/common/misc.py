@@ -468,6 +468,11 @@ def metadata_read(path, type_):
     """
     filename = path / '.reprounzip'
 
+    if not filename.exists():
+        logging.critical("Required metadata missing, did you point this "
+                         "command at the directory you created using the "
+                         "'setup' command?")
+        raise UsageError
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
