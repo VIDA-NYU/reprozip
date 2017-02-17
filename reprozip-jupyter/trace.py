@@ -15,6 +15,7 @@ import logging
 from nbconvert.preprocessors import ExecutePreprocessor
 import nbformat
 import os
+from rpaths import Path
 import sys
 
 from reprozip.common import setup_logging
@@ -42,12 +43,28 @@ class RPZKernelManager(KernelManager):
             cmd.append('--overwrite')
         cmd.extend(kernel_cmd)
 
+        logging.info("Kernel requested, connection file: %s",
+                     self.connection_file)
         logging.info("Executing: %r", cmd)
         return launch_kernel(cmd, **kw)
 
     def finish_shutdown(self, *args, **kwargs):
         kwargs['waittime'] = 600
-        return super(RPZKernelManager, self).finish_shutdown(*args, **kwargs)
+        super(RPZKernelManager, self).finish_shutdown(*args, **kwargs)
+
+        # Add the input file to the configuration
+        if self.rpz_args.dir:
+            config = Path(self.rpz_args.dir) / 'config.yml'
+        else:
+            config = Path('.reprozip-trace/config.yml')
+
+        with config.rewrite(encoding='utf-8') as (read, write):
+            for line in read:
+                write.write(line)
+                if line == 'inputs_outputs:\n':
+                    write.write('  - name: jupyter_connection_file'
+                                '  # Needed for reprozip-jupyter operations\n'
+                                '    path: %s\n' % self.connection_file)
 
 
 KernelManagerABC.register(RPZKernelManager)
