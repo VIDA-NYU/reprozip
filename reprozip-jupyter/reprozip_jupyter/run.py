@@ -1,11 +1,11 @@
+# Copyright (C) 2014-2017 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 """Run notebooks in a packed environment.
 """
 
 from __future__ import division, print_function, unicode_literals
-
-if __name__ == '__main__':  # noqa
-    from run import main
-    main()
 
 import argparse
 import contextlib
@@ -20,7 +20,6 @@ import subprocess
 import sys
 
 from reprounzip.common import setup_logging
-from reprounzip.utils import iteritems
 
 
 __version__ = '0.1'
@@ -33,7 +32,7 @@ def process_connection_file(original):
 
     data['ip'] = '0.0.0.0'  # Kernel should listen on all interfaces
 
-    ports = [value for key, value in iteritems(data) if key.endswith('_port')]
+    ports = [value for key, value in data.items() if key.endswith('_port')]
 
     fd, fixed_file = Path.tempfile(suffix='.json')
     with fixed_file.open('wb') as fp:
@@ -84,7 +83,8 @@ class RPZKernelManager(IOLoopKernelManager):
 
 class RPZMappingKernelManager(MappingKernelManager):
     def __init__(self, **kwargs):
-        kwargs['kernel_manager_class'] = 'run.RPZKernelManager'
+        kwargs['kernel_manager_class'] = \
+            'reprozip_jupyter.run.RPZKernelManager'
         super(RPZMappingKernelManager, self).__init__(**kwargs)
 
 
@@ -96,11 +96,12 @@ def run_server(args):
                                 kernel_manager_class=RPZMappingKernelManager)
 
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser(
+        'reprozip-jupyter run',
         description="This runs a Jupyter notebook server that will spawn "
-                    "notebooks in Docker containers started from the given "
-                    "ReproZip package",
+                    "notebooks in Docker containers running in the given "
+                    "unpacked environment",
         epilog="Please report issues to reprozip-users@vgc.poly.edu")
     parser.add_argument('--version', action='version',
                         version=__version__)
@@ -111,7 +112,7 @@ def main():
     parser.add_argument('jupyter_args', nargs=argparse.REMAINDER,
                         help="Arguments to pass to the notebook server")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     setup_logging('REPROZIP-JUPYTER-SERVER', args.verbosity)
     if not args.target:
         parser.error("missing experiment directory")

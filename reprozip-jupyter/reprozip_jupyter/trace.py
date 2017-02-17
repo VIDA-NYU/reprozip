@@ -1,11 +1,11 @@
+# Copyright (C) 2014-2017 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
 """Trace a notebook to generate accompanying RPZ pack.
 """
 
 from __future__ import division, print_function, unicode_literals
-
-if __name__ == '__main__':  # noqa
-    from trace import main
-    main()
 
 import argparse
 from jupyter_client.launcher import launch_kernel
@@ -18,7 +18,7 @@ import os
 from rpaths import Path
 import sys
 
-from reprozip.common import setup_logging
+from reprounzip.common import setup_logging
 
 
 __version__ = '0.1'
@@ -64,6 +64,7 @@ class RPZKernelManager(KernelManager):
                 if line == 'inputs_outputs:\n':
                     write.write('  - name: jupyter_connection_file'
                                 '  # Needed for reprozip-jupyter operations\n'
+                                '    read_by_runs: [0]\n'
                                 '    path: %s\n' % self.connection_file)
 
 
@@ -135,8 +136,9 @@ def trace_notebook(args):
     return notebook
 
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser(
+        'reprozip-jupyter trace',
         description="This runs a Jupyter notebook under ReproZip trace to "
                     "generate the accompanying environment package",
         epilog="Please report issues to reprozip-users@vgc.poly.edu")
@@ -168,7 +170,7 @@ def main():
         help="overwrite the previous trace, don't add to it")
     parser.add_argument('notebook', help="command-line to run under trace")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     setup_logging('REPROZIP-JUPYTER-TRACE', args.verbosity)
     if not args.notebook:
         parser.error("missing notebook")
