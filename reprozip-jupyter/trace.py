@@ -3,6 +3,10 @@
 
 from __future__ import division, print_function, unicode_literals
 
+if __name__ == '__main__':  # noqa
+    from trace import main
+    main()
+
 import argparse
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import KernelManager
@@ -20,6 +24,8 @@ __version__ = '0.1'
 
 
 class RPZKernelManager(KernelManager):
+    rpz_args = None
+
     def _launch_kernel(self, kernel_cmd, **kw):
         cmd = ['reprozip']
         cmd.extend(['-v'] * (self.rpz_args.verbosity - 1))
@@ -97,11 +103,6 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         return nb, resources
         # } no change
 
-    def preprocess_cell(self, *args, **kwargs):
-        logging.info("Preprocess cell")
-        return super(RPZExecutePreprocessor, self).preprocess_cell(
-            *args, **kwargs)
-
 
 def trace_notebook(args):
     notebook_filename = args.notebook
@@ -157,7 +158,3 @@ def main():
         sys.exit(1)
     trace_notebook(args)
     sys.exit(0)
-
-
-if __name__ == '__main__':
-    main()
