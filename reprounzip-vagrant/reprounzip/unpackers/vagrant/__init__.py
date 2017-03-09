@@ -251,18 +251,21 @@ def vagrant_setup_create(args):
     logging.info("Using box %s", box)
     logging.debug("Distribution: %s", target_distribution or "unknown")
 
-    # If using chroot, we might still need to install packages to get missing
-    # (not packed) files
-    if use_chroot:
+    install_packages = args.install_packages
+    if install_packages is None:
+        install_packages = not use_chroot
+
+    # We might still need to install packages to get missing (not packed) files
+    if not install_packages:
         packages = [pkg for pkg in packages if not pkg.packfiles]
         if packages:
-            record_usage(vagrant_install_pkgs=True)
             logging.info("Some packages were not packed, so we'll install and "
                          "copy their files\n"
                          "Packages that are missing:\n%s",
                          ' '.join(pkg.name for pkg in packages))
 
     if packages:
+        record_usage(vagrant_install_pkgs=True)
         try:
             installer = select_installer(pack, runs, target_distribution)
         except CantFindInstaller as e:
@@ -823,6 +826,13 @@ def setup(parser, **kwargs):
         opts.add_argument('--distribution', nargs=1,
                           help="Distribution used in the Vagrant box (for "
                                "package installer selection)")
+        opts.add_argument('--install-packages', action='store_true',
+                          default=None, dest='install_packages',
+                          help="Install packages rather than using packed "
+                               "files")
+        opts.add_argument('--dont-install-packages', action='store_false',
+                          default=None, dest='install_packages',
+                          help="Don't install packages, use packed files")
         opts.add_argument('--memory', nargs=1,
                           help="Amount of RAM to allocate to VM (megabytes, "
                                "default: box default)")
