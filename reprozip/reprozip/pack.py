@@ -61,12 +61,15 @@ def canonicalize_config(packages, other_files, additional_patterns,
     """Expands ``additional_patterns`` from the configuration file.
     """
     add_files = expand_patterns(additional_patterns)
-    if sort_packages:
-        add_files, add_packages = identify_packages(add_files)
-    else:
-        add_packages = []
-    other_files, packages = combine_files(add_files, add_packages,
-                                          other_files, packages)
+    if add_files:
+        logging.info("Found %d files from expanding additional_patterns...",
+                     len(add_files))
+        if sort_packages:
+            add_files, add_packages = identify_packages(add_files)
+        else:
+            add_packages = []
+        other_files, packages = combine_files(add_files, add_packages,
+                                              other_files, packages)
     return packages, other_files
 
 
