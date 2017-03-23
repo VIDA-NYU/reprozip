@@ -23,6 +23,8 @@ build:
   # number: 1
   string: _REPLACE_buildstr_REPLACE_
 
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
 requirements:
   build:
     - python
@@ -30,6 +32,7 @@ requirements:
 
   run:
     - python
+    - setuptools  # for pkg_resources
     - pyyaml
     - requests
     - rpaths >=0.8
