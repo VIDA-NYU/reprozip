@@ -49,6 +49,7 @@ def shell_escape(s):
     if not s or any(c not in safe_shell_chars for c in s):
         return '"%s"' % (s.replace('\\', '\\\\')
                           .replace('"', '\\"')
+                          .replace('`', '\\`')
                           .replace('$', '\\$'))
     else:
         return s
