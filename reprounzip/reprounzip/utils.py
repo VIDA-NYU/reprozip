@@ -68,7 +68,7 @@ if PY3:
     stdout, stderr = sys.stdout, sys.stderr
 else:
     izip = itertools.izip
-    irange = xrange
+    irange = xrange  # noqa: F821
     iteritems = dict.iteritems
     itervalues = dict.itervalues
     listvalues = dict.values
@@ -83,8 +83,8 @@ if PY3:
     int_types = int,
     unicode_ = str
 else:
-    int_types = int, long
-    unicode_ = unicode
+    int_types = int, long  # noqa: F821
+    unicode_ = unicode  # noqa: F821
 
 
 def flatten(n, l):
