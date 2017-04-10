@@ -272,7 +272,7 @@ def docker_setup_build(args):
 
     logging.info("Calling 'docker build'...")
     try:
-        retcode = subprocess.call(['docker', 'build', '-t'] +
+        retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
                                   cwd=target.path)
     except OSError:
@@ -309,7 +309,7 @@ def docker_reset(args):
                         "reset")
     else:
         logging.info("Removing image %s", image.decode('ascii'))
-        retcode = subprocess.call(['docker', 'rmi', image])
+        retcode = subprocess.call(args.docker_cmd.split() + ['rmi', image])
         if retcode != 0:
             logging.warning("Can't remove previous image, docker returned %d",
                             retcode)
@@ -477,7 +477,8 @@ def docker_run(args):
     if args.detach:
         logging.info("Start container %s (detached)",
                      container.decode('ascii'))
-        retcode = interruptible_call(['docker', 'run', b'--name=' + container,
+        retcode = interruptible_call(args.docker_cmd.split() +
+                                     ['run', b'--name=' + container,
                                       '-h', hostname,
                                       '-d', '-t'] +
                                      args.docker_option +
@@ -490,7 +491,8 @@ def docker_run(args):
 
     # Run command in container
     logging.info("Starting container %s", container.decode('ascii'))
-    retcode = interruptible_call(['docker', 'run', b'--name=' + container,
+    retcode = interruptible_call(args.docker_cmd.split() +
+                                 ['run', b'--name=' + container,
                                   '-h', hostname,
                                   '-i', '-t'] +
                                  args.docker_option +
@@ -501,7 +503,8 @@ def docker_run(args):
         sys.exit(1)
 
     # Get exit status from "docker inspect"
-    out = subprocess.check_output(['docker', 'inspect', container])
+    out = subprocess.check_output(args.docker_cmd.split() +
+                                  ['inspect', container])
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
@@ -514,7 +517,8 @@ def docker_run(args):
     new_image = make_unique_name(b'reprounzip_image_')
     logging.info("Committing container %s to image %s",
                  container.decode('ascii'), new_image.decode('ascii'))
-    subprocess.check_call(['docker', 'commit', container, new_image])
+    subprocess.check_call(args.docker_cmd.split() +
+                          ['commit', container, new_image])
 
     # Update image name
     unpacked_info['current_image'] = new_image
@@ -522,14 +526,14 @@ def docker_run(args):
 
     # Remove the container
     logging.info("Destroying container %s", container.decode('ascii'))
-    retcode = subprocess.call(['docker', 'rm', container])
+    retcode = subprocess.call(args.docker_cmd.split() + ['rm', container])
     if retcode != 0:
         logging.error("Error deleting container %s", container.decode('ascii'))
 
     # Untag previous image, unless it is the initial_image
     if image != unpacked_info['initial_image']:
         logging.info("Untagging previous image %s", image.decode('ascii'))
-        subprocess.check_call(['docker', 'rmi', image])
+        subprocess.check_call(args.docker_cmd.split() + ['rmi', image])
 
     # Update input file status
     metadata_update_run(config, unpacked_info, selected_runs)
@@ -539,8 +543,10 @@ def docker_run(args):
 
 
 class ContainerUploader(FileUploader):
-    def __init__(self, target, input_files, files, unpacked_info):
+    def __init__(self, target, input_files, files, unpacked_info,
+                 docker_cmd='docker'):
         self.unpacked_info = unpacked_info
+        self.docker_cmd = docker_cmd
         FileUploader.__init__(self, target, input_files, files)
 
     def prepare_upload(self, files):
@@ -591,7 +597,8 @@ class ContainerUploader(FileUploader):
             # TODO : restore permissions?
 
         image = make_unique_name(b'reprounzip_image_')
-        retcode = subprocess.call(['docker', 'build', '-t', image, '.'],
+        retcode = subprocess.call(self.docker_cmd +
+                                  ['build', '-t', image, '.'],
                                   cwd=self.build_directory.path)
         if retcode != 0:
             logging.critical("docker build failed with code %d", retcode)
@@ -601,7 +608,8 @@ class ContainerUploader(FileUploader):
             if from_image != self.unpacked_info['initial_image']:
                 logging.info("Untagging previous image %s",
                              from_image.decode('ascii'))
-                retcode = subprocess.call(['docker', 'rmi', from_image])
+                retcode = subprocess.call(self.docker_cmd +
+                                          ['rmi', from_image])
                 if retcode != 0:
                     logging.warning("Can't remove previous image, docker "
                                     "returned %d", retcode)
@@ -621,21 +629,24 @@ def docker_upload(args):
     input_files = unpacked_info.setdefault('input_files', {})
 
     try:
-        ContainerUploader(target, input_files, files, unpacked_info)
+        ContainerUploader(target, input_files, files, unpacked_info,
+                          docker_cmd=args.docker_cmd.split())
     finally:
         write_dict(target, unpacked_info)
 
 
 class ContainerDownloader(FileDownloader):
-    def __init__(self, target, files, image, all_=False):
+    def __init__(self, target, files, image, all_=False, docker_cmd='docker'):
         self.image = image
+        self.docker_cmd = docker_cmd
         FileDownloader.__init__(self, target, files, all_=all_)
 
     def prepare_download(self, files):
         # Create a container from the image
         self.container = make_unique_name(b'reprounzip_dl_')
         logging.info("Creating container %s", self.container.decode('ascii'))
-        subprocess.check_call(['docker', 'create',
+        subprocess.check_call(self.docker_cmd +
+                              ['create',
                                b'--name=' + self.container,
                                self.image])
 
@@ -644,9 +655,10 @@ class ContainerDownloader(FileDownloader):
         # a file name (#4272)
         tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
         try:
-            ret = subprocess.call(['docker', 'cp',
-                                  self.container + b':' + remote_path.path,
-                                  tmpdir.path])
+            ret = subprocess.call(self.docker_cmd +
+                                  ['cp',
+                                   self.container + b':' + remote_path.path,
+                                   tmpdir.path])
             if ret != 0:
                 logging.critical("Can't get output file: %s", remote_path)
                 return False
@@ -657,7 +669,7 @@ class ContainerDownloader(FileDownloader):
 
     def finalize(self):
         logging.info("Removing container %s", self.container.decode('ascii'))
-        retcode = subprocess.call(['docker', 'rm', self.container])
+        retcode = subprocess.call(self.docker_cmd + ['rm', self.container])
         if retcode != 0:
             logging.warning("Can't remove temporary container, docker "
                             "returned %d", retcode)
@@ -677,7 +689,8 @@ def docker_download(args):
     image = unpacked_info['current_image']
     logging.debug("Downloading from image %s", image.decode('ascii'))
 
-    ContainerDownloader(target, files, image, all_=args.all)
+    ContainerDownloader(target, files, image,
+                        all_=args.all, docker_cmd=args.docker_cmd.split())
 
 
 @target_must_exist
@@ -696,12 +709,12 @@ def docker_destroy_docker(args):
         image = unpacked_info.pop('current_image')
         if image != initial_image:
             logging.info("Destroying image %s...", image.decode('ascii'))
-            retcode = subprocess.call(['docker', 'rmi', image])
+            retcode = subprocess.call(args.docker_cmd.split() + ['rmi', image])
             if retcode != 0:
                 logging.error("Error deleting image %s", image.decode('ascii'))
 
     logging.info("Destroying image %s...", initial_image.decode('ascii'))
-    retcode = subprocess.call(['docker', 'rmi', initial_image])
+    retcode = subprocess.call(args.docker_cmd.split() + ['rmi', initial_image])
     if retcode != 0:
         logging.error("Error deleting image %s", initial_image.decode('ascii'))
 
@@ -767,6 +780,9 @@ def setup(parser, **kwargs):
       output_id:filename    extracts the output file to the corresponding local
                             path
     """
+    parser.add_argument('--docker-cmd', action='store', default='docker',
+                        help="Change the Docker command; split on spaces")
+
     subparsers = parser.add_subparsers(title="actions",
                                        metavar='', help=argparse.SUPPRESS)
 

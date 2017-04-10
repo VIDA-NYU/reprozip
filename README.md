@@ -2,9 +2,9 @@
 [![Coverage Status](https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=master)](https://codecov.io/github/ViDA-NYU/reprozip?branch=master)
 [![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/master/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=latest)](https://docs.reprozip.org/en/latest/)
-[![Matrix](https://img.shields.io/badge/chat-matrix.org-brightgreen.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
-[![status](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0/status.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.60654.svg)](https://doi.org/10.5281/zenodo.60654)
+[![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
+[![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.237968-green.svg)](https://doi.org/10.5281/zenodo.237968)
 
 ReproZip
 ========

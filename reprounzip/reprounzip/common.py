@@ -562,8 +562,8 @@ other_files:
 
 # If you want to include additional files in the pack, you can list additional
 # patterns of files that will be included
+additional_patterns:
 # Example:
-#additional_patterns:
 #  - /etc/apache2/**  # Everything under apache2/
 #  - /var/log/apache2/*.log  # Log files directly under apache2/
 #  - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in

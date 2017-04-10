@@ -11,6 +11,15 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
+1.0.10 (???)
+------------
+
+Bugfixes:
+* Correctly escape shell commands containing backticks
+
+Enhancements:
+* Add `--docker-cmd` to reprounzip-docker to select the Docker command (for example `--docker-cmd="sudo docker"`)
+
 1.0.9 (2017-01-10)
 ------------------
 
