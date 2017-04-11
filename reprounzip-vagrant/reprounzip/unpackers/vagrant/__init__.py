@@ -164,11 +164,12 @@ def machine_setup(target):
         chan = ssh.get_transport().open_session()
         chan.exec_command(
             '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                'for i in dev proc; do '
-                'if ! grep "^/experimentroot/$i$" /proc/mounts; then '
-                'mount -o rbind /$i /experimentroot/$i; '
+                'if ! grep -q "/experimentroot/dev " /proc/mounts; then '
+                'mount -o rbind /dev /experimentroot/dev; '
                 'fi; '
-                'done'))
+                'if ! grep -q "/experimentroot/proc " /proc/mounts; then '
+                'mount -t proc none /experimentroot/proc; '
+                'fi'))
         if chan.recv_exit_status() != 0:
             logging.critical("Couldn't mount directories in chroot")
             sys.exit(1)
