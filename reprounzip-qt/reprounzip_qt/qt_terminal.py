@@ -32,6 +32,7 @@ class Terminal(QtGui.QWidget):
         self.setLayout(layout)
 
         self.process = QtCore.QProcess(self)
+
         # Dodge py2app issues
         env = QtCore.QProcessEnvironment.systemEnvironment()
         if env.contains('PYTHONHOME'):
@@ -41,6 +42,9 @@ class Terminal(QtGui.QWidget):
                 'PATH',
                 (env.value('PATH', '/usr/bin:/bin:/usr/sbin:/sbin') +
                  ':/usr/local/bin:/opt/reprounzip'))
+
+        # Unset TERM to avoid ansi escapes
+        env.remove('TERM')
 
         self.process.setProcessEnvironment(env)
         self.process.setProcessChannelMode(QtCore.QProcess.SeparateChannels)

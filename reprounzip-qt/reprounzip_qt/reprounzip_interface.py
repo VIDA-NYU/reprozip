@@ -322,7 +322,6 @@ end tell
                                   ('gnome-terminal', lambda a: ['-x', 'a'])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
-                print([term] + args)
                 subprocess.check_call([term] + args, stdin=subprocess.PIPE)
                 return None
     return "Couldn't start a terminal", 'critical'
