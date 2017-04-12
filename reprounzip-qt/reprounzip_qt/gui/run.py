@@ -4,14 +4,13 @@
 
 from __future__ import division, print_function, unicode_literals
 
-import re
 import yaml
 
 from PyQt4 import QtCore, QtGui
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
-    error_msg
+    error_msg, parse_ports
 
 
 class RunOptions(QtGui.QWidget):
@@ -59,8 +58,6 @@ class ChrootOptions(RunOptions):
 
 
 class DockerOptions(RunOptions):
-    _port_re = re.compile('^(?:([0-9]+):)?([0-9]+)(?:/([a-z]+))?$')
-
     def __init__(self):
         super(DockerOptions, self).__init__()
 
@@ -80,8 +77,10 @@ class DockerOptions(RunOptions):
         self.raw_options = QtGui.QLineEdit('')
         self.add_row("Raw Docker options:", self.raw_options)
 
-        self.ports = QtGui.QLineEdit('')
-        self.add_row("Publish ports:", self.ports)
+        self.ports = QtGui.QLineEdit(
+            '',
+            toolTip="Space-separated host:guest port mappings")
+        self.add_row("Expose ports:", self.ports)
 
     def options(self):
         options = super(DockerOptions, self).options()
@@ -97,25 +96,13 @@ class DockerOptions(RunOptions):
             if opt:
                 options['args'].append('--docker-option=%s' % opt)
 
-        for port in self.ports.text().split():
-            port = port.strip()
-            if port:
-                m = self._port_re.match(port)
-                if m is None:
-                    error_msg(self, "Invalid port specification: '%s'" % port,
-                              'warning')
-                    return None
-                else:
-                    host, container, proto = m.groups()
-                    if not host:
-                        host = container
-                    if proto:
-                        proto = '/' + proto
-                    else:
-                        proto = ''
-                    options['args'].extend(
-                        ['--docker-option=-p',
-                         '--docker-option=%s:%s%s' % (host, container, proto)])
+        ports = parse_ports(self.ports.text(), self)
+        if ports is None:
+            return None
+        for host, container, proto in ports:
+            options['args'].extend(
+                ['--docker-option=-p',
+                 '--docker-option=%s:%s/%s' % (host, container, proto)])
 
         return options
 
@@ -124,6 +111,23 @@ class VagrantOptions(RunOptions):
     def __init__(self):
         super(VagrantOptions, self).__init__()
         self.add_x11()
+
+        self.ports = QtGui.QLineEdit(
+            '',
+            toolTip="Space-separated host:guest port mappings")
+        self.add_row("Expose ports:", self.ports)
+
+    def options(self):
+        options = super(VagrantOptions, self).options()
+
+        ports = parse_ports(self.ports.text(), self)
+        if ports is None:
+            return None
+        for host, container, proto in parse_ports(self.ports.text(), self):
+            options['args'].append('--expose-port=%s:%s/%s' %
+                                   (host, container, proto))
+
+        return options
 
 
 class FilesManager(QtGui.QDialog):
@@ -301,7 +305,7 @@ class RunTab(QtGui.QWidget):
             widget = WidgetClass()
             self.unpacker_options.addWidget(widget)
 
-        self.unpacker_options.addWidget(QtGui.QLabel("Select an directory to "
+        self.unpacker_options.addWidget(QtGui.QLabel("Select a directory to "
                                                      "display options..."))
         self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
