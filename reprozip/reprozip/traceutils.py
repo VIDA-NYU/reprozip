@@ -106,7 +106,7 @@ def combine_traces(traces, target):
         configuration file.
     :type target: Path
     """
-    # We are probably overwriting on of the traces we're reading, so write to
+    # We are probably overwriting one of the traces we're reading, so write to
     # a temporary file first then move it
     fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
     if PY3:
