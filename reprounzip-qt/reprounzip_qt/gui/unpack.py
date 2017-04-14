@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, \
-    handle_error, error_msg
+    handle_error, error_msg, parse_ports
 
 
 class UnpackerOptions(QtGui.QWidget):
@@ -124,6 +124,11 @@ class VagrantOptions(UnpackerOptions):
         self.gui = QtGui.QCheckBox("Enable local GUI")
         self.add_row("GUI:", self.gui)
 
+        self.ports = QtGui.QLineEdit(
+            '',
+            toolTip="Space-separated host:guest port mappings")
+        self.add_row("Expose ports:", self.ports)
+
         self.use_chroot = QtGui.QCheckBox("use chroot and prefer packed files "
                                           "over the virtual machines' files",
                                           checked=True)
@@ -148,6 +153,13 @@ class VagrantOptions(UnpackerOptions):
 
         if self.gui.isChecked():
             options['args'].append('--use-gui')
+
+        ports = parse_ports(self.ports.text(), self)
+        if ports is None:
+            return None
+        for host, container, proto in ports:
+            options['args'].append('--expose-port=%s:%s/%s' % (
+                                   host, container, proto))
 
         if not self.use_chroot.isChecked():
             options['args'].append('--dont-use-chroot')
