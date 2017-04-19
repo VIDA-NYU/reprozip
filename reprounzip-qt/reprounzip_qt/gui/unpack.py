@@ -5,6 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
+import subprocess
 
 from PyQt4 import QtCore, QtGui
 
@@ -79,6 +80,27 @@ class DockerOptions(UnpackerOptions):
         self.root.addItems(ROOT.TEXT)
         self.add_row("Elevate privileges:", self.root)
 
+        try:
+            cmd = ['docker-machine', 'ls', '-q']
+            query = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            out, _ = query.communicate()
+            if query.returncode != 0:
+                raise subprocess.CalledProcessError(query.returncode, cmd)
+            self.machine = QtGui.QComboBox(editable=False)
+            if 'DOCKER_HOST' in os.environ:
+                self.machine.addItem("Custom config from environment", None)
+            else:
+                self.machine.addItem("Default (no machine)", None)
+            for machine in out.splitlines():
+                machine = machine.strip()
+                if machine:
+                    self.machine.addItem(machine.decode('utf-8', 'replace'),
+                                         machine)
+        except (OSError, subprocess.CalledProcessError):
+            self.machine = QtGui.QComboBox(editable=False, enabled=False)
+            self.machine.addItem("docker-machine unavailable", None)
+        self.add_row("docker-machine:", self.machine)
+
         self.image = QtGui.QLineEdit(placeholderText='detect')
         self.add_row("Base image:", self.image)
 
@@ -91,6 +113,10 @@ class DockerOptions(UnpackerOptions):
 
     def options(self):
         options = super(DockerOptions, self).options()
+
+        if self.machine.currentIndex() != -1:
+            options['docker-machine'] = self.machine.itemData(
+                self.machine.currentIndex())
 
         options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
