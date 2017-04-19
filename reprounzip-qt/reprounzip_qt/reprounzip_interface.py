@@ -153,12 +153,35 @@ def unpack(package, unpacker, directory, options=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+
+    docker_machine = options.get('docker-machine', None)
+    if docker_machine:
+        cmd = ['docker-machine', 'env', docker_machine]
+        getconf = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        out, _ = getconf.communicate()
+        if getconf.returncode != 0:
+            raise subprocess.CalledProcessError(getconf.returncode, cmd)
+        for line in out.splitlines():
+            line = line.strip()
+            if not line or line[0] == b'#':
+                continue
+            if line[0:7] == b'export ':
+                line = line[7:]
+            sep = line.index(b'=')
+            key = line[:sep]
+            if line[sep + 1] != b'"' or line[-1] != b'"':
+                raise ValueError("docker-machine env format not recognized")
+            value = line[sep + 2:-1]
+            env[key] = value
+
     cmd = ([reprounzip, unpacker, 'setup'] +
            options.get('args', []) +
            [os.path.abspath(package), os.path.abspath(directory)])
 
     code = run_in_builtin_terminal_maybe(
         cmd, options.get('root', None),
+        env=env,
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")
@@ -237,16 +260,17 @@ def download(directory, name, path, unpacker=None, root=None):
         return code == 0
 
 
-def run_in_builtin_terminal_maybe(cmd, root, **kwargs):
+def run_in_builtin_terminal_maybe(cmd, root, env={}, **kwargs):
     if root is None:
-        code = run_in_builtin_terminal(cmd, **kwargs)
+        code = run_in_builtin_terminal(cmd, env, **kwargs)
         return code
     else:
-        run_in_system_terminal(cmd, root=root)
+        run_in_system_terminal(cmd, env, root=root)
         return None
 
 
-def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
+def run_in_system_terminal(cmd, env={},
+                           wait=True, close_on_success=False, root=None):
     if root is None:
         pass
     elif root == 'sudo':
@@ -258,12 +282,14 @@ def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
 
     cmd = ' '.join(native_escape(c) for c in cmd)
 
+    environ = dict(os.environ)
+    environ.update(env)
+
     system = platform.system().lower()
     if system == 'darwin':
         # Dodge py2app issues
-        env = dict(os.environ)
-        env.pop('PYTHONPATH', None)
-        env.pop('PYTHONHOME', None)
+        environ.pop('PYTHONPATH', None)
+        environ.pop('PYTHONHOME', None)
         proc = subprocess.Popen(['/usr/bin/osascript', '-'],
                                 stdin=subprocess.PIPE, env=env)
         run_script = """\
