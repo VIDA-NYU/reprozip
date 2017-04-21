@@ -287,6 +287,17 @@ def docker_setup_build(args):
 
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
+    if 'DOCKER_MACHINE_NAME' in os.environ:
+        unpacked_info['docker_host'] = {
+            'type': 'docker-machine',
+            'name': os.environ['DOCKER_MACHINE_NAME']}
+    elif 'DOCKER_HOST' in os.environ:
+        unpacked_info['docker_host'] = {
+            'type': 'custom',
+            'env': dict((k, v)
+                        for k, v in iteritems(os.environ)
+                        if k.startswith('DOCKER_'))}
+
     write_dict(target, unpacked_info)
 
 

@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Terminal(QtGui.QWidget):
     finished = QtCore.pyqtSignal(int)
 
-    def __init__(self, cmdline, input_enabled=False,
+    def __init__(self, cmdline, env, input_enabled=False,
                  success_msg=None, fail_msg=None,
                  **kwargs):
         super(Terminal, self).__init__(**kwargs)
@@ -34,19 +34,23 @@ class Terminal(QtGui.QWidget):
         self.process = QtCore.QProcess(self)
 
         # Dodge py2app issues
-        env = QtCore.QProcessEnvironment.systemEnvironment()
-        if env.contains('PYTHONHOME'):
-            env.remove('PYTHONPATH')
-            env.remove('PYTHONHOME')
-            env.insert(
+        environ = QtCore.QProcessEnvironment.systemEnvironment()
+        if environ.contains('PYTHONHOME'):
+            environ.remove('PYTHONPATH')
+            environ.remove('PYTHONHOME')
+            environ.insert(
                 'PATH',
-                (env.value('PATH', '/usr/bin:/bin:/usr/sbin:/sbin') +
+                (environ.value('PATH', '/usr/bin:/bin:/usr/sbin:/sbin') +
                  ':/usr/local/bin:/opt/reprounzip'))
 
         # Unset TERM to avoid ansi escapes
-        env.remove('TERM')
+            environ.remove('TERM')
 
-        self.process.setProcessEnvironment(env)
+        # Add additional environment variables
+        for k, v in env.items():
+            environ.insert(k, v)
+
+        self.process.setProcessEnvironment(environ)
         self.process.setProcessChannelMode(QtCore.QProcess.SeparateChannels)
         if input_enabled:
             mode = QtCore.QIODevice.ReadWrite
@@ -105,7 +109,8 @@ body {
         self.text.append('<br><span style="color: blue;">%s</span>' % msg)
 
 
-def run_in_builtin_terminal(cmd, text=None, success_msg=None, fail_msg=None):
+def run_in_builtin_terminal(cmd, env,
+                            text=None, success_msg=None, fail_msg=None):
     result = [False]
 
     def store_result(code):
@@ -115,7 +120,7 @@ def run_in_builtin_terminal(cmd, text=None, success_msg=None, fail_msg=None):
     layout = QtGui.QVBoxLayout()
     if text is not None:
         layout.addWidget(QtGui.QLabel(text))
-    terminal = Terminal(cmd, input_enabled=False,
+    terminal = Terminal(cmd, env, input_enabled=False,
                         success_msg=success_msg, fail_msg=fail_msg)
     terminal.finished.connect(store_result)
     layout.addWidget(terminal)
