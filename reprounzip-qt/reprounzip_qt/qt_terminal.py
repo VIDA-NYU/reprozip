@@ -44,7 +44,7 @@ class Terminal(QtGui.QWidget):
                  ':/usr/local/bin:/opt/reprounzip'))
 
         # Unset TERM to avoid ansi escapes
-            environ.remove('TERM')
+        environ.remove('TERM')
 
         # Add additional environment variables
         for k, v in env.items():
