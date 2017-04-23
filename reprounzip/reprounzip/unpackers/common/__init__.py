@@ -18,7 +18,7 @@ from reprounzip.unpackers.common.misc import UsageError, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, interruptible_call, \
     metadata_read, metadata_write, metadata_initial_iofiles, \
-    metadata_update_run
+    metadata_update_run, parse_ports
 from reprounzip.unpackers.common.packages import THIS_DISTRIBUTION, \
     PKG_NOT_INSTALLED, CantFindInstaller, select_installer
 
@@ -32,4 +32,5 @@ __all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
            'join_root', 'FileUploader', 'FileDownloader', 'get_runs',
            'add_environment_options', 'fixup_environment',
            'interruptible_call', 'metadata_read', 'metadata_write',
-           'metadata_initial_iofiles', 'metadata_update_run']
+           'metadata_initial_iofiles', 'metadata_update_run',
+           'parse_ports']

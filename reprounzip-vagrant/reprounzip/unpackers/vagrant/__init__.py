@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
-    metadata_initial_iofiles, metadata_update_run
+    metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
     run_interactive
@@ -159,11 +159,12 @@ def machine_setup(target):
         chan = ssh.get_transport().open_session()
         chan.exec_command(
             '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                'for i in dev proc; do '
-                'if ! grep "^/experimentroot/$i$" /proc/mounts; then '
-                'mount -o rbind /$i /experimentroot/$i; '
+                'if ! grep -q "/experimentroot/dev " /proc/mounts; then '
+                'mount -o rbind /dev /experimentroot/dev; '
                 'fi; '
-                'done'))
+                'if ! grep -q "/experimentroot/proc " /proc/mounts; then '
+                'mount -t proc none /experimentroot/proc; '
+                'fi'))
         if chan.recv_exit_status() != 0:
             logging.critical("Couldn't mount directories in chroot")
             sys.exit(1)
@@ -233,6 +234,8 @@ def vagrant_setup_create(args):
         except ValueError:
             logging.critical("Invalid value for memory size: %r", args.memory)
             sys.exit(1)
+
+    ports = parse_ports(args.expose_port)
 
     if args.base_image and args.base_image[0]:
         record_usage(vagrant_explicit_image=True)
@@ -367,42 +370,59 @@ mkdir -p /experimentroot/bin
 
         rpz_pack.close()
 
-        # Writes Vagrant file
-        logging.info("Writing %s...", target / 'Vagrantfile')
-        with (target / 'Vagrantfile').open('w', encoding='utf-8',
-                                           newline='\n') as fp:
-            # Vagrant header and version
-            fp.write(
-                '# -*- mode: ruby -*-\n'
-                '# vi: set ft=ruby\n\n'
-                'VAGRANTFILE_API_VERSION = "2"\n\n'
-                'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
-            # Selects which box to install
-            fp.write('  config.vm.box = "%s"\n' % box)
-            # Run the setup script on the virtual machine
-            fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
-
-            # Memory size
-            if memory is not None or args.gui:
-                fp.write('  config.vm.provider "virtualbox" do |v|\n')
-                if memory is not None:
-                    fp.write('    v.memory = %d\n' % memory)
-                if args.gui:
-                    fp.write('    v.gui = true\n')
-                fp.write('  end\n')
-
-            fp.write('end\n')
-
         # Meta-data for reprounzip
-        write_dict(target,
-                   metadata_initial_iofiles(config,
+        metadata = metadata_initial_iofiles(config,
                                             {'use_chroot': use_chroot,
-                                             'gui': args.gui}))
+                                             'gui': args.gui,
+                                             'ports': ports,
+                                             'box': box,
+                                             'memory': memory})
+        write_dict(target, metadata)
+
+        # Writes Vagrant file
+        write_vagrantfile(target, metadata)
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
         target.rmtree(ignore_errors=True)
         raise
+
+
+def write_vagrantfile(target, unpacked_info):
+    box = unpacked_info['box']
+    gui = unpacked_info.get('gui', False)
+    ports = unpacked_info.get('ports', [])
+    memory = unpacked_info.get('memory', None)
+
+    logging.info("Writing %s...", target / 'Vagrantfile')
+    with (target / 'Vagrantfile').open('w', encoding='utf-8',
+                                       newline='\n') as fp:
+        # Vagrant header and version
+        fp.write(
+            '# -*- mode: ruby -*-\n'
+            '# vi: set ft=ruby\n\n'
+            'VAGRANTFILE_API_VERSION = "2"\n\n'
+            'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
+        # Selects which box to install
+        fp.write('  config.vm.box = "%s"\n' % box)
+        # Run the setup script on the virtual machine
+        fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
+
+        # Memory size
+        if memory is not None or gui:
+            fp.write('  config.vm.provider "virtualbox" do |v|\n')
+            if memory is not None:
+                fp.write('    v.memory = %d\n' % memory)
+            if gui:
+                fp.write('    v.gui = true\n')
+            fp.write('  end\n')
+
+        # Port forwarding
+        for port in ports:
+            fp.write('  config.vm.network "forwarded_port", host: '
+                     '%s, guest: %s, protocol: "%s"\n' % port)
+
+        fp.write('end\n')
 
 
 @target_must_exist
@@ -448,6 +468,37 @@ def vagrant_run(args):
     selected_runs = get_runs(runs, args.run, cmdline)
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
+
+    # Port forwarding
+    ports = parse_ports(args.expose_port)
+
+    # If the requested ports are not a subset of the ones already set on the
+    # VM, we have to update the Vagrantfile and issue `vagrant reload`, which
+    # will reboot the machine
+    req_ports = set(ports)
+    set_ports = set(unpacked_info.get('ports', []))
+    if not req_ports.issubset(set_ports):
+        # Build new set of forwarded ports: the ones already set + the one just
+        # requested
+        # The ones we request now override the previous config
+        all_ports = dict((host, (guest, proto))
+                         for host, guest, proto in set_ports)
+        for host, guest, proto in req_ports:
+            all_ports[host] = guest, proto
+        unpacked_info['ports'] = sorted(
+            (host, guest, proto)
+            for host, (guest, proto) in iteritems(all_ports))
+
+        write_vagrantfile(target, unpacked_info)
+        logging.info("Some requested ports are not yet forwarded, running "
+                     "'vagrant reload'")
+        retcode = subprocess.call(['vagrant', 'reload', '--no-provision'],
+                                  cwd=target.path)
+        if retcode != 0:
+            logging.critical("vagrant reload failed with code %d, aborting",
+                             retcode)
+            sys.exit(1)
+        write_dict(target, unpacked_info)
 
     # X11 handler
     if unpacked_info['gui']:
@@ -823,6 +874,9 @@ def setup(parser, **kwargs):
                                "default: box default)")
         opts.add_argument('--use-gui', action='store_true', default=False,
                           dest='gui', help="Use the VM's X server")
+        opts.add_argument('--expose-port', '-p', action='append', default=[],
+                          help="Expose a network port, "
+                               "host[:experiment[/proto]]. Example: 8000:80")
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup(parser_setup_create)
@@ -859,6 +913,9 @@ def setup(parser, **kwargs):
                             help="Don't request a PTY from the SSH server")
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--expose-port', '-p', action='append', default=[],
+                            help="Expose a network port, "
+                                 "host[:experiment[/proto]]. Example: 8000:80")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
                             help="Enable X11 support (needs an X server on "

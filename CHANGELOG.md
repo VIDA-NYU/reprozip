@@ -16,9 +16,13 @@ Features:
 
 Bugfixes:
 * Correctly escape shell commands containing backticks
+* Overwrite tty prompt works correctly on Python 3
+* Fix /proc in vagrant-chroot and chroot having outside mounts
+* Fix ANSI escapes showing in Qt terminal dialog
 
 Enhancements:
 * Add `--docker-cmd` to reprounzip-docker to select the Docker command (for example `--docker-cmd="sudo docker"`)
+* Implement `--expose-port` option for Vagrant and Docker (no need for `--docker-option=-p...`)
 
 1.0.9 (2017-01-10)
 ------------------

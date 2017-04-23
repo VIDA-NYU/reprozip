@@ -254,9 +254,12 @@ def tty_prompt(prompt, chars):
     try:
         import termios
 
-        fd = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
-        stream = os.fdopen(fd, 'w+', 1)
-        old = termios.tcgetattr(fd)
+        # Can't use O_RDWR/"w+" for a single fd/stream because of PY3 bug 20074
+        ofd = os.open('/dev/tty', os.O_WRONLY | os.O_NOCTTY)
+        ostream = os.fdopen(ofd, 'w', 1)
+        ifd = os.open('/dev/tty', os.O_RDONLY | os.O_NOCTTY)
+        istream = os.fdopen(ifd, 'r', 1)
+        old = termios.tcgetattr(ifd)
     except (ImportError, AttributeError, IOError, OSError):
         ostream = sys.stdout
         istream = sys.stdin
@@ -276,17 +279,17 @@ def tty_prompt(prompt, chars):
         new[3] &= ~termios.ICANON  # 3 == 'lflags'
         tcsetattr_flags = termios.TCSAFLUSH | getattr(termios, 'TCSASOFT', 0)
         try:
-            termios.tcsetattr(fd, tcsetattr_flags, new)
-            stream.write(prompt)
-            stream.flush()
+            termios.tcsetattr(ifd, tcsetattr_flags, new)
+            ostream.write(prompt)
+            ostream.flush()
             while True:
-                char = stream.read(1)
+                char = istream.read(1)
                 if char in chars:
-                    stream.write("\n")
+                    ostream.write("\n")
                     return char
         finally:
-            termios.tcsetattr(fd, tcsetattr_flags, old)
-            stream.flush()
+            termios.tcsetattr(ifd, tcsetattr_flags, old)
+            ostream.flush()
 
 
 def trace(binary, argv, directory, append, verbosity=1):

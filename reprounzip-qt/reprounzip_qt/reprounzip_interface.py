@@ -135,13 +135,49 @@ def run(directory, unpacker=None, runs=None,
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+
+    with open(os.path.join(directory, '.reprounzip'), 'rb') as fp:
+        docker_host = pickle.load(fp).get('docker_host')
+    if docker_host and docker_host['type']:
+        if docker_host['type'] == 'docker-machine':
+            env.update(docker_machine_env(docker_host['name']))
+        elif docker_host['type'] == 'custom':
+            env.update(docker_host['env'])
+        else:
+            raise ValueError("Unrecognized docker host type %r" %
+                             docker_host['type'])
+
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
         args +
         [os.path.abspath(directory)] +
         ([','.join('%d' % r for r in runs)] if runs is not None else []),
+        env=env,
         root=root)
     return True
+
+
+def docker_machine_env(machine):
+    cmd = ['docker-machine', 'env', machine]
+    getconf = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    out, _ = getconf.communicate()
+    if getconf.returncode != 0:
+        raise subprocess.CalledProcessError(getconf.returncode, cmd)
+    env = {}
+    for line in out.splitlines():
+        line = line.strip()
+        if not line or line[0] == b'#':
+            continue
+        if line[0:7] == b'export ':
+            line = line[7:]
+        sep = line.index(b'=')
+        key = line[:sep]
+        if line[sep + 1] != b'"' or line[-1] != b'"':
+            raise ValueError("docker-machine env format not recognized")
+        value = line[sep + 2:-1]
+        env[key] = value
+    return env
 
 
 def unpack(package, unpacker, directory, options=None):
@@ -153,12 +189,19 @@ def unpack(package, unpacker, directory, options=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+
+    docker_machine = options.get('docker-machine', None)
+    if docker_machine:
+        env.update(docker_machine_env(docker_machine))
+
     cmd = ([reprounzip, unpacker, 'setup'] +
            options.get('args', []) +
            [os.path.abspath(package), os.path.abspath(directory)])
 
     code = run_in_builtin_terminal_maybe(
         cmd, options.get('root', None),
+        env=env,
         text="Unpacking experiment...",
         success_msg="Successfully setup experiment",
         fail_msg="Error setting up experiment")
@@ -237,16 +280,17 @@ def download(directory, name, path, unpacker=None, root=None):
         return code == 0
 
 
-def run_in_builtin_terminal_maybe(cmd, root, **kwargs):
+def run_in_builtin_terminal_maybe(cmd, root, env={}, **kwargs):
     if root is None:
-        code = run_in_builtin_terminal(cmd, **kwargs)
+        code = run_in_builtin_terminal(cmd, env, **kwargs)
         return code
     else:
-        run_in_system_terminal(cmd, root=root)
+        run_in_system_terminal(cmd, env, root=root)
         return None
 
 
-def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
+def run_in_system_terminal(cmd, env={},
+                           wait=True, close_on_success=False, root=None):
     if root is None:
         pass
     elif root == 'sudo':
@@ -258,12 +302,14 @@ def run_in_system_terminal(cmd, wait=True, close_on_success=False, root=None):
 
     cmd = ' '.join(native_escape(c) for c in cmd)
 
+    environ = dict(os.environ)
+    environ.update(env)
+
     system = platform.system().lower()
     if system == 'darwin':
         # Dodge py2app issues
-        env = dict(os.environ)
-        env.pop('PYTHONPATH', None)
-        env.pop('PYTHONHOME', None)
+        environ.pop('PYTHONPATH', None)
+        environ.pop('PYTHONHOME', None)
         proc = subprocess.Popen(['/usr/bin/osascript', '-'],
                                 stdin=subprocess.PIPE, env=env)
         run_script = """\
@@ -322,7 +368,6 @@ end tell
                                   ('gnome-terminal', lambda a: ['-x', 'a'])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
-                print([term] + args)
                 subprocess.check_call([term] + args, stdin=subprocess.PIPE)
                 return None
     return "Couldn't start a terminal", 'critical'

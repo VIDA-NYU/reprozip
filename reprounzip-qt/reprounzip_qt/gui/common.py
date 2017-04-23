@@ -4,6 +4,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import re
+
 from PyQt4 import QtCore, QtGui
 
 
@@ -53,3 +55,30 @@ class ROOT(object):
     OPTION_TO_INDEX = {None: 0, 'sudo': 1, 'su': 2}
     INDEX_TO_OPTION = {0: None, 1: 'sudo', 2: 'su'}
     TEXT = ["no", "with sudo", "with su"]
+
+
+_port_re = re.compile('^(?:([0-9]+):)?([0-9]+)(?:/([a-z]+))?$')
+
+
+def parse_ports(string, widget):
+    ports = []
+
+    for port in string.split():
+        port = port.strip()
+        if not port:
+            continue
+
+        m = _port_re.match(port)
+        if m is None:
+            error_msg(widget, "Invalid port specification: '%s'" % port,
+                      'warning')
+            return None
+        else:
+            host, experiment, proto = m.groups()
+            if not host:
+                host = experiment
+            if not proto:
+                proto = 'tcp'
+            ports.append((int(host), int(experiment), proto))
+
+    return ports

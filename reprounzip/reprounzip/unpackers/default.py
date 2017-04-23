@@ -498,7 +498,13 @@ def chroot_mount(args):
     target = Path(args.target[0])
     unpacked_info = metadata_read(target, 'chroot')
 
-    for m in ('/dev', '/dev/pts', '/proc'):
+    # Create proc mount
+    d = target / 'root/proc'
+    d.mkdir(parents=True)
+    subprocess.check_call(['mount', '-t', 'proc', 'none', str(d)])
+
+    # Bind /dev from host
+    for m in ('/dev', '/dev/pts'):
         d = join_root(target / 'root', Path(m))
         d.mkdir(parents=True)
         logging.info("Mounting %s on %s...", m, d)

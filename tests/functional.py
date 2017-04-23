@@ -7,8 +7,10 @@
 from __future__ import unicode_literals
 
 import functools
+import logging
 import os
 import re
+import requests
 from rpaths import Path, unicode
 import sqlite3
 import subprocess
@@ -17,9 +19,35 @@ import yaml
 
 from reprounzip.common import FILE_READ, FILE_WRITE
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import PY3, stderr_bytes, stderr, download_file
+from reprounzip.utils import PY3, stderr_bytes, stderr
 
 tests = Path(__file__).parent.absolute()
+
+
+def download_file_retry(url, dest):
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            logging.info("Download %s, attempt %d", url, attempt)
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            try:
+                with dest.open('wb') as f:
+                    for chunk in response.iter_content(4096):
+                        f.write(chunk)
+                    response.close()
+            except Exception as e:
+                try:
+                    dest.remove()
+                except OSError:
+                    pass
+                raise e
+            return
+        except requests.RequestException as e:
+            if attempt == 2:
+                raise e
+            logging.warning("Download %s: retrying after error: %s", url, e)
 
 
 def in_temp_dir(f):
@@ -778,7 +806,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         print("Testing old package %s" % name)
         f = Path(name)
         if not f.exists():
-            download_file(url, f)
+            download_file_retry(url, f)
         # Info
         check_call(rpuz + ['info', name])
         # Show files

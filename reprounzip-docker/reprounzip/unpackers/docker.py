@@ -31,7 +31,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, interruptible_call, metadata_read, metadata_write, \
-    metadata_initial_iofiles, metadata_update_run
+    metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
     download_file
@@ -286,6 +286,17 @@ def docker_setup_build(args):
 
     unpacked_info['initial_image'] = image
     unpacked_info['current_image'] = image
+    if 'DOCKER_MACHINE_NAME' in os.environ:
+        unpacked_info['docker_host'] = {
+            'type': 'docker-machine',
+            'name': os.environ['DOCKER_MACHINE_NAME']}
+    elif 'DOCKER_HOST' in os.environ:
+        unpacked_info['docker_host'] = {
+            'type': 'custom',
+            'env': dict((k, v)
+                        for k, v in iteritems(os.environ)
+                        if k.startswith('DOCKER_'))}
+
     write_dict(target, unpacked_info)
 
 
@@ -411,6 +422,12 @@ def docker_run(args):
 
     hostname = runs[selected_runs[0]].get('hostname', 'reprounzip')
 
+    # Port forwarding
+    port_options = []
+    for port_host, port_container, proto in parse_ports(args.expose_port):
+        port_options.extend(['-p',
+                             '%s:%s%s' % (port_host, port_container, proto)])
+
     # X11 handler
     if args.x11:
         local_ip = get_local_addr()
@@ -481,6 +498,7 @@ def docker_run(args):
                                      ['run', b'--name=' + container,
                                       '-h', hostname,
                                       '-d', '-t'] +
+                                     port_options +
                                      args.docker_option +
                                      [image, '/busybox', 'sh', '-c', cmds])
         if retcode != 0:
@@ -495,6 +513,7 @@ def docker_run(args):
                                  ['run', b'--name=' + container,
                                   '-h', hostname,
                                   '-i', '-t'] +
+                                 port_options +
                                  args.docker_option +
                                  [image, '/busybox', 'sh', '-c', cmds])
     if retcode != 0:
@@ -847,6 +866,9 @@ def setup(parser, **kwargs):
     parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--expose-port', '-p', action='append', default=[],
+                            help="Expose a network port, "
+                                 "host[:experiment[/proto]]. Example: 8000:80")
     parser_run.add_argument('--enable-x11', action='store_true', default=False,
                             dest='x11',
                             help="Enable X11 support (needs an X server on "
