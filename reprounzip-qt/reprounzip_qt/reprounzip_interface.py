@@ -320,6 +320,10 @@ def run_in_system_terminal(cmd, env={},
     environ = dict(os.environ)
     environ.update(env)
 
+    if env:
+        cmd = ' '.join(('%s=%s' % (k, shell_escape(v)))
+                       for k, v in env.items()) + ' ' + cmd
+
     system = platform.system().lower()
     if system == 'darwin':
         # Dodge py2app issues
