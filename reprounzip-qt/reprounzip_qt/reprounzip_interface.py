@@ -136,17 +136,7 @@ def run(directory, unpacker=None, runs=None,
                 'critical')
 
     env = {}
-
-    with open(os.path.join(directory, '.reprounzip'), 'rb') as fp:
-        docker_host = pickle.load(fp).get('docker_host')
-    if docker_host and docker_host['type']:
-        if docker_host['type'] == 'docker-machine':
-            env.update(docker_machine_env(docker_host['name']))
-        elif docker_host['type'] == 'custom':
-            env.update(docker_host['env'])
-        else:
-            raise ValueError("Unrecognized docker host type %r" %
-                             docker_host['type'])
+    restore_env(directory, env)
 
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
@@ -178,6 +168,19 @@ def docker_machine_env(machine):
         value = line[sep + 2:-1]
         env[key] = value
     return env
+
+
+def restore_env(directory, env):
+    with open(os.path.join(directory, '.reprounzip'), 'rb') as fp:
+        docker_host = pickle.load(fp).get('docker_host')
+    if docker_host and docker_host['type']:
+        if docker_host['type'] == 'docker-machine':
+            env.update(docker_machine_env(docker_host['name']))
+        elif docker_host['type'] == 'custom':
+            env.update(docker_host['env'])
+        else:
+            raise ValueError("Unrecognized docker host type %r" %
+                             docker_host['type'])
 
 
 def unpack(package, unpacker, directory, options=None):
@@ -220,8 +223,12 @@ def destroy(directory, unpacker=None, root=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+    restore_env(directory, env)
+
     code = run_in_builtin_terminal_maybe(
         [reprounzip, unpacker, 'destroy', os.path.abspath(directory)], root,
+        env=env,
         text="Destroying experiment directory...",
         success_msg="Successfully destroyed experiment directory",
         fail_msg="Error destroying experiment")
@@ -240,6 +247,9 @@ def upload(directory, name, path, unpacker=None, root=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+    restore_env(directory, env)
+
     if path is None:
         spec = ':%s' % name
     else:
@@ -248,6 +258,7 @@ def upload(directory, name, path, unpacker=None, root=None):
     code = run_in_builtin_terminal_maybe(
         [reprounzip, unpacker, 'upload', os.path.abspath(directory), spec],
         root,
+        env=env,
         text="Uploading file...",
         success_msg="Successfully replaced file",
         fail_msg="Error uploading file")
@@ -266,11 +277,15 @@ def download(directory, name, path, unpacker=None, root=None):
         return ("Couldn't find reprounzip command -- is reprounzip installed?",
                 'critical')
 
+    env = {}
+    restore_env(directory, env)
+
     spec = '%s:%s' % (name, path)
 
     code = run_in_builtin_terminal_maybe(
         [reprounzip, unpacker, 'download', os.path.abspath(directory), spec],
         root,
+        env=env,
         text="Downloading file...",
         success_msg="Successfully downloaded file",
         fail_msg="Error downloading file")
