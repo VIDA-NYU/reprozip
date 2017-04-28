@@ -14,13 +14,21 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 import logging
+from distutils.version import LooseVersion
 from rpaths import Path
 import sqlite3
 import sys
 
-from reprounzip.common import RPZPack, load_config
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
-from reprounzip.utils import stderr
+from reprounzip.common import FILE_WRITE, RPZPack, load_config
+from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, shell_escape
+from reprounzip.utils import PY3, iteritems, stderr
+
+
+def xml_escape(s):
+    """Escapes for XML.
+    """
+    return (("%s" % s).replace('&', '&amp;').replace('"', '&quot;')
+            .replace('<', '&lg;').replace('>', '&gt;'))
 
 
 def generate(target, configfile, database):
@@ -36,7 +44,201 @@ def generate(target, configfile, database):
 
     config = load_config(configfile, canonical=False)
 
-    TODO
+    has_thread_flag = config.format_version >= LooseVersion('0.7')
+
+    if PY3:
+        # On PY3, connect() only accepts unicode
+        conn = sqlite3.connect(str(database))
+    else:
+        conn = sqlite3.connect(database.path)
+    conn.row_factory = sqlite3.Row
+
+    vertices = []
+    edges = []
+
+    run = -1
+
+    # Read processes
+    cur = conn.cursor()
+    rows = cur.execute(
+        '''
+        SELECT id, parent, timestamp, is_thread, exitcode
+        FROM processes;
+        ''' if has_thread_flag else '''
+        SELECT id, parent, timestamp, 0 as is_thread, exitcode
+        FROM processes;
+        ''')
+    for r_id, r_parent, r_timestamp, r_isthread, r_exitcode in rows:
+        if r_parent is None:
+            # Create run entity
+            run += 1
+            vertices.append({'ID': 'run%d' % run,
+                             'type': 'Run',
+                             'label': "Run #%d" % run,
+                             'date': r_timestamp})
+            # Run -> process
+            edges.append({'ID': 'run_start%d' % run,
+                          'type': 'RunStarts',
+                          'label': "Run #%d command",
+                          'sourceID': 'run%d' % run,
+                          'targetID': 'process%d' % r_id})
+
+        # Create process entity
+        vertices.append({'ID': 'process%d' % r_id,
+                         'type': 'Process',
+                         'label': 'Process #%d' % r_id,
+                         'date': r_timestamp})
+
+        # Add process creation activity
+        if r_parent is not None:
+            # Process creation activity
+            vertex = {'ID': 'fork%d' % r_id,
+                      'type': 'Fork',
+                      'label': "#%d creates %s #%d" % (
+                          r_parent,
+                          "thread" if r_isthread else "process",
+                          r_id),
+                      'date': r_timestamp}
+            if has_thread_flag:
+                vertex['thread'] = 'true' if r_isthread else 'false'
+            vertices.append(vertex)
+
+            # Parent -> creation
+            edges.append({'ID': 'fork_p_%d' % r_id,
+                          'type': 'PerformsFork',
+                          'label': "Performs fork",
+                          'sourceID': 'process%d' % r_parent,
+                          'targetID': 'fork%d' % r_id})
+            # Creation -> child
+            edges.append({'ID': 'fork_c_%d' % r_id,
+                          'type': 'ForkCreates',
+                          'label': "Fork creates",
+                          'sourceId': 'fork%d' % r_id,
+                          'targetID': 'process%d' % r_id})
+    cur.close()
+
+    # Read opened files
+    cur = conn.cursor()
+    rows = cur.execute(
+        '''
+        SELECT name, is_directory
+        FROM opened_files
+        GROUP BY name;
+        ''')
+    for r_name, r_directory in rows:
+        # Create file entity
+        vertices.append({'ID': r_name,
+                         'type': 'Directory' if r_directory else 'File',
+                         'label': r_name})
+    cur.close()
+
+    # Read file opens
+    cur = conn.cursor()
+    rows = cur.execute(
+        '''
+        SELECT id, name, timestamp, mode, process
+        FROM opened_files;
+        ''')
+    for r_id, r_name, r_timestamp, r_mode, r_process in rows:
+        # Create file access activity
+        vertices.append({'ID': 'access%d' % r_id,
+                         'type': ('FileWrites' if r_mode & FILE_WRITE
+                                  else 'FileReads'),
+                         'label': ("File write: %s" if r_mode & FILE_WRITE
+                                   else "File read: %s") % r_name,
+                         'date': r_timestamp,
+                         'mode': r_mode})
+        # Process -> access
+        edges.append({'ID': 'proc_access%d' % r_id,
+                      'type': 'PerformsFileAccess',
+                      'label': "Process does file access",
+                      'sourceID': 'process%d' % r_process,
+                      'targetID': 'access%d' % r_id})
+        # Access -> file
+        edges.append({'ID': 'access_file%d' % r_id,
+                      'type': 'AccessFile',
+                      'label': "File access touches",
+                      'sourceID': 'access%d' % r_id,
+                      'targetID': r_name})
+    cur.close()
+
+    # Read executions
+    cur = conn.cursor()
+    rows = cur.execute(
+        '''
+        SELECT id, name, timestamp, process, argv
+        FROM executed_files;
+        ''')
+    for r_id, r_name, r_timestamp, r_process, r_argv in rows:
+        argv = r_argv.split('\0')
+        if not argv[-1]:
+            argv = argv[:-1]
+        cmdline = ' '.join(shell_escape(a) for a in argv)
+
+        # Create execution activity
+        vertices.append({'ID': 'exec%d' % r_id,
+                         'type': 'ProcessExecutes',
+                         'label': "Process #%d executes file %s" % (r_process,
+                                                                    r_name),
+                         'date': r_timestamp,
+                         'cmdline': cmdline,
+                         'process': r_process,
+                         'file': r_name})
+        # Process -> execution
+        edges.append({'ID': 'proc_exec%d' % r_id,
+                      'type': 'ProcessExecution',
+                      'label': "Process does exec()",
+                      'sourceID': 'process%d' % r_process,
+                      'targetID': 'exec%d' % r_id})
+        # Execution -> file
+        edges.append({'ID': 'exec_file%d' % r_id,
+                      'type': 'ExecutionFile',
+                      'label': "Execute file",
+                      'sourceId': 'exec%d' % r_id,
+                      'targetID': r_name})
+    cur.close()
+
+    # Write the file from the created lists
+    with target.open('w', encoding='utf-8', newlines='\n') as out:
+        out.write('<?xml version="1.0"?>\n\n'
+                  '<provenancedata xmlns:xsi="http://www.w3.org/2001/XMLSchema'
+                  '-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n'
+                  '  <vertices>\n')
+
+        for vertex in vertices:
+            tags = {}
+            for k in ('ID', 'type', 'label', 'date'):
+                if k not in vertex:
+                    raise ValueError("Vertex is missing tag '%s'" % k)
+                tags[k] = vertex.pop(k)
+            out.write('    <vertex>\n' +
+                      '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
+                                                              v=xml_escape(v))
+                                      for k, v in iteritems(tags)))
+            if vertex:
+                out.write('      <attributes>\n')
+                for k, v in iteritems(vertex):
+                    out.write('        <attribute>\n'
+                              '          <name>{k}</name>\n'
+                              '          <value>{v}</name>\n'
+                              .format(k=xml_escape(k),
+                                      v=xml_escape(v)))
+                out.write('      </attributes>\n')
+            out.write('    </vertex>\n')
+        out.write('  </vertices>\n'
+                  '  <edges>\n')
+        for edge in edges:
+            for k in ('ID', 'type', 'label', 'value', 'sourceID', 'targetID'):
+                if k not in edge:
+                    raise ValueError("Edge is missing tag '%s'" % k)
+            out.write('    <edge>\n' +
+                      '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
+                                                              v=xml_escape(v))
+                                      for k, v in iteritems(edge)) +
+                      '    </edge>\n')
+        out.write('</provenancedata>\n')
+
+    conn.close()
 
 
 def provgraph(args):
