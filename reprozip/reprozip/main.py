@@ -67,7 +67,7 @@ def print_db(database):
     conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, parent, timestamp, exitcode
         FROM processes;
@@ -77,7 +77,7 @@ def print_db(database):
     print(header)
     print("|  id  | parent |  exit |     timestamp    |")
     print(header)
-    for r_id, r_parent, r_timestamp, r_exit in processes:
+    for r_id, r_parent, r_timestamp, r_exit in rows:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
@@ -93,7 +93,7 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, name, timestamp, process, argv
         FROM executed_files;
@@ -105,7 +105,7 @@ def print_db(database):
     print("|   id   |     timestamp    | process | name and argv              "
           "           |")
     print(header)
-    for r_id, r_name, r_timestamp, r_process, r_argv in processes:
+    for r_id, r_name, r_timestamp, r_process, r_argv in rows:
         f_id = "{0: 7d} ".format(r_id)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
@@ -121,7 +121,7 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, name, timestamp, mode, process
         FROM opened_files;
@@ -133,7 +133,7 @@ def print_db(database):
     print("|   id   |     timestamp    | process | mode | name                "
           "           |")
     print(header)
-    for r_id, r_name, r_timestamp, r_mode, r_process in processes:
+    for r_id, r_name, r_timestamp, r_mode, r_process in rows:
         f_id = "{0: 7d} ".format(r_id)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
