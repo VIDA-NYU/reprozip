@@ -113,7 +113,7 @@ def generate(target, configfile, database):
             edges.append({'ID': 'fork_c_%d' % r_id,
                           'type': 'ForkCreates',
                           'label': "Fork creates",
-                          'sourceId': 'fork%d' % r_id,
+                          'sourceID': 'fork%d' % r_id,
                           'targetID': 'process%d' % r_id})
     cur.close()
 
@@ -129,7 +129,8 @@ def generate(target, configfile, database):
         # Create file entity
         vertices.append({'ID': r_name,
                          'type': 'Directory' if r_directory else 'File',
-                         'label': r_name})
+                         'label': r_name,
+                         'date': ''})
     cur.close()
 
     # Read file opens
@@ -194,49 +195,58 @@ def generate(target, configfile, database):
         edges.append({'ID': 'exec_file%d' % r_id,
                       'type': 'ExecutionFile',
                       'label': "Execute file",
-                      'sourceId': 'exec%d' % r_id,
+                      'sourceID': 'exec%d' % r_id,
                       'targetID': r_name})
     cur.close()
 
     # Write the file from the created lists
-    with target.open('w', encoding='utf-8', newlines='\n') as out:
+    with target.open('w', encoding='utf-8', newline='\n') as out:
         out.write('<?xml version="1.0"?>\n\n'
                   '<provenancedata xmlns:xsi="http://www.w3.org/2001/XMLSchema'
                   '-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n'
                   '  <vertices>\n')
 
         for vertex in vertices:
+            if 'date' not in vertex:
+                vertex['date'] = ''
             tags = {}
             for k in ('ID', 'type', 'label', 'date'):
                 if k not in vertex:
-                    raise ValueError("Vertex is missing tag '%s'" % k)
+                    vertex.update(tags)
+                    raise ValueError("Vertex is missing tag '%s': %r" % (
+                                     k, vertex))
                 tags[k] = vertex.pop(k)
-            out.write('    <vertex>\n' +
+            out.write('    <vertex>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
                                       for k, v in iteritems(tags)))
             if vertex:
-                out.write('      <attributes>\n')
+                out.write('\n      <attributes>\n')
                 for k, v in iteritems(vertex):
                     out.write('        <attribute>\n'
                               '          <name>{k}</name>\n'
-                              '          <value>{v}</name>\n'
+                              '          <value>{v}</value>\n'
+                              '        </attribute>\n'
                               .format(k=xml_escape(k),
                                       v=xml_escape(v)))
-                out.write('      </attributes>\n')
-            out.write('    </vertex>\n')
+                out.write('      </attributes>')
+            out.write('\n    </vertex>\n')
         out.write('  </vertices>\n'
                   '  <edges>\n')
         for edge in edges:
-            for k in ('ID', 'type', 'label', 'value', 'sourceID', 'targetID'):
+            for k in ('ID', 'type', 'label', 'sourceID', 'targetID'):
                 if k not in edge:
-                    raise ValueError("Edge is missing tag '%s'" % k)
-            out.write('    <edge>\n' +
+                    raise ValueError("Edge is missing tag '%s': %r" % (
+                                     k, edge))
+            if 'value' not in edge:
+                edge['value'] = ''
+            out.write('    <edge>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
                                       for k, v in iteritems(edge)) +
-                      '    </edge>\n')
-        out.write('</provenancedata>\n')
+                      '\n    </edge>\n')
+        out.write('  </edges>\n'
+                  '</provenancedata>\n')
 
     conn.close()
 
