@@ -235,14 +235,29 @@ class X11Handler(BaseX11Handler):
             return sorted(gai, key=lambda x: order.get(x[0], 999999))
 
         # Network addresses of the local machine
+        # Use whatever local interfaces lets you connect to google.com
         local_addresses = []
         for family, socktype, proto, canonname, sockaddr in \
-                sort_families(socket.getaddrinfo(socket.gethostname(), 6000)):
+                sort_families(socket.getaddrinfo('google.com', 9,
+                                                 socket.AF_UNSPEC,
+                                                 socket.SOCK_STREAM)):
+            sock = None
             try:
                 family = cls.SOCK2X[family]
             except KeyError:
                 continue
-            local_addresses.append((family, sockaddr[0]))
+            try:
+                sock = socket.socket(family, socktype, proto)
+                sock.settimeout(1)
+                sock.connect(sockaddr)
+                sock.close()
+            except socket.error:
+                continue
+            addr = sock.getsockname()[0]
+            if isinstance(addr, bytes):
+                addr = addr.decode('ascii')
+
+            local_addresses.append((family, addr))
 
         logging.debug("Local addresses: %s", (local_addresses,))
 

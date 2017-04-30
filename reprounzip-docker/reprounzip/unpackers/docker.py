@@ -369,13 +369,13 @@ def get_local_addr():
         for address in addresses:
             sock = None
             try:
-                af, socktype, proto, canonname, sa = address
-                sock = socket.socket(af, socktype, proto)
+                family, socktype, proto, canonname, sockaddr = address
+                sock = socket.socket(family, socktype, proto)
                 sock.settimeout(1)
-                sock.connect(sa)
+                sock.connect(sockaddr)
                 sock.close()
             except socket.error:
-                pass
+                continue
             if sock is not None:
                 addr = sock.getsockname()[0]
                 if isinstance(addr, bytes):
