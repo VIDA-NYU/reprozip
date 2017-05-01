@@ -56,6 +56,12 @@ def generate(target, configfile, database):
     vertices = []
     edges = []
 
+    # Create user entity, that initiates the runs
+    vertices.append({'ID': 'user',
+                     'type': 'Entity',
+                     'subtype': 'User',
+                     'label': 'User'})
+
     run = -1
 
     # Read processes
@@ -73,9 +79,16 @@ def generate(target, configfile, database):
             # Create run entity
             run += 1
             vertices.append({'ID': 'run%d' % run,
-                             'type': 'Run',
+                             'type': 'Activity',
+                             'subtype': 'Run',
                              'label': "Run #%d" % run,
                              'date': r_timestamp})
+            # User -> run
+            edges.append({'ID': 'user_run%d' % run,
+                          'type': 'UserRuns',
+                          'label': "User runs command",
+                          'sourceID': 'user',
+                          'targetID': 'run%d' % run})
             # Run -> process
             edges.append({'ID': 'run_start%d' % run,
                           'type': 'RunStarts',
@@ -85,7 +98,8 @@ def generate(target, configfile, database):
 
         # Create process entity
         vertices.append({'ID': 'process%d' % r_id,
-                         'type': 'Process',
+                         'type': 'Entity',
+                         'subtype': 'Process',
                          'label': 'Process #%d' % r_id,
                          'date': r_timestamp})
 
@@ -93,7 +107,8 @@ def generate(target, configfile, database):
         if r_parent is not None:
             # Process creation activity
             vertex = {'ID': 'fork%d' % r_id,
-                      'type': 'Fork',
+                      'type': 'Activity',
+                      'subtype': 'Fork',
                       'label': "#%d creates %s #%d" % (
                           r_parent,
                           "thread" if r_isthread else "process",
@@ -128,7 +143,8 @@ def generate(target, configfile, database):
     for r_name, r_directory in rows:
         # Create file entity
         vertices.append({'ID': r_name,
-                         'type': 'Directory' if r_directory else 'File',
+                         'type': 'Entity',
+                         'subtype': 'Directory' if r_directory else 'File',
                          'label': r_name,
                          'date': ''})
     cur.close()
@@ -143,8 +159,9 @@ def generate(target, configfile, database):
     for r_id, r_name, r_timestamp, r_mode, r_process in rows:
         # Create file access activity
         vertices.append({'ID': 'access%d' % r_id,
-                         'type': ('FileWrites' if r_mode & FILE_WRITE
-                                  else 'FileReads'),
+                         'type': 'Activity',
+                         'subtype': ('FileWrites' if r_mode & FILE_WRITE
+                                     else 'FileReads'),
                          'label': ("File write: %s" if r_mode & FILE_WRITE
                                    else "File read: %s") % r_name,
                          'date': r_timestamp,
@@ -178,7 +195,8 @@ def generate(target, configfile, database):
 
         # Create execution activity
         vertices.append({'ID': 'exec%d' % r_id,
-                         'type': 'ProcessExecutes',
+                         'type': 'Activity',
+                         'subtype': 'ProcessExecutes',
                          'label': "Process #%d executes file %s" % (r_process,
                                                                     r_name),
                          'date': r_timestamp,
