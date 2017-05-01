@@ -32,7 +32,7 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip*           | None                                            |
 +------------------------+-------------------------------------------------+
 | *reprounzip-vagrant*   | Python headers,                                 |
-|                        | a working C compiler [#pycrypto]_,              |
+|                        | a working C compiler, SSL library [#pycrypto]_, |
 |                        | `Vagrant v1.1+ <https://www.vagrantup.com/>`__, |
 |                        | `VirtualBox <https://www.virtualbox.org/>`__    |
 +------------------------+-------------------------------------------------+
@@ -46,7 +46,7 @@ Debian and Ubuntu
 
 You can get all the required dependencies using APT::
 
-    apt-get install python python-dev python-pip gcc libsqlite3-dev
+    apt-get install python python-dev python-pip gcc libsqlite3-dev libssl-dev
 
 Fedora & CentOS
 ```````````````
