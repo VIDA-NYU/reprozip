@@ -58,7 +58,7 @@ def generate(target, configfile, database):
 
     # Create user entity, that initiates the runs
     vertices.append({'ID': 'user',
-                     'type': 'Entity',
+                     'type': 'Agent',
                      'subtype': 'User',
                      'label': 'User'})
 
@@ -98,8 +98,8 @@ def generate(target, configfile, database):
 
         # Create process entity
         vertices.append({'ID': 'process%d' % r_id,
-                         'type': 'Entity',
-                         'subtype': 'Process',
+                         'type': 'Agent',
+                         'subtype': 'Thread' if r_isthread else 'Process',
                          'label': 'Process #%d' % r_id,
                          'date': r_timestamp})
 
