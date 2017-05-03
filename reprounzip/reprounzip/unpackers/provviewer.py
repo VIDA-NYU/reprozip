@@ -242,7 +242,7 @@ def generate(target, configfile, database):
 
         for vertex in vertices:
             if 'date' not in vertex:
-                vertex['date'] = ''
+                vertex['date'] = '-1'
             tags = {}
             for k in ('ID', 'type', 'label', 'date'):
                 if k not in vertex:
