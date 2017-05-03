@@ -133,6 +133,10 @@ def generate(target, configfile, database):
                           'targetID': 'process%d' % r_id})
     cur.close()
 
+    file2package = dict((f.path.path, pkg)
+                        for pkg in config.packages
+                        for f in pkg.files)
+
     # Read opened files
     cur = conn.cursor()
     rows = cur.execute(
@@ -143,11 +147,13 @@ def generate(target, configfile, database):
         ''')
     for r_name, r_directory in rows:
         # Create file entity
-        vertices.append({'ID': r_name,
-                         'type': 'Entity',
-                         'subtype': 'Directory' if r_directory else 'File',
-                         'label': r_name,
-                         'date': ''})
+        vertex = {'ID': r_name,
+                  'type': 'Entity',
+                  'subtype': 'Directory' if r_directory else 'File',
+                  'label': r_name}
+        if r_name in file2package:
+            vertex['package'] = file2package[r_name].name
+        vertices.append(vertex)
     cur.close()
 
     # Read file opens
