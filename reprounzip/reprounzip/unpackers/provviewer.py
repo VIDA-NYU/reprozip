@@ -136,6 +136,9 @@ def generate(target, configfile, database):
     file2package = dict((f.path.path, pkg)
                         for pkg in config.packages
                         for f in pkg.files)
+    inputs_outputs = dict((f.path.path, (bool(f.write_runs),
+                                         bool(f.read_runs)))
+                          for n, f in iteritems(config.inputs_outputs))
 
     # Read opened files
     cur = conn.cursor()
@@ -153,6 +156,12 @@ def generate(target, configfile, database):
                   'label': r_name}
         if r_name in file2package:
             vertex['package'] = file2package[r_name].name
+        if r_name in inputs_outputs:
+            out_, in_ = inputs_outputs[r_name]
+            if in_:
+                vertex['input'] = True
+            if out_:
+                vertex['output'] = True
         vertices.append(vertex)
     cur.close()
 
