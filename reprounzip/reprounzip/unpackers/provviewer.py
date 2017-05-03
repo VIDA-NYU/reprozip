@@ -102,6 +102,7 @@ def generate(target, configfile, database):
                          'subtype': 'Thread' if r_isthread else 'Process',
                          'label': 'Process #%d' % r_id,
                          'date': r_timestamp})
+        # TODO: add process end time (use master branch?)
 
         # Add process creation activity
         if r_parent is not None:
