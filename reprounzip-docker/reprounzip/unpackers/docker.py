@@ -33,7 +33,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     fixup_environment, interruptible_call, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, iteritems, stderr, join_root, \
+from reprounzip.utils import unicode_, irange, iteritems, stderr, join_root, \
     download_file
 
 
@@ -249,6 +249,113 @@ def docker_setup_create(args):
                      '--numeric-owner --strip=1 --null -T /rpz-files.list || '
                      '/busybox echo "TAR reports errors, this might or might '
                      'not prevent the execution to run")\n')
+
+            # Setup entry point
+            fp.write('COPY rpz_entrypoint.sh /rpz_entrypoint.sh\n'
+                     'ENTRYPOINT ["/busybox", "sh", "/rpz_entrypoint.sh"]\n')
+
+        # Write entry point script
+        logging.info("Writing %s...", target / 'rpz_entrypoint.sh')
+        with (target / 'rpz_entrypoint.sh').open('w', encoding='utf-8',
+                                                 newline='\n') as fp:
+            # The entrypoint gets some arguments from the run command
+            # By default, it just does all the runs
+            # "run N" executes the run with that number
+            # "cmd STR" sets a replacement command-line for the next run
+            # "do STR" executes a command as-is
+            fp.write(
+                '#!/bin/sh\n'
+                '\n'
+                'COMMAND=\n'
+                'ENVVARS=\n'
+                '\n'
+                'if [ $# = 0 ]; then\n'
+                '    exec /busybox sh /rpz_entrypoint.sh')
+            for nb in irange(len(runs)):
+                fp.write(' run %d' % nb)
+            fp.write(
+                '\n'
+                'fi\n'
+                '\n'
+                'while [ $# != 0 ]; do\n'
+                '    case "$1" in\n'
+                '        help)\n'
+                '            echo "Image built from reprounzip-docker" >&2\n'
+                '            echo "Usage: docker run <image> [cmd word [word '
+                '...]] [run <R>]" >&2\n'
+                '            echo "    \\`cmd ...\\` changes the command for '
+                'the next \\`run\\` option" >&2\n'
+                '            echo "    \\`run <name|number>\\` runs the '
+                'specified run" >&2\n'
+                '            echo "By default, all the runs are executed." '
+                '>&2\n'
+                '            echo "The runs in this image are:" >&2\n')
+            for run in runs:
+                fp.write(
+                    '            echo "    {name}: {cmdline}" >&2\n'.format(
+                        name=run['id'],
+                        cmdline=' '.join(shell_escape(a)
+                                         for a in run['argv'])))
+            fp.write(
+                '            exit 0\n'
+                '        ;;\n'
+                '        do)\n'
+                '            shift\n'
+                '            $1\n'
+                '        ;;\n'
+                '        env)\n'
+                '            shift\n'
+                '            ENVVARS="$1"\n'
+                '        ;;\n'
+                '        cmd)\n'
+                '            shift\n'
+                '            COMMAND="$1"\n'
+                '        ;;\n'
+                '        run)\n'
+                '            shift\n'
+                '            case "$1" in\n')
+            for i, run in enumerate(runs):
+                cmdline = ' '.join([run['binary']] + run['argv'][1:])
+                fp.write(
+                    '                {name})\n'
+                    '                    RUNCOMMAND={cmd}\n'
+                    '                    RUNWD={wd}\n'
+                    '                    RUNENV={env}\n'
+                    '                    RUNUID={uid}\n'
+                    '                    RUNGID={gid}\n'
+                    '                ;;\n'.format(
+                        name='%s|%d' % (run['id'], i),
+                        cmd=shell_escape(cmdline),
+                        wd=shell_escape(run['workingdir']),
+                        env=shell_escape(' '.join(
+                            '%s=%s' % (shell_escape(k), shell_escape(v))
+                            for k, v in iteritems(run['environ']))),
+                        uid=run.get('uid', 1000),
+                        gid=run.get('gid', 1000)))
+            fp.write(
+                '                *)\n'
+                '                    echo "RPZ: Unknown run $1" >&2\n'
+                '                    exit 1\n'
+                '                ;;\n'
+                '            esac\n'
+                '            if [ -n "$COMMAND" ]; then\n'
+                '                RUNCOMMAND="$COMMAND"\n'
+                '                COMMAND=\n'
+                '            fi\n'
+                '            export RUNWD; export RUNENV; export ENVVARS; '
+                'export RUNCOMMAND\n'
+                '            /rpzsudo "#$RUNUID" "#$RUNGID" /busybox sh -c '
+                '"cd \\"\\$RUNWD\\" && /busybox env -i $RUNENV $ENVVARS '
+                '$RUNCOMMAND"\n'
+                '            ENVVARS=\n'
+                '        ;;\n'
+                '        *)\n'
+                '            echo "RPZ: Unknown option $1" >&2\n'
+                '            exit 1\n'
+                '        ;;\n'
+                '    esac\n'
+                '    shift\n'
+                'done\n')
 
         # Meta-data for reprounzip
         write_dict(target, metadata_initial_iofiles(config))
