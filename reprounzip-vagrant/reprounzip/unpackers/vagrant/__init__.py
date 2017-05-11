@@ -446,13 +446,10 @@ class LocalX11Handler(BaseX11Handler):
     init_cmds = []
 
     @staticmethod
-    def fix_env(env):
-        """Sets ``$XAUTHORITY`` and ``$DISPLAY`` in the environment.
+    def env_fixes(env):
+        """Sets ``DISPLAY`` and remove ``$XAUTHORITY`` in the environment.
         """
-        new_env = dict(env)
-        new_env.pop('XAUTHORITY', None)
-        new_env['DISPLAY'] = ':0'
-        return new_env
+        return {'DISPLAY': ':0'}, ['XAUTHORITY']
 
 
 @target_must_exist
