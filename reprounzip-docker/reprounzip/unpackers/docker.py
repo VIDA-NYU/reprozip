@@ -30,8 +30,8 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
-    fixup_environment, interruptible_call, metadata_read, metadata_write, \
-    metadata_initial_iofiles, metadata_update_run, parse_ports
+    parse_environment_args, interruptible_call, metadata_read, \
+    metadata_write, metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import unicode_, irange, iteritems, stderr, join_root, \
     download_file
@@ -567,30 +567,35 @@ def docker_run(args):
     else:
         x11 = X11Handler(False, ('local', hostname), args.x11_display)
 
-    cmds = []
+    cmd = []
     for run_number in selected_runs:
         run = runs[run_number]
-        cmd = 'cd %s && ' % shell_escape(run['workingdir'])
-        cmd += '/busybox env -i '
-        environ = x11.fix_env(run['environ'])
-        environ = fixup_environment(environ, args)
-        cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
-                        for k, v in iteritems(environ))
-        cmd += ' '
+        env_set, env_unset = x11.env_fixes(run['environ'])
+        a_env_set, a_env_unset = parse_environment_args(args)
+        env_set.update(a_env_set)
+        env_unset.extend(a_env_unset)
+        if env_set or env_unset:
+            cmd.append('env')
+            env = []
+            for k in env_unset:
+                env.append('-u')
+                env.append(shell_escape(k))
+            for k, v in iteritems(env_set):
+                env.append('%s=%s' % (shell_escape(k), shell_escape(v)))
+            cmd.append(' '.join(env))
         # FIXME : Use exec -a or something if binary != argv[0]
-        if cmdline is None:
-            argv = [run['binary']] + run['argv'][1:]
-        else:
-            argv = cmdline
-        cmd += ' '.join(shell_escape(a) for a in argv)
-        uid = run.get('uid', 1000)
-        gid = run.get('gid', 1000)
-        cmd = '/rpzsudo \'#%d\' \'#%d\' /busybox sh -c %s' % (
-            uid, gid,
-            shell_escape(cmd))
-        cmds.append(cmd)
-    cmds = x11.init_cmds + cmds
-    cmds = ' && '.join(cmds)
+        if cmdline is not None:
+            cmd.append('cmd')
+            cmd.append(' '.join(shell_escape(a) for a in cmdline))
+        cmd.append('run')
+        cmd.append('%d' % run_number)
+    cmd = list(chain.from_iterable([['do', shell_escape(c)]
+                                    for c in x11.init_cmds] +
+                                   [cmd]))
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.debug("Passing arguments to Docker image:")
+        for c in cmd:
+            logging.debug(c)
 
     signals.pre_run(target=target)
 
@@ -608,7 +613,7 @@ def docker_run(args):
                                       '-d', '-t'] +
                                      port_options +
                                      args.docker_option +
-                                     [image, '/busybox', 'sh', '-c', cmds])
+                                     [image] + cmd)
         if retcode != 0:
             logging.critical("docker run failed with code %d", retcode)
             subprocess.call(['docker', 'rm', '-f', container])
@@ -623,7 +628,7 @@ def docker_run(args):
                                   '-i', '-t'] +
                                  port_options +
                                  args.docker_option +
-                                 [image, '/busybox', 'sh', '-c', cmds])
+                                 [image] + cmd)
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
