@@ -269,7 +269,10 @@ def docker_setup_build(args):
         logging.critical("Image already built")
         sys.exit(1)
 
-    image = make_unique_name(b'reprounzip_image_')
+    if args.image_name:
+        image = args.image_name[0]
+    else:
+        image = make_unique_name(b'reprounzip_image_')
 
     logging.info("Calling 'docker build'...")
     try:
@@ -809,8 +812,8 @@ def setup(parser, **kwargs):
     def add_opt_general(opts):
         opts.add_argument('target', nargs=1, help="Experiment directory")
 
-    # setup/create
-    def add_opt_setup(opts):
+    # Common between setup and setup/create
+    def add_opt_setup_create(opts):
         opts.add_argument('pack', nargs=1, help="Pack to extract")
         opts.add_argument('--base-image', nargs=1, help="Base image to use")
         opts.add_argument('--distribution', nargs=1,
@@ -824,6 +827,14 @@ def setup(parser, **kwargs):
                           default=False, dest='install_pkgs',
                           help=argparse.SUPPRESS)
 
+    # Common between setup and setup/build
+    def add_opt_setup_build(opts):
+        opts.add_argument('--image-name', nargs=1,
+                          help="Name of the image to create (by default, a "
+                               "random name beginning with "
+                               "'reprounzip_image_' is generated)")
+        add_raw_docker_option(opts)
+
     # --docker-option
     def add_raw_docker_option(opts):
         opts.add_argument('--docker-option', action='append',
@@ -832,21 +843,21 @@ def setup(parser, **kwargs):
                                "specified multiple times")
 
     parser_setup_create = subparsers.add_parser('setup/create')
-    add_opt_setup(parser_setup_create)
+    add_opt_setup_create(parser_setup_create)
     add_opt_general(parser_setup_create)
     parser_setup_create.set_defaults(func=docker_setup_create)
 
     # setup/build
     parser_setup_build = subparsers.add_parser('setup/build')
     add_opt_general(parser_setup_build)
-    add_raw_docker_option(parser_setup_build)
+    add_opt_setup_build(parser_setup_build)
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
     parser_setup = subparsers.add_parser('setup')
-    add_opt_setup(parser_setup)
+    add_opt_setup_create(parser_setup)
+    add_opt_setup_build(parser_setup)
     add_opt_general(parser_setup)
-    add_raw_docker_option(parser_setup)
     parser_setup.set_defaults(func=docker_setup)
 
     # reset
