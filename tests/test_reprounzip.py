@@ -135,6 +135,10 @@ class TestCommon(unittest.TestCase):
         old_environ, os.environ = os.environ, outer_env
         try:
             self.assertEqual(
+                reprounzip.unpackers.common.parse_environment_args(
+                    FakeArgs([], [])),
+                ({}, []))
+            self.assertEqual(
                 reprounzip.unpackers.common.fixup_environment(
                     inner_env,
                     FakeArgs([], [])),
@@ -144,6 +148,13 @@ class TestCommon(unittest.TestCase):
                     'SHARED': 'sharedvalue',
                 })
 
+            self.assertEqual(
+                reprounzip.unpackers.common.parse_environment_args(
+                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
+                ({'OUTONLY': 'outvalue',
+                  'COMMON': 'commonvalueout',
+                  'EMPTY': ''},
+                 []))
             self.assertEqual(
                 reprounzip.unpackers.common.fixup_environment(
                     inner_env,
@@ -157,6 +168,14 @@ class TestCommon(unittest.TestCase):
                 })
 
             self.assertEqual(
+                reprounzip.unpackers.common.parse_environment_args(
+                    FakeArgs(['OUTONLY'],
+                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
+                ({'OUTONLY': 'outvalue',
+                  'COMMON': '',
+                  'SHARED': 'surprise'},
+                 ['INONLY']))
+            self.assertEqual(
                 reprounzip.unpackers.common.fixup_environment(
                     inner_env,
                     FakeArgs(['OUTONLY'],
@@ -167,6 +186,10 @@ class TestCommon(unittest.TestCase):
                     'SHARED': 'surprise',
                 })
 
+            self.assertEqual(
+                reprounzip.unpackers.common.parse_environment_args(
+                    FakeArgs(['.*Y$'], [])),
+                ({'OUTONLY': 'outvalue', 'EMPTY': ''}, []))
             self.assertEqual(
                 reprounzip.unpackers.common.fixup_environment(
                     inner_env,

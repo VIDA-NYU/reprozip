@@ -98,6 +98,20 @@ class BaseX11Handler(object):
     commands, and `port_forward` which describes the reverse port tunnels from
     the experiment to the local X server.
     """
+    def fix_env(self, env):
+        """Apply env_fixes to get a new environment dict.
+        """
+        env_set, env_unset = self.env_fixes(env)
+        if env_set or env_unset:
+            env = dict(env)
+            env.update(env_set)
+            for k in env_unset:
+                env.pop(k, None)
+        return env
+
+    @staticmethod
+    def env_fixes(env):
+        return {}, []
 
 
 class X11Handler(BaseX11Handler):
@@ -292,18 +306,17 @@ class X11Handler(BaseX11Handler):
 
         return [(6000 + self.display, connect)]
 
-    def fix_env(self, env):
+    def env_fixes(self, env):
         """Sets ``$XAUTHORITY`` and ``$DISPLAY`` in the environment.
         """
         if not self.enabled:
-            return env
-        new_env = dict(env)
-        new_env['XAUTHORITY'] = str(self.xauth)
+            return {}, []
+        env_set = {'XAUTHORITY': str(self.xauth)}
         if self.target[0] == 'local':
-            new_env['DISPLAY'] = '127.0.0.1:%d' % self.display
+            env_set['DISPLAY'] = '127.0.0.1:%d' % self.display
         elif self.target[0] == 'internet':
-            new_env['DISPLAY'] = '%s:%d' % (self.target[1], self.display)
-        return new_env
+            env_set['DISPLAY'] = '%s:%d' % (self.target[1], self.display)
+        return env_set, []
 
     @property
     def init_cmds(self):
