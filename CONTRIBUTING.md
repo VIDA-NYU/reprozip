@@ -6,7 +6,6 @@
 * [Attribution](#attribution)
 
 # Notes
-[Notes]: #notes
 
 Any contributions received are assumed to be covered by the BSD 3-Clause license. We might ask you to sign a Contributor License Agreement before accepting a larger contribution. To learn more about ReproZip, see:
 * [ReproZip Examples](https://vida-nyu.github.io/reprozip-examples/)
@@ -14,7 +13,6 @@ Any contributions received are assumed to be covered by the BSD 3-Clause license
 * [ReproZip Demo Video](https://www.youtube.com/watch?v=-zLPuwCHXo0)
 
 # Contributing
-[Contributing]: #contributing
 
 Please follow the [Citizen Code of Conduct](https://github.com/stumpsyn/policies/blob/master/citizen_code_of_conduct.md) in all your interactions with the project. If you would like to contribute to this project by modifying/adding to the code, please read the [Best Practices for Contributing] below and feel free to follow the standard GitHub workflow:
 
@@ -41,7 +39,6 @@ Please follow the [Citizen Code of Conduct](https://github.com/stumpsyn/policies
 11. Make a "Pull Request" from your branch here on GitHub.
 
 # Resolving Merge Conflicts
-[Resolving Merge Conflicts]: #resolving-merge-conflicts
 
 Depending on the order that Pull Requests get processed, your PR may result in a conflict and become un-mergable.  To correct this, do the following from the command line:
 
@@ -73,26 +70,23 @@ git push origin my-feature-branch-name
 The pull request should automatically update to reflect your changes.
 
 ## Best Practices for Contributing
-[Best Practices for Contributing]: #best-practices-for-contributing
+
 * Before you start coding, open an issue so that the community can discuss your change to ensure it is in line with the goals of the project and not being worked on by someone else. This allows for discussion and fine tuning of your feature and results in a more succent and focused additions.
     * If you are fixing a small glitch or bug, you may make a PR without opening an issue.
     * If you are adding a large feature, create an issue so that we may give you feedback and agree on what makes the most sense for the project before making your change and submitting a PR (this will make sure you don't have to do major changes down the line).
 
-* Pull Requests represent final code. Please ensure they are:
-     * Well tested by the author. It is the author's job to ensure their code works as expected.
-     * Free of unnecessary log calls. Logging is great for debugging, but when a PR is made, log calls should only be present when there is an actual error or to warn of an unimplemented feature.
+    * Well tested by the author. It is the author's job to ensure their code works as expected.
+    * Free of unnecessary log calls. Logging is great for debugging, but when a PR is made, log calls should only be present when there is an actual error or to warn of an unimplemented feature.
 
 * If your code is untested, log heavy, or incomplete, prefix your PR with "[WIP]", so others know it is still being tested and shouldn't be considered for merging yet. This way we can still give you feedback or help finalize the feature even if it's not ready for prime time.
 
 That's it! Following these guidelines will ensure that your additions are approved quickly and integrated into the project. Thanks for your contribution!
 
 # Attribution
-[Attribution]: #attribution
 
 This CONTRIBUTING.md was adapted from [ProjectPorcupine's](https://github.com/TeamPorcupine/ProjectPorcupine)'s [CONTRIBUTING.md](https://github.com/TeamPorcupine/ProjectPorcupine/blob/master/CONTRIBUTING.md)
 
 # Contact info
-[Contact info]: #contact-info
 
 You are welcome to [subscribe to](https://vgc.poly.edu/mailman/listinfo/reprozip-users) or contact our user mailing list [reprozip-users](mailto:reprozip-users@vgc.poly.edu) for questions, suggestions and discussions about using ReproZip.
 
