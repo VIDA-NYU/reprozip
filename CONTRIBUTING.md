@@ -75,8 +75,9 @@ The pull request should automatically update to reflect your changes.
     * If you are fixing a small glitch or bug, you may make a PR without opening an issue.
     * If you are adding a large feature, create an issue so that we may give you feedback and agree on what makes the most sense for the project before making your change and submitting a PR (this will make sure you don't have to do major changes down the line).
 
+* Pull Requests are eventually merged into the codebase. Please ensure they are:
     * Well tested by the author. It is the author's job to ensure their code works as expected.
-    * Free of unnecessary log calls. Logging is great for debugging, but when a PR is made, log calls should only be present when there is an actual error or to warn of an unimplemented feature.
+    * Free of unnecessary log calls. Logging important for debugging, but when a PR is made, log calls should only be present when there is an actual error or to record some important piece of information or progress.
 
 * If your code is untested, log heavy, or incomplete, prefix your PR with "[WIP]", so others know it is still being tested and shouldn't be considered for merging yet. This way we can still give you feedback or help finalize the feature even if it's not ready for prime time.
 
