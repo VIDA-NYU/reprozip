@@ -8,8 +8,8 @@
 # Notes
 
 Any contributions received are assumed to be covered by the BSD 3-Clause license. We might ask you to sign a Contributor License Agreement before accepting a larger contribution. To learn more about ReproZip, see:
-* [ReproZip Examples](https://vida-nyu.github.io/reprozip-examples/)
-* [ReproZip Documentation](https://reprozip.readthedocs.io/)
+* [ReproZip Examples](https://examples.reprozip.org/)
+* [ReproZip Documentation](https://docs.reprozip.org/)
 * [ReproZip Demo Video](https://www.youtube.com/watch?v=-zLPuwCHXo0)
 
 # Contributing
