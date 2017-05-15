@@ -14,7 +14,7 @@ Any contributions received are assumed to be covered by the BSD 3-Clause license
 
 # Contributing
 
-Please follow the [Citizen Code of Conduct](https://github.com/stumpsyn/policies/blob/master/citizen_code_of_conduct.md) in all your interactions with the project. If you would like to contribute to this project by modifying/adding to the code, please read the [Best Practices for Contributing] below and feel free to follow the standard GitHub workflow:
+Please follow the [Contributor Covenant](CODE_OF_CONDUCT.md) in all your interactions with the project. If you would like to contribute to this project by modifying/adding to the code, please read the [Best Practices for Contributing] below and feel free to follow the standard GitHub workflow:
 
 1. Fork the project.
 2. Clone your fork to your computer.
