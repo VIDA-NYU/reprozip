@@ -230,11 +230,19 @@ def combine_traces(traces, target):
             DELETE FROM maps.map_processes;
             ''')
 
+        # An implicit transaction gets created. Python used to implicitly
+        # commit it, but no longer does as of 3.6, so we have to explicitly
+        # commit before detaching.
+        conn.commit()
+
         # Detach
         conn.execute(
             '''
             DETACH DATABASE trace;
             ''')
+
+    # See above.
+    conn.commit()
 
     conn.execute(
         '''
