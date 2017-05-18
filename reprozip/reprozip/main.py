@@ -67,7 +67,7 @@ def print_db(database):
     conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, parent, timestamp, exit_timestamp, exitcode, cpu_time
         FROM processes;
@@ -80,7 +80,7 @@ def print_db(database):
           " cpu time |")
     print(header)
     for (r_id, r_parent, r_timestamp, r_endtime,
-            r_exit, r_cpu_time) in processes:
+            r_exit, r_cpu_time) in rows:
         f_id = "{0: 5d} ".format(r_id)
         if r_parent is not None:
             f_parent = "{0: 7d} ".format(r_parent)
@@ -102,7 +102,7 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, name, timestamp, process, argv
         FROM executed_files;
@@ -114,7 +114,7 @@ def print_db(database):
     print("|   id   |     timestamp    | process | name and argv              "
           "           |")
     print(header)
-    for r_id, r_name, r_timestamp, r_process, r_argv in processes:
+    for r_id, r_name, r_timestamp, r_process, r_argv in rows:
         f_id = "{0: 7d} ".format(r_id)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
@@ -130,7 +130,7 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    processes = cur.execute(
+    rows = cur.execute(
         '''
         SELECT id, name, timestamp, mode, process
         FROM opened_files;
@@ -142,7 +142,7 @@ def print_db(database):
     print("|   id   |     timestamp    | process | mode | name                "
           "           |")
     print(header)
-    for r_id, r_name, r_timestamp, r_mode, r_process in processes:
+    for r_id, r_name, r_timestamp, r_mode, r_process in rows:
         f_id = "{0: 7d} ".format(r_id)
         f_timestamp = "{0: 17d} ".format(r_timestamp)
         f_proc = "{0: 8d} ".format(r_process)
@@ -153,7 +153,7 @@ def print_db(database):
     cur.close()
 
     cur = conn.cursor()
-    connections = cur.execute(
+    rows = cur.execute(
         '''
         SELECT DISTINCT inbound, family, protocol, address
         FROM connections
@@ -161,7 +161,7 @@ def print_db(database):
         ''')
     header_shown = -1
     current_family = current_protocol = None
-    for r_inbound, r_family, r_protocol, r_address in connections:
+    for r_inbound, r_family, r_protocol, r_address in rows:
         if header_shown < r_inbound:
             if r_inbound:
                 print("\nIncoming connections:")
