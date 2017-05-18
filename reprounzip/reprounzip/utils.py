@@ -59,8 +59,8 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     izip = zip
     irange = range
-    iteritems = dict.items
-    itervalues = dict.values
+    iteritems = lambda d: d.items()
+    itervalues = lambda d: d.values()
     listvalues = lambda d: list(d.values())
 
     stdout_bytes, stderr_bytes = sys.stdout.buffer, sys.stderr.buffer
@@ -69,9 +69,9 @@ if PY3:
 else:
     izip = itertools.izip
     irange = xrange  # noqa: F821
-    iteritems = dict.iteritems
-    itervalues = dict.itervalues
-    listvalues = dict.values
+    iteritems = lambda d: d.iteritems()
+    itervalues = lambda d: d.itervalues()
+    listvalues = lambda d: d.values()
 
     _writer = codecs.getwriter(locale.getpreferredencoding())
     stdout_bytes, stderr_bytes = sys.stdout, sys.stderr
