@@ -217,6 +217,12 @@ class Package(object):
         else:
             return '"%s"' % escape(unicode_(f))
 
+    def json_endpoint(self, f, level_pkgs):
+        if level_pkgs == LVL_PKG_PACKAGE:
+            return self.name
+        else:
+            return unicode_(f)
+
     def json(self, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
             logging.critical("JSON output doesn't support --packages package")
@@ -634,7 +640,10 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
     """Writes a JSON file suitable for further processing.
     """
     # Packages
-    json_packages = [pkg.json(level_pkgs) for pkg in packages]
+    if level_pkgs in (LVL_PKG_IGNORE, LVL_PKG_DROP):
+        json_packages = []
+    else:
+        json_packages = [pkg.json(level_pkgs) for pkg in packages]
 
     # Other files
     json_other_files = [unicode_(fi) for fi in sorted(other_files)]
@@ -644,15 +653,27 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
     json_runs = [run.json(prog_map, level_processes) for run in runs]
 
     # Connect edges
-    for prog, f, mode, argv in edges:
-        what = unicode_(f)
+    done_edges = set()
+    for prog, fi, mode, argv in edges:
+        endp_prog = prog_map[prog]
+        if fi in package_map:
+            if level_pkgs == LVL_PKG_DROP:
+                continue
+            endp_file = package_map[fi].json_endpoint(fi, level_pkgs)
+            e = endp_prog['name'], endp_file, mode
+            if e in done_edges:
+                continue
+            else:
+                done_edges.add(e)
+        else:
+            endp_file = unicode_(fi)
         if mode is None:
-            prog_map[prog]['reads'].append(what)
+            endp_prog['reads'].append(endp_file)
             # TODO: argv?
         elif mode & FILE_WRITE:
-            prog_map[prog]['writes'].append(what)
+            endp_prog['writes'].append(endp_file)
         elif mode & FILE_READ:
-            prog_map[prog]['reads'].append(what)
+            endp_prog['reads'].append(endp_file)
 
     json_other_files.sort()
 
