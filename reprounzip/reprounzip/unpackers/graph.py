@@ -88,22 +88,22 @@ class Run(object):
             json_process = self.processes[0].json()
             for process in self.processes:
                 prog_map[process] = json_process
-            return [json_process]
+            processes = [json_process]
         else:
-            run = []
+            processes = []
             process_idx_map = {}
             for process in self.processes:
                 if level_processes == LVL_PROC_THREAD or not process.thread:
-                    process_idx_map[process] = len(run)
+                    process_idx_map[process] = len(processes)
                     json_process = process.json(process_idx_map)
                     prog_map[process] = json_process
-                    run.append(json_process)
+                    processes.append(json_process)
                 else:
                     p_process = process
                     while p_process.thread:
                         p_process = p_process.parent
                     prog_map[process] = prog_map[p_process]
-            return run
+        return {'name': self.name, 'processes': processes}
 
 
 class Process(object):
