@@ -268,6 +268,8 @@ digraph G {
                              '/some/dir/thing',
                              '/some/dir/two',
                              '/usr/share/1_one.pyc'],
+             'inputs_outputs': [{'name': "important", 'path': "/some/dir/one",
+                                 'written_by_runs': [0], 'read_by_runs': [1]}],
              'runs': [{'name': "first run",
                        'processes': [
                            {'name': '0',

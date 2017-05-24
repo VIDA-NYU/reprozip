@@ -452,8 +452,9 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                          "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
-    inputs_outputs = dict((f.path, n)
-                          for n, f in iteritems(config.inputs_outputs))
+    inputs_outputs = config.inputs_outputs
+    inputs_outputs_map = dict((f.path, n)
+                              for n, f in iteritems(config.inputs_outputs))
     has_thread_flag = config.format_version >= LooseVersion('0.7')
 
     runs, files, edges = read_events(database, all_forks,
@@ -544,7 +545,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                            for prog, f, mode, argv in edges)
     else:
         if level_other_files == LVL_OTHER_IO:
-            other_files = set(f for f in other_files if f in inputs_outputs)
+            other_files = set(f
+                              for f in other_files if f in inputs_outputs_map)
             edges = [(prog, f, mode, argv)
                      for prog, f, mode, argv in edges
                      if f in package_map or f in other_files]
@@ -555,7 +557,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                      if f in package_map]
 
     args = (target, runs, packages, other_files, package_map, edges,
-            inputs_outputs, level_pkgs, level_processes, level_other_files)
+            inputs_outputs, inputs_outputs_map,
+            level_pkgs, level_processes, level_other_files)
     if graph_format == FORMAT_DOT:
         graph_dot(*args)
     elif graph_format == FORMAT_JSON:
@@ -565,7 +568,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
 
 def graph_dot(target, runs, packages, other_files, package_map, edges,
-              inputs_outputs, level_pkgs, level_processes, level_other_files):
+              inputs_outputs, inputs_outputs_map,
+              level_pkgs, level_processes, level_other_files):
     """Writes a GraphViz DOT file from the collected information.
     """
     with target.open('w', encoding='utf-8', newline='\n') as fp:
@@ -594,11 +598,11 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         # Other files
         logging.info("Writing other files...")
         for fi in sorted(other_files):
-            if fi in inputs_outputs:
+            if fi in inputs_outputs_map:
                 fp.write('    "%(path)s" [fillcolor="#A3B4E0", '
                          'label="%(name)s\\n%(path)s"];\n' %
                          {'path': escape(unicode_(fi)),
-                          'name': inputs_outputs[fi]})
+                          'name': inputs_outputs_map[fi]})
             else:
                 fp.write('    "%s";\n' % escape(unicode_(fi)))
 
@@ -637,7 +641,8 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
 
 
 def graph_json(target, runs, packages, other_files, package_map, edges,
-               inputs_outputs, level_pkgs, level_processes, level_other_files):
+               inputs_outputs, inputs_outputs_map,
+               level_pkgs, level_processes, level_other_files):
     """Writes a JSON file suitable for further processing.
     """
     # Packages
@@ -686,7 +691,12 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
         json.dump({'packages': sorted(json_packages,
                                       key=lambda p: p['name']),
                    'other_files': json_other_files,
-                   'runs': json_runs},
+                   'runs': json_runs,
+                   'inputs_outputs': [
+                       {'name': k, 'path': unicode_(v.path),
+                        'read_by_runs': v.read_runs,
+                        'written_by_runs': v.write_runs}
+                       for k, v in sorted(iteritems(inputs_outputs))]},
                   fp,
                   ensure_ascii=False,
                   indent=2,
