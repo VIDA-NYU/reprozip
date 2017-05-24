@@ -50,10 +50,11 @@ class TestGraph(unittest.TestCase):
             ('open', 2, "/some/dir", True, FILE_WDIR),
             ('exec', 2, "/bin/sh", "/some/dir", "sh\0script_2\0"),
             ('proc', 3, 2, True),
-            ('open', 3, "/some/dir", True, FILE_WDIR),
-            ('exec', 3, "/usr/bin/python", "/some/dir", "python\0-\0"),
-            ('open', 3, "/some/dir/one", False, FILE_READ),
-            ('open', 3, "/some/dir/thing", False, FILE_WRITE),
+            ('proc', 4, 2, False),
+            ('open', 4, "/some/dir", True, FILE_WDIR),
+            ('exec', 4, "/usr/bin/python", "/some/dir", "python\0-\0"),
+            ('open', 4, "/some/dir/one", False, FILE_READ),
+            ('open', 4, "/some/dir/thing", False, FILE_WRITE),
             ('exec', 2, "/some/dir/report", "/some/dir", "./report\0-v\0"),
             ('open', 2, "/some/dir/thing", False, FILE_READ),
             ('open', 2, "/some/dir/result", False, FILE_WRITE),
@@ -194,10 +195,12 @@ digraph G {
     subgraph cluster_run1 {
         label="run1";
         prog4 [label="/bin/sh (2)"];
-        prog5 [label="/usr/bin/python (3)",fillcolor="#666666"];
-        prog4 -> prog5 [label="fork+exec"];
-        prog6 [label="/some/dir/report (2)"];
-        prog4 -> prog6 [label="exec"];
+        prog5 [label="/bin/sh (3)",fillcolor="#666666"];
+        prog4 -> prog5 [label="thread"];
+        prog6 [label="/usr/bin/python (4)"];
+        prog4 -> prog6 [label="fork+exec"];
+        prog7 [label="/some/dir/report (2)"];
+        prog4 -> prog7 [label="exec"];
     }
 
     node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
@@ -241,12 +244,12 @@ digraph G {
     "/usr/bin/wc" -> prog3 [style=bold, label="wc out.txt"];
     "/some/dir/two" -> prog3 [color="#8888CC"];
     "/bin/sh" -> prog4 [style=bold, label="sh script_2"];
-    "/usr/bin/python" -> prog5 [style=bold, label="python -"];
-    "/some/dir/one" -> prog5 [color="#8888CC"];
-    prog5 -> "/some/dir/thing" [color="#000088"];
-    "/some/dir/report" -> prog6 [style=bold, label="./report -v"];
-    "/some/dir/thing" -> prog6 [color="#8888CC"];
-    prog6 -> "/some/dir/result" [color="#000088"];
+    "/usr/bin/python" -> prog6 [style=bold, label="python -"];
+    "/some/dir/one" -> prog6 [color="#8888CC"];
+    prog6 -> "/some/dir/thing" [color="#000088"];
+    "/some/dir/report" -> prog7 [style=bold, label="./report -v"];
+    "/some/dir/thing" -> prog7 [color="#8888CC"];
+    prog7 -> "/some/dir/result" [color="#000088"];
 }
 """,
             {'packages': [{'name': 'pkg1', 'version': '1.0',
@@ -301,8 +304,14 @@ digraph G {
                         'reads': ['/bin/sh'],
                         'writes': []},
                        {'name': '3',
-                        'long_name': 'python (3)',
-                        'description': '/usr/bin/python\n3',
+                        'long_name': 'sh (3)',
+                        'description': '/bin/sh\n3',
+                        'parent': [0, 'fork'],
+                        'reads': [],
+                        'writes': []},
+                       {'name': '4',
+                        'long_name': 'python (4)',
+                        'description': '/usr/bin/python\n4',
                         'parent': [0, 'fork+exec'],
                         'reads': ['/usr/bin/python', '/some/dir/one'],
                         'writes': ['/some/dir/thing']},
@@ -332,10 +341,12 @@ digraph G {
     subgraph cluster_run1 {
         label="run1";
         prog4 [label="/bin/sh (2)"];
-        prog5 [label="/usr/bin/python (3)",fillcolor="#666666"];
-        prog4 -> prog5 [label="fork+exec"];
-        prog6 [label="/some/dir/report (2)"];
-        prog4 -> prog6 [label="exec"];
+        prog5 [label="/bin/sh (3)",fillcolor="#666666"];
+        prog4 -> prog5 [label="thread"];
+        prog6 [label="/usr/bin/python (4)"];
+        prog4 -> prog6 [label="fork+exec"];
+        prog7 [label="/some/dir/report (2)"];
+        prog4 -> prog7 [label="exec"];
     }
 
     node [shape=ellipse fontcolor="#131C39" fillcolor="#C9D2ED"];
@@ -368,12 +379,12 @@ digraph G {
     "pkg pkg1" -> prog3 [style=bold, label="wc out.txt"];
     "/some/dir/two" -> prog3 [color="#8888CC"];
     "/bin/sh" -> prog4 [style=bold, label="sh script_2"];
-    "pkg python" -> prog5 [style=bold, label="python -"];
-    "/some/dir/one" -> prog5 [color="#8888CC"];
-    prog5 -> "/some/dir/thing" [color="#000088"];
-    "/some/dir/report" -> prog6 [style=bold, label="./report -v"];
-    "/some/dir/thing" -> prog6 [color="#8888CC"];
-    prog6 -> "/some/dir/result" [color="#000088"];
+    "pkg python" -> prog6 [style=bold, label="python -"];
+    "/some/dir/one" -> prog6 [color="#8888CC"];
+    prog6 -> "/some/dir/thing" [color="#000088"];
+    "/some/dir/report" -> prog7 [style=bold, label="./report -v"];
+    "/some/dir/thing" -> prog7 [color="#8888CC"];
+    prog7 -> "/some/dir/result" [color="#000088"];
 }
 """,
             False,
