@@ -112,7 +112,7 @@ class Process(object):
     _id_gen = 0
 
     def __init__(self, pid, run, parent, timestamp, thread, acted, binary,
-                 created):
+                 argv, created):
         self.id = Process._id_gen
         Process._id_gen += 1
         self.pid = pid
@@ -125,6 +125,8 @@ class Process(object):
         self.acted = acted
         # Executable file
         self.binary = binary
+        # Command-line if this was created by an exec
+        self.argv = argv
         # How was this process created, one of the C_* constants
         self.created = created
 
@@ -177,7 +179,7 @@ class Process(object):
             parent = None
         return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
                 'long_name': long_name, 'description': description,
-                'is_thread': self.thread}
+                'argv': self.argv, 'is_thread': self.thread}
 
 
 class Package(object):
@@ -368,6 +370,7 @@ def read_events(database, all_forks, has_thread_flag):
                               r_thread,
                               False,
                               binary,
+                              None,
                               C_INITIAL if r_parent is None else C_FORK)
             processes[r_id] = process
             all_programs.append(process)
@@ -397,6 +400,7 @@ def read_events(database, all_forks, has_thread_flag):
                 process.binary = r_name
                 process.created = C_FORKEXEC
                 process.acted = True
+                process.argv = argv
             else:
                 process = Process(process.pid,
                                   run,
@@ -405,6 +409,7 @@ def read_events(database, all_forks, has_thread_flag):
                                   False,
                                   True,         # Hides exec only once
                                   r_name,
+                                  argv,
                                   C_EXEC)
                 all_programs.append(process)
                 processes[r_process] = process
