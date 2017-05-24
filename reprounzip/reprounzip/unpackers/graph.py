@@ -119,7 +119,7 @@ class Process(object):
         self.run = run
         self.parent = parent
         self.timestamp = timestamp
-        self.thread = thread
+        self.thread = bool(thread)
         # Whether that process has done something yet. If it execve()s and
         # hasn't done anything since it forked, no need for it to appear
         self.acted = acted
@@ -176,7 +176,8 @@ class Process(object):
         else:
             parent = None
         return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
-                'long_name': long_name, 'description': description}
+                'long_name': long_name, 'description': description,
+                'is_thread': self.thread}
 
 
 class Package(object):
