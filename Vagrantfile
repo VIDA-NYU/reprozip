@@ -25,6 +25,19 @@ adduser vagrant docker
 SCRIPT
   end
 
+   # Default Port Forwarding
+   default_ports = {
+      80   => 8000,
+      443  => 44300,
+      3306 => 33060,
+      5432 => 54320
+   }
+
+  # Use Default Port Forwarding Unless Overridden
+  default_ports.each do |guest, host|
+    config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+  end
+   	
   config.vm.define "travis", autostart: false do |m|
     m.vm.box = "hashicorp/precise64"
   end
