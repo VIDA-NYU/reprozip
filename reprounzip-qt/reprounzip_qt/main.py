@@ -17,9 +17,7 @@ def qt_init():
     sip.setapi('QString', 2)
     sip.setapi('QVariant', 2)
 
-    from PyQt4 import QtGui
-
-    return QtGui.QApplication(sys.argv)
+    from PyQt4 import QtGui  # noqa
 
 
 def main():
@@ -38,9 +36,11 @@ def main():
 
     args = parser.parse_args()
 
-    app = qt_init()
+    qt_init()
 
-    from reprounzip_qt.gui import ReprounzipUi
+    from reprounzip_qt.gui import Application, ReprounzipUi
+
+    app = Application(sys.argv)
 
     window_args = {}
     if args.package and args.unpacked:
@@ -57,6 +57,7 @@ def main():
         sys.exit(2)
 
     window = ReprounzipUi(**window_args)
+    app.set_main_window(window)
     window.setVisible(True)
 
     app.exec_()

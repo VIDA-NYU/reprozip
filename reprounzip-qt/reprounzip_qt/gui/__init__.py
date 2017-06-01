@@ -4,10 +4,26 @@
 
 from __future__ import division, print_function, unicode_literals
 
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 
 from reprounzip_qt.gui.unpack import UnpackTab
 from reprounzip_qt.gui.run import RunTab
+
+
+class Application(QtGui.QApplication):
+    def __init__(self, argv):
+        QtGui.QApplication.__init__(self, argv)
+        self.main_window = None
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.FileOpen:
+            if self.main_window:
+                self.main_window.open_rpz(event.file())
+                return True
+        return QtGui.QApplication.event(self, event)
+
+    def set_main_window(self, window):
+        self.main_window = window
 
 
 class ReprounzipUi(QtGui.QMainWindow):
@@ -31,3 +47,8 @@ class ReprounzipUi(QtGui.QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def open_rpz(self, filename):
+        if self.tabs.widget(1).should_exit():
+            self.tabs.widget(0).change_package(filename)
+            self.tabs.setCurrentIndex(0)
