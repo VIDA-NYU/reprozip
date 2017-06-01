@@ -269,6 +269,9 @@ class UnpackTab(QtGui.QWidget):
 
         self._package_changed()
 
+    def replaceable(self):
+        return not self.package_widget.text()
+
     def _browse_pkg(self):
         picked = QtGui.QFileDialog.getOpenFileName(
             self, "Pick package file",
