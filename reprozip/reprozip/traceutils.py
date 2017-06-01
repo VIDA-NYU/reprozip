@@ -29,6 +29,8 @@ def create_schema(conn):
             run_id INTEGER NOT NULL,
             parent INTEGER,
             timestamp INTEGER NOT NULL,
+            exit_timestamp INTEGER,
+            cpu_time INTEGER,
             is_thread BOOLEAN NOT NULL,
             exitcode INTEGER
             );
@@ -64,6 +66,21 @@ def create_schema(conn):
         ''',
         '''
         CREATE INDEX exec_proc_idx ON executed_files(process);
+        ''',
+        '''
+        CREATE TABLE connections(
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL,
+            process INTEGER NOT NULL,
+            inbound INTEGER NOT NULL,
+            family TEXT NULL,
+            protocol TEXT NULL,
+            address TEXT NULL
+            );
+        ''',
+        '''
+        CREATE INDEX connections_proc_idx ON connections(process);
         ''',
     ]
     for stmt in sql:
