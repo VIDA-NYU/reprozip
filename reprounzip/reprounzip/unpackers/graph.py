@@ -111,14 +111,15 @@ class Process(object):
     """
     _id_gen = 0
 
-    def __init__(self, pid, run, parent, timestamp, thread, acted, binary,
-                 argv, created):
+    def __init__(self, pid, run, parent, start_time, exit_time, thread, acted,
+                 binary, argv, created):
         self.id = Process._id_gen
         Process._id_gen += 1
         self.pid = pid
         self.run = run
         self.parent = parent
-        self.timestamp = timestamp
+        self.start_time = start_time
+        self.exit_time = exit_time
         self.thread = bool(thread)
         # Whether that process has done something yet. If it execve()s and
         # hasn't done anything since it forked, no need for it to appear
@@ -180,7 +181,7 @@ class Process(object):
         return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
                 'long_name': long_name, 'description': description,
                 'argv': self.argv, 'is_thread': self.thread,
-                'start_time': self.timestamp}
+                'start_time': self.start_time, 'exit_time': self.exit_time}
 
 
 class Package(object):
@@ -282,7 +283,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
     return level_pkgs, level_processes, level_other_files, file_depth
 
 
-def read_events(database, all_forks, has_thread_flag):
+def read_events(database, all_forks, has_thread_flag, has_exit_timestamp):
     # In here, a file is any file on the filesystem. A binary is a file, that
     # gets executed. A process is a system-level task, identified by its pid
     # (pids don't get reused in the database).
@@ -308,15 +309,21 @@ def read_events(database, all_forks, has_thread_flag):
 
     # Reads processes from the database
     process_cursor = conn.cursor()
-    if has_thread_flag:
+    if has_exit_timestamp and has_thread_flag:
         sql = '''
-        SELECT id, parent, timestamp, is_thread
+        SELECT id, parent, timestamp, exit_timestamp, is_thread
+        FROM processes
+        ORDER BY id
+        '''
+    elif has_thread_flag:
+        sql = '''
+        SELECT id, parent, timestamp, NULL as exit_timestamp, is_thread
         FROM processes
         ORDER BY id
         '''
     else:
         sql = '''
-        SELECT id, parent, timestamp, 0 as is_thread
+        SELECT id, parent, timestamp, NULL as exit_timestamp, 0 as is_thread
         FROM processes
         ORDER BY id
         '''
@@ -354,7 +361,7 @@ def read_events(database, all_forks, has_thread_flag):
     run = None
     for ts, event_type, data in rows:
         if event_type == 'process':
-            r_id, r_parent, r_timestamp, r_thread = data
+            r_id, r_parent, r_start_time, r_exit_time, r_thread = data
             logging.debug("Process %d created (parent %r)", r_id, r_parent)
             if r_parent is not None:
                 parent = processes[r_parent]
@@ -367,7 +374,8 @@ def read_events(database, all_forks, has_thread_flag):
             process = Process(r_id,
                               run,
                               parent,
-                              r_timestamp,
+                              r_start_time,
+                              r_exit_time,
                               r_thread,
                               False,
                               binary,
@@ -403,15 +411,18 @@ def read_events(database, all_forks, has_thread_flag):
                 process.acted = True
                 process.argv = argv
             else:
-                process = Process(process.pid,
-                                  run,
-                                  process,
-                                  r_timestamp,
-                                  False,
-                                  True,         # Hides exec only once
-                                  r_name,
-                                  argv,
-                                  C_EXEC)
+                new_process = Process(process.pid,
+                                      run,
+                                      process,
+                                      r_timestamp,
+                                      process.exit_time,
+                                      False,
+                                      True,         # Hides exec only once
+                                      r_name,
+                                      argv,
+                                      C_EXEC)
+                process.exit_time = r_timestamp
+                process = new_process
                 all_programs.append(process)
                 processes[r_process] = process
                 run.processes.append(process)
@@ -462,9 +473,11 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     inputs_outputs_map = dict((f.path, n)
                               for n, f in iteritems(config.inputs_outputs))
     has_thread_flag = config.format_version >= LooseVersion('0.7')
+    has_exit_timestamp = config.format_version >= LooseVersion('1.1')
 
     runs, files, edges = read_events(database, all_forks,
-                                     has_thread_flag)
+                                     has_thread_flag,
+                                     has_exit_timestamp)
 
     # Label the runs
     if len(runs) != len(config.runs):
