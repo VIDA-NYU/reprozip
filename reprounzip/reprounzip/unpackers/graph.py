@@ -179,7 +179,8 @@ class Process(object):
             parent = None
         return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
                 'long_name': long_name, 'description': description,
-                'argv': self.argv, 'is_thread': self.thread}
+                'argv': self.argv, 'is_thread': self.thread,
+                'start_time': self.timestamp}
 
 
 class Package(object):
