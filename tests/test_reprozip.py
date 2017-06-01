@@ -231,49 +231,15 @@ class TestCombine(unittest.TestCase):
 
     def test_combine(self):
         traces = []
-        schema = '''
-PRAGMA foreign_keys=OFF;
-BEGIN TRANSACTION;
-CREATE TABLE processes(
-    id INTEGER NOT NULL PRIMARY KEY,
-    run_id INTEGER NOT NULL,
-    parent INTEGER,
-    timestamp INTEGER NOT NULL,
-    is_thread BOOLEAN NOT NULL,
-    exitcode INTEGER
-    );
-CREATE TABLE opened_files(
-    id INTEGER NOT NULL PRIMARY KEY,
-    run_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    timestamp INTEGER NOT NULL,
-    mode INTEGER NOT NULL,
-    is_directory BOOLEAN NOT NULL,
-    process INTEGER NOT NULL
-    );
-CREATE TABLE executed_files(
-    id INTEGER NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL,
-    run_id INTEGER NOT NULL,
-    timestamp INTEGER NOT NULL,
-    process INTEGER NOT NULL,
-    argv TEXT NOT NULL,
-    envp TEXT NOT NULL,
-    workingdir TEXT NOT NULL
-    );
-CREATE INDEX proc_parent_idx ON processes(parent);
-CREATE INDEX open_proc_idx ON opened_files(process);
-CREATE INDEX exec_proc_idx ON executed_files(process);
-        '''
         sql_data = [
-            schema + '''
+            '''
 INSERT INTO "processes" VALUES(1,0,NULL,12345678901001,0,0);
 INSERT INTO "opened_files" VALUES(1,0,'/home/vagrant',12345678901001,4,1,1);
 INSERT INTO "opened_files" VALUES(2,0,'/lib/ld.so',12345678901003,1,0,1);
 INSERT INTO "executed_files" VALUES(1,'/usr/bin/id',0,12345678901002,1,'id',
     'RUN=first','/home/vagrant');
             ''',
-            schema + '''
+            '''
 INSERT INTO "processes" VALUES(1,0,NULL,12345678902001,0,0);
 INSERT INTO "processes" VALUES(2,0,1,12345678902002,1,0);
 INSERT INTO "processes" VALUES(3,1,NULL,12345678902004,0,0);
@@ -284,7 +250,7 @@ INSERT INTO "opened_files" VALUES(3,1,'/usr/bin',12345678902004,4,1,3);
 INSERT INTO "executed_files" VALUES(1,'/usr/bin/id',1,12345678902006,4,'id',
     'RUN=third','/home/vagrant');
             ''',
-            schema + '''
+            '''
 INSERT INTO "processes" VALUES(0,0,NULL,12345678903001,0,1);
 INSERT INTO "opened_files" VALUES(0,0,'/home',12345678903001,4,1,0);
 INSERT INTO "executed_files" VALUES(1,'/bin/false',0,12345678903002,0,'false',
@@ -298,6 +264,7 @@ INSERT INTO "executed_files" VALUES(1,'/bin/false',0,12345678903002,0,'false',
             else:
                 conn = sqlite3.connect(trace.path)
             conn.row_factory = sqlite3.Row
+            traceutils.create_schema(conn)
             conn.executescript(dat + 'COMMIT;')
             conn.commit()
             conn.close()
