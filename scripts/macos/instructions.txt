@@ -1,0 +1,17 @@
+Reset PATH to not include macports, etc
+export DYLD_FRAMEWORK_PATH=/opt/reprounzip/Frameworks
+export CFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk"
+export LDFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk"
+export MACOS_DEPLOYMENT_TARGET=10.8
+Build Python with --prefix=/opt/reprounzip/python27
+Copy reprounzip and reprounzip-qt to /opt/reprounzip
+Install pip with get-pip.py
+Install reprounzip, reprounzip-docker, reprounzip-vagrant, reprounzip-vistrails
+Install sip and PyQt4
+Install reprounzip-qt
+Build shim application:
+    gcc -mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk \
+        reprounzip-qt.c -o ReproUnzip.app/Contents/MacOS/reprounzip-qt
+Put QtCore.framework and QtGui.framework in /opt/reprounzip/Frameworks
+Build installer using ReproUnzip.pkgproj
+    Packages application: http://s.sudre.free.fr/Software/Packages/about.html
