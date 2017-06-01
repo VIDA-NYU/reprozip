@@ -195,6 +195,8 @@ def _print_package_info(pack, info, verbosity=1):
                     print("        signal: %d" % run['signal'])
                 else:
                     print("        exitcode: %d" % run['exitcode'])
+                if run.get('walltime') is not None:
+                    print("        walltime: %s" % run['walltime'])
 
     inputs_outputs = info.get('inputs_outputs')
     if inputs_outputs:

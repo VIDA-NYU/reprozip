@@ -175,11 +175,14 @@ class FileUploader(object):
                     sys.exit(1)
                 local_path, input_name = filespec_split
 
-                try:
-                    input_path = inputs_outputs[input_name].path
-                except KeyError:
-                    logging.critical("Invalid input file: %r", input_name)
-                    sys.exit(1)
+                if input_name.startswith('/'):
+                    input_path = PosixPath(input_name)
+                else:
+                    try:
+                        input_path = inputs_outputs[input_name].path
+                    except KeyError:
+                        logging.critical("Invalid input file: %r", input_name)
+                        sys.exit(1)
 
                 temp = None
 
@@ -290,11 +293,15 @@ class FileDownloader(object):
         try:
             # Download files
             for output_name, local_path in resolved_files:
-                try:
-                    remote_path = inputs_outputs[output_name].path
-                except KeyError:
-                    logging.critical("Invalid output file: %r", output_name)
-                    sys.exit(1)
+                if output_name.startswith('/'):
+                    remote_path = PosixPath(output_name)
+                else:
+                    try:
+                        remote_path = inputs_outputs[output_name].path
+                    except KeyError:
+                        logging.critical("Invalid output file: %r",
+                                         output_name)
+                        sys.exit(1)
 
                 logging.debug("Downloading file %s", remote_path)
                 if local_path is None:
@@ -410,23 +417,35 @@ def add_environment_options(parser):
                              "multiple times)")
 
 
-def fixup_environment(environ, args):
+def parse_environment_args(args):
     if not (args.pass_env or args.set_env):
-        return environ
-    environ = dict(environ)
+        return {}, []
+
+    env_set = {}
+    env_unset = []
 
     regexes = [re.compile(pattern + '$') for pattern in args.pass_env]
     for var in os.environ:
         if any(regex.match(var) for regex in regexes):
-            environ[var] = os.environ[var]
+            env_set[var] = os.environ[var]
 
     for var in args.set_env:
         if '=' in var:
             var, value = var.split('=', 1)
-            environ[var] = value
+            env_set[var] = value
         else:
-            environ.pop(var, None)
+            env_unset.append(var)
 
+    return env_set, env_unset
+
+
+def fixup_environment(environ, args):
+    env_set, env_unset = parse_environment_args(args)
+    if env_set or env_unset:
+        environ = dict(environ)
+        environ.update(env_set)
+        for k in env_unset:
+            environ.pop(k, None)
     return environ
 
 

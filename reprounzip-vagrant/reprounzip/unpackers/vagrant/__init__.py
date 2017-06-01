@@ -54,17 +54,18 @@ def select_box(runs, gui=False):
 
     def find_distribution(parameter, distribution, version, architecture):
         boxes = parameter['boxes']
-        default = parameter['default']
 
-        for distrib_name, distrib in iteritems(boxes):
-            if distribution == distrib_name:
+        for distrib in boxes:
+            if re.match(distrib['name'], distribution) is not None:
                 result = find_version(distrib, version, architecture)
                 if result is not None:
                     return result
-        distrib = boxes[default]
+        default = parameter['default']
         logging.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
-        return find_version(distrib, None, architecture)
+                        distribution, default['name'])
+        result = default['architectures'].get(architecture)
+        if result:
+            return default['distribution'], result
 
     def find_version(distrib, version, architecture):
         if version is not None:
@@ -81,15 +82,9 @@ def select_box(runs, gui=False):
         if result is not None:
             return box['distribution'], result
 
-    if gui:
-        vagrant_param = get_parameter('vagrant_boxes_x')
-        if vagrant_param is None:  # Compatibility with old parameters
-            return 'debian', 'remram/debian-8-amd64-x'
-    else:
-        vagrant_param = get_parameter('vagrant_boxes')
-
-    result = find_distribution(vagrant_param,
-                               distribution, version, architecture)
+    result = find_distribution(
+        get_parameter('vagrant_boxes_x' if gui else 'vagrant_boxes'),
+        distribution, version, architecture)
     if result is None:
         logging.critical("Error: couldn't find a base box for required "
                          "architecture")
@@ -446,13 +441,10 @@ class LocalX11Handler(BaseX11Handler):
     init_cmds = []
 
     @staticmethod
-    def fix_env(env):
-        """Sets ``$XAUTHORITY`` and ``$DISPLAY`` in the environment.
+    def env_fixes(env):
+        """Sets ``DISPLAY`` and remove ``$XAUTHORITY`` in the environment.
         """
-        new_env = dict(env)
-        new_env.pop('XAUTHORITY', None)
-        new_env['DISPLAY'] = ':0'
-        return new_env
+        return {'DISPLAY': ':0'}, ['XAUTHORITY']
 
 
 @target_must_exist

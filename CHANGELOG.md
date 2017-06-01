@@ -1,6 +1,16 @@
 Changelog
 =========
 
+1.1.0 (???)
+-----------
+
+Behavior change:
+* .rpz config format changed (version 0.8 -> 1.1)
+
+Features:
+* Configuration file contains the walltime taken by each run
+* It is now possible to upload or download any file via its full path
+
 1.0.10 (???)
 ------------
 

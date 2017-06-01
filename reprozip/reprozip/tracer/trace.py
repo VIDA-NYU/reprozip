@@ -381,7 +381,8 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
         # chronological)
         executions = cur.execute(
             '''
-            SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+            SELECT e.name, e.argv, e.envp, e.workingdir,
+                   p.timestamp, p.exit_timestamp, p.exitcode
             FROM processes p
             JOIN executed_files e ON e.id=(
                 SELECT id FROM executed_files e2
@@ -400,7 +401,8 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
         # Same query as previous block but only gets last process
         executions = cur.execute(
             '''
-            SELECT e.name, e.argv, e.envp, e.workingdir, p.exitcode
+            SELECT e.name, e.argv, e.envp, e.workingdir,
+                   p.timestamp, p.exit_timestamp, p.exitcode
             FROM processes p
             JOIN executed_files e ON e.id=(
                 SELECT id FROM executed_files e2
@@ -412,7 +414,8 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             ORDER BY p.id DESC
             LIMIT 1;
             ''')
-    for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
+    for (r_name, r_argv, r_envp, r_workingdir,
+         r_start, r_end, r_exitcode) in executions:
         # Decodes command-line
         argv = r_argv.split('\0')
         if not argv[-1]:
@@ -424,7 +427,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        runs.append({'id': "run%d" % len(runs),
+        run = {'id': "run%d" % len(runs),
                      'binary': r_name, 'argv': argv,
                      'workingdir': unicode_(Path(r_workingdir)),
                      'architecture': platform.machine().lower(),
@@ -433,9 +436,17 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
                      'system': [platform.system(), platform.release()],
                      'environ': environ,
                      'uid': os.getuid(),
-                     'gid': os.getgid(),
-                     'signal' if r_exitcode & 0x0100 else 'exitcode':
-                         r_exitcode & 0xFF})
+                     'gid': os.getgid()}
+
+        if r_exitcode & 0x0100:
+            run['signal'] = r_exitcode & 0xFF
+        else:
+            run['exitcode'] = r_exitcode & 0xFF
+
+        if r_end is not None:
+            run['walltime'] = (r_end - r_start) / 1.0E9  # ns to s
+
+        runs.append(run)
 
     cur.close()
     conn.close()

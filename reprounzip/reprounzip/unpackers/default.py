@@ -665,7 +665,10 @@ class LocalUploader(FileUploader):
 
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
-        member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+        try:
+            member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+        except KeyError:
+            return None
         member = copy.copy(member)
         member.name = str(temp.components[-1])
         tar.extract(member, str(temp.parent))
