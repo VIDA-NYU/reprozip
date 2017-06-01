@@ -199,10 +199,11 @@ def combine_traces(traces, target):
         logging.info("Insert processes...")
         conn.execute(
             '''
-            INSERT INTO processes(id, run_id, parent,
-                                       timestamp, is_thread, exitcode)
+            INSERT INTO processes(id, run_id, parent, timestamp,
+                                  exit_timestamp, cpu_time, is_thread,
+                                  exitcode)
             SELECT p.new AS id, r.new AS run_id, parent,
-                   timestamp, is_thread, exitcode
+                   timestamp, exit_timestamp, cpu_time, is_thread, exitcode
             FROM trace.processes t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
             INNER JOIN maps.map_processes p ON t.id = p.old
@@ -232,6 +233,20 @@ def combine_traces(traces, target):
             SELECT name, r.new AS run_id, timestamp, p.new AS process,
                    argv, envp, workingdir
             FROM trace.executed_files t
+            INNER JOIN maps.map_runs r ON t.run_id = r.old
+            INNER JOIN maps.map_processes p ON t.process = p.old
+            ORDER BY t.id;
+            ''')
+
+        # connections
+        logging.info("Insert connections...")
+        conn.execute(
+            '''
+            INSERT INTO connections(run_id, timestamp, process, inbound,
+                                    family, protocol, address)
+            SELECT r.new AS run_id, timestamp, p.new AS process,
+                   inbound, family, protocol, address
+            FROM trace.connections t
             INNER JOIN maps.map_runs r ON t.run_id = r.old
             INNER JOIN maps.map_processes p ON t.process = p.old
             ORDER BY t.id;
