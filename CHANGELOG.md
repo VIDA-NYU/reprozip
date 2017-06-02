@@ -19,10 +19,14 @@ Bugfixes:
 * Overwrite tty prompt works correctly on Python 3
 * Fix /proc in vagrant-chroot and chroot having outside mounts
 * Fix ANSI escapes showing in Qt terminal dialog
+* Fix reprozip combine crash on Python 3.6 (patch from James Clarke)
+* Using `graph --packages drop` together with `--json` no longer crashes
 
 Enhancements:
 * Add `--docker-cmd` to reprounzip-docker to select the Docker command (for example `--docker-cmd="sudo docker"`)
 * Implement `--expose-port` option for Vagrant and Docker (no need for `--docker-option=-p...`)
+* Add docker-machine support to GUI (select which machine to use)
+* Better binaries for MacOS
 
 1.0.9 (2017-01-10)
 ------------------

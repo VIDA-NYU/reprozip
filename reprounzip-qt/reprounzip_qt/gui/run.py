@@ -405,3 +405,6 @@ class RunTab(QtGui.QWidget):
             return r == QtGui.QMessageBox.Yes
         else:
             return True
+
+    def replaceable(self):
+        return not self.unpacker
