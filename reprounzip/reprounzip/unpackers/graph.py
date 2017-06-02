@@ -278,7 +278,7 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
     return level_pkgs, level_processes, level_other_files, file_depth
 
 
-def read_events(database, all_forks, has_thread_flag):
+def read_events(database, all_forks, selected_runs, has_thread_flag):
     # In here, a file is any file on the filesystem. A binary is a file, that
     # gets executed. A process is a system-level task, identified by its pid
     # (pids don't get reused in the database).
@@ -427,7 +427,8 @@ def format_argv(argv):
         return "%s ..." % argv[0]
 
 
-def generate(target, configfile, database, all_forks=False, graph_format='dot',
+def generate(target, configfile, database, selected_runs=None,
+             all_forks=False, graph_format='dot',
              level_pkgs='file', level_processes='thread',
              level_other_files='all',
              regex_filters=None, regex_replaces=None, aggregates=None):
@@ -455,7 +456,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                           for n, f in iteritems(config.inputs_outputs))
     has_thread_flag = config.format_version >= LooseVersion('0.7')
 
-    runs, files, edges = read_events(database, all_forks,
+    runs, files, edges = read_events(database, all_forks, selected_runs,
                                      has_thread_flag)
 
     # Label the runs
@@ -701,9 +702,10 @@ def graph(args):
     format or JSON.
     """
     def call_generate(args, config, trace):
-        generate(Path(args.target[0]), config, trace, args.all_forks,
-                 args.format, args.packages, args.processes, args.otherfiles,
-                 args.regex_filter, args.regex_replace, args.aggregate)
+        generate(Path(args.target[0]), config, trace, args.runs,
+                 args.all_forks, args.format, args.packages, args.processes,
+                 args.otherfiles, args.regex_filter, args.regex_replace,
+                 args.aggregate)
 
     if args.pack is not None:
         rpz_pack = RPZPack(args.pack)
@@ -758,6 +760,7 @@ def setup(parser, **kwargs):
                         const='dot', default='dot',
                         help="Set the output format to DOT (this is the "
                         "default)")
+    parser.add_argument('--runs', help="Which runs to plot")
     parser.add_argument('--json', action='store_const', dest='format',
                         const='json', help="Set the output format to JSON")
     parser.add_argument(
