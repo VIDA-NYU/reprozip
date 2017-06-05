@@ -25,6 +25,10 @@ class Application(QtGui.QApplication):
         self.windows = set()
 
     def linux_try_register_default(self, window):
+        rcpath = os.path.expanduser('~/.reprozip')
+        rcname = 'rpuzqt-nodefault'
+        if os.path.exists(os.path.join(rcpath, rcname)):
+            return
         try:
             proc = subprocess.Popen(['xdg-mime', 'query', 'default',
                                      'application/x-reprozip'],
@@ -43,6 +47,11 @@ class Application(QtGui.QApplication):
                     QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
                 if r == QtGui.QMessageBox.Yes:
                     self.linux_register_default(window)
+                elif r == QtGui.QMessageBox.No:
+                    if not os.path.exists(rcpath):
+                        os.mkdir(rcpath)
+                    with open(os.path.join(rcpath, rcname), 'w') as fp:
+                        fp.write('1\n')
 
     def linux_register_default(self, window):
         command = os.path.abspath(sys.argv[0])
