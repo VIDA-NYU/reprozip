@@ -32,7 +32,8 @@ Besides Python and pip, each component or plugin to be used may have additional 
 | *reprounzip*           | None                                            |
 +------------------------+-------------------------------------------------+
 | *reprounzip-vagrant*   | Python headers,                                 |
-|                        | a working C compiler [#pycrypto]_,              |
+|                        | a working C compiler, SSL library [#pycrypto]_, |
+|                        | FFI library [#pycrypto]_,                       |
 |                        | `Vagrant v1.1+ <https://www.vagrantup.com/>`__, |
 |                        | `VirtualBox <https://www.virtualbox.org/>`__    |
 +------------------------+-------------------------------------------------+
@@ -46,14 +47,14 @@ Debian and Ubuntu
 
 You can get all the required dependencies using APT::
 
-    apt-get install python python-dev python-pip gcc libsqlite3-dev
+    apt-get install python python-dev python-pip gcc libsqlite3-dev libssl-dev libffi-dev
 
 Fedora & CentOS
 ```````````````
 
 You can get the dependencies using the Yum packaging manager::
 
-    yum install python python-devel gcc sqlite-devel
+    yum install python python-devel gcc sqlite-devel openssl-devel libffi-devel
 
 ..  [#bug] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
 ..  [#pycrypto] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
