@@ -54,7 +54,7 @@ Fedora & CentOS
 
 You can get the dependencies using the Yum packaging manager::
 
-    yum install python python-devel gcc sqlite-devel
+    yum install python python-devel gcc sqlite-devel openssl-devel libffi-devel
 
 ..  [#bug] ``reprozip`` and ``reprounzip graph`` will not work before 2.7.3 due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3. Python 2.6 is ancient and unsupported.
 ..  [#pycrypto] Required to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__.
