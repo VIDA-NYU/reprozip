@@ -13,6 +13,7 @@ import sys
 import tempfile
 import traceback
 
+import reprounzip_qt
 from reprounzip_qt.gui.common import error_msg
 from reprounzip_qt.gui.unpack import UnpackTab
 from reprounzip_qt.gui.run import RunTab
@@ -90,6 +91,19 @@ Type=Application
 MimeType=application/x-reprozip
 '''.format(command))
             subprocess.check_call(['update-desktop-database', app_dir])
+
+            # Install icon
+            iconpath = os.path.join(os.environ['HOME'],
+                                    '.local/share/icons/hicolor')
+            icondir = os.path.join(iconpath, '48x48/mimetypes')
+            iconfile = os.path.join(os.path.dirname(reprounzip_qt.__file__),
+                                    'icon.png')
+            if not os.path.exists(icondir):
+                os.makedirs(icondir)
+            shutil.copyfile(
+                iconfile,
+                os.path.join(icondir, 'application-x-reprozip.png'))
+            subprocess.check_call(['update-icon-caches', iconpath])
         except (OSError, subprocess.CalledProcessError):
             error_msg(window, "Error setting default application",
                       'error', traceback.format_exc())

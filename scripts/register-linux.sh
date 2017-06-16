@@ -18,8 +18,6 @@ END
 xdg-mime install /tmp/reprozip-mime.xml
 update-mime-database "$HOME/.local/share/mime"
 
-# TODO: install icon
-
 # Install desktop file
 mkdir -p "$HOME/.local/share/applications"
 cat >"$HOME/.local/share/applications/reprounzip.desktop" <<END
@@ -30,3 +28,11 @@ Type=Application
 MimeType=application/x-reprozip
 END
 update-desktop-database "$HOME/.local/share/applications"
+
+# Install icon
+if ! [ -d "$HOME/.local/share/icons/hicolor/48x48/mimetypes" ]; then
+    mkdir "$HOME/.local/share/icons/hicolor/48x48/mimetypes"
+fi
+cp "$(dirname "$0")/reprounzip-qt/icon.png" \
+    "$HOME/.local/share/icons/hicolor/48x48/mimetypes/application-x-reprozip.png"
+update-icon-caches "$HOME/.local/share/icons/hicolor"

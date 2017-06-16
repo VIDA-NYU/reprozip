@@ -13,6 +13,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(name='reprounzip-qt',
       version='0.2',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
+      package_data={'reprounzip_qt': ['icon.png']},
       entry_points={
           'gui_scripts': [
               'reprounzip-qt = reprounzip_qt.main:main']},
