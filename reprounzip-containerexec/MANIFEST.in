@@ -1,0 +1,3 @@
+include *.md
+include README.rst
+include LICENSE.txt
