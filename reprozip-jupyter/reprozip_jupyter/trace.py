@@ -139,15 +139,16 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         # } no change
 
 
-def trace_notebook(filename, **kwargs):
+def trace_notebook(filename, save_notebook=True, **kwargs):
     with open(filename) as fp:
         notebook = nbformat.read(fp, as_version=4)
     preprocessor = RPZExecutePreprocessor(RPZOptions(**kwargs))
     preprocessor.preprocess(
         notebook,
         {'metadata': {'path': os.path.dirname(filename)}})
-    with open(filename, 'wt') as fp:
-        nbformat.write(notebook, fp)
+    if save_notebook:
+        with open(filename, 'wt') as fp:
+            nbformat.write(notebook, fp)
     return notebook
 
 
@@ -157,6 +158,7 @@ def cmd_trace_notebook(args):
         sys.stderr.write("missing notebook\n")
         sys.exit(1)
     return trace_notebook(args.notebook,
+                          save_notebook=args.save_notebook,
                           verbosity=args.verbosity, dir=args.dir,
                           identify_packages=args.identify_packages,
                           find_inputs_outputs=args.find_inputs_outputs,
@@ -167,6 +169,10 @@ def setup(parser):
     parser.add_argument('-d', '--dir',
                         help="where to store database and configuration file "
                              "(default: ./.reprozip-trace)")
+    parser.add_argument(
+        '--dont-save-notebook', action='store_false', default=True,
+        dest='save_notebook',
+        help="do not update the notebook file when executing")
     parser.add_argument(
         '--dont-identify-packages', action='store_false', default=True,
         dest='identify_packages',

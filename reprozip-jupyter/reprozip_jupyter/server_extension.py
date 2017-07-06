@@ -35,6 +35,7 @@ class TraceHandler(RequestHandler):
             [sys.executable, '-c',
              'from reprozip_jupyter.main import main; main()',
              'trace',
+             '--dont-save-notebook',
              '-d', self._tempdir.path,
              self._notebook_file.path],
             stdin=subprocess.PIPE)
