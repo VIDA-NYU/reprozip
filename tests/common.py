@@ -29,6 +29,8 @@ def make_database(insert, path=None):
             run_id INTEGER NOT NULL,
             parent INTEGER,
             timestamp INTEGER NOT NULL,
+            exit_timestamp INTEGER,
+            cpu_time INTEGER,
             is_thread BOOLEAN NOT NULL,
             exitcode INTEGER
             );
@@ -70,26 +72,54 @@ def make_database(insert, path=None):
         '''
         CREATE INDEX exec_proc_idx ON executed_files(process);
         ''')
+    conn.execute(
+        '''
+        CREATE TABLE connections(
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL,
+            process INTEGER NOT NULL,
+            inbound INTEGER NOT NULL,
+            family TEXT NULL,
+            protocol TEXT NULL,
+            address TEXT NULL
+            );
+        ''')
+    conn.execute(
+        '''
+        CREATE INDEX connections_proc_idx ON connections(process);
+        ''')
 
+    run = -1
     for timestamp, l in enumerate(insert):
         if l[0] == 'proc':
             ident, parent, is_thread = l[1:]
+            if parent is None:
+                run += 1
             conn.execute(
                 '''
                 INSERT INTO processes(id, run_id, parent, timestamp,
                                       is_thread, exitcode)
-                VALUES(?, 0, ?, ?, ?, 0);
+                VALUES(?, ?, ?, ?, ?, 0);
                 ''',
-                (ident, parent, timestamp, is_thread))
+                (ident, run, parent, timestamp, is_thread))
+        elif l[0] == 'exit':
+            ident, = l[1:]
+            conn.execute(
+                '''
+                UPDATE processes SET exit_timestamp=?
+                WHERE id=?;
+                ''',
+                (timestamp, ident))
         elif l[0] == 'open':
             process, name, is_dir, mode = l[1:]
             conn.execute(
                 '''
                 INSERT INTO opened_files(run_id, name, timestamp, mode,
                                          is_directory, process)
-                VALUES(0, ?, ?, ?, ?, ?);
+                VALUES(?, ?, ?, ?, ?, ?);
                 ''',
-                (name, timestamp, mode, is_dir, process))
+                (run, name, timestamp, mode, is_dir, process))
         elif l[0] == 'exec':
             process, name, wdir, argv = l[1:]
             conn.execute(
@@ -97,9 +127,9 @@ def make_database(insert, path=None):
                 INSERT INTO executed_files(run_id, name, timestamp,
                                            process, argv, envp,
                                            workingdir)
-                VALUES(0, ?, ?, ?, ?, "", ?);
+                VALUES(?, ?, ?, ?, ?, "", ?);
                 ''',
-                (name, timestamp, process, argv, wdir))
+                (run, name, timestamp, process, argv, wdir))
         else:
             assert False
 

@@ -44,12 +44,15 @@ class TestGraph(unittest.TestCase):
             ('open', 1, "/usr/lib/2_one.so", False, FILE_READ),
             ('open', 1, "/some/dir/two", False, FILE_WRITE),
             ('exec', 0, "/usr/bin/wc", "/some/dir", "wc\0out.txt\0"),
+            ('exit', 1),
             ('open', 0, "/some/dir/two", False, FILE_READ),
+            ('exit', 0),
 
             ('proc', 2, None, False),
             ('open', 2, "/some/dir", True, FILE_WDIR),
             ('exec', 2, "/bin/sh", "/some/dir", "sh\0script_2\0"),
             ('proc', 3, 2, True),
+            ('exit', 3),
             ('proc', 4, 2, False),
             ('open', 4, "/some/dir", True, FILE_WDIR),
             ('exec', 4, "/usr/bin/python", "/some/dir", "python\0-\0"),
@@ -57,12 +60,14 @@ class TestGraph(unittest.TestCase):
             ('open', 4, "/some/dir/thing", False, FILE_WRITE),
             ('exec', 2, "/some/dir/report", "/some/dir", "./report\0-v\0"),
             ('open', 2, "/some/dir/thing", False, FILE_READ),
+            ('exit', 4),
             ('open', 2, "/some/dir/result", False, FILE_WRITE),
+            ('exit', 2),
         ], cls._trace / 'trace.sqlite3')
         conn.close()
         with (cls._trace / 'config.yml').open('w', encoding='utf-8') as fp:
             fp.write("""\
-version: "0.7"
+version: "1.1"
 runs:
 - id: first run
   architecture: x86_64
@@ -277,6 +282,7 @@ digraph G {
                             'description': '/bin/sh\n0',
                             'argv': ['sh', 'script_1'],
                             'start_time': 0,
+                            'exit_time': 5,
                             'is_thread': False,
                             'parent': None,
                             'reads': ['/bin/sh', '/usr/share/1_one.pyc'],
@@ -286,6 +292,7 @@ digraph G {
                             'description': '/usr/bin/python\n0',
                             'argv': ['python', 'drive.py'],
                             'start_time': 5,
+                            'exit_time': 15,
                             'is_thread': False,
                             'parent': [0, 'exec'],
                             'reads': ['/usr/bin/python',
@@ -298,6 +305,7 @@ digraph G {
                             'description': '/some/dir/experiment\n1',
                             'argv': ['experiment'],
                             'start_time': 9,
+                            'exit_time': 16,
                             'is_thread': False,
                             'parent': [1, 'fork+exec'],
                             'reads': ['/some/dir/experiment',
@@ -308,6 +316,7 @@ digraph G {
                             'description': '/usr/bin/wc\n0',
                             'argv': ['wc', 'out.txt'],
                             'start_time': 15,
+                            'exit_time': 18,
                             'is_thread': False,
                             'parent': [1, 'exec'],
                             'reads': ['/usr/bin/wc', '/some/dir/two'],
@@ -319,7 +328,8 @@ digraph G {
                             'long_name': 'sh (2)',
                             'description': '/bin/sh\n2',
                             'argv': ['sh', 'script_2'],
-                            'start_time': 17,
+                            'start_time': 19,
+                            'exit_time': 29,
                             'is_thread': False,
                             'parent': None,
                             'reads': ['/bin/sh'],
@@ -328,7 +338,8 @@ digraph G {
                             'long_name': 'sh (3)',
                             'description': '/bin/sh\n3',
                             'argv': ['sh', 'script_2'],
-                            'start_time': 20,
+                            'start_time': 22,
+                            'exit_time': 23,
                             'is_thread': True,
                             'parent': [0, 'fork'],
                             'reads': [],
@@ -337,7 +348,8 @@ digraph G {
                             'long_name': 'python (4)',
                             'description': '/usr/bin/python\n4',
                             'argv': ['python', '-'],
-                            'start_time': 21,
+                            'start_time': 24,
+                            'exit_time': 31,
                             'is_thread': False,
                             'parent': [0, 'fork+exec'],
                             'reads': ['/usr/bin/python', '/some/dir/one'],
@@ -346,7 +358,8 @@ digraph G {
                             'long_name': 'report (2)',
                             'description': '/some/dir/report\n2',
                             'argv': ['./report', '-v'],
-                            'start_time': 26,
+                            'start_time': 29,
+                            'exit_time': 33,
                             'is_thread': False,
                             'parent': [0, 'exec'],
                             'reads': ['/some/dir/report', '/some/dir/thing'],
