@@ -70,6 +70,14 @@ def check_directory(directory):
     return None
 
 
+def is_jupyter(directory):
+    with open(os.path.join(directory, 'config.yml')) as fp:
+        config = yaml.safe_load(fp)
+    iofiles = config.get('inputs_outputs', None)
+    return iofiles and any(iofile['name'] == 'jupyter_connection_file'
+                           for iofile in config.get('inputs_outputs'))
+
+
 class FileStatus(object):
     def __init__(self, name, path, is_input, is_output):
         self.name = name
@@ -125,9 +133,19 @@ def find_command(cmd):
 
 
 def run(directory, unpacker=None, runs=None,
-        root=None, args=[]):
+        root=None, jupyter=False, args=[]):
     if unpacker is None:
         unpacker = check_directory(directory)
+
+    if jupyter:
+        reprounzip_jupyter = find_command('reprozip-jupyter')
+        if reprounzip_jupyter is None:
+            return ("Couldn't find reprozip-jupyter command -- is it "
+                    "installed?", 'critical')
+        run_in_system_terminal(
+            [reprounzip_jupyter, 'run', os.path.abspath(directory)],
+            root=root)
+        return True
 
     reprounzip = find_command('reprounzip')
     if reprounzip is None:
