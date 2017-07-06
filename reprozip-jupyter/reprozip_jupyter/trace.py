@@ -24,24 +24,44 @@ from reprounzip.common import setup_logging
 __version__ = '0.1'
 
 
-class RPZKernelManager(KernelManager):
-    rpz_args = None
+class RPZOptions(object):
+    def __init__(self, verbosity=1, dir=None, identify_packages=True,
+                 find_inputs_outputs=True, append=None):
+        self.verbosity = verbosity
+        self.dir = dir
+        self.identify_packages = identify_packages
+        self.find_inputs_outputs = find_inputs_outputs
+        self.append = append
 
-    def _launch_kernel(self, kernel_cmd, **kw):
+    def trace_command_line(self, kernel_cmd):
         cmd = ['reprozip']
-        cmd.extend(['-v'] * (self.rpz_args.verbosity - 1))
+        cmd.extend(['-v'] * (self.verbosity - 1))
         cmd.append('trace')
-        if self.rpz_args.dir:
-            cmd.extend(['--dir', self.rpz_args.dir])
-        if not self.rpz_args.identify_packages:
+        if self.dir:
+            cmd.extend(['--dir', self.dir])
+        if not self.identify_packages:
             cmd.append('--dont-identify-packages')
-        if not self.rpz_args.find_inputs_outputs:
+        if not self.find_inputs_outputs:
             cmd.append('--dont-find-inputs-outputs')
-        if self.rpz_args.append:
+        if self.append:
             cmd.append('--continue')
         else:
             cmd.append('--overwrite')
         cmd.extend(kernel_cmd)
+        return cmd
+
+    def config_file(self):
+        if self.dir:
+            return Path(self.dir) / 'config.yml'
+        else:
+            return Path('.reprozip-trace/config.yml')
+
+
+class RPZKernelManager(KernelManager):
+    rpz_options = None
+
+    def _launch_kernel(self, kernel_cmd, **kw):
+        cmd = self.rpz_options.trace_command_line(kernel_cmd)
 
         logging.info("Kernel requested, connection file: %s",
                      self.connection_file)
@@ -53,10 +73,7 @@ class RPZKernelManager(KernelManager):
         super(RPZKernelManager, self).finish_shutdown(*args, **kwargs)
 
         # Add the input file to the configuration
-        if self.rpz_args.dir:
-            config = Path(self.rpz_args.dir) / 'config.yml'
-        else:
-            config = Path('.reprozip-trace/config.yml')
+        config = self.rpz_options.config_file()
 
         with config.rewrite(encoding='utf-8') as (read, write):
             for line in read:
@@ -72,8 +89,8 @@ KernelManagerABC.register(RPZKernelManager)
 
 
 class RPZExecutePreprocessor(ExecutePreprocessor):
-    def __init__(self, args):
-        self.rpz_args = args
+    def __init__(self, options):
+        self.rpz_options = options
         super(RPZExecutePreprocessor, self).__init__()
 
     def preprocess(self, nb, resources):
@@ -92,7 +109,7 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
 
         # copied from start_new_kernel(), but using our KernelManager class {
         km = RPZKernelManager(kernel_name=kernel_name)
-        km.rpz_args = self.rpz_args
+        km.rpz_options = self.rpz_options
         km.start_kernel(extra_arguments=self.extra_arguments,
                         cwd=path)  # changed not to hide stderr
         kc = km.client()
@@ -122,31 +139,31 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         # } no change
 
 
-def trace_notebook(args):
-    notebook_filename = args.notebook
-
-    with open(notebook_filename) as fp:
+def trace_notebook(filename, **kwargs):
+    with open(filename) as fp:
         notebook = nbformat.read(fp, as_version=4)
-    preprocessor = RPZExecutePreprocessor(args)
+    preprocessor = RPZExecutePreprocessor(RPZOptions(**kwargs))
     preprocessor.preprocess(
         notebook,
-        {'metadata': {'path': os.path.dirname(notebook_filename)}})
-    with open(notebook_filename, 'wt') as fp:
+        {'metadata': {'path': os.path.dirname(filename)}})
+    with open(filename, 'wt') as fp:
         nbformat.write(notebook, fp)
     return notebook
 
 
-def main(argv):
-    parser = argparse.ArgumentParser(
-        'reprozip-jupyter trace',
-        description="This runs a Jupyter notebook under ReproZip trace to "
-                    "generate the accompanying environment package",
-        epilog="Please report issues to reprozip-users@vgc.poly.edu")
-    parser.add_argument('--version', action='version',
-                        version=__version__)
-    parser.add_argument('-v', '--verbose', action='count', default=1,
-                        dest='verbosity',
-                        help="augments verbosity level")
+def cmd_trace_notebook(args):
+    setup_logging('REPROZIP-JUPYTER-TRACE', args.verbosity)
+    if not args.notebook:
+        sys.stderr.write("missing notebook\n")
+        sys.exit(1)
+    return trace_notebook(args.notebook,
+                          verbosity=args.verbosity, dir=args.dir,
+                          identify_packages=args.identify_packages,
+                          find_inputs_outputs=args.find_inputs_outputs,
+                          append=args.append)
+
+
+def setup(parser):
     parser.add_argument('-d', '--dir',
                         help="where to store database and configuration file "
                              "(default: ./.reprozip-trace)")
@@ -169,11 +186,4 @@ def main(argv):
         '-w', '--overwrite', action='store_true', dest='overwrite',
         help="overwrite the previous trace, don't add to it")
     parser.add_argument('notebook', help="command-line to run under trace")
-
-    args = parser.parse_args(argv)
-    setup_logging('REPROZIP-JUPYTER-TRACE', args.verbosity)
-    if not args.notebook:
-        parser.error("missing notebook")
-        sys.exit(1)
-    trace_notebook(args)
-    sys.exit(0)
+    parser.set_defaults(func=cmd_trace_notebook)

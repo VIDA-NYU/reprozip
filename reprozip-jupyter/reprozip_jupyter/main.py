@@ -6,6 +6,8 @@ import argparse
 import sys
 
 from . import __version__
+from . import run
+from . import trace
 
 
 def main():
@@ -28,23 +30,17 @@ def main():
         help="Runs a Jupyter notebook under ReproZip trace to generate the "
              "accompanying environment package")
     add_options(parser_trace)
-    parser_trace.add_argument('args', nargs=argparse.REMAINDER)
+    trace.setup(parser_trace)
 
     parser_run = subparser.add_parser(
         'run',
         help="Runs a Jupyter notebook server that will spawn notebooks in "
              "Docker containers running in the given unpacked environment")
     add_options(parser_run)
-    parser_run.add_argument('args', nargs=argparse.REMAINDER)
+    run.setup(parser_run)
 
     args = parser.parse_args()
-
-    if args.cmd == 'trace':
-        from .trace import main
-    elif args.cmd == 'run':
-        from .run import main
-    else:
+    if getattr(args, 'func', None) is None:
         parser.print_help(sys.stderr)
         sys.exit(2)
-
-    main((['-v'] * args.verbosity) + args.args)
+    args.func(args)

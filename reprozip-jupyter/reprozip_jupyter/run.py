@@ -45,11 +45,10 @@ def process_connection_file(original):
 
 
 class RPZKernelManager(IOLoopKernelManager):
-    rpz_args = None
+    rpz_target = None
+    rpz_verbosity = 1
 
     def _launch_kernel(self, kernel_cmd, **kw):
-        target = self.rpz_args.target
-
         # Need to parse kernel command-line to find the connection file
         logging.info("Kernel command-line: %s", ' '.join(kernel_cmd))
         connection_file = None
@@ -66,19 +65,19 @@ class RPZKernelManager(IOLoopKernelManager):
         with process_connection_file(connection_file) as (fixed_file, ports):
             # Upload connection file to environment
             subprocess.check_call(
-                ['reprounzip'] + (['-v'] * (self.rpz_args.verbosity - 1)) +
-                 ['docker', 'upload', target,
-                  '%s:jupyter_connection_file' % fixed_file])
+                ['reprounzip'] + (['-v'] * (self.rpz_verbosity - 1)) +
+                ['docker', 'upload', self.rpz_target,
+                 '%s:jupyter_connection_file' % fixed_file])
 
         docker_options = []
         for port in ports:
             docker_options.extend(['-p', '%d:%d' % (port, port)])
 
         return subprocess.Popen(
-            ['reprounzip'] + (['-v'] * (self.rpz_args.verbosity - 1)) +
+            ['reprounzip'] + (['-v'] * (self.rpz_verbosity - 1)) +
             ['docker', 'run'] +
             ['--docker-option=%s' % opt for opt in docker_options] +
-            [target])
+            [self.rpz_target])
 
 
 class RPZMappingKernelManager(MappingKernelManager):
@@ -88,34 +87,29 @@ class RPZMappingKernelManager(MappingKernelManager):
         super(RPZMappingKernelManager, self).__init__(**kwargs)
 
 
-def run_server(args):
-    RPZKernelManager.rpz_args = args
+def run_server(target, jupyter_args=None, verbosity=1):
+    RPZKernelManager.rpz_target = target
+    RPZKernelManager.rpz_verbosity = verbosity
+
+    if not jupyter_args:
+        jupyter_args = []
 
     logging.info("Starting Jupyter notebook")
-    NotebookApp.launch_instance(argv=args.jupyter_args,
+    NotebookApp.launch_instance(argv=jupyter_args,
                                 kernel_manager_class=RPZMappingKernelManager)
 
 
-def main(argv):
-    parser = argparse.ArgumentParser(
-        'reprozip-jupyter run',
-        description="This runs a Jupyter notebook server that will spawn "
-                    "notebooks in Docker containers running in the given "
-                    "unpacked environment",
-        epilog="Please report issues to reprozip-users@vgc.poly.edu")
-    parser.add_argument('--version', action='version',
-                        version=__version__)
-    parser.add_argument('-v', '--verbose', action='count', default=1,
-                        dest='verbosity',
-                        help="augments verbosity level")
+def cmd_run_server(args):
+    setup_logging('REPROZIP-JUPYTER-SERVER', args.verbosity)
+    if not args.target:
+        sys.stderr.write("Missing experiment directory\n")
+        sys.exit(1)
+
+    run_server(args.target, args.jupyter_args, verbosity=args.verbosity)
+
+
+def setup(parser):
     parser.add_argument('target', help="Experiment directory")
     parser.add_argument('jupyter_args', nargs=argparse.REMAINDER,
                         help="Arguments to pass to the notebook server")
-
-    args = parser.parse_args(argv)
-    setup_logging('REPROZIP-JUPYTER-SERVER', args.verbosity)
-    if not args.target:
-        parser.error("missing experiment directory")
-        sys.exit(1)
-    run_server(args)
-    sys.exit(0)
+    parser.set_defaults(func=cmd_run_server)
