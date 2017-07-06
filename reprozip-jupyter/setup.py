@@ -13,6 +13,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
 setup(name='reprozip-jupyter',
       version='0.1',
       packages=['reprozip_jupyter'],
+      package_data={'reprozip_jupyter': ['notebook-extension.js']},
       entry_points={
           'console_scripts': [
               'reprozip-jupyter = reprozip_jupyter.main:main']},
