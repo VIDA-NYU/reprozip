@@ -88,22 +88,22 @@ class Run(object):
             json_process = self.processes[0].json()
             for process in self.processes:
                 prog_map[process] = json_process
-            return [json_process]
+            processes = [json_process]
         else:
-            run = []
+            processes = []
             process_idx_map = {}
             for process in self.processes:
                 if level_processes == LVL_PROC_THREAD or not process.thread:
-                    process_idx_map[process] = len(run)
+                    process_idx_map[process] = len(processes)
                     json_process = process.json(process_idx_map)
                     prog_map[process] = json_process
-                    run.append(json_process)
+                    processes.append(json_process)
                 else:
                     p_process = process
                     while p_process.thread:
                         p_process = p_process.parent
                     prog_map[process] = prog_map[p_process]
-            return run
+        return {'name': self.name, 'processes': processes}
 
 
 class Process(object):
@@ -112,19 +112,21 @@ class Process(object):
     _id_gen = 0
 
     def __init__(self, pid, run, parent, timestamp, thread, acted, binary,
-                 created):
+                 argv, created):
         self.id = Process._id_gen
         Process._id_gen += 1
         self.pid = pid
         self.run = run
         self.parent = parent
         self.timestamp = timestamp
-        self.thread = thread
+        self.thread = bool(thread)
         # Whether that process has done something yet. If it execve()s and
         # hasn't done anything since it forked, no need for it to appear
         self.acted = acted
         # Executable file
         self.binary = binary
+        # Command-line if this was created by an exec
+        self.argv = argv
         # How was this process created, one of the C_* constants
         self.created = created
 
@@ -176,7 +178,9 @@ class Process(object):
         else:
             parent = None
         return {'name': name, 'parent': parent, 'reads': [], 'writes': [],
-                'long_name': long_name, 'description': description}
+                'long_name': long_name, 'description': description,
+                'argv': self.argv, 'is_thread': self.thread,
+                'start_time': self.timestamp}
 
 
 class Package(object):
@@ -360,6 +364,10 @@ def read_events(database, all_forks, has_thread_flag):
                 runs.append(run)
                 parent = None
                 binary = None
+            if r_parent is not None:
+                argv = processes[r_parent].argv
+            else:
+                argv = None
             process = Process(r_id,
                               run,
                               parent,
@@ -367,6 +375,7 @@ def read_events(database, all_forks, has_thread_flag):
                               r_thread,
                               False,
                               binary,
+                              argv,
                               C_INITIAL if r_parent is None else C_FORK)
             processes[r_id] = process
             all_programs.append(process)
@@ -396,6 +405,7 @@ def read_events(database, all_forks, has_thread_flag):
                 process.binary = r_name
                 process.created = C_FORKEXEC
                 process.acted = True
+                process.argv = argv
             else:
                 process = Process(process.pid,
                                   run,
@@ -404,6 +414,7 @@ def read_events(database, all_forks, has_thread_flag):
                                   False,
                                   True,         # Hides exec only once
                                   r_name,
+                                  argv,
                                   C_EXEC)
                 all_programs.append(process)
                 processes[r_process] = process
@@ -451,8 +462,9 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                          "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
-    inputs_outputs = dict((f.path, n)
-                          for n, f in iteritems(config.inputs_outputs))
+    inputs_outputs = config.inputs_outputs
+    inputs_outputs_map = dict((f.path, n)
+                              for n, f in iteritems(config.inputs_outputs))
     has_thread_flag = config.format_version >= LooseVersion('0.7')
 
     runs, files, edges = read_events(database, all_forks,
@@ -543,7 +555,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                            for prog, f, mode, argv in edges)
     else:
         if level_other_files == LVL_OTHER_IO:
-            other_files = set(f for f in other_files if f in inputs_outputs)
+            other_files = set(f
+                              for f in other_files if f in inputs_outputs_map)
             edges = [(prog, f, mode, argv)
                      for prog, f, mode, argv in edges
                      if f in package_map or f in other_files]
@@ -554,7 +567,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                      if f in package_map]
 
     args = (target, runs, packages, other_files, package_map, edges,
-            inputs_outputs, level_pkgs, level_processes, level_other_files)
+            inputs_outputs, inputs_outputs_map,
+            level_pkgs, level_processes, level_other_files)
     if graph_format == FORMAT_DOT:
         graph_dot(*args)
     elif graph_format == FORMAT_JSON:
@@ -564,7 +578,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
 
 def graph_dot(target, runs, packages, other_files, package_map, edges,
-              inputs_outputs, level_pkgs, level_processes, level_other_files):
+              inputs_outputs, inputs_outputs_map,
+              level_pkgs, level_processes, level_other_files):
     """Writes a GraphViz DOT file from the collected information.
     """
     with target.open('w', encoding='utf-8', newline='\n') as fp:
@@ -593,11 +608,11 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         # Other files
         logging.info("Writing other files...")
         for fi in sorted(other_files):
-            if fi in inputs_outputs:
+            if fi in inputs_outputs_map:
                 fp.write('    "%(path)s" [fillcolor="#A3B4E0", '
                          'label="%(name)s\\n%(path)s"];\n' %
                          {'path': escape(unicode_(fi)),
-                          'name': inputs_outputs[fi]})
+                          'name': inputs_outputs_map[fi]})
             else:
                 fp.write('    "%s";\n' % escape(unicode_(fi)))
 
@@ -636,7 +651,8 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
 
 
 def graph_json(target, runs, packages, other_files, package_map, edges,
-               inputs_outputs, level_pkgs, level_processes, level_other_files):
+               inputs_outputs, inputs_outputs_map,
+               level_pkgs, level_processes, level_other_files):
     """Writes a JSON file suitable for further processing.
     """
     # Packages
@@ -685,7 +701,12 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
         json.dump({'packages': sorted(json_packages,
                                       key=lambda p: p['name']),
                    'other_files': json_other_files,
-                   'runs': json_runs},
+                   'runs': json_runs,
+                   'inputs_outputs': [
+                       {'name': k, 'path': unicode_(v.path),
+                        'read_by_runs': v.read_runs,
+                        'written_by_runs': v.write_runs}
+                       for k, v in sorted(iteritems(inputs_outputs))]},
                   fp,
                   ensure_ascii=False,
                   indent=2,

@@ -27,6 +27,9 @@ Enhancements:
 * Implement `--expose-port` option for Vagrant and Docker (no need for `--docker-option=-p...`)
 * Add docker-machine support to GUI (select which machine to use)
 * Better binaries for MacOS
+* Automatically register reprounzip-qt to open .RPZ files on Linux
+* Register ReproUnzip with Windows from installer
+* Add icon from @heng2j
 
 1.0.9 (2017-01-10)
 ------------------
