@@ -10,12 +10,12 @@ function notebook_extension($, IPython, utils, dialog) {
         // TODO: Cancel trace?
         var cancel = function cancel() {};
 
-        dialog.modal({
+        var modal = dialog.modal({
             body: "Executing notebook under trace...",
-            title: "Tracing notebook with ReproZip",
+            title: "Packing notebook with ReproZip",
             buttons: {
                 "Cancel": {
-                    class: "btn-primary",
+                    class: "btn-warning",
                     click: cancel
                 }
             },
@@ -33,6 +33,33 @@ function notebook_extension($, IPython, utils, dialog) {
                                          "reprozip/trace"), {
                 method: "POST",
                 data: {file: IPython.notebook.notebook_path}
+            }).then(function packed(response) {
+                console.log("reprozip: packing successful");
+                modal.modal("hide");
+                dialog.modal({
+                    body: "Created package " + response.bundle,
+                    title: "Packing notebook with ReproZip",
+                    buttons: {
+                        "Close": {
+                            class: "btn-primary"
+                        }
+                    }
+                });
+            }, function failed() {
+                console.error("reprozip: packing failed");
+                modal.modal("hide");
+                var m = dialog.modal({
+                    body: "Packing failed!",
+                    title: "Packing notebook with ReproZip",
+                    show: false,
+                    buttons: {
+                        "Close": {
+                            class: "btn-danger"
+                        }
+                    }
+                });
+                m.find(".modal-body").html("<div class=\"alert alert-danger\"><strong>Packing failed!</strong> Check the server console for details.</div>");
+                m.modal("show");
             });
         };
         console.log("reprozip: saving notebook")
