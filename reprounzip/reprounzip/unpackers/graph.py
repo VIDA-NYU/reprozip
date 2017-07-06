@@ -364,6 +364,10 @@ def read_events(database, all_forks, has_thread_flag):
                 runs.append(run)
                 parent = None
                 binary = None
+            if r_parent is not None:
+                argv = processes[r_parent].argv
+            else:
+                argv = None
             process = Process(r_id,
                               run,
                               parent,
@@ -371,7 +375,7 @@ def read_events(database, all_forks, has_thread_flag):
                               r_thread,
                               False,
                               binary,
-                              None,
+                              argv,
                               C_INITIAL if r_parent is None else C_FORK)
             processes[r_id] = process
             all_programs.append(process)
