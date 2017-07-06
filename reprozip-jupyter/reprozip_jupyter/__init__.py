@@ -8,7 +8,7 @@ def _jupyter_nbextension_paths():
     return [
         dict(
             section='notebook',
-            src='notebook_extension.js',
+            src='notebook-extension.js',
             dest='reprozip-jupyter.js',
             require='reprozip-jupyter',
         ),
