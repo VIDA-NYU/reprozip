@@ -103,7 +103,7 @@ def cmd_run_server(args):
     setup_logging('REPROZIP-JUPYTER-SERVER', args.verbosity)
     if not args.target:
         sys.stderr.write("Missing experiment directory\n")
-        sys.exit(1)
+        sys.exit(2)
 
     run_server(args.target, args.jupyter_args, verbosity=args.verbosity)
 

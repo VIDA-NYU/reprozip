@@ -13,6 +13,7 @@ from jupyter_client.manager import KernelManager
 from jupyter_client.managerabc import KernelManagerABC
 import logging
 from nbconvert.preprocessors import ExecutePreprocessor
+from nbconvert.preprocessors.execute import CellExecutionError
 import nbformat
 import os
 from rpaths import Path
@@ -131,6 +132,8 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         try:
             nb, resources = super(ExecutePreprocessor, self).preprocess(
                 nb, resources)
+        except CellExecutionError:
+            sys.exit(3)
         finally:
             self.kc.stop_channels()
             self.km.shutdown_kernel(now=False)  # changed from now=False
@@ -156,7 +159,7 @@ def cmd_trace_notebook(args):
     setup_logging('REPROZIP-JUPYTER-TRACE', args.verbosity)
     if not args.notebook:
         sys.stderr.write("missing notebook\n")
-        sys.exit(1)
+        sys.exit(2)
     return trace_notebook(args.notebook,
                           save_notebook=args.save_notebook,
                           verbosity=args.verbosity, dir=args.dir,
