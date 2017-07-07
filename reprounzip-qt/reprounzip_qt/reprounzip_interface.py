@@ -142,8 +142,11 @@ def run(directory, unpacker=None, runs=None,
         if reprounzip_jupyter is None:
             return ("Couldn't find reprozip-jupyter command -- is it "
                     "installed?", 'critical')
+        cmd = [reprounzip_jupyter, 'run', os.path.abspath(directory)]
         run_in_system_terminal(
-            [reprounzip_jupyter, 'run', os.path.abspath(directory)],
+            ['sh', '-c',
+             'cd %s && %s' % (shell_escape(os.getcwd()),
+                              ' '.join(shell_escape(a) for a in cmd))],
             root=root)
         return True
 
