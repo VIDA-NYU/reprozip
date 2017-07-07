@@ -1,7 +1,7 @@
-define(['jquery',
-        'base/js/namespace',
-        'base/js/utils',
-        'base/js/dialog'],
+define(["jquery",
+        "base/js/namespace",
+        "base/js/utils",
+        "base/js/dialog"],
 function notebook_extension($, IPython, utils, dialog) {
     var ajax = utils.ajax || $.ajax;
 
@@ -67,8 +67,8 @@ function notebook_extension($, IPython, utils, dialog) {
         env.notebook.save_checkpoint();
     }
 
-    function _on_load(env){
-        console.info('reprozip: extension reprozip-jupyter loaded');
+    function _on_load() {
+        console.info("reprozip: extension reprozip-jupyter loaded");
 
         var trace_action = {
             help: "Trace this notebook using ReproZip",
@@ -78,10 +78,28 @@ function notebook_extension($, IPython, utils, dialog) {
         };
         var trace_action_name = IPython.keyboard_manager.actions.register(
             trace_action,
-            'trace-with-reprozip',
-            'reprozip');
+            "trace-with-reprozip",
+            "reprozip");
         console.log("reprozip: created action", trace_action_name);
+
+        // Add icon to toolbar
         IPython.toolbar.add_buttons_group([trace_action_name]);
+
+        // Add icon to "kernel" menu
+        var kernel_menu = $("#kernel_menu");
+        if(!kernel_menu.length) {
+            console.log("reprozip: no kernel menu?");
+        } else {
+            var after_entry = $("#restart_run_all");
+            if(!after_entry.length) {
+                console.log("reprozip: Couldn't find restart_run_all, using end of menu");
+                var children = kernel_menu.children();
+                after_entry = children[children.length - 1];
+            }
+            var entry = $("<a href=\"#\">Trace with ReproZip</a>");
+            entry.on("click", fn_trace.bind(null, IPython));
+            after_entry.after($("<li>").attr("title", "Trace this notebook using ReproZip").append(entry));
+        }
     }
 
     return {load_ipython_extension: _on_load};
