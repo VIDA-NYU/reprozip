@@ -8,6 +8,22 @@ reprozip-jupyter
 
 This package provides tracing and reproduction of Jupyter notebooks, allowing one to pack all the libraries and data used in their notebook to allow anyone to re-run it easily.
 
+You can use it from the command-line::
+
+    # Trace & pack
+    $ reprozip-jupyter trace mynotebook.ipynb
+    $ reprozip pack notebook_environment.rpz
+
+    # Unpack and reproduce
+    $ reprounzip docker setup notebook_environment.rpz /tmp/notebook
+    $ reprozip-jupyter run /tmp/notebook
+
+Or you can pack directly from the Jupyter notebook interface, if you enable the extension::
+
+    $ jupyter nbextension install --py reprozip_jupyter --user
+    $ jupyter nbextension enable --py reprozip_jupyter --user
+    $ jupyter serverextension enable --py reprozip_jupyter --user
+
 Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprounzip <https://pypi.python.org/pypi/reprounzip>`_ for more information.
 
 Additional Information
