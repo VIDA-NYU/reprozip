@@ -291,6 +291,13 @@ class RunTab(QtGui.QWidget):
         self.root.addItems(ROOT.TEXT)
         layout.addWidget(self.root, 6, 1, 1, 2)
 
+        layout.addWidget(QtGui.QLabel("Jupyter integration:"),
+                         7, 0)
+        self.run_jupyter_notebook = QtGui.QCheckBox("Run notebook server",
+                                                    checked=False,
+                                                    enabled=False)
+        layout.addWidget(self.run_jupyter_notebook, 7, 1, 1, 2)
+
         group = QtGui.QGroupBox(title="Unpacker options")
         group_layout = QtGui.QVBoxLayout()
         self.unpacker_options = ResizableStack()
@@ -298,8 +305,8 @@ class RunTab(QtGui.QWidget):
         scroll.setWidget(self.unpacker_options)
         group_layout.addWidget(scroll)
         group.setLayout(group_layout)
-        layout.addWidget(group, 7, 0, 1, 3)
-        layout.setRowStretch(7, 1)
+        layout.addWidget(group, 8, 0, 1, 3)
+        layout.setRowStretch(8, 1)
 
         for i, (name, WidgetClass) in enumerate(self.UNPACKERS):
             widget = WidgetClass()
@@ -317,7 +324,7 @@ class RunTab(QtGui.QWidget):
         self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 8, 0, 1, 3)
+        layout.addLayout(buttons, 9, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -338,6 +345,9 @@ class RunTab(QtGui.QWidget):
 
         unpacker = reprounzip.check_directory(self.directory)
 
+        self.run_jupyter_notebook.setChecked(False)
+        self.run_jupyter_notebook.setEnabled(False)
+
         self.runs_widget.clear()
         if unpacker is not None:
             with open(self.directory + '/config.yml') as fp:
@@ -354,6 +364,12 @@ class RunTab(QtGui.QWidget):
             self.unpacker_options.setCurrentIndex(
                 dict((n, i) for i, (n, w) in enumerate(self.UNPACKERS))
                 .get(unpacker, 4))
+
+            if (unpacker == 'docker' and
+                    reprounzip.find_command('reprozip-jupyter') is not None and
+                    reprounzip.is_jupyter(self.directory)):
+                self.run_jupyter_notebook.setEnabled(True)
+                self.run_jupyter_notebook.setChecked(True)
         else:
             self.run_widget.setEnabled(False)
             self.destroy_widget.setEnabled(False)
@@ -374,6 +390,7 @@ class RunTab(QtGui.QWidget):
             self.directory, runs=runs,
             unpacker=self.unpacker,
             root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()],
+            jupyter=self.run_jupyter_notebook.isChecked(),
             **options))
 
     def _destroy(self):
