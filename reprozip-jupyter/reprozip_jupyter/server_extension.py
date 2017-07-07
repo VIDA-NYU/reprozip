@@ -59,7 +59,14 @@ class TraceHandler(RequestHandler):
             self.nbapp.log.info("reprozip: started packing...")
         else:
             self._tempdir.rmtree()
-            self.send_error(500)
+            if returncode == 3:
+                self.set_header('Content-Type', 'application/json')
+                self.finish(
+                    {'error': "There was an error running the notebook. "
+                              "Please make sure that it can run from top to "
+                              "bottom without error before packing."})
+            else:
+                self.send_error(500)
 
     def _packing_done(self, returncode):
         self.nbapp.log.info("reprozip: packing done, returned %d", returncode)

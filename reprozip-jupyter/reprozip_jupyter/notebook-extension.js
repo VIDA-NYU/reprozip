@@ -34,17 +34,31 @@ function notebook_extension($, IPython, utils, dialog) {
                 method: "POST",
                 data: {file: IPython.notebook.notebook_path}
             }).then(function packed(response) {
-                console.log("reprozip: packing successful");
-                modal.modal("hide");
-                dialog.modal({
-                    body: "Created package " + response.bundle,
-                    title: "Packing notebook with ReproZip",
-                    buttons: {
-                        "Close": {
-                            class: "btn-primary"
+                if(response.error) {
+                    console.log("reprozip: got error response");
+                    modal.modal("hide");
+                    var m = dialog.modal({
+                        body: response.error,
+                        title: "Packing notebook with ReproZip",
+                        buttons: {
+                            "Close": {
+                                class: "btn-danger"
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    console.log("reprozip: packing successful");
+                    modal.modal("hide");
+                    dialog.modal({
+                        body: "Created package " + response.bundle,
+                        title: "Packing notebook with ReproZip",
+                        buttons: {
+                            "Close": {
+                                class: "btn-primary"
+                            }
+                        }
+                    });
+                }
             }, function failed() {
                 console.error("reprozip: packing failed");
                 modal.modal("hide");
