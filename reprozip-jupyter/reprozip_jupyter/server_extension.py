@@ -24,7 +24,7 @@ class TraceHandler(RequestHandler):
         name = self._notebook_file.unicodename
         if name.endswith('.ipynb'):
             name = name[:-6]
-        name = u'%s.%s.rpz' % (name, datetime.now().strftime('%Y%m%d%H%M%S'))
+        name = u'%s_%s.rpz' % (name, datetime.now().strftime('%Y%m%d-%H%M%S'))
         self._pack_file = self._notebook_file.parent / name
         self.nbapp.log.info("reprozip: tracing request from client: file=%r",
                             self._notebook_file)
