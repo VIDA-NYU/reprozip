@@ -18,6 +18,9 @@ Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__,
 and `reprounzip-docker <https://pypi.python.org/pypi/reprounzip-docker>`_
 for other components and plugins.
 
+A GUI is available at
+`reprounzip-qt <https://pypi.python.org/pypi/reprounzip-qt>`_.
+
 
 Additional Information
 ----------------------

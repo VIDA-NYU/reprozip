@@ -13,11 +13,9 @@ reprounzip-vistrails
 
 This is a plugin that creates VisTrails workflows from unpacked experiments. See the `VisTrails website <https://www.vistrails.org/>`_ for more information about VisTrails.
 
-Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__,
-`reprounzip <https://pypi.python.org/pypi/reprounzip>`_,
-and `reprounzip-docker <https://pypi.python.org/pypi/reprounzip-docker>`_
-for other components and plugins.
+Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and
 
+`reprounzip <https://pypi.python.org/pypi/reprounzip>`_ for other components.
 
 Additional Information
 ----------------------

@@ -13,7 +13,7 @@ reprozip-jupyter
 
 This package provides tracing and reproduction of Jupyter notebooks, allowing one to pack all the libraries and data used in their notebook to allow anyone to re-run it easily.
 
-Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprounzip <https://pypi.python.org/pypi/reprounzip-vagrant>`_ for more information.
+Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprounzip <https://pypi.python.org/pypi/reprounzip>`_ for more information.
 
 
 Additional Information

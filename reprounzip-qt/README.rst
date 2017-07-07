@@ -13,7 +13,7 @@ reprounzip-qt
 
 This is a graphical user interface for the reprounzip package, allowing to unpack and run packed applications without having to use the command-line interface.
 
-Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprounzip <https://pypi.python.org/pypi/reprounzip-vagrant>`_ for more information.
+Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprounzip <https://pypi.python.org/pypi/reprounzip>`_ for more information.
 
 
 Additional Information
