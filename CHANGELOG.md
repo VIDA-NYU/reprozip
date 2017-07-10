@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.10 (???)
-------------
+1.0.10 (2017-07-10)
+-------------------
 
 Bugfixes:
 * Correctly escape shell commands containing backticks
