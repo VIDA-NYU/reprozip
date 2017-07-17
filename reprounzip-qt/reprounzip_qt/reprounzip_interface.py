@@ -5,6 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import itertools
+import logging
 import os
 import pickle
 import platform
@@ -14,6 +15,9 @@ import time
 import yaml
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
+
+
+logger = logging.getLogger('reprounzip_qt')
 
 
 safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -67,7 +71,10 @@ def check_directory(directory):
         if os.path.isfile(filename):
             with open(filename, 'rb') as fp:
                 unpacked_info = pickle.load(fp)
+            logger.debug("Directory was created by unpacker '%s': %s",
+                         unpacked_info['unpacker'], directory)
             return unpacked_info['unpacker']
+    logger.debug("Not an unpacked directory: %s", directory)
     return None
 
 
@@ -75,8 +82,11 @@ def is_jupyter(directory):
     with open(os.path.join(directory, 'config.yml')) as fp:
         config = yaml.safe_load(fp)
     iofiles = config.get('inputs_outputs', None)
-    return iofiles and any(iofile['name'] == 'jupyter_connection_file'
-                           for iofile in config.get('inputs_outputs'))
+    detected = iofiles and any(iofile['name'] == 'jupyter_connection_file'
+                               for iofile in config.get('inputs_outputs'))
+    if detected:
+        logger.debug("Jupyter kernel detected")
+    return detected
 
 
 class FileStatus(object):
@@ -98,6 +108,7 @@ class FilesStatus(object):
                                  f.get('read_by_runs'),
                                  f.get('written_by_runs'))
                       for f in config.get('inputs_outputs') or []]
+        logger.info("Loaded %d files from the configuration", len(self.files))
         self._refresh()
 
     def _refresh(self):
@@ -122,6 +133,7 @@ def find_command(cmd):
             for ext in ('.bat', '.exe', '.cmd'):
                 filename = os.path.join(path, cmd + ext)
                 if os.path.exists(filename):
+                    logger.info("Using %s", filename)
                     return filename
     else:
         for path in itertools.chain(
@@ -129,7 +141,9 @@ def find_command(cmd):
                 ['/usr/local/bin', '/opt/reprounzip']):
             filename = os.path.join(path, cmd)
             if os.path.exists(filename):
+                logger.info("Using %s", filename)
                 return filename
+    logger.warning("Command not found: %s", cmd)
     return None
 
 
@@ -198,6 +212,7 @@ def docker_machine_env(machine):
             raise ValueError("docker-machine env format not recognized")
         value = line[sep + 2:-1]
         env[key] = value
+    logger.info("Got environment from docker-machine: %r", env)
     return env
 
 
@@ -322,6 +337,8 @@ def run_in_system_terminal(cmd, env={},
         assert False
 
     cmd = ' '.join(native_escape(c) for c in cmd)
+
+    logger.info("Running in system terminal: %s", cmd)
 
     environ = dict(os.environ)
     environ.update(env)

@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import logging
 import os
 import platform
 from PyQt4 import QtCore, QtGui
@@ -19,6 +20,9 @@ from reprounzip_qt.gui.unpack import UnpackTab
 from reprounzip_qt.gui.run import RunTab
 
 
+logger = logging.getLogger('reprounzip_qt')
+
+
 class Application(QtGui.QApplication):
     def __init__(self, argv):
         QtGui.QApplication.__init__(self, argv)
@@ -29,6 +33,7 @@ class Application(QtGui.QApplication):
         rcpath = os.path.expanduser('~/.reprozip')
         rcname = 'rpuzqt-nodefault'
         if os.path.exists(os.path.join(rcpath, rcname)):
+            logger.info("Registering application disabled")
             return
         try:
             proc = subprocess.Popen(['xdg-mime', 'query', 'default',
@@ -38,7 +43,7 @@ class Application(QtGui.QApplication):
             out, err = proc.communicate()
             registered = bool(out.strip())
         except OSError:
-            pass
+            logger.info("xdg-mime call failed, not registering application")
         else:
             if not registered:
                 r = QtGui.QMessageBox.question(
@@ -57,10 +62,12 @@ class Application(QtGui.QApplication):
     def linux_register_default(self, window):
         command = os.path.abspath(sys.argv[0])
         if not os.path.isfile(command):
+            logger.error("Couldn't find argv[0] location!")
             return
         dirname = tempfile.mkdtemp(prefix='reprozip_mime_')
         try:
             # Install x-reprozip mimetype
+            logger.info("Installing application/x-reprozip mimetype for .rpz")
             filename = os.path.join(dirname, 'nyuvida-reprozip.xml')
             with open(filename, 'w') as fp:
                 fp.write('''\
@@ -78,6 +85,7 @@ class Application(QtGui.QApplication):
                                                 '.local/share/mime')])
 
             # Install icon
+            logger.info("Copying icon")
             icon_dest_root = os.path.join(os.environ['HOME'],
                                           '.local/share/icons/hicolor')
             icon_dest_subdir = os.path.join(icon_dest_root, '48x48/mimetypes')
@@ -91,6 +99,7 @@ class Application(QtGui.QApplication):
             subprocess.check_call(['update-icon-caches', icon_dest_root])
 
             # Install desktop file
+            logger.info("Installing reprounzip.desktop file")
             app_dir = os.path.join(os.environ['HOME'],
                                    '.local/share/applications')
             if not os.path.exists(app_dir):
@@ -105,6 +114,8 @@ MimeType=application/x-reprozip
 Icon={1}
 '''.format(command, icon_dest_file))
             subprocess.check_call(['update-desktop-database', app_dir])
+
+            logger.info("Application registered!")
         except (OSError, subprocess.CalledProcessError):
             error_msg(window, "Error setting default application",
                       'error', traceback.format_exc())

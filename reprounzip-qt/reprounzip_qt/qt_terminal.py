@@ -6,8 +6,12 @@ from __future__ import division, print_function, unicode_literals
 
 import cgi
 import locale
+import logging
 from PyQt4 import QtCore, QtGui
 import sys
+
+
+logger = logging.getLogger('reprounzip_qt')
 
 
 class Terminal(QtGui.QWidget):
@@ -51,6 +55,8 @@ class Terminal(QtGui.QWidget):
         # Add additional environment variables
         for k, v in env.items():
             environ.insert(k, v)
+
+        logger.info("Running in builtin Qt terminal: %r", cmdline)
 
         self.process.setProcessEnvironment(environ)
         self.process.setProcessChannelMode(QtCore.QProcess.SeparateChannels)
