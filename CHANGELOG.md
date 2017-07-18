@@ -11,8 +11,8 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
-1.0.10 (???)
-------------
+1.0.10 (2017-07-10)
+-------------------
 
 Bugfixes:
 * Correctly escape shell commands containing backticks
@@ -23,6 +23,9 @@ Bugfixes:
 * Using `graph --packages drop` together with `--json` no longer crashes
 
 Enhancements:
+* New reprozip-jupyter tool to trace and reproduce Jupyter notebooks
+* reprozip_jupyter can be registered as a Jupyter extension to trace notebooks from the Jupyter web interface
+* The Qt GUI knows to run packages with reprozip-jupyter if they are notebook environments (kernels) unpacked with Docker (and reprozip-jupyter is installed)
 * Add `--docker-cmd` to reprounzip-docker to select the Docker command (for example `--docker-cmd="sudo docker"`)
 * Implement `--expose-port` option for Vagrant and Docker (no need for `--docker-option=-p...`)
 * Add docker-machine support to GUI (select which machine to use)
