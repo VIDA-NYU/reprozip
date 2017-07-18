@@ -5,9 +5,8 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
-import subprocess
-
 from PyQt4 import QtCore, QtGui
+import subprocess
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, \

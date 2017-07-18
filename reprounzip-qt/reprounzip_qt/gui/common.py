@@ -4,9 +4,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
-import re
-
 from PyQt4 import QtCore, QtGui
+import re
 
 
 def error_msg(parent, message, severity, details=None):

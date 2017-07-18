@@ -4,9 +4,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
-import yaml
-
 from PyQt4 import QtCore, QtGui
+import yaml
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
