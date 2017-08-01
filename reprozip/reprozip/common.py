@@ -26,6 +26,7 @@ import copy
 from datetime import datetime
 from distutils.version import LooseVersion
 import functools
+import json
 import logging
 import logging.handlers
 import os
@@ -67,12 +68,14 @@ class File(CommonEqualityMixin):
 class Package(CommonEqualityMixin):
     """A distribution package, containing a set of files.
     """
-    def __init__(self, name, version, files=None, packfiles=True, size=None):
+    def __init__(self, name, version, files=None, packfiles=True, size=None,
+                 meta=None):
         self.name = name
         self.version = version
         self.files = list(files) if files is not None else []
         self.packfiles = packfiles
         self.size = size
+        self.meta = meta
 
     def add_file(self, file_):
         self.files.append(file_)
@@ -461,6 +464,8 @@ def write_package(fp, pkg, indent=0):
         fp.write("%s    size: %d\n" % (indent_str, pkg.size))
     fp.write("%s    packfiles: %s\n" % (indent_str, 'true' if pkg.packfiles
                                                     else 'false'))
+    if pkg.meta:
+        fp.write("%s    meta: %s\n" % (indent_str, json.dumps(pkg.meta),))
     fp.write("%s    files:\n"
              "%s      # Total files used: %s\n" % (
                  indent_str, indent_str,

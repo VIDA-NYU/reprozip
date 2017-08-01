@@ -169,7 +169,8 @@ class DpkgManager(PkgManager):
         p = subprocess.Popen(['dpkg-query',
                               '--showformat=${Package}\t'
                               '${Version}\t'
-                              '${Installed-Size}\n',
+                              '${Installed-Size}\t'
+                              '${Section}\n',
                               '-W',
                               pkgname],
                              stdout=subprocess.PIPE)
@@ -182,13 +183,15 @@ class DpkgManager(PkgManager):
                 if name == pkgname:
                     version = fields[1].decode('ascii')
                     size = int(fields[2].decode('ascii')) * 1024    # kbytes
+                    section = fields[3].decode('ascii')
                     break
             for l in p.stdout:  # finish draining stdout
                 pass
         finally:
             p.wait()
         if p.returncode == 0:
-            pkg = Package(pkgname, version, size=size)
+            pkg = Package(pkgname, version, size=size,
+                          meta={'section': section})
             logging.debug("Found package %s", pkg)
             return pkg
         else:
