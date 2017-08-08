@@ -17,6 +17,7 @@ from __future__ import division, print_function, unicode_literals
 
 import codecs
 import contextlib
+from datetime import datetime
 import email.utils
 import itertools
 import locale
@@ -28,6 +29,7 @@ from rpaths import Path, PosixPath
 import stat
 import subprocess
 import sys
+import time
 
 
 class StreamWriter(object):
@@ -206,6 +208,31 @@ def optional_return_type(req_args, other_args):
     for i, n in enumerate(req_args):
         dct[n] = property(operator.itemgetter(i))
     return type(str('OptionalReturnType'), (tuple,), dct)
+
+
+def tz_offset():
+    offset = time.timezone if time.localtime().tm_isdst == 0 else time.altzone
+    return -offset
+
+
+def isodatetime():
+    offset = tz_offset()
+    sign = '+'
+    if offset < 0:
+        sign = '-'
+        offset = -offset
+    if offset % 60 == 0:
+        offset = '%02d:%02d' % (offset // 3600, (offset // 60) % 60)
+    else:
+        offset = '%02d:%02d:%02d' % (offset // 3600, (offset // 60) % 60,
+                                     offset % 60)
+    # Remove microsecond
+    now = datetime.now()
+    now = datetime(year=now.year, month=now.month, day=now.day,
+                   hour=now.hour, minute=now.minute, second=now.second)
+    return '%s%s%s' % (now.isoformat(),
+                       sign,
+                       offset)
 
 
 def hsize(nbytes):
