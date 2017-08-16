@@ -187,11 +187,12 @@ class Process(object):
 class Package(object):
     """Structure representing a system package.
     """
-    def __init__(self, name, version=None):
+    def __init__(self, name, version=None, section=None):
         self.id = None
         self.name = name
         self.version = version
         self.files = set()
+        self.section = section
 
     def dot(self, fp, level_pkgs):
         assert self.id is not None
@@ -237,7 +238,7 @@ class Package(object):
         else:
             assert False
         return {'name': self.name, 'version': self.version or None,
-                'files': files}
+                'section': self.section, 'files': files}
 
 
 def parse_levels(level_pkgs, level_processes, level_other_files):
@@ -546,7 +547,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
             if pkg is not None:
                 package = packages.get(pkg.name)
                 if package is None:
-                    package = Package(pkg.name, pkg.version)
+                    package = Package(pkg.name, pkg.version,
+                                      pkg.meta.get('section', None))
                     packages[pkg.name] = package
                 package.files.add(fi)
                 package_map[fi] = package
@@ -698,7 +700,6 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
             endp_file = unicode_(fi)
         if mode is None:
             endp_prog['reads'].append(endp_file)
-            # TODO: argv?
         elif mode & FILE_WRITE:
             endp_prog['writes'].append(endp_file)
         elif mode & FILE_READ:
