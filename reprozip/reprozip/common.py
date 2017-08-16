@@ -75,7 +75,7 @@ class Package(CommonEqualityMixin):
         self.files = list(files) if files is not None else []
         self.packfiles = packfiles
         self.size = size
-        self.meta = meta
+        self.meta = meta or {}
 
     def add_file(self, file_):
         self.files.append(file_)
