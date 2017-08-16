@@ -113,12 +113,14 @@ packages:
   files:
   - "/usr/lib/2_one.so"
   - "/etc/2_two.cfg"
+  meta: {"section": "libs"}
 - name: python
   version: "2.7"
   size: 5000000
   packfiles: true
   files:
   - "/usr/bin/python"
+  meta: {"section": "python"}
 - name: unused
   version: "0.1"
   size: 100
@@ -258,12 +260,15 @@ digraph G {
 }
 """,
             {'packages': [{'name': 'pkg1', 'version': '1.0',
-                           'files': ['/usr/bin/wc']},
+                           'files': ['/usr/bin/wc'],
+                           'section': None},
                           {'name': 'pkg2', 'version': '1.0',
                            'files': ['/etc/2_two.cfg',
-                                     '/usr/lib/2_one.so']},
+                                     '/usr/lib/2_one.so'],
+                           'section': 'libs'},
                           {'name': 'python', 'version': '2.7',
-                           'files': ['/usr/bin/python']}],
+                           'files': ['/usr/bin/python'],
+                           'section': 'python'}],
              'other_files': ['/bin/sh',
                              '/some/dir/drive.py',
                              '/some/dir/experiment',
