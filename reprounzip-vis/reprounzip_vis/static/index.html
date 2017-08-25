@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="UTF-8">
+    <title>ReproZip Provenance Graph</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+
+    <!-- Latest compiled and minified CSS   <link rel="stylesheet" href="css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <script src="https://cdn.rawgit.com/eligrey/canvas-toBlob.js/f1a01896135ab378aa5c0118eadd81da55e698d8/canvas-toBlob.js"></script>
+    <script src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
+    <script src="https://momentjs.com/downloads/moment.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Local customized bootstrap CSS  -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Planing to switch to d3 v4 if necessary
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    -->
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script type="text/javascript" src="js/gantt-chart-d3.js"></script>
+
+
+
+</head>
+
+<body style="color: #ffffff">
+<div id="wrapper" class="toggled">
+
+    <!-- Sidebar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+        <ul class="nav sidebar-nav">
+            <li class="sidebar-brand">
+                <a href="#">
+                    ReproZip Provenance Graph
+                </a>
+            </li>
+            <li >
+
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapse1"><i class="fa fa-fw fa-server" style="margin-right: 5px"></i> Overview</a>
+
+                <div id="collapse1" class="panel-collapse collapse">
+
+                    <div class="panel-body" style="margin-left: 20px">
+
+                        <div class="btn-group-vertical" style="text-align: left; margin-bottom: 2px; ">
+
+                            <button id="generate" type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"><i class="fa fa-download" aria-hidden="true" style="margin-right: 5px; align-content: flex-start"></i> Save as SVG</button>
+                            <button id="packages_ConnectAll" type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"><i class="fa fa-share-alt fa-rotate-270" aria-hidden="true" style="margin-right: 5px" ></i>  Connect All Packages </button>
+                            <button id="tree_CloseAll"  type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"> <i class="fa fa-circle" aria-hidden="true" style="margin-right: 5px"></i>  Collapse All </button>
+                            <button id="tree_ExpandAll" type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"><i class="fa fa-sitemap fa-rotate-270" aria-hidden="true" style="margin-right: 5px" ></i>  Expand All </button>
+                            <button id="timeLineShow" type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"><i class="fa fa-bar-chart fa-rotate-90 " aria-hidden="true" style="margin-right: 5px" ></i>  Show Timeline </button>
+                            <button id="graphShow" type="button" class="btn btn-primary " style="text-align: left; margin-top: 2px"><i class="fa fa-refresh fa-rotate-270" aria-hidden="true" style="margin-right: 5px" ></i>  Refresh </button>
+
+                        </div>
+
+
+                        <div>
+                            <label>
+                                <input id="toggle-inFocus" type="checkbox" data-toggle="toggle" >
+                                Focus on/off
+                            </label>
+                        </div>
+
+                        <div id="thisRunName">
+
+
+                        </div>
+
+                        <div class="All_Packages" style="color: lightslategrey;font: 13px sans-serif;">
+
+                        </div>
+                    </div>
+                </div>
+
+
+            </li>
+            <li>
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapse2"><i class="fa fa-fw fa-info-circle"></i> Process Details</a>
+
+                <div id="collapse2" class="panel-collapse collapse in">
+
+
+                    <div id='processDetails' class="panel-body fileSearch" style="margin-left: 20px">
+
+                    </div>
+
+
+                </div>
+
+
+
+            </li>
+
+        </ul>
+    </nav>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+        <button type="button" class="hamburger is-closed animated fadeInLeft" data-toggle="offcanvas">
+            <span class="hamb-top"></span>
+            <span class="hamb-middle"></span>
+            <span class="hamb-bottom"></span>
+        </button>
+
+        <div id='viz-graph'></div>
+
+
+        <!-- /#page-content-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+
+
+</div>
+
+<!-- GLobal utilities variables  -->
+<script>
+
+    /*-- tooltip variables  --*/
+
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("font-size",  12 + "px")
+        .style("opacity", 0);
+
+</script>
+
+
+
+<!-- GLobal dimension variables -->
+<script>
+
+
+
+    console.log(' $(window).resize() : ',  $(window).resize());
+
+
+    const margin = {top: $(window).resize().outerHeight() * 0.3, right: $(window).resize().outerWidth()  * 0.1, bottom: $(window).resize().outerHeight() * 0.15, left:  $(window).resize().outerWidth()  * 0.1},
+        width = $(window).resize().outerWidth() * 3.5 - margin.right - margin.left, //4500
+        height = $(window).resize().outerHeight() ,  //1400
+        padding = 3.5, // separation between packages
+        maxRadius = 20; // radius for each package ;
+
+
+
+    //
+    //        const margin = {top: 300, right: 120, bottom: 150, left: 150},
+    //            width = 4500 - margin.right - margin.left, //4500
+    //            height = 1400 - margin.top - margin.bottom,  //1400
+    //            padding = 3.5, // separation between packages
+    //            maxRadius = 20; // radius for each package ;
+
+</script>
+
+<!-- GLobal data variables  -->
+<script>
+    // script to prepare data
+    let fileDict = {};
+    // let rawData = [] ;
+    let rawData = {} ;
+    // let treeData = [];
+    let treeData = {};
+    //  let forceNodes = {"nodes" : []};
+
+
+</script>
+
+
+
+<!-- GLobal variables for d3 visualization  -->
+<script>
+
+
+    /*-- Global variables for the visualization  --*/
+    const duration = 750;
+    let nodeId_Index = 0;
+
+
+    /*-- define the current data set for the visualization  --*/
+
+    const currentJsonFile = "bash-count.json";
+    //const currentJsonFile = "stacked-up-website.json";
+    //const currentJsonFile = "stacked-up-website_og.json";
+    //const currentJsonFile = "ache.json";
+    //const currentJsonFile = "digits.json";
+
+
+
+    /*-- Variables for runs --*/
+
+    let runNames = [];
+    let runsNumber = 0;
+
+
+    // boolean to indicate if the switch of focusing process and associated packages is toggled
+    let inFocus = false;
+
+
+
+    const diagonal = d3.svg.diagonal()
+        .projection(function(d) { return [d.y, d.x]; });
+
+    const svg = d3.select("#viz-graph").append("svg")
+        .attr("class", "chart")
+        .attr("width", width + margin.right + margin.left)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("class", "viz")
+        .attr("id", "viz")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+    <!-- d3 tree layout / processes network graph related variables -->
+    const tree = d3.layout.tree()
+        .size([height , width ]);
+
+    let root,
+        currentSelectedNode,
+        currentDisplayingNodes;
+    let isTreeRedrawn = false;
+
+
+
+    <!-- d3 force layout / packages   related variables -->
+    let force = d3.layout.force();
+    let forceData = {"packages": []};
+    let packagesNumber = 0;
+    let thisNodeCircle, thisNodeCircleLabel;
+    let sectionsInPackages = {};
+
+    let forceNodes; // = force.nodes();
+    let forceLinks; // = force.links();
+    let forcePackages = svg.selectAll(".package");
+    let label = svg.selectAll(".forceLabel");
+    let edge = svg.selectAll(".edge");
+
+
+    <!-- d3 time line related variables -->
+    let timeLineLen = 0;
+    let timeLineLen_Total = 0;
+    let duration_total_ms;
+    let rootStartTime = 0;
+
+    const taskStatus = {
+        "SUCCEEDED" : "bar",
+        "FAILED" : "bar-failed",
+        "RUNNING" : "bar-running",
+        "KILLED" : "bar-killed"
+    };
+
+    let taskNames = [];
+
+    let processes = [];
+
+
+
+</script>
+
+
+
+
+<code>
+
+    <script src="js/index.js"></script>
+    <script src="js/NYT_SVGCrowbar.js"></script>
+    <script src="js/d3_Visualization.js"></script>
+    <script src="js/sideBar.js"></script>
+
+</code>
+
+
+
+<!-- Execution for d3 visualization  -->
+<script>
+
+    treeDraw(currentJsonFile);
+
+</script>
+
+
+
+
+</body>
+
+</html>

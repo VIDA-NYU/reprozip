@@ -1,0 +1,234 @@
+
+body {
+  font-family: "Lato", sans-serif;
+}
+
+.node {
+  cursor: pointer;
+}
+
+
+.searchFilesList{
+
+  display: none;
+
+}
+
+.searchFilesList input
+{
+  width: 100%;
+  height: 60px;
+  font-size: 20px;
+  background-color: #fff;
+  box-shadow: 0px 2px 4px rgba( 52, 67, 75, .2 );
+  display: block;
+  padding: 0 20px;
+  margin-bottom: 40px;
+
+  -webkit-transition: box-shadow .1s linear;
+  transition: box-shadow .1s linear;
+}
+.searchFilesList input::-webkit-input-placeholder	{ color: #a1bdcb !important; }
+.searchFilesList input::-moz-placeholder			{ color: #a1bdcb !important; }
+.searchFilesList input:-ms-input-placeholder		{ color: #a1bdcb !important; }
+.searchFilesList input:focus
+{
+  box-shadow: 0px 4px 8px rgba( 52, 67, 75, .4 );
+}
+.searchFilesList .highlight
+{
+  background-color: #fffd77;
+}
+.searchFilesList > ul
+{
+  margin-left: -50px;
+
+}
+.searchFilesList > ul > li
+{
+  list-style: none;
+  margin-left: 10px;
+
+}
+.searchFilesList > ul > li:not( :first-child )
+{
+  border-top: 1px solid #dcebed;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+.searchFilesList > ul > li.is-hidden
+{
+  display: none;
+}
+.searchFilesList > ul > li h4
+{
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: -30px;
+
+}
+.searchFilesList > ul > li h4:hover,
+.searchFilesList > ul > li h4:focus,
+.searchFilesList > ul > li.is-active h4,
+.searchFilesList > ul > li:target h4
+{
+  color: #a664b7;
+}
+.searchFilesList > ul > li > div
+{
+  display: none;
+}
+.searchFilesList > ul > li.is-active > div,
+.searchFilesList > ul > li:target > div
+{
+  display: block;
+  margin-top: 10px;
+}
+
+.searchFilesList__notfound
+{
+  font-size: 20px;
+  font-style: italic;
+  display: none;
+}
+.searchFilesList__notfound.is-visible
+{
+  display: block;
+}
+
+div.tooltip {
+  position: absolute;
+  text-align: left;
+  flex: auto;
+
+  padding: 2px;
+  color: white;
+  font: 12px sans-serif;
+  background: black;
+  border: 0px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 2.5px;
+  opacity: 1;
+}
+
+.node text {
+  font: 15px sans-serif;
+  fill: #555;
+  opacity: 1;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+  opacity:1 ;
+
+}
+
+.link text {
+  font: 11px sans-serif;
+  fill: #555;
+  stroke-width: 0.5px;
+  opacity: 1;
+
+
+}
+
+.is-focus {
+
+  opacity: 1;
+}
+
+.is-fade {
+
+  opacity: 0.4;
+}
+
+.timeLineText , .totalTimeLineText {
+
+  fill: #555;
+  font-size: 15px;
+
+}
+
+.edge {
+  stroke: #999;
+  stroke-width: 3px;
+  position: relative;
+  z-index: 999;
+
+}
+
+
+#processDetails {
+  float: left;
+  height: auto;
+  margin-left: 20px;
+  position: absolute;
+  display: block;
+  color: lightslategrey;
+  font: 13px sans-serif;
+
+}
+#container,
+#viz-graph {
+
+  transition: margin-left .5s;
+  padding: 16px;
+
+
+}
+
+#viz-graph {
+
+  overflow: scroll;
+  zoom: 65%
+}
+
+
+.toggle.ios, .toggle-on.ios, .toggle-off.ios { border-radius: 20px; }
+.toggle.ios .toggle-handle { border-radius: 20px; }
+
+
+
+
+
+
+
+.chart {
+  font-family: Arial, sans-serif;
+
+}
+
+.axis path,.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: #8a6cb6;
+}
+
+.bar-failed {
+  fill: #CC0000;
+}
+
+.bar-running {
+  fill: #8a6cb6;
+}
+
+.bar-succeeded {
+  fill: #33b5e5;
+}
+
+.bar-killed {
+  fill: #ffbb33;
+}
+
