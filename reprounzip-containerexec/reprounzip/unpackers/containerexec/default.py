@@ -27,10 +27,17 @@ TYPE_ = 'containerexec'
 
 
 def containerexec_create(args):
+    """Unpacks the experiment in a specified folder so it can be run with
+    containerexec.
+
+    The files in the rpz-file (pack) are unpacked to the target location, and
+    system files are also copied if they are not already available in the pack.
+    Busybox will be also installed in case /bin/sh wasn't packed.
+    """
     chroot_create(args)
 
-    # Rewrite the meta-data for reprounzip with a containerexec-specific name
-    # of the unpacker
+    # Rewrite the meta-data for reprounzip with a specific type-name
+    # of the containerexec unpacker
     target = Path(args.target[0])
     config = load_config_file(target / 'config.yml', True)
     metadata_write(target, metadata_initial_iofiles(config), TYPE_)
@@ -38,7 +45,14 @@ def containerexec_create(args):
 
 @target_must_exist
 def containerexec_run(args):
-    """Runs the experiment in an isolated environment.
+    """Runs the experiment in a container environment that is partially isolated
+    from the host.
+
+    The process is isolated from other processes on the same system, in a similar
+    way as for example Docker isolates applications (using operating-level system
+    virtualization).
+    For further informations, see also
+    https://github.com/sosy-lab/benchexec/blob/master/doc/container.md
     """
     if args is None:
         args = sys.args
@@ -60,6 +74,7 @@ def containerexec_run(args):
 
     signals.pre_run(target=target)
 
+    # Each run is executed in its own executor process.
     for run_number in selected_runs:
         run = runs[run_number]
 
@@ -90,7 +105,6 @@ def containerexec_run(args):
                                           environ=env, rootDir=root_dir)
         except (BenchExecException, OSError) as e:
             sys.exit("Cannot execute process: {0}.".format(e))
-            #sys.exit("Cannot execute {0}: {1}.".format(util.escape_string_shell(args[0]), e))
 
     stderr.write("\n*** Command finished, status: %d\n" % result.value or result.signal)
     signals.post_run(target=target, retcode=result.value)
@@ -113,12 +127,14 @@ def containerexec_destroy(args):
 
 
 def setup(parser, **kwargs):
-    """Unpacks the files in a directory and runs the experiment in an isolated environment
+    """Unpacks the files in a directory and runs the experiment in a container
+    that is partially isolated from the host. ContainerExec is part of
+    BenchExec: https://github.com/sosy-lab/benchexec/
 
     setup           creates the directory (needs the pack filename)
     upload          replaces input files in the directory
                     (without arguments, lists input files)
-    run             runs the experiment in the isolated environment
+    run             runs the experiment in a container
     download        gets output files from the machine
                     (without arguments, lists output files)
     destroy         removes the unpacked directory
@@ -126,6 +142,7 @@ def setup(parser, **kwargs):
     For example:
 
         $ reprounzip containerexec setup mypackage.rpz path
+        $ reprounzip containerexec upload path/ input:/home/user/input.txt
         $ reprounzip containerexec run path/
         $ reprounzip containerexec download path/ results:/home/user/results.txt
         $ reprounzip containerexec destroy path
