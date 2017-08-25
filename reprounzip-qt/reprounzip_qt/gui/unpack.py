@@ -259,6 +259,9 @@ class UnpackTab(QtGui.QWidget):
 
         buttons = QtGui.QHBoxLayout()
         buttons.addStretch(1)
+        vis = QtGui.QPushButton("Show provenance")
+        vis.clicked.connect(self._show_vis)
+        buttons.addWidget(vis)
         self.unpack_widget = QtGui.QPushButton("Unpack experiment",
                                                enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
@@ -318,3 +321,6 @@ class UnpackTab(QtGui.QWidget):
                                    options.get('root'))
         else:
             error_msg(self, "No unpacker selected", 'warning')
+
+    def _show_vis(self):
+        handle_error(self, reprounzip.show_vis(self.package_widget.text()))
