@@ -91,7 +91,8 @@ def containerexec_run(args):
         else:
             argv = cmdline
 
-        executor = containerexecutor.ContainerExecutor(uid=uid, gid=gid)
+        executor = containerexecutor.ContainerExecutor(uid=uid, gid=gid,
+                                                       network_access=True)
 
         # ensure that process gets killed on interrupt/kill signal
         def signal_handler_kill(signum, frame):
