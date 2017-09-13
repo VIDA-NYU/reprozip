@@ -90,6 +90,30 @@ body p {
     color:#bbbbbb
 }
 
+/* --------------------BREAD CRUMBS--------------------------*/
+.breadcrumb{
+	padding:8px 15px;
+	margin-bottom:23px;
+	list-style:none;
+	background-color:rgba(87, 6, 140, 0.2);
+	border-radius:3px;
+    font-size: 1.2em;
+}
+
+.breadcrumb>li{
+	display:inline-block;
+}
+
+.breadcrumb>li+li:before{
+	content:"/\00a0";
+	padding:0 5px;
+	color:#563d7c;
+}
+
+.breadcrumb>.active{
+	color:#bbbbbb;
+}
+
 /* --------------------SAMPLE CODE--------------------------*/
 /* Sample code areas */
 @media(min-width:768px) {
