@@ -583,9 +583,9 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
     """Writes a GraphViz DOT file from the collected information.
     """
     with target.open('w', encoding='utf-8', newline='\n') as fp:
-        fp.write('digraph G {\n    /* programs */\n'
+        fp.write('digraph G {\n    rankdir=LR;\n\n    /* programs */\n'
                  '    node [shape=box fontcolor=white '
-                 'fillcolor=black style=filled];\n')
+                 'fillcolor=black style="filled,rounded"];\n')
 
         # Programs
         logging.info("Writing programs...")
