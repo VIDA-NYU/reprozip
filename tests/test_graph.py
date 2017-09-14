@@ -180,8 +180,10 @@ other_files:
         self.do_tests(
             """\
 digraph G {
+    rankdir=LR;
+
     /* programs */
-    node [shape=box fontcolor=white fillcolor=black style=filled];
+    node [shape=box fontcolor=white fillcolor=black style="filled,rounded"];
     subgraph cluster_run0 {
         label="first run";
         prog0 [label="/bin/sh (0)"];
@@ -356,8 +358,10 @@ digraph G {
         self.do_tests(
             """\
 digraph G {
+    rankdir=LR;
+
     /* programs */
-    node [shape=box fontcolor=white fillcolor=black style=filled];
+    node [shape=box fontcolor=white fillcolor=black style="filled,rounded"];
     subgraph cluster_run0 {
         label="first run";
         prog0 [label="/bin/sh (0)"];
