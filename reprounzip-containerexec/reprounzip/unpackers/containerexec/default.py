@@ -72,6 +72,9 @@ def containerexec_run(args):
     root_dir = target / b"root"
     root_dir = str(root_dir.resolve())
 
+    if args.x11 and not any('DISPLAY' in s for s in args.pass_env):
+        args.pass_env.append('DISPLAY')
+
     signals.pre_run(target=target)
 
     # Each run is executed in its own executor process.
@@ -79,7 +82,6 @@ def containerexec_run(args):
         run = runs[run_number]
 
         working_dir = shell_escape(run['workingdir'])
-
         env = fixup_environment(run['environ'], args)
 
         uid = run['uid']
@@ -103,7 +105,7 @@ def containerexec_run(args):
         # actual run execution
         try:
             result = executor.execute_run(argv, workingDir=working_dir,
-                                          environ=env, rootDir=root_dir)
+                                          rootDir=root_dir, environ=env)
         except (BenchExecException, OSError) as e:
             sys.exit("Cannot execute process: {0}.".format(e))
 
@@ -185,6 +187,10 @@ def setup(parser, **kwargs):
     parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
     parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
                             help="Command line to run")
+    parser_run.add_argument('--enable-x11', action='store_true', default=False,
+                            dest='x11',
+                            help="Enable X11 support (needs an X server on "
+                                 "the host)")
     add_environment_options(parser_run)
     parser_run.set_defaults(func=containerexec_run)
 
