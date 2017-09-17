@@ -1,10 +1,16 @@
 body {
-  margin: 0;
-  padding-top:20px;
+    padding-top: 0px;
 }
 
 body p {
-  font-size:1.1em;
+  font-size:1.2em;
+}
+
+/*--------------------NAV LOGO--------------------------*/
+.navbar-brand{
+	min-height: 50px;
+    display: flex;
+    align-items: center;
 }
 
 /* --------------------NAV BAR--------------------------*/
@@ -95,7 +101,7 @@ body p {
 	padding:8px 15px;
 	margin-bottom:23px;
 	list-style:none;
-	background-color:rgba(87, 6, 140, 0.2);
+	background-color:#fff;
 	border-radius:3px;
     font-size: 1.2em;
     max-width: fit-content;
