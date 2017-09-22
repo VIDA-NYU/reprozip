@@ -56,8 +56,26 @@ ga('send', 'pageview');
 
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
             <ul class="nav navbar-nav">
-              <li><a href="index.html">About</a></li>
-              <li class="active"><a href="#">News</a></li>
+               <li class="dropdown">
+                <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">About <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="index.html#how">How It Works</a></li>
+                  <li><a href="index.html#why">Why ReproZip?</a></li>
+                  <li><a href="index.html#examples">Examples</a></li>
+                  <li><a href="index.html#citing">Citing ReproZip</a></li>
+				  <li><a href="index.html#contact">Contact the Team</a></li>
+                </ul>
+              </li>
+
+			  <li class="dropdown active">
+                <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  <li><a href="news.html#news">What's New</a></li>
+                  <li><a href="news.html#presentations">Presentations</a></li>
+                  <li><a href="news.html#publications">Publications</a></li>
+                  <li><a href="news.html#posters">Posters</a></li>
+                </ul>
+              </li>
               <li class="hidden-md hidden-sm"><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
               <li class="hidden-md hidden-sm"><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
               <li class="hidden-md hidden-sm"><a href="https://examples.reprozip.org/">Examples</a></li>
@@ -101,14 +119,6 @@ ga('send', 'pageview');
       </nav>
 
 	<div class="container" role="main">
-	
-		<ul class="breadcrumb">
-		  <li><a href="#news">What's New</a></li>
-		  <li><a href="#presentations">Presentations</a></li>
-		  <li><a href="#publications">Publications</a></li>
-		  <li><a href="#posters">Posters</a></li>
-		</ul>
-
 
       <div class="page-header" id="news">
         <h2>What's New</h2>
