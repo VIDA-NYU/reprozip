@@ -1,4 +1,5 @@
 # Copyright (C) 2014-2017 New York University
+# Copyright (C) 2017 Dirk Beyer
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
