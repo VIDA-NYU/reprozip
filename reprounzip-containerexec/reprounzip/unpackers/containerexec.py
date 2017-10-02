@@ -6,7 +6,8 @@
 """Containerexec plugin for reprounzip."""
 
 # prepare for Python 3
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import \
+    absolute_import, division, print_function, unicode_literals
 
 import argparse
 import logging
@@ -49,9 +50,9 @@ def containerexec_run(args):
     """Runs the experiment in a container environment that is partially isolated
     from the host.
 
-    The process is isolated from other processes on the same system, in a similar
-    way as for example Docker isolates applications (using operating-level system
-    virtualization).
+    The process is isolated from other processes on the same system,
+    in a similar way as for example Docker isolates applications
+    (using operating-level system virtualization).
     For further informations, see also
     https://github.com/sosy-lab/benchexec/blob/master/doc/container.md
     """
@@ -101,7 +102,7 @@ def containerexec_run(args):
         def signal_handler_kill(signum, frame):
             executor.stop()
         signal.signal(signal.SIGTERM, signal_handler_kill)
-        signal.signal(signal.SIGINT,  signal_handler_kill)
+        signal.signal(signal.SIGINT, signal_handler_kill)
 
         # actual run execution
         try:
@@ -110,7 +111,8 @@ def containerexec_run(args):
         except (BenchExecException, OSError) as e:
             sys.exit("Cannot execute process: {0}.".format(e))
 
-    stderr.write("\n*** Command finished, status: %d\n" % result.value or result.signal)
+    stderr.write(
+        "\n*** Command finished, status: %d\n" % result.value or result.signal)
     signals.post_run(target=target, retcode=result.value)
 
     # Update input file status
@@ -146,9 +148,9 @@ def setup(parser, **kwargs):
     For example:
 
         $ reprounzip containerexec setup mypackage.rpz path
-        $ reprounzip containerexec upload path/ input:/home/user/input.txt
+        $ reprounzip containerexec upload path/ input:/home/.../input.txt
         $ reprounzip containerexec run path/
-        $ reprounzip containerexec download path/ results:/home/user/results.txt
+        $ reprounzip containerexec download path/ results:/home/.../results.txt
         $ reprounzip containerexec destroy path
 
     Upload specifications are either:
