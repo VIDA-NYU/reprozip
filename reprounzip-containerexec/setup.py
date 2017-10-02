@@ -16,11 +16,10 @@ req = [
     'benchexec>=1.10']
 setup(name='reprounzip-containerexec',
       version='0.1',
-      packages=['reprounzip', 'reprounzip.unpackers',
-                'reprounzip.unpackers.containerexec'],
+      packages=['reprounzip', 'reprounzip.unpackers'],
       entry_points={
           'reprounzip.unpackers': [
-              'containerexec = reprounzip.unpackers.containerexec.default:setup']},
+              'containerexec = reprounzip.unpackers.containerexec:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
       description="Linux tool enabling reproducible experiments (unpacker) in an isolated environment",
