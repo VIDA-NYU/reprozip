@@ -5,6 +5,11 @@ set -eux
 # Update things
 pip install -U setuptools pip
 
+# Fix 'cryptography' on Python 3.3 (though they don't support it officially)
+if [ $TRAVIS_PYTHON_VERSION = 3.3 ]; then
+    pip install enum34
+fi
+
 # Use a plain-ASCII locale, to make sure to catch stupid PY3 behaviors
 export LANG=C
 export LC_ALL=C
