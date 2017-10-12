@@ -2,6 +2,9 @@
 
 set -eux
 
+# Update things
+pip install -U setuptools pip
+
 # Use a plain-ASCII locale, to make sure to catch stupid PY3 behaviors
 export LANG=C
 export LC_ALL=C
