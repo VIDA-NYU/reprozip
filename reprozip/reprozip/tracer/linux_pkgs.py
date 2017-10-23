@@ -121,11 +121,11 @@ class DpkgManager(PkgManager):
                 continue
             with listfile.open('rb') as fp:
                 # Read paths from the file
-                l = fp.readline()
-                while l:
-                    if l[-1:] == b'\n':
-                        l = l[:-1]
-                    path = Path(l)
+                line = fp.readline()
+                while line:
+                    if line[-1:] == b'\n':
+                        line = line[:-1]
+                    path = Path(line)
                     # If it's one of the requested paths
                     if path in requested:
                         # If we had assigned it to a package already, undo
@@ -134,7 +134,7 @@ class DpkgManager(PkgManager):
                         # Else assign to the package
                         else:
                             found[path] = pkgname
-                    l = fp.readline()
+                    line = fp.readline()
 
         # Remaining files are not from packages
         self.unknown_files.update(
@@ -175,15 +175,15 @@ class DpkgManager(PkgManager):
                              stdout=subprocess.PIPE)
         try:
             size = version = None
-            for l in p.stdout:
-                fields = l.split()
+            for line in p.stdout:
+                fields = line.split()
                 # Removes :arch
                 name = fields[0].decode('ascii').split(':', 1)[0]
                 if name == pkgname:
                     version = fields[1].decode('ascii')
                     size = int(fields[2].decode('ascii')) * 1024    # kbytes
                     break
-            for l in p.stdout:  # finish draining stdout
+            for line in p.stdout:  # finish draining stdout
                 pass
         finally:
             p.wait()
@@ -206,9 +206,9 @@ class RpmManager(PkgManager):
         out, err = p.communicate()
         if p.returncode != 0:
             return None
-        return [l.strip().decode('iso-8859-1')
-                for l in out.splitlines()
-                if l]
+        return [line.strip().decode('iso-8859-1')
+                for line in out.splitlines()
+                if line]
 
     def _create_package(self, pkgname):
         p = subprocess.Popen(['rpm', '-q', pkgname,
