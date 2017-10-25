@@ -116,7 +116,7 @@ def docker_setup(args):
     docker_setup_create(args)
     try:
         docker_setup_build(args)
-    except:
+    except BaseException:
         Path(args.target[0]).rmtree(ignore_errors=True)
         raise
 

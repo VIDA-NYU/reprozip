@@ -7,6 +7,7 @@ from __future__ import division, print_function, unicode_literals
 import cgi
 import locale
 from PyQt4 import QtCore, QtGui
+import sys
 
 
 class Terminal(QtGui.QWidget):
@@ -38,6 +39,7 @@ class Terminal(QtGui.QWidget):
         if environ.contains('PYTHONHOME'):
             environ.remove('PYTHONPATH')
             environ.remove('PYTHONHOME')
+        if sys.platform == 'darwin':
             environ.insert(
                 'PATH',
                 (environ.value('PATH', '/usr/bin:/bin:/usr/sbin:/sbin') +

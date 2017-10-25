@@ -89,7 +89,7 @@ else:
     unicode_ = unicode  # noqa: F821
 
 
-def flatten(n, l):
+def flatten(n, iterable):
     """Flattens an iterable by repeatedly calling chain.from_iterable() on it.
 
     >>> a = [[1, 2, 3], [4, 5, 6]]
@@ -105,8 +105,8 @@ def flatten(n, l):
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     """
     for _ in irange(n):
-        l = itertools.chain.from_iterable(l)
-    return l
+        iterable = itertools.chain.from_iterable(iterable)
+    return iterable
 
 
 class UniqueNames(object):
