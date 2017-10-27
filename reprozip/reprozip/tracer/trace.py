@@ -345,6 +345,7 @@ def trace(binary, argv, directory, append, verbosity=1):
                             "signal %d", c & 0xFF)
         else:
             logging.warning("Program exited with non-zero code %d", c)
+        sys.exit(c)
     logging.info("Program completed")
 
 
