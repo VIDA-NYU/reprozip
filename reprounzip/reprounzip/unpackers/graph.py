@@ -455,6 +455,10 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     level_pkgs, level_processes, level_other_files, file_depth = \
         parse_levels(level_pkgs, level_processes, level_other_files)
 
+    if target.exists():
+        logging.critical("Output file %s exists")
+        sys.exit(1)
+
     # Reads package ownership from the configuration
     if not configfile.is_file():
         logging.critical("Configuration file does not exist!\n"
