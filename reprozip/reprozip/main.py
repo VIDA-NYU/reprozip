@@ -23,6 +23,7 @@ import os
 from rpaths import Path
 import sqlite3
 import sys
+import traceback
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
@@ -388,8 +389,9 @@ def main():
     try:
         status = args.func(args)
     except Exception as e:
+        traceback.print_exc()
         submit_usage_report(result=type(e).__name__)
-        raise
+        sys.exit(125)
     else:
         submit_usage_report(result='success')
     if status is None:
