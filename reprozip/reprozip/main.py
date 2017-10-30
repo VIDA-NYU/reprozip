@@ -174,6 +174,8 @@ def testrun(args):
                       "signal %d" % (c & 0xFF))
             else:
                 print("\nWarning: program exited with non-zero code %d" % c)
+
+        return c
     finally:
         database.remove()
 
@@ -196,15 +198,16 @@ def trace(args):
         append = False
     else:
         append = None
-    reprozip.tracer.trace.trace(args.cmdline[0],
-                                argv,
-                                Path(args.dir),
-                                append,
-                                args.verbosity)
+    status = reprozip.tracer.trace.trace(args.cmdline[0],
+                                         argv,
+                                         Path(args.dir),
+                                         append,
+                                         args.verbosity)
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
                                               args.find_inputs_outputs,
                                               overwrite=False)
+    return status
 
 
 def reset(args):
@@ -383,10 +386,13 @@ def main():
         parser.error("missing command-line")
     record_usage(command=args.selected_command)
     try:
-        args.func(args)
+        status = args.func(args)
     except Exception as e:
         submit_usage_report(result=type(e).__name__)
         raise
     else:
         submit_usage_report(result='success')
-    sys.exit(0)
+    if status is None:
+        sys.exit(0)
+    else:
+        sys.exit(int(status))

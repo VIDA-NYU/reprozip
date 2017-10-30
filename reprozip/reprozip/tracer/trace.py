@@ -347,6 +347,8 @@ def trace(binary, argv, directory, append, verbosity=1):
             logging.warning("Program exited with non-zero code %d", c)
     logging.info("Program completed")
 
+    return c
+
 
 def write_configuration(directory, sort_packages, find_inputs_outputs,
                         overwrite=False):
