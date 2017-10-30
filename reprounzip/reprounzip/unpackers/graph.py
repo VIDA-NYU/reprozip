@@ -31,8 +31,7 @@ from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
 from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
-    unicode_, escape, normalize_path
-
+    unicode_, escape, normalize_path, tty_prompt
 
 C_INITIAL = 0   # First process or don't know
 C_FORK = 1      # Might actually be any one of fork, vfork or clone
@@ -453,6 +452,17 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
     level_pkgs, level_processes, level_other_files, file_depth = \
         parse_levels(level_pkgs, level_processes, level_other_files)
+
+    if target.exists():
+        r = tty_prompt(
+            "Output file %s exists\n"
+            "(d)elete it or (s)top? [d/s] " % target,
+            'dDsS')
+        if r is None:
+            logging.critical("Output file %s exists")
+            sys.exit(1)
+        elif r in 'sS':
+            sys.exit(1)
 
     # Reads package ownership from the configuration
     if not configfile.is_file():
