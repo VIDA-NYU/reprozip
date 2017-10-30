@@ -28,8 +28,7 @@ from reprozip.common import File, InputOutputFile, load_config, save_config, \
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, \
-    unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links, \
-    tty_prompt
+    unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links
 
 
 class TracedFile(File):
@@ -241,6 +240,56 @@ def get_files(conn):
         if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                      for m in magic_dirs))
     return files, inputs, outputs
+
+
+def tty_prompt(prompt, chars):
+    """Get input from the terminal.
+
+    On Linux, this will find the controlling terminal and ask there.
+
+    :param prompt: String to be displayed on the terminal before reading the
+        input.
+    :param chars: Accepted character responses.
+    """
+    try:
+        import termios
+
+        # Can't use O_RDWR/"w+" for a single fd/stream because of PY3 bug 20074
+        ofd = os.open('/dev/tty', os.O_WRONLY | os.O_NOCTTY)
+        ostream = os.fdopen(ofd, 'w', 1)
+        ifd = os.open('/dev/tty', os.O_RDONLY | os.O_NOCTTY)
+        istream = os.fdopen(ifd, 'r', 1)
+        old = termios.tcgetattr(ifd)
+    except (ImportError, AttributeError, IOError, OSError):
+        ostream = sys.stdout
+        istream = sys.stdin
+        if not os.isatty(sys.stdin.fileno()):
+            return None
+
+        while True:
+            ostream.write(prompt)
+            ostream.flush()
+            line = istream.readline()
+            if not line:
+                return None
+            elif line[0] in chars:
+                return line[0]
+    else:
+        new = old[:]
+        new[3] &= ~termios.ICANON  # 3 == 'lflags'
+        tcsetattr_flags = termios.TCSAFLUSH | getattr(termios, 'TCSASOFT', 0)
+        try:
+            termios.tcsetattr(ifd, tcsetattr_flags, new)
+            ostream.write(prompt)
+            ostream.flush()
+            while True:
+                char = istream.read(1)
+                if char in chars:
+                    ostream.write("\n")
+                    return char
+        finally:
+            termios.tcsetattr(ifd, tcsetattr_flags, old)
+            ostream.flush()
 
 
 def trace(binary, argv, directory, append, verbosity=1):
