@@ -22,7 +22,7 @@ static sqlite3_uint64 gettime(void)
         /* LCOV_EXCL_START : clock_gettime() is unlikely to fail */
         log_critical(0, "getting time failed (clock_gettime): %s",
                      strerror(errno));
-        exit(1);
+        exit(125);
         /* LCOV_EXCL_END */
     }
     timestamp = now.tv_sec;

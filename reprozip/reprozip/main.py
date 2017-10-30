@@ -277,7 +277,7 @@ def main():
                      "Versions before 2.7.3 are affected by bug 13676 and "
                      "will not work with ReproZip\n" %
                      sys.version.split(' ', 1)[0])
-        sys.exit(1)
+        sys.exit(125)
 
     # Parses command-line
 
