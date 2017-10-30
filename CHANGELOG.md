@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.0.11 (???)
+------------
+
+Bugfixes:
+* Write timestamp in config with timezone offset
+* Always fix up PATH on MacOS (to pick up Docker)
+
+Enhancements:
+* Improve DOT graph layout
+* Don't silently overwrite output with `reprounzip graph`
+* Add `--regex-include` to `reprounzip graph`
+
 1.0.10 (2017-07-10)
 -------------------
 
