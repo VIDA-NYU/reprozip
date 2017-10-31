@@ -5,7 +5,6 @@
 from __future__ import print_function, unicode_literals
 
 import json
-import os
 from rpaths import Path
 import sys
 import unittest
@@ -135,8 +134,8 @@ other_files:
 
     def do_dot_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
-        fd, target = Path.tempfile(prefix='rpz_testgraph_', suffix='.dot')
-        os.close(fd)
+        tmpdir = Path.tempdir(prefix='rpz_testgraph_')
+        target = tmpdir / 'graph.dot'
         try:
             graph.generate(target,
                            self._trace / 'config.yml',
@@ -150,12 +149,12 @@ other_files:
             if expected is not False:
                 raise
         finally:
-            target.remove()
+            tmpdir.rmtree()
 
     def do_json_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
-        fd, target = Path.tempfile(prefix='rpz_testgraph_', suffix='.json')
-        os.close(fd)
+        tmpdir = Path.tempdir(prefix='rpz_testgraph_')
+        target = tmpdir / 'graph.json'
         try:
             graph.generate(target,
                            self._trace / 'config.yml',
@@ -170,7 +169,7 @@ other_files:
             if expected is not False:
                 raise
         finally:
-            target.remove()
+            tmpdir.rmtree()
 
     def do_tests(self, expected_dot, expected_json, **kwargs):
         self.do_dot_test(expected_dot, **kwargs)

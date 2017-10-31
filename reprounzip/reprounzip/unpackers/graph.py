@@ -456,7 +456,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
         parse_levels(level_pkgs, level_processes, level_other_files)
 
     if target.exists():
-        logging.critical("Output file %s exists")
+        logging.critical("Output file %s exists", target)
         sys.exit(1)
 
     # Reads package ownership from the configuration
