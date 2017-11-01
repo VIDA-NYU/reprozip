@@ -34,7 +34,14 @@ def main():
     parser.add_argument('package', nargs=argparse.OPTIONAL)
     parser.add_argument('--unpacked', action='append', default=[])
 
-    args = parser.parse_args()
+    argv = sys.argv
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith('-psn'):
+            del argv[i]
+        else:
+            i += 1
+    args = parser.parse_args(argv)
 
     qt_init()
 
