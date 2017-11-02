@@ -23,6 +23,7 @@ import os
 from rpaths import Path
 import sqlite3
 import sys
+import traceback
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
@@ -174,6 +175,8 @@ def testrun(args):
                       "signal %d" % (c & 0xFF))
             else:
                 print("\nWarning: program exited with non-zero code %d" % c)
+
+        return c
     finally:
         database.remove()
 
@@ -196,15 +199,16 @@ def trace(args):
         append = False
     else:
         append = None
-    reprozip.tracer.trace.trace(args.cmdline[0],
-                                argv,
-                                Path(args.dir),
-                                append,
-                                args.verbosity)
+    status = reprozip.tracer.trace.trace(args.cmdline[0],
+                                         argv,
+                                         Path(args.dir),
+                                         append,
+                                         args.verbosity)
     reprozip.tracer.trace.write_configuration(Path(args.dir),
                                               args.identify_packages,
                                               args.find_inputs_outputs,
                                               overwrite=False)
+    return status
 
 
 def reset(args):
@@ -277,7 +281,7 @@ def main():
                      "Versions before 2.7.3 are affected by bug 13676 and "
                      "will not work with ReproZip\n" %
                      sys.version.split(' ', 1)[0])
-        sys.exit(1)
+        sys.exit(125)
 
     # Parses command-line
 
@@ -383,10 +387,14 @@ def main():
         parser.error("missing command-line")
     record_usage(command=args.selected_command)
     try:
-        args.func(args)
+        status = args.func(args)
     except Exception as e:
+        traceback.print_exc()
         submit_usage_report(result=type(e).__name__)
-        raise
+        sys.exit(125)
     else:
         submit_usage_report(result='success')
-    sys.exit(0)
+    if status is None:
+        sys.exit(0)
+    else:
+        sys.exit(int(status))
