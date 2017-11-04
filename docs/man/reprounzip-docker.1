@@ -32,7 +32,7 @@ will be created from the specified base
 .I IMAGE
 by adding the experiment's content on top of it. You can use \-\-docker\-option to pass additional options to docker build for example \-\-docker\-option=\-\-squash.
 .TP
-.BI run " [\-\-cmdline ...] [\-\-expose\-port PORT] [\-\-enable\-x11] [\-\-x11\-display DISPLAY] [\-\-tunneled\-x11] [\-d] [\-\-docker\-option OPTION] [\-\-pass\-env VAR] [\-\-set\-env VAR[=val]] <directory> [run]"
+.BI run " [\-\-expose\-port PORT] [\-\-enable\-x11] [\-\-x11\-display DISPLAY] [\-\-tunneled\-x11] [\-d] [\-\-docker\-option OPTION] [\-\-pass\-env VAR] [\-\-set\-env VAR[=val]] <directory> [run] [\-\-cmdline ...]"
 Runs an experiment that has been unpacked to a directory.
 .TP
 .BI upload " <directory> [localfile:experimentfile] [...]"
