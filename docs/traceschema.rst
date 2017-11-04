@@ -47,6 +47,7 @@ The *mode* attribute is a binary OR of the following values (accessible from ``r
     FILE_WRITE  = 0x02
     FILE_WDIR   = 0x04
     FILE_STAT   = 0x08
+    FILE_LINK   = 0x10
 
 ``executed_files``
 ''''''''''''''''''
