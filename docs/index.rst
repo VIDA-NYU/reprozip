@@ -23,8 +23,9 @@ Contents
     packing
     unpacking
     graph
-    vistrails
+    jupyter
     gui
+    vistrails
     faq
     troubleshooting
     unpacked-format
@@ -38,6 +39,6 @@ Links
 * `GitHub repository <https://github.com/ViDA-NYU/reprozip>`__
 * Mailing lists:
 
-  * `reprozip-users@vgc.poly.edu <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__ (users)
+  * `users@reprozip.org <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__ (users)
 
-  * `reprozip-dev@vgc.poly.edu <https://vgc.poly.edu/mailman/listinfo/reprozip-dev>`__ (developers)
+  * `dev@reprozip.org <https://vgc.poly.edu/mailman/listinfo/reprozip-dev>`__ (developers)
