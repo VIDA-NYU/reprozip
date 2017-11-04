@@ -1,22 +1,22 @@
 .\" Manpage for reprounzip
 .\" Contact reprozip-dev@vgc.poly.edu to correct errors or typos.
-.TH man 1 "2 June 2017" "1.0.9" "reprouzip man page"
+.TH man 1 "4 November 2017" "1.0.10" "reprouzip man page"
 .SH NAME
 reprounzip \- the reproducibility unpacker
 .SH SYNOPSIS
-reprounzip [-h] [--version] [-v]  ...
+reprounzip [\-h] [\-\-version] [\-v] ...
 .SH DESCRIPTION
 reprounzip inspects or unpacks a reproducible experiment package (.rpz file) created by reprozip.
 .SH OPTIONS
 .SS General options:
 .TP
-.B -h, --help
+.B \-h, \-\-help
 show this help message and exit
 .TP
-.B --version
+.B \-\-version
 show program's version number and exit
 .TP
-.B -v, --verbose
+.B \-v, \-\-verbose
 augments verbosity level
 
 .SS Commands:
@@ -27,31 +27,63 @@ Enables or disables anonymous usage reports
 .B info
 Prints out some information about a pack
 .TP
-.B chroot
-Unpacks the files and run with chroot
-.TP
-.B graph
+.BI graph " <output.dot> [package.rpz]"
 Generates a provenance graph from the trace data
 .TP
-.B showfiles
+.BI showfiles " <package>"
 Prints out input and output file names
 .TP
-.B directory
+.B installpkgs " <package.rpz>"
+Installs the required packages on this system
+.TP
+.BR directory " ..."
 Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
 .TP
-.B installpkgs
-Installs the required packages on this system
+.B chroot
+Unpacks the files and run with chroot
 .TP
 .B docker
 Runs the experiment in a Docker container
 .TP
 .B vagrant
 Runs the experiment in a virtual machine created through Vagrant
+
+.SS Unpacker commands:
+Each unpacker (such as
+.BR directory ", " chroot ", " docker ", or " vagrant )
+has a similar set of commands, detailed below. Please refer to
+.BR reprounzip\-\f(BIunpacker (1)
+for detailed information about a specific unpacker.
+.TP
+.BI setup " <package.rpz> <directory>"
+Unpacks an experiment and sets it up for reproduction in the specified directory.
+.TP
+.BI run " [\-\-cmdline ...] <directory> [run]"
+Runs an experiment that has been unpacked to a directory.
+.TP
+.BI upload " <directory> [localfile:experimentfile] [...]"
+Replaces a file inside the experiment with your own. This allows you to reproduce an experiment in its original environment, but with modified data or configuration. Running this command with only the
+.I directory
+will list all the named files that you can replace with this command.
+.TP
+.BI download " <directory> [experimentfile[:localfile]] [...]"
+Download a file from the experiment container/virtual machine/directory to your filesystem. If
+.I localfile
+is not specified, a file of the same name will be written in the current directory. Running this command with only the
+.I directory
+will list all the named files that you can download with this command.
+.TP
+.BI destroy " <directory>"
+Removes an unpacked experiment directory, and associated resources such as containers, virtual machines, or mount points.
+.B Always use this command
+to delete an unpacked experiment, otherwise resources might get left behind, or with chroot you might end up
+.B deleting system files
+through the mount point that has been created.
 .SH FILES
 .TP
 .B ~/.reprozip/log
 Log file where reprozip and reprounzip write messages during execution. Useful to report issues to the developers, even if you were running without
-.IR --verbose .
+.IR \-\-verbose .
 .SH ENVIRONMENT
 .TP
 .B REPROZIP_USAGE_STATS
@@ -68,8 +100,8 @@ nothing will be downloaded and the bundled parameters will be used instead.
 Get information on a package:
 .IP
 .nf
-.RB "$" " reprounzip -v info" " foobar0.4-python2.rpz"
------ Pack information -----
+.RB "$" " reprounzip \-v info" " foobar0.4\-python2.rpz"
+\-\-\-\-\- Pack information \-\-\-\-\-
 Compressed size: 1.64 MB
 Unpacked size: 4.98 MB
 [...]
@@ -77,14 +109,14 @@ Unpacked size: 4.98 MB
 
 .P
 Unpack the experiment using
-.BR reprounzip-docker (1)
+.BR reprounzip\-docker (1)
 under
 .IR /tmp :
 .IP
 .nf
-.RB "$" " reprounzip docker setup" " foobar0.4-python2.rpz /tmp/foobar-docker"
-.RB "$" " reprounzip docker run" " /tmp/foobar-docker"
-.RB "$" " reprounzip docker destroy" " /tmp/foobar-docker"
+.RB "$" " reprounzip docker setup" " foobar0.4\-python2.rpz /tmp/foobar\-docker"
+.RB "$" " reprounzip docker run" " /tmp/foobar\-docker"
+.RB "$" " reprounzip docker destroy" " /tmp/foobar\-docker"
 .fi
 
 .SH SEE ALSO
@@ -93,9 +125,9 @@ The ReproZip website
 https://www.reprozip.org/
 .TP
 ReproZip's GitHub repository
-https://github.com/ViDA-NYU/reprozip
+https://github.com/ViDA\-NYU/reprozip
 .SH BUGS
-Please report bugs on our mailing-list at reprozip-users@vgc.poly.edu or on GitHub at https://github.com/ViDA-NYU/reprozip/issues.
+Please report bugs on our mailing-list at reprozip\-users@vgc.poly.edu or on GitHub at https://github.com/ViDA\-NYU/reprozip/issues.
 .SH AUTHOR
 .RB "ReproZip is being developed at" " New York University" .
 

@@ -1,0 +1,85 @@
+.\" Manpage for reprounzip
+.\" Contact reprozip-dev@vgc.poly.edu to correct errors or typos.
+.TH man 1 "4 November 2017" "1.0.10" "reprounzip\-docker man page"
+.SH NAME
+reprounzip\-docker \- Docker unpacker for reprounzip
+.SH SYNOPSIS
+reprounzip [\-v] docker [\-h] [\-\-version] [\-\-docker\-cmd DOCKER] ...
+.SH DESCRIPTION
+reprounzip\-docker is the unpacker plugin for reprounzip that allows reproducing packed experiments on different environments by using a Docker container. You will need Docker to be installed on your machine to use it.
+.SH OPTIONS
+.SS General options:
+.TP
+.B \-h, \-\-help
+show this help message and exit
+.TP
+.B \-\-version
+show program's version number and exit
+.TP
+.B \-v, \-\-verbose
+augments verbosity level
+.TP
+.B \-\-docker\-cmd DOCKER
+changes the location or command used to run the Docker client. This option is split on spaces, for example you can use
+\-\-docker\-cmd 'sudo /opt/bin/docker'
+
+.SS Commands:
+.TP
+.BI setup " [\-\-base\-image IMAGE] [\-\-distribution DISTRIBUTION] [\-\-install\-pkgs] [\-\-image\-name NAME] [\-\-docker\-option OPTION] <package.rpz> <directory>"
+Unpacks an experiment and sets it up for reproduction in the specified directory. A Docker image
+.I NAME
+will be created from the specified base
+.I IMAGE
+by adding the experiment's content on top of it. You can use \-\-docker\-option to pass additional options to docker build for example \-\-docker\-option=\-\-squash.
+.TP
+.BI run " [\-\-cmdline ...] [\-\-expose\-port PORT] [\-\-enable\-x11] [\-\-x11\-display DISPLAY] [\-\-tunneled\-x11] [\-d] [\-\-docker\-option OPTION] [\-\-pass\-env VAR] [\-\-set\-env VAR[=val]] <directory> [run]"
+Runs an experiment that has been unpacked to a directory.
+.TP
+.BI upload " <directory> [localfile:experimentfile] [...]"
+Replaces a file inside the experiment image with your own. This allows you to reproduce an experiment in its original environment, but with modified data or configuration. Running this command with only the
+.I directory
+will list all the named files that you can replace with this command.
+.TP
+.BI download " <directory> [experimentfile[:localfile]] [...]"
+Download a file from the experiment container to your filesystem. If
+.I localfile
+is not specified, a file of the same name will be written in the current directory. Running this command with only the
+.I directory
+will list all the named files that you can download with this command.
+.TP
+.BI reset " <directory>"
+Reset the experiment to the state it was when it was first unpacked. This undoes the effects of
+.BR upload " and " run
+commands on the experiment's environment.
+.TP
+.BI destroy " <directory>"
+Removes an unpacked experiment directory, and the associated Docker images.
+.SH SEE ALSO
+.TP
+The ReproZip website
+https://www.reprozip.org/
+.TP
+ReproZip's GitHub repository
+https://github.com/ViDA\-NYU/reprozip
+.TP
+The Docker website
+https://www.docker.com/
+.SH BUGS
+Please report bugs on our mailing-list at reprozip\-users@vgc.poly.edu or on GitHub at https://github.com/ViDA\-NYU/reprozip/issues.
+.SH AUTHOR
+.RB "ReproZip is being developed at" " New York University" .
+
+The team includes:
+.RS
+.nf
+Remi Rampin
+Fernando Chirigati
+Vicky Steeves
+Juliana Freire
+Dennis Shasha
+.fi
+.RE
+.SH COPYRIGHT
+Copyright 2014-2017 New York University.
+
+.RB "Licensed under a" " BSD 3-Clause license." " See the LICENSE file included with the software for details."
