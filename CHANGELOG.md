@@ -8,12 +8,14 @@ Bugfixes:
 * Write timestamp in config with timezone offset
 * Always fix up PATH on MacOS (to pick up Docker)
 * Don't have reprounzip-qt choke on MacOS's `-psn_x_xxxx` arguments
+* Fix "Couldn't find reprounzip command" in the GUI on Windows if installed from the installer and opened a package by double-click
 
 Enhancements:
 * Improve DOT graph layout
 * Don't silently overwrite output with `reprounzip graph`
 * Add `--regex-include` to `reprounzip graph`
 * `reprozip trace` now returns 125 for tracing errors (previously 1), and returns the traced program's exit code otherwise (previously always 0)
+* Manpages are available
 
 1.0.10 (2017-07-10)
 -------------------
