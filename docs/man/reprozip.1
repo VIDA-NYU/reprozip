@@ -1,0 +1,111 @@
+.\" Manpage for reprozip
+.\" Contact reprozip-dev@vgc.poly.edu to correct errors or typos.
+.TH man 1 "4 November 2017" "1.0.10" "reprozip man page"
+.SH NAME
+reprozip \- the reproducibility packer
+.SH SYNOPSIS
+reprozip [\-h] [\-\-version] [\-d DIR] [\-\-dont\-identify\-packages]
+         [\-\-dont\-find\-inputs\-outputs] [\-v] ...
+.SH DESCRIPTION
+reprozip traces and packs an experiment or program into a reproducible package (.rpz file). Those packages can be archived, and reproduced later using reprounzip(1).
+.SH OPTIONS
+.SS General options:
+.TP
+.B \-h, \-\-help
+show this help message and exit
+.TP
+.B \-\-version
+show program's version number and exit
+.TP
+.B \-d DIR, \-\-dir DIR
+where to store database and configuration file (default: ./.reprozip\-trace)
+.TP
+.B \-\-dont\-identify\-packages
+do not try identify which package each file comes from
+.TP
+.B \-\-dont\-find\-inputs\-outputs
+do not try to identify input and output files
+.TP
+.B \-v, \-\-verbose
+augments verbosity level
+
+.SS Commands:
+.TP
+.B usage_report
+Enables or disables anonymous usage reports
+.TP
+.B trace
+Runs the program and writes out database and configuration file
+.TP
+.B testrun
+Runs the program and writes out the database contents
+.TP
+.B reset
+Resets the configuration file
+.TP
+.B pack
+Packs the experiment according to the current configuration
+.TP
+.B combine
+Combine multiple traces into one (possibly as subsequent runs)
+.SH EXIT STATUS
+reprozip returns 1 in case of internal error, otherwise it returns the same result as the traced command.
+.SH FILES
+.TP
+.B ~/.reprozip/log
+Log file where reprozip and reprounzip write messages during execution. Useful to report issues to the developers, even if you were running without
+.IR \-\-verbose .
+.TP
+.B .reprozip\-trace/trace.sqlite3, .reprozip\-trace/config.yml
+When tracing, the trace database and configuration file get written to a directory
+.I .reprozip\-trace
+in the current directory. This location can be overridden with
+.IR \-\-dir .
+It can be useful to edit the configuration file before packing, to make sure no useless or private file is to be included in the package, and to correctly label input files, output files, and run steps.
+.SH ENVIRONMENT
+.TP
+.B REPROZIP_USAGE_STATS
+If this variable is set to
+.I \*(lqoff\*(rq
+then usage statistics will be completely disabled (won't be reported, recorded, and won't ask you about it).
+.SH EXAMPLES
+.P
+Trace and pack a simple Python script:
+.IP
+.nf
+.RB "$" " reprozip trace" " python foobar.py"
+.RB "$" " reprozip pack" " foobar0.4\-python2.rpz"
+.fi
+.P
+Use testrun to show the files used by a command:
+.IP
+.nf
+.RB "$" " reprozip testrun" " /usr/bin/id"
+.fi
+
+.SH SEE ALSO
+.TP
+The ReproZip website
+https://www.reprozip.org/
+.TP
+ReproZip's GitHub repository
+https://github.com/ViDA\-NYU/reprozip
+.SH BUGS
+Please report bugs on our mailing-list at users@reprozip.org or on GitHub at https://github.com/ViDA\-NYU/reprozip/issues.
+.SH AUTHOR
+.RB "ReproZip is being developed at" " New York University" .
+
+The team includes:
+.RS
+.nf
+Remi Rampin
+Fernando Chirigati
+Vicky Steeves
+Juliana Freire
+Dennis Shasha
+.fi
+.RE
+.SH COPYRIGHT
+Copyright 2014-2017 New York University.
+
+.RB "Licensed under a" " BSD 3-Clause license." " See the LICENSE file included with the software for details."

@@ -904,7 +904,7 @@ def setup(parser, **kwargs):
     parser_upload = subparsers.add_parser('upload')
     add_opt_general(parser_upload)
     parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
-                               help="<path>:<input_file_name")
+                               help="<path>:<input_file_name>")
     parser_upload.set_defaults(func=vagrant_upload)
 
     # run

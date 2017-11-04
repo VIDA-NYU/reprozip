@@ -1,0 +1,147 @@
+.\" Manpage for reprounzip
+.\" Contact reprozip-dev@vgc.poly.edu to correct errors or typos.
+.TH man 1 "4 November 2017" "1.0.10" "reprounzip man page"
+.SH NAME
+reprounzip \- the reproducibility unpacker
+.SH SYNOPSIS
+reprounzip [\-h] [\-\-version] [\-v] ...
+.SH DESCRIPTION
+reprounzip inspects or unpacks a reproducible experiment package (.rpz file) created by reprozip.
+.SH OPTIONS
+.SS General options:
+.TP
+.B \-h, \-\-help
+show this help message and exit
+.TP
+.B \-\-version
+show program's version number and exit
+.TP
+.B \-v, \-\-verbose
+augments verbosity level
+
+.SS Commands:
+.TP
+.B usage_report
+Enables or disables anonymous usage reports
+.TP
+.B info
+Prints out some information about a pack
+.TP
+.BI graph " <output.dot> [package.rpz]"
+Generates a provenance graph from the trace data
+.TP
+.BI showfiles " <package>"
+Prints out input and output file names
+.TP
+.B installpkgs " <package.rpz>"
+Installs the required packages on this system
+.TP
+.BR directory " ..."
+Unpacks the files in a directory and runs with PATH and LD_LIBRARY_PATH
+.TP
+.B chroot
+Unpacks the files and run with chroot
+.TP
+.B docker
+Runs the experiment in a Docker container
+.TP
+.B vagrant
+Runs the experiment in a virtual machine created through Vagrant
+
+.SS Unpacker commands:
+Each unpacker (such as
+.BR directory ", " chroot ", " docker ", or " vagrant )
+has a similar set of commands, detailed below. Please refer to
+.BR reprounzip\-\f(BIunpacker (1)
+for detailed information about a specific unpacker.
+.TP
+.BI setup " <package.rpz> <directory>"
+Unpacks an experiment and sets it up for reproduction in the specified directory.
+.TP
+.BI run " <directory> [run] [\-\-cmdline ...]"
+Runs an experiment that has been unpacked to a directory.
+.TP
+.BI upload " <directory> [localfile:experimentfile] [...]"
+Replaces a file inside the experiment with your own. This allows you to reproduce an experiment in its original environment, but with modified data or configuration. Running this command with only the
+.I directory
+will list all the named files that you can replace with this command.
+.TP
+.BI download " <directory> [experimentfile[:localfile]] [...]"
+Download a file from the experiment container/virtual machine/directory to your filesystem. If
+.I localfile
+is not specified, a file of the same name will be written in the current directory. Running this command with only the
+.I directory
+will list all the named files that you can download with this command.
+.TP
+.BI destroy " <directory>"
+Removes an unpacked experiment directory, and associated resources such as containers, virtual machines, or mount points.
+.B Always use this command
+to delete an unpacked experiment, otherwise resources might get left behind, or with chroot you might end up
+.B deleting system files
+through the mount point that has been created.
+.SH FILES
+.TP
+.B ~/.reprozip/log
+Log file where reprozip and reprounzip write messages during execution. Useful to report issues to the developers, even if you were running without
+.IR \-\-verbose .
+.SH ENVIRONMENT
+.TP
+.B REPROZIP_USAGE_STATS
+If this variable is set to
+.I \*(lqoff\*(rq
+then usage statistics will be completely disabled (won't be reported, recorded, and won't ask you about it).
+.TP
+.B REPROZIP_PARAMETERS
+If this variable is set to a URL, it specifies an alternate location from which to download runtime parameters. If it is set to
+.IR \*(lqoff\*(rq ,
+nothing will be downloaded and the bundled parameters will be used instead.
+.SH EXAMPLES
+.P
+Get information on a package:
+.IP
+.nf
+.RB "$" " reprounzip \-v info" " foobar0.4\-python2.rpz"
+\-\-\-\-\- Pack information \-\-\-\-\-
+Compressed size: 1.64 MB
+Unpacked size: 4.98 MB
+[...]
+.fi
+
+.P
+Unpack the experiment using
+.BR reprounzip\-docker (1)
+under
+.IR /tmp :
+.IP
+.nf
+.RB "$" " reprounzip docker setup" " foobar0.4\-python2.rpz /tmp/foobar\-docker"
+.RB "$" " reprounzip docker run" " /tmp/foobar\-docker"
+.RB "$" " reprounzip docker destroy" " /tmp/foobar\-docker"
+.fi
+
+.SH SEE ALSO
+.TP
+The ReproZip website
+https://www.reprozip.org/
+.TP
+ReproZip's GitHub repository
+https://github.com/ViDA\-NYU/reprozip
+.SH BUGS
+Please report bugs on our mailing-list at users@reprozip.org or on GitHub at https://github.com/ViDA\-NYU/reprozip/issues.
+.SH AUTHOR
+.RB "ReproZip is being developed at" " New York University" .
+
+The team includes:
+.RS
+.nf
+Remi Rampin
+Fernando Chirigati
+Vicky Steeves
+Juliana Freire
+Dennis Shasha
+.fi
+.RE
+.SH COPYRIGHT
+Copyright 2014-2017 New York University.
+
+.RB "Licensed under a" " BSD 3-Clause license." " See the LICENSE file included with the software for details."
