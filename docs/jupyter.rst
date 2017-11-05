@@ -3,7 +3,7 @@
 Making Jupyter Notebooks Reproducible with ReproZip
 ***************************************************
 
-**reprozip-jupyter** is a plugin for `Jupyter Notebooks <https://jupyter.org>`, a popular open-source web application that allows you to create and share documents that contain live code, equations, visualizations and narrative text. These are valuable documents for data cleaning, analysis, writing executable papers/articles, and more. However, Jupyter Notebooks are subject to dependency hell like any other application -- just the Notebook is not enough for full reproducibility. We have written a ReproZip plugin for Jupyter Notebooks to help users automatically capture dependencies (including data, environmental variables, etc.) of Notebooks and also automatically set up those dependencies in another computing environment.
+**reprozip-jupyter** is a plugin for `Jupyter Notebooks <https://jupyter.org>`__, a popular open-source web application that allows you to create and share documents that contain live code, equations, visualizations and narrative text. These are valuable documents for data cleaning, analysis, writing executable papers/articles, and more. However, Jupyter Notebooks are subject to dependency hell like any other application -- just the Notebook is not enough for full reproducibility. We have written a ReproZip plugin for Jupyter Notebooks to help users automatically capture dependencies (including data, environment variables, etc.) of Notebooks and also automatically set up those dependencies in another computing environment.
 
 Installation
 ============
@@ -21,7 +21,7 @@ Once successfully installed, you should then enable the plugin for both the clie
 		$ jupyter nbextension enable --py reprozip_jupyter --user
 		$ jupyter serverextension enable --py reprozip_jupyter --user
 
-Once these steps are completed, you should either start a Jupyter Notebook server and/or restart your kernel to be able to see the ReproZip button in your notebook's toolbar.
+Once these steps are completed, when you start a Jupyter Notebook server, you should be able to see the ReproZip button in your notebook's toolbar.
 
 Packing
 =======
@@ -34,14 +34,16 @@ The notebook will execute from top-to-bottom and *reprozip-jupyter* traces that 
 
 ..  image:: figures/rzj-running.png
 
-*reprozip-jupyter* will name the resulting ReproZip package (*.rpz*) as *notebookname_datetime.rpz* and save it to the same working directory the notebook is in:
+*reprozip-jupyter* will name the resulting ReproZip package (*.rpz*) as ``notebookname_datetime.rpz`` and save it to the same working directory the notebook is in:
+
 ..  image:: figures/rzj-pkg.png
 
+Note that the notebook file itself (``.ipynb``) is not included in the package, so you should share or archive both of those files. The reason is that a lot of services can render notebooks (GitHub, OSF...), and they wouldn't be able to if it was in the RPZ file.
 
 Unpacking
 =========
 
-Now, anyone can rerun the Jupyter notebook, with all dependencies automatically configured. First, they would need to install *reprounzip* and the *reprounzip-docker* plugin (installation steps are in the unpacking seciton of the documentation). Second, they need to download or otherwise acquire the *.rpz* file and original *.ipynb* notebook they'd like to reproduce.
+Now, anyone can rerun the Jupyter notebook, with all dependencies automatically configured. First, they would need to install *reprounzip* and the *reprounzip-docker* plugin (see the :ref:`installation steps <install>`). Second, they need to download or otherwise acquire the ``.rpz`` file and original ``.ipynb`` notebook they'd like to reproduce.
 
 To reproduce the notebook using the GUI, follow these steps:
 
@@ -51,7 +53,7 @@ To reproduce the notebook using the GUI, follow these steps:
 
 ..  image:: figures/rzj-setup.png
 
-4. This second table allows you to interact with and rerun the notebook. All you need to do is click 'Run Experiment' and the Jupyter Notebook home file list should pop up in your default browser (if not, navigate to localhost:8888). Open the notebook, and rerun with every dependency configured for you!
+4. This second table allows you to interact with and rerun the notebook. All you need to do is click 'Run Experiment' and the Jupyter Notebook home file list should pop up in your default browser (if not, navigate to ``localhost:8888``). Open the notebook, and rerun with every dependency configured for you!
 
 ..  image:: figures/rzj-run.png
 
@@ -65,6 +67,6 @@ On the command line, you would:
 
 		$ reprozip-jupyter run <directory>
 
-3. The Jupyter Notebook home file list should pop up in your default browser (if not, navigate to localhost:8888).
+3. The Jupyter Notebook home file list should pop up in your default browser (if not, navigate to ``localhost:8888``).
 4. Open the notebook, and rerun with every dependency configured for you!
 
