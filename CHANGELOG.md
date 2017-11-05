@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.11 (???)
-------------
+1.0.11 (2017-11-05)
+-------------------
 
 Bugfixes:
 * Write timestamp in config with timezone offset
