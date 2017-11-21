@@ -35,7 +35,7 @@ requirements:
     - rpaths >=0.8
     - reprounzip >=1.0
     - notebook
-    - jupyter-client
+    - jupyter_client
     - nbformat
     - nbconvert
 
