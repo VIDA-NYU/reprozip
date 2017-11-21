@@ -638,7 +638,7 @@ static void sigint_handler(int signo)
             log_error(0, "cleaning up on SIGINT");
         cleanup();
         restore_signals();
-        exit(1);
+        exit(128 + 2);
     }
     else if(verbosity >= 1)
         log_error(0, "Got SIGINT, press twice to abort...");
@@ -696,7 +696,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
                 "This could be caused by a security policy or isolation "
                 "mechanism (such as\n Docker), see http://bit.ly/2bZd8Fa",
                 strerror(errno));
-            exit(1);
+            exit(125);
         }
         /* Stop this once so tracer can set options */
         kill(getpid(), SIGSTOP);
@@ -704,7 +704,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         execvp(binary, args);
         log_critical(0, "couldn't execute the target command (execvp "
                      "returned): %s", strerror(errno));
-        exit(1);
+        exit(127);
     }
 
     /* Open log file */

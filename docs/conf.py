@@ -53,6 +53,13 @@ master_doc = 'index'
 project = u'ReproZip'
 copyright = u'2014-2017, New York University'
 
+authors = [u'Fernando Chirigati', u'Remi Rampin',
+           u'Juliana Freire', u'Dennis Shasha']
+if len(authors) <= 1:
+    authors_str = u', '.join(authors)
+else:
+    authors_str = u', '.join(authors[:-1]) + u', and ' + authors[-1]
+
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
@@ -146,8 +153,8 @@ html_theme = 'default'
 # html_logo = None
 
 # The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
+# the docs.  This file should be a Windows icon file (.ico) being 16x16 or
+# 32x32 pixels large.
 #
 # html_favicon = None
 
@@ -261,8 +268,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'ReproZip.tex', u'ReproZip Documentation',
-     u'Fernando Chirigati, Remi Rampin, Juliana Freire, and Dennis Shasha',
-     'manual'),
+     authors_str, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -296,10 +302,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'reprozip', u'ReproZip Documentation',
-     [u'Fernando Chirigati', u'Remi Rampin', u'Juliana Freire', u'Dennis Shasha'], 1)
-]
+man_pages = []
 
 # If true, show URL addresses after external links.
 #
@@ -313,9 +316,9 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'ReproZip', u'ReproZip Documentation',
-     u'Fernando Chirigati, Remi Rampin, Juliana Freire, and Dennis Shasha',
-     'ReproZip',
-     'Allows the reproducibility of command-line experiments in a different environment',
+     authors_str, 'ReproZip',
+     u"Allows the reproducibility of command-line experiments in a different "
+     "environment",
      'Miscellaneous'),
 ]
 

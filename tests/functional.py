@@ -605,7 +605,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Build
         build('exec_echo32', ['exec_echo.c'], ['-m32'])
         # Trace
-        check_call(rpz + ['testrun', './exec_echo32 42'])
+        check_call(rpz + ['testrun', './exec_echo32', '42'])
     else:
         print("Can't try exec_echo transitions: not running on 64bits")
 
@@ -613,7 +613,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Tracing non-existing program
     #
 
-    check_call(rpz + ['testrun', './doesntexist'])
+    ret = call(rpz + ['testrun', './doesntexist'])
+    assert ret == 127
 
     # ########################################
     # 'connect' program: testrun
@@ -726,8 +727,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     assert rows[0][0] == FILE_WRITE
 
     # Trace a failure: inaccessible file
-    check_call(rpz + ['trace', '--overwrite', '-d', 'readwrite-F-trace',
+    ret = call(rpz + ['trace', '--overwrite', '-d', 'readwrite-F-trace',
                       './readwrite', 'readwrite_test/non/existing/file'])
+    assert ret == 1
 
     # ########################################
     # Test shebang corner-cases

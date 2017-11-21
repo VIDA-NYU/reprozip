@@ -1,0 +1,21 @@
+Update the CHANGELOG.md file
+
+Create a signed tag for the version
+    git tag -s 1.0.11
+
+Make sdists, gpg sigs, upload to PyPI using twine
+
+Create a release on GitHub, add the CHANGELOG to it, link to the attached files
+    Mention which packages didn't change
+    Don't forget to update the links in the description
+    Don't forget to link to previous releases of packages that didn't change
+    Attach tarballs and wheels
+    Attach installers
+
+Build Windows installer using native Python installer & InnoDB
+
+Build MacOS installer using Python built from source, App shim, Packages.app
+
+Build Anaconda packages using scripts/conda/conda.py
+
+Update S3 bucket so website links redirect to newest binaries

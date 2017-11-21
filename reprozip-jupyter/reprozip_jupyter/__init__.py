@@ -1,7 +1,7 @@
 """Traces and packs notebook environments with ReproZip.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 def _jupyter_nbextension_paths():

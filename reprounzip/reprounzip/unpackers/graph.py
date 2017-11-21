@@ -453,7 +453,8 @@ def format_argv(argv):
 def generate(target, configfile, database, all_forks=False, graph_format='dot',
              level_pkgs='file', level_processes='thread',
              level_other_files='all',
-             regex_filters=None, regex_replaces=None, aggregates=None):
+             regex_filters=None, regex_includes=None,
+             regex_replaces=None, aggregates=None):
     """Main function for the graph subcommand.
     """
     try:
@@ -465,6 +466,10 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
     level_pkgs, level_processes, level_other_files, file_depth = \
         parse_levels(level_pkgs, level_processes, level_other_files)
+
+    if target.exists():
+        logging.critical("Output file %s exists", target)
+        sys.exit(1)
 
     # Reads package ownership from the configuration
     if not configfile.is_file():
@@ -495,11 +500,16 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     # Apply regexes
     ignore = [lambda path, r=re.compile(p): r.search(path) is not None
               for p in regex_filters or []]
+    include = [lambda path, r=re.compile(p): r.search(path) is not None
+               for p in regex_includes or []]
     replace = [lambda path, r=re.compile(p): r.sub(repl, path)
                for p, repl in regex_replaces or []]
 
     def filefilter(path):
         pathuni = unicode_(path)
+        if include and not any(f(pathuni) for f in include):
+            logging.debug("IGN(include) %s", pathuni)
+            return None
         if any(f(pathuni) for f in ignore):
             logging.debug("IGN %s", pathuni)
             return None
@@ -738,7 +748,8 @@ def graph(args):
     def call_generate(args, config, trace):
         generate(Path(args.target[0]), config, trace, args.all_forks,
                  args.format, args.packages, args.processes, args.otherfiles,
-                 args.regex_filter, args.regex_replace, args.aggregate)
+                 args.regex_filter, args.regex_include,
+                 args.regex_replace, args.aggregate)
 
     if args.pack is not None:
         rpz_pack = RPZPack(args.pack)
@@ -785,8 +796,12 @@ def setup(parser, **kwargs):
                         "'io' or 'no' (default: 'all')")
     parser.add_argument('--aggregate', action='append',
                         help="Aggregate all files under this path")
+    parser.add_argument('--regex-include', action='append',
+                        help="Glob patterns of files to include (checked "
+                             "before --regex-filter)")
     parser.add_argument('--regex-filter', action='append',
-                        help="Glob patterns of files to ignore")
+                        help="Glob patterns of files to ignore (checked "
+                             "after --regex-include)")
     parser.add_argument('--regex-replace', action='append', nargs=2,
                         help="Apply regular expression replacement to files")
     parser.add_argument('--dot', action='store_const', dest='format',

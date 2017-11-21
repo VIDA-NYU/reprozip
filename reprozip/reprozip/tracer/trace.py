@@ -316,9 +316,9 @@ def trace(binary, argv, directory, append, verbosity=1):
                     "Trace directory %s exists\n"
                     "Please use either --continue or --overwrite\n",
                     directory)
-                sys.exit(1)
+                sys.exit(125)
             elif r in 'sS':
-                sys.exit(1)
+                sys.exit(125)
             elif r in 'dD':
                 directory.rmtree()
                 directory.mkdir()
@@ -346,6 +346,8 @@ def trace(binary, argv, directory, append, verbosity=1):
         else:
             logging.warning("Program exited with non-zero code %d", c)
     logging.info("Program completed")
+
+    return c
 
 
 def write_configuration(directory, sort_packages, find_inputs_outputs,

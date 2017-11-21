@@ -1,6 +1,6 @@
 package:
   name: reprozip-jupyter
-  version: !!str _REPLACE_version_REPLACE_
+  version: !!str 0.2
 
 source:
   fn: reprozip-jupyter.tar.gz
@@ -35,7 +35,7 @@ requirements:
     - rpaths >=0.8
     - reprounzip >=1.0
     - notebook
-    - jupyter-client
+    - jupyter_client
     - nbformat
     - nbconvert
 
