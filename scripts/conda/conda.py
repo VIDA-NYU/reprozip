@@ -86,11 +86,17 @@ for python_ver in ('2.7', '3.4', '3.5', '3.6'):
                     # Changes version
                     line = line.replace('_REPLACE_version_REPLACE_', version)
                     # Changes URL
-                    line = line.replace(
-                        '_REPLACE_url_REPLACE_',
-                        'file://{0}/{1}.tar.gz'.format(
-                            temp_dir.replace(os.sep, '/'),
-                            package_name))
+                    if osname == 'win':
+                        line = line.replace(
+                            '_REPLACE_url_REPLACE_',
+                            'file:///{0}/{1}.tar.gz'.format(
+                                temp_dir.replace(os.sep, '/'),
+                                package_name))
+                    else:
+                        line = line.replace(
+                            '_REPLACE_url_REPLACE_',
+                            'file://{0}/{1}.tar.gz'.format(temp_dir,
+                                                           package_name))
                     # Change build string
                     line = line.replace('_REPLACE_buildstr_REPLACE_',
                                         'py{0}'.format(python_ver))
