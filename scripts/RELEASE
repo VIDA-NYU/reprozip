@@ -19,3 +19,5 @@ Build MacOS installer using Python built from source, App shim, Packages.app
 Build Anaconda packages using scripts/conda/conda.py
 
 Update S3 bucket so website links redirect to newest binaries
+
+Upload parameters to stats.reprozip.org
