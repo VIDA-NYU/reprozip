@@ -5,6 +5,8 @@ Create a signed tag for the version
 
 Make sdists, gpg sigs, upload to PyPI using twine
 
+Make binary Linux wheels using scripts/linux-wheels.sh
+
 Create a release on GitHub, add the CHANGELOG to it, link to the attached files
     Mention which packages didn't change
     Don't forget to update the links in the description
