@@ -519,7 +519,8 @@ def docker_run(args):
                                   '-i', '-t'] +
                                  port_options +
                                  args.docker_option +
-                                 [image, '/busybox', 'sh', '-c', cmds])
+                                 [image, '/busybox', 'sh', '-c', cmds],
+                                 request_tty=True)
     if retcode != 0:
         logging.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])

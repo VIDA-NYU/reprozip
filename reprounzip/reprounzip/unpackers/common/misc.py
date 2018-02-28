@@ -430,7 +430,7 @@ def fixup_environment(environ, args):
     return environ
 
 
-def interruptible_call(*args, **kwargs):
+def interruptible_call(cmd, **kwargs):
     assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
     proc = [None]
 
@@ -444,7 +444,23 @@ def interruptible_call(*args, **kwargs):
     signal.signal(signal.SIGINT, _sigint_handler)
 
     try:
-        proc[0] = subprocess.Popen(*args, **kwargs)
+        if kwargs.pop('request_tty', False):
+            try:
+                import pty
+            except ImportError:
+                pass
+            else:
+                if hasattr(sys.stdin, 'isatty') and not sys.stdin.isatty():
+                    logging.info("We need a tty and we are not attached to "
+                                 "one. Opening pty...")
+                    if kwargs.pop('shell', False):
+                        if not isinstance(cmd, (str, unicode_)):
+                            raise TypeError("shell=True but cmd is not a "
+                                            "string")
+                        cmd = ['/bin/sh', '-c', cmd]
+                    res = pty.spawn(cmd)
+                    return res >> 8 - (res & 0xFF)
+        proc[0] = subprocess.Popen(cmd, **kwargs)
         return proc[0].wait()
     finally:
         signal.signal(signal.SIGINT, signal.default_int_handler)
