@@ -26,13 +26,13 @@
 
     <!-- Google Analytics -->
     <script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-ga('create', 'UA-54723441-1', 'auto');
-ga('send', 'pageview');
+	ga('create', 'UA-54723441-1', 'auto');
+	ga('send', 'pageview');
     </script>
   </head>
 
@@ -49,29 +49,28 @@ ga('send', 'pageview');
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-			<a class="navbar-brand" href="index.html"><img alt="ReproZip" src="img/navbar-logo.png"></a>
+	  <a class="navbar-brand" href="#"><img alt="ReproZip" src="img/navbar-logo.png"></a>
           </div><!--end navbar-header-->
 			
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
             <ul class="nav navbar-nav">
-
-			  <li class="dropdown active">
+	       <li class="dropdown active">
                 <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">About <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
                   <li><a href="index.html#how">How It Works</a></li>
                   <li><a href="index.html#why">Why ReproZip?</a></li>
                   <li><a href="index.html#examples">Examples</a></li>
                   <li><a href="index.html#citing">Citing ReproZip</a></li>
-				  <li><a href="index.html#contact">Contact the Team</a></li>
+		  <li><a href="index.html#contact">Contact the Team</a></li>
                 </ul>
               </li>
 
-			  <li class="dropdown">
+              <li class="dropdown">
                 <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
                   <li><a href="news.html#news">What's New</a></li>
-                  <li><a href="news.html#presentations">Presentations</a></li>
                   <li><a href="news.html#publications">Publications</a></li>
+		  <li><a href="news.html#presentations">Presentations</a></li>
                   <li><a href="news.html#posters">Posters</a></li>
                 </ul>
               </li>
@@ -175,7 +174,7 @@ result: -17.814</span></code></pre>
               </div>
             </div>
           </div>
-		 <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
+		 
 
           <div class="page-header" id="why">
               <h3>Why ReproZip?</h3>
@@ -188,7 +187,7 @@ result: -17.814</span></code></pre>
           <p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell" rel="noopener">dependency hell</a>.</p>
 
           <p><a href="https://reprozip.readthedocs.io/">ReproZip</a> helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
-		   <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
+		   
 
           <div class="page-header" id="examples">
             <h3>Examples</h3>
@@ -201,7 +200,7 @@ result: -17.814</span></code></pre>
           <div class="video-container">
             <iframe width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
           </div>
-     	 <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
+     	 
 
           <div class="page-header" id="citing">
             <h3>Citing ReproZip</h3>
@@ -216,7 +215,7 @@ result: -17.814</span></code></pre>
           </div>
 
           <p>A preprint version is available <a href="http://bigdata.poly.edu/~fchirigati/papers/reprozip-sigmod206.pdf" >here</a>. For a complete list of publications, posters, and presentations, please visit <a href="news.html" rel="noopener">News</a>. To reference our Web site, please use <a href="https://www.reprozip.org/" rel="noopener">https://www.reprozip.org</a>.</p>
-		 <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
+		 
 
           <div class="page-header" id="contact">
             <h3>Contact Us</h3>
@@ -229,18 +228,17 @@ result: -17.814</span></code></pre>
 			<table style="height: 100%; width:100%;">
 			<tbody>
 				<tr>   
-					<td><img src="img/juliana.jpg" alt="Juliana Freire"/><p><a href="http://vgc.poly.edu/~juliana/">Juliana Freire</a></p></td>
-					<td><img src="img/dennis.jpg" alt="Dennis Shasha"/><p><a href="http://www.cs.nyu.edu/shasha/">Dennis Shasha</a></p></td>
-					<td><img src="img/remi.jpg" alt="Remi Rampin"/><p><a href="https://github.com/remram44"> Rémi Rampin</a></p></td>
+					<td><a href="http://vgc.poly.edu/~juliana/"><img src="img/juliana.jpg" alt="Juliana Freire"/><p>Juliana Freire</p></a></td>
+					<td><a href="http://www.cs.nyu.edu/shasha/"><img src="img/dennis.jpg" alt="Dennis Shasha"/><p>Dennis Shasha</p></a></td>
+					<td><a href="https://remirampin.com"><img src="img/remi.jpg" alt="Remi Rampin"/><p>Rémi Rampin</p></a></td>
 				</tr>
 				<tr>   
-					<td><img src="img/fernando.jpg" alt="Fernando Chirigati"/><p><a href="http://vgc.poly.edu/~fchirigati/">Fernando Chirigati</a></p></td>
-					<td><img src="img/vicky.jpg" alt="Vicky Steeves"/><p><a href="https://vickysteeves.com">Vicky Steeves</a></p></td>
-					<td><img src="img/heng.jpg" alt="Heng Li"/><p><a href="https://www.linkedin.com/in/heng2j">Zhonheng Li (summer 2017)</a></p></td>
+					<td><a href="http://vgc.poly.edu/~fchirigati/"><img src="img/fernando.jpg" alt="Fernando Chirigati"/><p>Fernando Chirigati</p></a></td>
+					<td><a href="https://vickysteeves.com"><img src="img/vicky.jpg" alt="Vicky Steeves"/><p>Vicky Steeves</p></a></td>
+					<td><a href="https://www.linkedin.com/in/heng2j"><img src="img/heng.jpg" alt="Heng Li"/><p>Zhonheng Li (summer 2017)</p></a></td>
 				</tr>
 			</tbody>
 			</table>
- 		    <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
 
         </div><!--end center content-->
 
@@ -257,7 +255,7 @@ result: -17.814</span></code></pre>
 
     <footer class="footer">
       <div class="container">
-        <p>ReproZip is under development at <a href="http://engineering.nyu.edu/" rel="noopener">NYU</a> by the <abbr title="Visualization and Data Analytics">ViDA group</abbr>.</p>
+        <p>ReproZip is under development at <a href="http://engineering.nyu.edu/" rel="noopener">NYU</a> by the <a href="https://vida.engineering.nyu.edu/"><abbr title="Visualization and Data Analytics">ViDA group</abbr></a>.</p>
         <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt" rel="noopener">BSD</a>.</p>
       </div>
     </footer>
