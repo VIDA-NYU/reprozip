@@ -26,96 +26,95 @@
 
     <!-- Google Analytics -->
     <script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-ga('create', 'UA-54723441-1', 'auto');
-ga('send', 'pageview');
+    ga('create', 'UA-54723441-1', 'auto');
+    ga('send', 'pageview');
     </script>
   </head>
 
   <body>
 
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse">
+      <div class="container">
 
-      <!-- Fixed navbar -->
-      <nav class="navbar navbar-inverse">
-        <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"><img alt="ReproZip" src="img/navbar-logo.png"></a>
+        </div><!--end navbar-header-->
 
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#"><img alt="ReproZip" src="img/navbar-logo.png"></a>
-          </div><!--end navbar-header-->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+          <ul class="nav navbar-nav">
+            <li class="dropdown">
+              <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">About <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="index.html#how">How It Works</a></li>
+                <li><a href="index.html#why">Why ReproZip?</a></li>
+                <li><a href="index.html#examples">Examples</a></li>
+                <li><a href="index.html#citing">Citing ReproZip</a></li>
+                <li><a href="index.html#contact">Contact the Team</a></li>
+              </ul>
+            </li>
 
-          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
-            <ul class="nav navbar-nav">
-               <li class="dropdown">
-                <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">About <span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
-                  <li><a href="index.html#how">How It Works</a></li>
-                  <li><a href="index.html#why">Why ReproZip?</a></li>
-                  <li><a href="index.html#examples">Examples</a></li>
-                  <li><a href="index.html#citing">Citing ReproZip</a></li>
-                  <li><a href="index.html#contact">Contact the Team</a></li>
-                </ul>
-              </li>
+            <li class="dropdown active">
+              <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="news.html#news">What's New</a></li>
+                <li><a href="news.html#publications">Publications</a></li>
+                <li><a href="news.html#presentations">Presentations</a></li>
+                <li><a href="news.html#posters">Posters</a></li>
+              </ul>
+            </li>
+            <li class="hidden-md hidden-sm"><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
+            <li class="hidden-md hidden-sm"><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
+            <li class="hidden-md hidden-sm"><a href="https://examples.reprozip.org/">Examples</a></li>
+            <li class="dropdown visible-md visible-sm">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">See also<span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
+                <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
+                <li><a href="https://examples.reprozip.org/">Examples</a></li>
+              </ul>
+            </li>
+          </ul>
 
-              <li class="dropdown active">
-                <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News <span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
-                  <li><a href="news.html#news">What's New</a></li>
-                  <li><a href="news.html#publications">Publications</a></li>
-          <li><a href="news.html#presentations">Presentations</a></li>
-                  <li><a href="news.html#posters">Posters</a></li>
-                </ul>
-              </li>
-              <li class="hidden-md hidden-sm"><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
-              <li class="hidden-md hidden-sm"><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-              <li class="hidden-md hidden-sm"><a href="https://examples.reprozip.org/">Examples</a></li>
-              <li class="dropdown visible-md visible-sm">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">See also<span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
-                  <li><a href="https://reprozip.readthedocs.io/">Documentation</a></li>
-                  <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-                  <li><a href="https://examples.reprozip.org/">Examples</a></li>
-                </ul>
-              </li>
-            </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <!--dropdown-->
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="https://pypi.python.org/pypi/reprozip" rel="noopener">reprozip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip" rel="noopener">reprounzip</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-docker" rel="noopener">reprounzip-docker</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" rel="noopener">reprounzip-vagrant</a></li>
+                <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" rel="noopener">reprounzip-vistrails</a></li>
+              </ul>
+            </li><!--end dropdown-->
 
-            <ul class="nav navbar-nav navbar-right">
-              <!--dropdown-->
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
-                  <li><a href="https://pypi.python.org/pypi/reprozip" rel="noopener">reprozip</a></li>
-                  <li><a href="https://pypi.python.org/pypi/reprounzip" rel="noopener">reprounzip</a></li>
-                  <li><a href="https://pypi.python.org/pypi/reprounzip-docker" rel="noopener">reprounzip-docker</a></li>
-                  <li><a href="https://pypi.python.org/pypi/reprounzip-vagrant" rel="noopener">reprounzip-vagrant</a></li>
-                  <li><a href="https://pypi.python.org/pypi/reprounzip-vistrails" rel="noopener">reprounzip-vistrails</a></li>
-                </ul>
-              </li><!--end dropdown-->
+            <!--dropdown-->
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer">Windows</a></li>
+                <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer">Mac OS X</a></li>
+                <li><a href="https://anaconda.org/ViDA-NYU" rel="noopener">Anaconda</a></li>
+              </ul>
+            </li><!--end dropdown-->
+          </ul><!--end right nav bar-->
 
-              <!--dropdown-->
-              <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu">
-                  <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer">Windows</a></li>
-                  <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer">Mac OS X</a></li>
-                  <li><a href="https://anaconda.org/ViDA-NYU" rel="noopener">Anaconda</a></li>
-                </ul>
-              </li><!--end dropdown-->
-            </ul><!--end right nav bar-->
+        </div><!--end nav-collapse -->
 
-          </div><!--end nav-collapse -->
-
-        </div> <!-- end container-fluid-->
-      </nav>
+      </div> <!-- end container-fluid-->
+    </nav>
 
     <div class="container" role="main">
 
@@ -132,23 +131,23 @@ ga('send', 'pageview');
           <td class="date"><b>[Jul 13, 2017]</b></td>
           <td class="news">ReproZip will be presented at <a href="https://scipy2017.scipy.org" target="_blank" rel="noopener">SciPy 2017</a>.</td>
         </tr>
-     <tr>
+        <tr>
           <td class="date"><b>[Jul 10, 2017]</b></td>
           <td class="news">ReproZip v1.0.10 has been <a href="https://github.com/ViDA-NYU/reprozip/releases/tag/1.0.10" target="_blank" rel="noopener">released</a>. Fixes reprozip combine crash on Python 3.6 (patch from James Clarke). New reprozip-jupyter tool to trace and reproduce Jupyter notebooks (can be registered as Jupyter extension for web interface).</td>
         </tr>
-    <tr>
+        <tr>
           <td class="date"><b>[May 23, 2017]</b></td>
           <td class="news">ReproZip will be presented at <a href="http://www.iassist2017.org/" target="_blank" rel="noopener">IASSIST 2017</a>.</td>
         </tr>
-    <tr>
+        <tr>
           <td class="date"><b>[May 1, 2017]</b></td>
           <td class="news">ReproZip will be presented at <a href="http://presqt.crc.nd.edu/index.php/workshops/workshop-one" target="_blank" rel="noopener">PresQT Workshop One</a>.</td>
         </tr>
-    <tr>
+        <tr>
           <td class="date"><b>[Apr 24, 2017]</b></td>
           <td class="news">ReproZip will be presented at <a href="https://www.egu2017.eu/" target="_blank" rel="noopener">the European Geosciences Union Meeting</a>.</td>
         </tr>
-    <tr>
+        <tr>
           <td class="date"><b>[Jan 26, 2017]</b></td>
           <td class="news">ReproZip will be presented at <a href="http://events.brainhack.org/global2017/locations.html#NYC" target="_blank" rel="noopener">Brainhack NYC</a>.</td>
         </tr>
@@ -228,7 +227,7 @@ ga('send', 'pageview');
       <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
 
       <div class="page-header" id="publications">
-          <h2>Publications</h2>
+        <h2>Publications</h2>
       </div>
 
       <h4>2017</h4>
@@ -262,7 +261,7 @@ ga('send', 'pageview');
       <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
 
       <div class="page-header" id="presentations">
-          <h2>Presentations</h2>
+        <h2>Presentations</h2>
       </div>
 
       <h4>2017</h4>
