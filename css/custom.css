@@ -1,10 +1,16 @@
 body {
-  margin: 0;
-  padding-top:20px;
+    padding-top: 0px;
 }
 
 body p {
-  font-size:1.1em;
+  font-size:1.2em;
+}
+
+/*--------------------NAV LOGO--------------------------*/
+.navbar-brand{
+	min-height: 50px;
+    display: flex;
+    align-items: center;
 }
 
 /* --------------------NAV BAR--------------------------*/
@@ -88,6 +94,31 @@ body p {
 }
 .dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:hover,.dropdown-menu>.disabled>a:focus{
     color:#bbbbbb
+}
+
+/* --------------------BREAD CRUMBS--------------------------*/
+.breadcrumb{
+	padding:8px 15px;
+	margin-bottom:23px;
+	list-style:none;
+	background-color:#fff;
+	border-radius:3px;
+    font-size: 1.2em;
+    max-width: fit-content;
+}
+
+.breadcrumb>li{
+	display:inline-block;
+}
+
+.breadcrumb>li+li:before{
+	content:"/\00a0";
+	padding:0 5px;
+	color:#563d7c;
+}
+
+.breadcrumb>.active{
+	color:#bbbbbb;
 }
 
 /* --------------------SAMPLE CODE--------------------------*/
