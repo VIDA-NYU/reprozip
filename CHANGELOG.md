@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.12 (???)
+------------
+
+Bigfixes:
+* Fix some kernel/libc issuing unrecognized `openat()` calls, resulting in files missing in the trace
+* Fix `openat()` calls recording read-write as simply write
+
 1.0.11 (2017-11-05)
 -------------------
 
