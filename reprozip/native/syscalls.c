@@ -780,7 +780,10 @@ static int syscall_xxx_at(const char *name, struct Process *process,
 {
     /* Argument 0 is a file descriptor, we assume that the rest of them match
      * the non-at variant of the syscall */
-    if(process->params[0].i == AT_FDCWD)
+    /* It seems that Linux accepts both AT_FDCWD=-100 sign-extended to 32 bit
+     * and 64 bit. This is weird, but a process is unlikely to have 2**32 open
+     * file descriptors anyway, so we only check bottom 32 bits. See #293 */
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) == AT_FDCWD)
     {
         struct syscall_table_entry *entry = NULL;
         struct syscall_table *tbl;
