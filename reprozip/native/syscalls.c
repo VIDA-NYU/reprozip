@@ -788,7 +788,10 @@ static int syscall_xxx_at(const char *name, struct Process *process,
 {
     /* Argument 0 is a file descriptor, we assume that the rest of them match
      * the non-at variant of the syscall */
-    if(process->params[0].i == AT_FDCWD)
+    /* It seems that Linux accepts both AT_FDCWD=-100 sign-extended to 32 bit
+     * and 64 bit. This is weird, but a process is unlikely to have 2**32 open
+     * file descriptors anyway, so we only check bottom 32 bits. See #293 */
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) == AT_FDCWD)
     {
         struct syscall_table_entry *entry = NULL;
         struct syscall_table *tbl;
@@ -802,7 +805,7 @@ static int syscall_xxx_at(const char *name, struct Process *process,
         tbl = &syscall_tables[syscall_type];
         if(real_syscall < tbl->length)
             entry = &tbl->entries[real_syscall];
-        if(entry == NULL || entry->name == NULL || entry->proc_exit == NULL)
+        if(entry == NULL || entry->name == NULL)
         {
             log_critical(process->tid, "INVALID SYSCALL in *at dispatch: %d",
                          real_syscall);
@@ -816,14 +819,17 @@ static int syscall_xxx_at(const char *name, struct Process *process,
             register_type arg0 = process->params[0];
             for(i = 0; i < PROCESS_ARGS - 1; ++i)
                 process->params[i] = process->params[i + 1];
-            ret = entry->proc_exit(name, process, entry->udata);
+            if(!process->in_syscall && entry->proc_entry)
+                ret = entry->proc_entry(name, process, entry->udata);
+            else if(process->in_syscall && entry->proc_exit)
+                ret = entry->proc_exit(name, process, entry->udata);
             for(i = PROCESS_ARGS; i > 1; --i)
                 process->params[i - 1] = process->params[i - 2];
             process->params[0] = arg0;
             return ret;
         }
     }
-    else
+    else if(!process->in_syscall)
     {
         char *pathname = tracee_strdup(process->tid, process->params[1].p);
         log_info(process->tid,
@@ -946,7 +952,7 @@ void syscall_build_table(void)
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {296, "mkdirat", NULL, syscall_xxx_at, 39},
-            {295, "openat", NULL, syscall_xxx_at, 5},
+            {295, "openat", syscall_xxx_at, syscall_xxx_at, 5},
             {307, "faccessat", NULL, syscall_xxx_at, 33},
             {305, "readlinkat", NULL, syscall_xxx_at, 85},
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
@@ -1022,7 +1028,7 @@ void syscall_build_table(void)
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
-            {257, "openat", NULL, syscall_xxx_at, 2},
+            {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
@@ -1095,7 +1101,7 @@ void syscall_build_table(void)
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
-            {257, "openat", NULL, syscall_xxx_at, 2},
+            {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},

@@ -33,7 +33,7 @@ For more detailed information, please refer to our `website <https://www.reprozi
 
 ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. The team includes:
 
-* `Fernando Chirigati <https://vgc.poly.edu/~fchirigati/>`_
+* `Fernando Chirigati <http://fchirigati.com/>`_
 * `Juliana Freire <https://vgc.poly.edu/~juliana/>`_
 * `Remi Rampin <https://remirampin.com/>`_
 * `Dennis Shasha <http://cs.nyu.edu/shasha/>`_

@@ -1,6 +1,6 @@
 package:
   name: reprozip-jupyter
-  version: !!str 0.2
+  version: !!str 0.3
 
 source:
   fn: reprozip-jupyter.tar.gz
@@ -32,6 +32,7 @@ requirements:
 
   run:
     - python
+    - setuptools
     - rpaths >=0.8
     - reprounzip >=1.0
     - notebook

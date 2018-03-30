@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=latest)](https://docs.reprozip.org/en/latest/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.1042123-green.svg)](https://doi.org/10.5281/zenodo.1042123)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.1210301-green.svg)](https://doi.org/10.5281/zenodo.1210301)
 
 ReproZip
 ========
@@ -135,7 +135,7 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 [puz]: https://pypi.python.org/pypi/reprounzip
 [puzd]: https://pypi.python.org/pypi/reprounzip-docker
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
-[fc]: https://vgc.poly.edu/~fchirigati/
+[fc]: http://fchirigati.com/
 [jf]: https://vgc.poly.edu/~juliana/
 [rr]: https://remirampin.com/
 [ds]: http://cs.nyu.edu/shasha/

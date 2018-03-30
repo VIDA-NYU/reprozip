@@ -30,7 +30,7 @@ requirements:
 
   run:
     - python
-    - reprounzip >=1.0.8
+    - reprounzip >=1.0.10
     - rpaths >=0.8
     - paramiko
 
