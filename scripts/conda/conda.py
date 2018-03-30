@@ -110,6 +110,7 @@ for python_ver in ('2.7', '3.4', '3.5', '3.6'):
                                                   '--python', python_ver,
                                                   '--output', package_name],
                                                  cwd=temp_dir).rstrip()
+            output_pkg = output_pkg.decode('ascii')
             output_pkg = join(temp_dir, output_pkg)
             subprocess.check_call(['conda', 'build',
                                    '--croot', croot,
