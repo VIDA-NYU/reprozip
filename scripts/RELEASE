@@ -1,5 +1,7 @@
 Update the CHANGELOG.md file
 
+Bump versions in setup.py files, __init__.py files, docs/conf.py, installers
+
 Create a signed tag for the version
     git tag -s 1.0.11
 

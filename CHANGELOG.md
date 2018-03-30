@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.0.12 (???)
-------------
+1.0.12 (2018-03-30)
+-------------------
+
+(reprozip, reprounzip-qt and reprozip-jupyter only)
 
 Bugfixes:
 * Fix some kernel/libc issuing unrecognized `openat()` calls, resulting in files missing in the trace
