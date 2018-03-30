@@ -54,8 +54,6 @@ for python_ver in ('2.7', '3.4', '3.5', '3.6'):
                          'reprozip-jupyter', 'reprounzip-qt'):
         if package_name == 'reprozip' and osname != 'linux':
             continue
-        if package_name == 'reprounzip-qt' and python_ver != '2.7':
-            continue
 
         temp_dir = tempfile.mkdtemp(prefix='rr_conda_')
         os.mkdir(join(temp_dir, 'croot'))
