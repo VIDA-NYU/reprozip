@@ -34,7 +34,7 @@ def main():
     parser.add_argument('package', nargs=argparse.OPTIONAL)
     parser.add_argument('--unpacked', action='append', default=[])
 
-    argv = sys.argv
+    argv = sys.argv[1:]
     i = 0
     while i < len(argv):
         if argv[i].startswith('-psn'):
