@@ -77,6 +77,19 @@ class Application(QtGui.QApplication):
                                    os.path.join(os.environ['HOME'],
                                                 '.local/share/mime')])
 
+            # Install icon
+            icon_dest_root = os.path.join(os.environ['HOME'],
+                                          '.local/share/icons/hicolor')
+            icon_dest_subdir = os.path.join(icon_dest_root, '48x48/mimetypes')
+            icon_dest_file = os.path.join(icon_dest_subdir,
+                                          'application-x-reprozip.png')
+            icon_src = os.path.join(os.path.dirname(reprounzip_qt.__file__),
+                                    'icon.png')
+            if not os.path.exists(icon_dest_subdir):
+                os.makedirs(icon_dest_subdir)
+            shutil.copyfile(icon_src, icon_dest_file)
+            subprocess.check_call(['update-icon-caches', icon_dest_root])
+
             # Install desktop file
             app_dir = os.path.join(os.environ['HOME'],
                                    '.local/share/applications')
@@ -89,21 +102,9 @@ Name=ReproUnzip
 Exec={0} %f
 Type=Application
 MimeType=application/x-reprozip
-'''.format(command))
+Icon={1}
+'''.format(command, icon_dest_file))
             subprocess.check_call(['update-desktop-database', app_dir])
-
-            # Install icon
-            iconpath = os.path.join(os.environ['HOME'],
-                                    '.local/share/icons/hicolor')
-            icondir = os.path.join(iconpath, '48x48/mimetypes')
-            iconfile = os.path.join(os.path.dirname(reprounzip_qt.__file__),
-                                    'icon.png')
-            if not os.path.exists(icondir):
-                os.makedirs(icondir)
-            shutil.copyfile(
-                iconfile,
-                os.path.join(icondir, 'application-x-reprozip.png'))
-            subprocess.check_call(['update-icon-caches', iconpath])
         except (OSError, subprocess.CalledProcessError):
             error_msg(window, "Error setting default application",
                       'error', traceback.format_exc())
