@@ -1,8 +1,8 @@
 [![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=1.0.x)](https://travis-ci.org/ViDA-NYU/reprozip)
 [![Coverage Status](https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=1.0.x)](https://codecov.io/github/ViDA-NYU/reprozip?branch=1.0.x)
-[![Code Health](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x/landscape.png)](https://landscape.io/github/ViDA-NYU/reprozip/1.0.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)](https://docs.reprozip.org/en/1.0.x/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
+[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/remram44)
 [![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.1210301-green.svg)](https://doi.org/10.5281/zenodo.1210301)
 
