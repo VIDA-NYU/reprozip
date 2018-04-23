@@ -56,7 +56,6 @@ for python_ver in ('2.7', '3.4', '3.5', '3.6'):
             continue
 
         temp_dir = tempfile.mkdtemp(prefix='rr_conda_')
-        os.mkdir(join(temp_dir, 'croot'))
 
         pkgdir = join(top_level, package_name)
 
@@ -103,6 +102,8 @@ for python_ver in ('2.7', '3.4', '3.5', '3.6'):
                     fp.write(line)
 
             # Builds Conda package
+            croot = join(temp_dir, 'croot')
+            os.mkdir(croot)
             output_pkg = subprocess.check_output(['conda', 'build',
                                                   '--croot', croot,
                                                   '--python', python_ver,
