@@ -805,7 +805,7 @@ static int syscall_xxx_at(const char *name, struct Process *process,
         }
         else
         {
-            int ret;
+            int ret = 0;
             /* Shifts arguments */
             size_t i;
             register_type arg0 = process->params[0];
