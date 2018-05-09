@@ -1193,13 +1193,19 @@ int syscall_handle(struct Process *process)
         {
             int ret = 0;
             if(entry->name && verbosity >= 3)
-                log_debug(process->tid, "%s()", entry->name);
+                log_debug(process->tid, "%c%s()",
+                          process->in_syscall?'-':'+',
+                          entry->name);
             if(!process->in_syscall && entry->proc_entry)
                 ret = entry->proc_entry(entry->name, process, entry->udata);
             else if(process->in_syscall && entry->proc_exit)
                 ret = entry->proc_exit(entry->name, process, entry->udata);
             if(ret != 0)
+            {
+                log_error(process->tid, "handler for syscall %d %s failed!",
+                          syscall, process->in_syscall?"exit":"entry");
                 return -1;
+            }
         }
     }
 
