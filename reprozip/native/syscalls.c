@@ -417,7 +417,7 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             }
             else
             {
-                if(statbuf.st_mode & 04000 == 04000)
+                if((statbuf.st_mode & 04000) == 04000)
                 {
                     if(statbuf.st_uid != getuid())
                     {
@@ -435,7 +435,7 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                  "because it is owned by our user");
                     }
                 }
-                if(statbuf.st_mode & 02000 == 02000)
+                if((statbuf.st_mode & 02000) == 02000)
                 {
                     int is_our_group = 0;
                     size_t i, size;
