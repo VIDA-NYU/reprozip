@@ -678,7 +678,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
                 0,
                 "couldn't use ptrace: %s\n"
                 "This could be caused by a security policy or isolation "
-                "mechanism (such as\n Docker), see http://bit.ly/2bZd8Fa",
+                "mechanism (such as Docker), see http://bit.ly/2bZd8Fa",
                 strerror(errno));
             exit(125);
         }

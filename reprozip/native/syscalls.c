@@ -423,10 +423,10 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                     {
                         log_warn(process->tid,
                                  "executing set-uid binary! For security, "
-                                 "Linux will not give the process any\n"
+                                 "Linux will not give the process any "
                                  "privileges from set-uid while it is being "
-                                 "traced. This will probably break\n"
-                                 "whatever you are tracing.");
+                                 "traced. This will probably break whatever "
+                                 "you are tracing.");
                     }
                     else
                     {
@@ -471,10 +471,10 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                     {
                         log_warn(process->tid,
                                  "executing set-gid binary! For security, "
-                                 "Linux will not give the process any\n"
+                                 "Linux will not give the process any "
                                  "privileges from set-gid while it is being "
-                                 "traced. This will probably break\n"
-                                 "whatever you are tracing.");
+                                 "traced. This will probably break whatever "
+                                 "you are tracing.");
                     }
                     else
                     {
