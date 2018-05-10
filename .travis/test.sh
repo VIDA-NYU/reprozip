@@ -15,7 +15,7 @@ in
         python tests --run-docker
         ;;
     checks)
-        flake8 --ignore=E731 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip reprounzip-qt/reprounzip_qt tests/*.py
+        flake8 --ignore=E731 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip reprounzip-qt/reprounzip_qt reprozip-jupyter/reprozip_jupyter tests/*.py
         diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
         find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
