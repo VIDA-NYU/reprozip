@@ -417,14 +417,23 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             }
             else
             {
-                if( (statbuf.st_mode & 04000 == 04000)
-                 && (statbuf.st_uid != getuid()) )
+                if(statbuf.st_mode & 04000 == 04000)
                 {
-                    log_warn(process->tid,
-                             "executing set-uid binary! For security, Linux "
-                             "will not give the process any\nprivileges from "
-                             "set-uid while it is being traced. This will "
-                             "probably break\nwhatever you are tracing.");
+                    if(statbuf.st_uid != getuid())
+                    {
+                        log_warn(process->tid,
+                                 "executing set-uid binary! For security, "
+                                 "Linux will not give the process any\n"
+                                 "privileges from set-uid while it is being "
+                                 "traced. This will probably break\n"
+                                 "whatever you are tracing.");
+                    }
+                    else
+                    {
+                        log_info(process->tid,
+                                 "binary has set-uid bit set, not a problem "
+                                 "because it is owned by our user");
+                    }
                 }
                 if(statbuf.st_mode & 02000 == 02000)
                 {
@@ -466,6 +475,12 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                  "privileges from set-gid while it is being "
                                  "traced. This will probably break\n"
                                  "whatever you are tracing.");
+                    }
+                    else
+                    {
+                        log_info(process->tid,
+                                 "binary has set-gid bit set, not a problem "
+                                 "because it is in one of our groups");
                     }
                 }
             }
