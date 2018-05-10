@@ -828,8 +828,8 @@ static int syscall_xxx_at(const char *name, struct Process *process,
                  "process used unhandled system call %s(%d, \"%s\")",
                  name, process->params[0].i, pathname);
         free(pathname);
-        return 0;
     }
+    return 0;
 }
 
 
