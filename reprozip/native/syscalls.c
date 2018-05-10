@@ -408,7 +408,69 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             return 0;
         }
         if(buffer[0] != '#' || buffer[1] != '!')
+        {
+            // Check if executable is set-uid or set-gid
+            struct stat statbuf;
+            if(stat(exec_target, &statbuf) != 0)
+            {
+                log_error(process->tid, "couldn't stat executed file %s", exec_target);
+            }
+            else
+            {
+                if( (statbuf.st_mode & 04000 == 04000)
+                 && (statbuf.st_uid != getuid()) )
+                {
+                    log_warn(process->tid,
+                             "executing set-uid binary! For security, Linux "
+                             "will not give the process any\nprivileges from "
+                             "set-uid while it is being traced. This will "
+                             "probably break\nwhatever you are tracing.");
+                }
+                if(statbuf.st_mode & 02000 == 02000)
+                {
+                    int is_our_group = 0;
+                    size_t i, size;
+                    // Get the list of groups
+                    gid_t *groups = NULL;
+                    int ret = getgroups(0, NULL);
+                    if(ret >= 0)
+                    {
+                        size = (size_t)ret;
+                        groups = malloc(sizeof(gid_t) * size);
+                        ret = getgroups(ret, groups);
+                    }
+                    if(ret < 0)
+                    {
+                        free(groups);
+                        log_critical(process->tid, "getgroups() failed: %s",
+                                     strerror(errno));
+                        return -1;
+                    }
+
+                    // Check if the gid is one of our groups
+                    for(i = 0; i < size; ++i)
+                    {
+                        if(groups[i] == statbuf.st_gid)
+                        {
+                            is_our_group = 1;
+                            break;
+                        }
+                    }
+                    free(groups);
+
+                    if(!is_our_group)
+                    {
+                        log_warn(process->tid,
+                                 "executing set-gid binary! For security, "
+                                 "Linux will not give the process any\n"
+                                 "privileges from set-gid while it is being "
+                                 "traced. This will probably break\n"
+                                 "whatever you are tracing.");
+                    }
+                }
+            }
             return 0;
+        }
         else
         {
             char *start = buffer + 2;
