@@ -43,7 +43,7 @@ void log_real_(pid_t tid, const char *tag, int lvl, const char *format, ...)
     char datestr[13]; /* HH:MM:SS.mmm */
     static char *buffer = NULL;
     static size_t bufsize = 4096;
-    int length;
+    size_t length;
     if(buffer == NULL)
         buffer = malloc(bufsize);
     {
@@ -53,11 +53,11 @@ void log_real_(pid_t tid, const char *tag, int lvl, const char *format, ...)
         sprintf(datestr+8, ".%03u", (unsigned int)(tv.tv_usec / 1000));
     }
     va_start(args, format);
-    length = vsnprintf(buffer, bufsize, format, args);
+    length = (size_t)vsnprintf(buffer, bufsize, format, args);
     va_end(args);
-    if(length >= bufsize)
+    if(length + 1 >= bufsize)
     {
-        while(length >= bufsize)
+        while(length + 1 >= bufsize)
             bufsize *= 2;
         free(buffer);
         buffer = malloc(bufsize);

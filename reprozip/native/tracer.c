@@ -216,6 +216,8 @@ void trace_count_processes(unsigned int *p_nproc, unsigned int *p_unknown)
         case PROCSTAT_UNKNOWN:
             /* Exists but no corresponding syscall has returned yet */
             ++unknown;
+            ++nproc;
+            break;
         case PROCSTAT_ALLOCATED:
             /* Not yet attached but it will show up eventually */
         case PROCSTAT_ATTACHED:
