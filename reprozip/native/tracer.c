@@ -693,7 +693,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     /* Open log file */
     {
-        char logfilename[4096];
+        char *logfilename;
         const char *home = getenv("HOME");
         if(!home || !home[0])
         {
@@ -701,13 +701,16 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             restore_signals();
             return 1;
         }
+        logfilename = malloc(strlen(home) + 15);
         strcpy(logfilename, home);
         strcat(logfilename, "/.reprozip/log");
         if(log_open_file(logfilename) != 0)
         {
+            free(logfilename);
             restore_signals();
             return 1;
         }
+        free(logfilename);
     }
 
     if(db_init(database_path) != 0)
