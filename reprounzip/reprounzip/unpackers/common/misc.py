@@ -443,9 +443,10 @@ else:
         """
         logging.info("Using builtin pty.spawn()")
 
-        import pty, tty
+        import pty
+        import tty
 
-        if type(argv) == type(b''):
+        if isinstance(argv, bytes):
             argv = (argv,)
         pid, master_fd = pty.fork()
         if pid == pty.CHILD:
@@ -482,7 +483,7 @@ def interruptible_call(cmd, **kwargs):
     try:
         if kwargs.pop('request_tty', False):
             try:
-                import pty
+                import pty  # noqa: F401
             except ImportError:
                 pass
             else:
