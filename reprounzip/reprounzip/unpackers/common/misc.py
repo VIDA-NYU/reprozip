@@ -26,8 +26,8 @@ import tarfile
 import reprounzip.common
 from reprounzip.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
-    unicode_, join_root, copyfile
+from reprounzip.utils import PY3, irange, iteritems, itervalues, \
+    stdout_bytes, unicode_, join_root, copyfile
 
 
 COMPAT_OK = 0
@@ -430,7 +430,44 @@ def fixup_environment(environ, args):
     return environ
 
 
-def interruptible_call(*args, **kwargs):
+if PY3:
+    def pty_spawn(*args, **kwargs):
+        import pty
+
+        return pty.spawn(*args, **kwargs)
+else:
+    def pty_spawn(argv):
+        """Version of pty.spawn() for PY2, that returns the exit code.
+
+        This works around https://bugs.python.org/issue2489.
+        """
+        logging.info("Using builtin pty.spawn()")
+
+        import pty
+        import tty
+
+        if isinstance(argv, bytes):
+            argv = (argv,)
+        pid, master_fd = pty.fork()
+        if pid == pty.CHILD:
+            os.execlp(argv[0], *argv)
+        try:
+            mode = tty.tcgetattr(pty.STDIN_FILENO)
+            tty.setraw(pty.STDIN_FILENO)
+            restore = 1
+        except tty.error:    # This is the same as termios.error
+            restore = 0
+        try:
+            pty._copy(master_fd, pty._read, pty._read)
+        except (IOError, OSError):
+            if restore:
+                tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
+
+        os.close(master_fd)
+        return os.waitpid(pid, 0)[1]
+
+
+def interruptible_call(cmd, **kwargs):
     assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
     proc = [None]
 
@@ -444,7 +481,23 @@ def interruptible_call(*args, **kwargs):
     signal.signal(signal.SIGINT, _sigint_handler)
 
     try:
-        proc[0] = subprocess.Popen(*args, **kwargs)
+        if kwargs.pop('request_tty', False):
+            try:
+                import pty  # noqa: F401
+            except ImportError:
+                pass
+            else:
+                if hasattr(sys.stdin, 'isatty') and not sys.stdin.isatty():
+                    logging.info("We need a tty and we are not attached to "
+                                 "one. Opening pty...")
+                    if kwargs.pop('shell', False):
+                        if not isinstance(cmd, (str, unicode_)):
+                            raise TypeError("shell=True but cmd is not a "
+                                            "string")
+                        cmd = ['/bin/sh', '-c', cmd]
+                    res = pty_spawn(cmd)
+                    return res >> 8 - (res & 0xFF)
+        proc[0] = subprocess.Popen(cmd, **kwargs)
         return proc[0].wait()
     finally:
         signal.signal(signal.SIGINT, signal.default_int_handler)

@@ -519,15 +519,17 @@ def docker_run(args):
                                   '-i', '-t'] +
                                  port_options +
                                  args.docker_option +
-                                 [image, '/busybox', 'sh', '-c', cmds])
-    if retcode != 0:
+                                 [image, '/busybox', 'sh', '-c', cmds],
+                                 request_tty=True)
+
+    # Get exit status from "docker inspect"
+    try:
+        out = subprocess.check_output(args.docker_cmd.split() +
+                                      ['inspect', container])
+    except subprocess.CalledProcessError:
         logging.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
-
-    # Get exit status from "docker inspect"
-    out = subprocess.check_output(args.docker_cmd.split() +
-                                  ['inspect', container])
     outjson = json.loads(out.decode('ascii'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
