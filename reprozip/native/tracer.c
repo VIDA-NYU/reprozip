@@ -267,15 +267,16 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
         unsigned long int offset;
         unsigned int dev_major, dev_minor;
         unsigned long int inode;
-        char pathname[4096];
+        int path_offset;
         int ret = sscanf(line,
-               "%lx-%lx %4s %lx %x:%x %lu %s",
+               "%lx-%lx %4s %lx %x:%x %lu %n",
                &addr_start, &addr_end,
                perms,
                &offset,
                &dev_major, &dev_minor,
                &inode,
-               pathname);
+               &path_offset);
+        char *pathname = line + path_offset;
         if(ret != 7)
         {
             log_error(tid, "Invalid format in /proc/%d/maps (%d):\n  %s", tid,
@@ -305,8 +306,8 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
 #endif
         if(inode > 0)
         {
-            if(strncmp(pathname, binary, 4096) != 0
-             && strncmp(previous_path, pathname, 4096) != 0)
+            if(strcmp(pathname, binary) != 0
+             && strncmp(pathname, previous_path, 4096) != 0)
             {
 #ifdef DEBUG_PROC_PARSER
                 log_info(tid, "    adding to database");
