@@ -268,7 +268,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
         unsigned int dev_major, dev_minor;
         unsigned long int inode;
         char pathname[4096];
-        sscanf(line,
+        int ret = sscanf(line,
                "%lx-%lx %4s %lx %x:%x %lu %s",
                &addr_start, &addr_end,
                perms,
@@ -276,6 +276,14 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
                &dev_major, &dev_minor,
                &inode,
                pathname);
+        if(ret != 7)
+        {
+            log_error(tid, "Invalid format in /proc/%d/maps (%d):\n  %s", tid,
+                      ret, line);
+            free(line);
+            fclose(fp);
+            return -1;
+        }
 
 #ifdef DEBUG_PROC_PARSER
         log_info(tid,
