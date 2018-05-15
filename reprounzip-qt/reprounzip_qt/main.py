@@ -70,7 +70,7 @@ def main():
         window_args = dict(unpack=dict(package=args.package))
     elif len(args.unpacked) == 1:
         logger.info("Got unpacked directory on the command-line: %s",
-                     args.unpacked)
+                    args.unpacked)
         record_usage(cmdline='directory')
         window_args = dict(run=dict(unpacked_directory=args.unpacked[0]),
                            tab=1)
