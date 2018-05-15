@@ -257,7 +257,7 @@ def docker_setup_create(args):
                      'ENTRYPOINT ["/busybox", "sh", "/rpz_entrypoint.sh"]\n')
 
         # Write entry point script
-        logging.info("Writing %s...", target / 'rpz_entrypoint.sh')
+        logger.info("Writing %s...", target / 'rpz_entrypoint.sh')
         with (target / 'rpz_entrypoint.sh').open('w', encoding='utf-8',
                                                  newline='\n') as fp:
             # The entrypoint gets some arguments from the run command
@@ -597,10 +597,10 @@ def docker_run(args):
     cmd = list(chain.from_iterable([['do', shell_escape(c)]
                                     for c in x11.init_cmds] +
                                    [cmd]))
-    if logging.getLogger().isEnabledFor(logging.DEBUG):
-        logging.debug("Passing arguments to Docker image:")
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Passing arguments to Docker image:")
         for c in cmd:
-            logging.debug(c)
+            logger.debug(c)
 
     signals.pre_run(target=target)
 

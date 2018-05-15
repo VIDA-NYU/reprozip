@@ -242,7 +242,7 @@ def combine_traces(traces, target):
             ''')
 
         # connections
-        logging.info("Insert connections...")
+        logger.info("Insert connections...")
         conn.execute(
             '''
             INSERT INTO connections(run_id, timestamp, process, inbound,
