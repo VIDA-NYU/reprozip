@@ -18,12 +18,13 @@ in
         flake8 --ignore=E731 reprozip/reprozip reprounzip/reprounzip reprounzip-*/reprounzip reprounzip-qt/reprounzip_qt reprozip-jupyter/reprozip_jupyter tests/*.py
         diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
         diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
-        find reprozip reprounzip reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
+        find reprozip reprounzip reprozip-* reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
             T=$(file -b --mime "$i")
             if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
                 echo "$i is not ASCII"
                 exit 1
             fi
         done)
+        find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -exec sh -c "grep 'logging\\.\\(debug\\|warning\\|critical\\|error\\|info\\)' \"\$@\" && exit 1; exit 0" {} +
         ;;
 esac
