@@ -15,6 +15,9 @@ from reprounzip.unpackers.common.misc import UsageError
 from reprounzip.utils import itervalues
 
 
+logger = logging.getLogger('reprounzip')
+
+
 THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
 
 
@@ -47,8 +50,8 @@ class AptInstaller(object):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
-            logging.error("Error: some packages could not be installed:%s",
-                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
+            logger.error("Error: some packages could not be installed:%s",
+                         ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
 
@@ -103,8 +106,8 @@ class YumInstaller(object):
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
-            logging.error("Error: some packages could not be installed:%s",
-                          ''.join("\n    %s" % pkg for pkg in required_pkgs))
+            logger.error("Error: some packages could not be installed:%s",
+                         ''.join("\n    %s" % pkg for pkg in required_pkgs))
 
         return r, pkgs_status
 
@@ -155,9 +158,9 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
     elif (set([orig_distribution, target_distribution]) ==
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
-        logging.warning("Installing on %s but pack was generated on %s",
-                        target_distribution.capitalize(),
-                        orig_distribution.capitalize())
+        logger.warning("Installing on %s but pack was generated on %s",
+                       target_distribution.capitalize(),
+                       orig_distribution.capitalize())
     elif target_distribution is None:
         raise CantFindInstaller("Target distribution is unknown; try using "
                                 "--distribution")

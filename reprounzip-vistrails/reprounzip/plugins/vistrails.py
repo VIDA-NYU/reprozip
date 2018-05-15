@@ -33,7 +33,10 @@ from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import iteritems
 
 
-__version__ = '1.0.5'
+__version__ = '1.0.13'
+
+
+logger = logging.getLogger('reprounzip.vistrails')
 
 
 def escape_xml(s):
@@ -220,7 +223,7 @@ def do_vistrails(target, pack=None, **kwargs):
 
     # Writes VisTrails workflow
     bundle = target / 'vistrails.vt'
-    logging.info("Writing VisTrails workflow %s...", bundle)
+    logger.info("Writing VisTrails workflow %s...", bundle)
     vtdir = Path.tempdir(prefix='reprounzip_vistrails_')
     ids = IdScope()
     try:
@@ -287,13 +290,13 @@ def run_from_vistrails():
         try:
             cli_version = int(sys.argv[1])
         except ValueError:
-            logging.info("Compatibility mode: reprounzip-vistrails didn't get "
-                         "a version number")
+            logger.info("Compatibility mode: reprounzip-vistrails didn't get "
+                        "a version number")
     if cli_version != 1:
-        logging.critical("Unknown interface version %d; you are probably "
-                         "using a version of reprounzip-vistrails too old for "
-                         "your VisTrails package. Consider upgrading.",
-                         cli_version)
+        logger.critical("Unknown interface version %d; you are probably "
+                        "using a version of reprounzip-vistrails too old for "
+                        "your VisTrails package. Consider upgrading.",
+                        cli_version)
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -316,18 +319,18 @@ def run_from_vistrails():
 
     def cmd(lst, add=None):
         if add:
-            logging.info("cmd: %s %s", ' '.join(rpuz + lst), add)
+            logger.info("cmd: %s %s", ' '.join(rpuz + lst), add)
             string = ' '.join(shell_escape(a) for a in (rpuz + lst))
             string += ' ' + add
             subprocess.check_call(string, shell=True,
                                   cwd=args.directory)
         else:
-            logging.info("cmd: %s", ' '.join(rpuz + lst))
+            logger.info("cmd: %s", ' '.join(rpuz + lst))
             subprocess.check_call(rpuz + lst,
                                   cwd=args.directory)
 
-    logging.info("reprounzip-vistrails calling reprounzip; dir=%s",
-                 args.directory)
+    logger.info("reprounzip-vistrails calling reprounzip; dir=%s",
+                args.directory)
 
     # Parses input files from the command-line
     upload_command = []

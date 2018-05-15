@@ -19,7 +19,7 @@ if platform.system().lower() != 'linux':
 
 # List the source files
 sources = ['pytracer.c', 'tracer.c', 'syscalls.c', 'database.c',
-           'ptrace_utils.c', 'utils.c', 'log.c']
+           'ptrace_utils.c', 'utils.c', 'pylog.c']
 # They can be found under native/
 sources = [os.path.join('native', n) for n in sources]
 
@@ -57,7 +57,15 @@ setup(name='reprozip',
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
       maintainer_email='remirampin@gmail.com',
-      url='http://vida-nyu.github.io/reprozip/',
+      url='https://www.reprozip.org/',
+      project_urls={
+          'Homepage': 'https://github.com/ViDA-NYU/reprozip',
+          'Documentation': 'https://docs.reprozip.org/',
+          'Examples': 'https://examples.reprozip.org/',
+          'Say Thanks': 'https://saythanks.io/to/remram44',
+          'Source': 'https://github.com/ViDA-NYU/reprozip',
+          'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
+      },
       long_description=description,
       license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',

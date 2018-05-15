@@ -11,6 +11,20 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
+1.0.13 (2018-05-15)
+-------------------
+
+Bugfixes:
+* Fix uninitialized return value making some xxx_at() calls abort the trace
+* Fix some other warnings via static analysis
+
+Enhancements:
+* Show a warning when executing a file that has the set-uid or set-gid bit set, since Linux will not give it its privileges, making it confusing for users why their run failed
+* Make reprounzip-docker run even without a TTY
+* Correctly handle experiment returning non-0 in Docker
+* The C extension now logs through Python's logging facilities ('reprozip' logger)
+* Collect usage information from reprounzip-qt as well
+
 1.0.12 (2018-03-30)
 -------------------
 

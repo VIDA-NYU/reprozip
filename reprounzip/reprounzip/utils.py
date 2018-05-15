@@ -32,6 +32,9 @@ import sys
 import time
 
 
+logger = logging.getLogger(__name__.split('.', 1)[0])
+
+
 class StreamWriter(object):
     def __init__(self, stream):
         writer = codecs.getwriter(locale.getpreferredencoding())
@@ -363,14 +366,14 @@ def make_dir_writable(directory):
             path = path / c
             sb = path.stat()
             if sb.st_uid == uid and not sb.st_mode & 0o100:
-                logging.debug("Temporarily setting u+x on %s", path)
+                logger.debug("Temporarily setting u+x on %s", path)
                 restore_perms.append((path, sb.st_mode))
                 path.chmod(sb.st_mode | 0o700)
 
         # Add u+wx to the target
         sb = directory.stat()
         if sb.st_uid == uid and sb.st_mode & 0o700 != 0o700:
-            logging.debug("Temporarily setting u+wx on %s", directory)
+            logger.debug("Temporarily setting u+wx on %s", directory)
             restore_perms.append((directory, sb.st_mode))
             directory.chmod(sb.st_mode | 0o700)
 
@@ -457,10 +460,10 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
     except requests.RequestException as e:
         if cache.exists():
             if e.response and e.response.status_code == 304:
-                logging.info("Download %s: cache is up to date", cachename)
+                logger.info("Download %s: cache is up to date", cachename)
             else:
-                logging.warning("Download %s: error downloading %s: %s",
-                                cachename, url, e)
+                logger.warning("Download %s: error downloading %s: %s",
+                               cachename, url, e)
             if dest is not None:
                 cache.copy(dest)
                 return dest
@@ -469,7 +472,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
         else:
             raise
 
-    logging.info("Download %s: downloading %s", cachename, url)
+    logger.info("Download %s: downloading %s", cachename, url)
     try:
         with cache.open('wb') as f:
             for chunk in response.iter_content(4096):
@@ -481,7 +484,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
         except OSError:
             pass
         raise e
-    logging.info("Downloaded %s successfully", cachename)
+    logger.info("Downloaded %s successfully", cachename)
 
     if dest is not None:
         cache.copy(dest)

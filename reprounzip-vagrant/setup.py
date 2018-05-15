@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-vagrant',
-      version='1.0.10',
+      version='1.0.13',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.vagrant'],
       entry_points={
@@ -27,7 +27,15 @@ setup(name='reprounzip-vagrant',
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
       maintainer_email='remirampin@gmail.com',
-      url='http://vida-nyu.github.io/reprozip/',
+      url='https://www.reprozip.org/',
+      project_urls={
+          'Homepage': 'https://github.com/ViDA-NYU/reprozip',
+          'Documentation': 'https://docs.reprozip.org/',
+          'Examples': 'https://examples.reprozip.org/',
+          'Say Thanks': 'https://saythanks.io/to/remram44',
+          'Source': 'https://github.com/ViDA-NYU/reprozip',
+          'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
+      },
       long_description=description,
       license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',

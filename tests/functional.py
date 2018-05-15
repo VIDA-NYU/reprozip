@@ -24,12 +24,15 @@ from reprounzip.utils import PY3, stderr_bytes, stderr
 tests = Path(__file__).parent.absolute()
 
 
+logger = logging.getLogger('reprozip-tests')
+
+
 def download_file_retry(url, dest):
     attempt = 0
     while True:
         attempt += 1
         try:
-            logging.info("Download %s, attempt %d", url, attempt)
+            logger.info("Download %s, attempt %d", url, attempt)
             response = requests.get(url, stream=True)
             response.raise_for_status()
             try:
@@ -47,7 +50,7 @@ def download_file_retry(url, dest):
         except requests.RequestException as e:
             if attempt == 2:
                 raise e
-            logging.warning("Download %s: retrying after error: %s", url, e)
+            logger.warning("Download %s: retrying after error: %s", url, e)
 
 
 def in_temp_dir(f):
@@ -88,7 +91,7 @@ def check_call(args):
 
 
 @print_arg_list
-def check_output(args, stream='out'):
+def call_output(args, stream='out'):
     if stream == 'out':
         kw = {'stdout': subprocess.PIPE}
     elif stream == 'err':
@@ -108,9 +111,15 @@ def check_output(args, stream='out'):
         stderr_bytes.write(line)
         output.append(line)
     retcode = p.wait()
+    return retcode, b''.join(output)
+
+
+@print_arg_list
+def check_output(args, stream='out'):
+    retcode, output = call_output(args, stream)
     if retcode != 0:
         raise subprocess.CalledProcessError(retcode, args)
-    return b''.join(output)
+    return output
 
 
 def build(target, sources, args=[]):
@@ -788,6 +797,38 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                               for p in ('a', 'b', 'c', 'd', 'e'))
     assert opened == [Path.cwd() / 'c', Path.cwd() / 'e']
     assert executed == [(Path.cwd() / 'a', './a\x001\x002\x00')]
+
+    # ########################################
+    # Test set-uid warning
+    #
+
+    # Find a set-uid program
+    executable = '/bin/su'
+    if not os.path.exists(executable) and os.path.exists('/usr/bin/su'):
+        executable = '/usr/bin/su'
+    assert os.stat(executable).st_mode & 0o4000 == 0o4000
+    # Trace
+    # Pass a wrong username to su to make it exit without reading a password
+    _, err = call_output(rpz + ['testrun', executable,
+                                '94627ebfafbf81cd77a17d4ed646a80c94bf4202'],
+                         'err')
+    err = err.split(b'\n')
+    assert any(b'executing set-uid binary!' in l for l in err)
+
+    # ########################################
+    # Test set-gid warning
+    #
+
+    # Find a set-gid program
+    executable = '/usr/bin/crontab'
+    if not os.path.exists(executable) and os.path.exists('/bin/crontab'):
+        executable = '/bin/crontab'
+    assert os.stat(executable).st_mode & 0o2000 == 0o2000
+    # Trace
+    # Pass a wrong username to su to make it exit without reading a password
+    _, err = call_output(rpz + ['testrun', executable, '-l'], 'err')
+    err = err.split(b'\n')
+    assert any(b'executing set-gid binary!' in l for l in err)
 
     # ########################################
     # Test old packages

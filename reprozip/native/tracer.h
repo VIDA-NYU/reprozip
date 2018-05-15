@@ -8,9 +8,6 @@ int fork_and_trace(const char *binary, int argc, char **argv,
                    const char *database_path, int *exit_status);
 
 
-extern int trace_verbosity;
-
-
 /* This is NOT a union because sign-extension rules depend on actual register
  * sizes. */
 typedef struct S_register_type {

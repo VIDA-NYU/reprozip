@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprozip-jupyter',
-      version='0.3',
+      version='0.4',
       packages=['reprozip_jupyter'],
       package_data={'reprozip_jupyter': ['notebook-extension.js']},
       entry_points={
@@ -25,7 +25,15 @@ setup(name='reprozip-jupyter',
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
       maintainer_email='remirampin@gmail.com',
-      url='http://vida-nyu.github.io/reprozip/',
+      url='https://www.reprozip.org/',
+      project_urls={
+          'Homepage': 'https://github.com/ViDA-NYU/reprozip',
+          'Documentation': 'https://docs.reprozip.org/',
+          'Examples': 'https://examples.reprozip.org/',
+          'Say Thanks': 'https://saythanks.io/to/remram44',
+          'Source': 'https://github.com/ViDA-NYU/reprozip',
+          'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
+      },
       long_description=description,
       license='BSD',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',

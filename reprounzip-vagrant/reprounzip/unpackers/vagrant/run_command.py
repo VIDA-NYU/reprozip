@@ -23,6 +23,9 @@ from reprounzip.unpackers.vagrant.interaction import interactive_shell
 from reprounzip.utils import irange, stdout_bytes
 
 
+logger = logging.getLogger('reprounzip.vagrant')
+
+
 class IgnoreMissingKey(MissingHostKeyPolicy):
     """Policy that just ignores missing SSH host keys.
 
@@ -152,7 +155,7 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
             chan.get_pty()
 
         # Execute command
-        logging.info("Connected via SSH, running command...")
+        logger.info("Connected via SSH, running command...")
         chan.exec_command(cmd)
 
         # Get output

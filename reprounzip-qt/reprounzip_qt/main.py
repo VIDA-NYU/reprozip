@@ -6,9 +6,15 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 import locale
+import logging
 import sys
 
+from reprounzip.common import setup_logging
 from reprounzip_qt import __version__
+from reprounzip_qt.usage import record_usage, submit_usage_report
+
+
+logger = logging.getLogger('reprounzip_qt')
 
 
 def qt_init():
@@ -31,6 +37,8 @@ def main():
         epilog="Please report issues to reprozip-users@vgc.poly.edu")
     parser.add_argument('--version', action='version',
                         version="reprounzip-qt version %s" % __version__)
+    parser.add_argument('-v', '--verbose', action='count', default=1,
+                        dest='verbosity', help="augments verbosity level")
     parser.add_argument('package', nargs=argparse.OPTIONAL)
     parser.add_argument('--unpacked', action='append', default=[])
 
@@ -42,6 +50,8 @@ def main():
         else:
             i += 1
     args = parser.parse_args(argv)
+
+    setup_logging('REPROUNZIP-QT', args.verbosity)
 
     qt_init()
 
@@ -55,19 +65,27 @@ def main():
                          "directory\n")
         sys.exit(2)
     elif args.package:
+        logger.info("Got package on the command-line: %s", args.package)
+        record_usage(cmdline='package')
         window_args = dict(unpack=dict(package=args.package))
     elif len(args.unpacked) == 1:
+        logger.info("Got unpacked directory on the command-line: %s",
+                    args.unpacked)
+        record_usage(cmdline='directory')
         window_args = dict(run=dict(unpacked_directory=args.unpacked[0]),
                            tab=1)
     elif args.unpacked:
         sys.stderr.write("You may only use --unpacked once\n")
         sys.exit(2)
+    else:
+        record_usage(cmdline='empty')
 
     window = ReprounzipUi(**window_args)
     app.set_first_window(window)
     window.setVisible(True)
 
     app.exec_()
+    submit_usage_report()
     sys.exit(0)
 
 

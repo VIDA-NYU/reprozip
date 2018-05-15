@@ -24,6 +24,9 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, shell_escape
 from reprounzip.utils import PY3, iteritems, stderr
 
 
+logger = logging.getLogger('reprounzip.provviewer')
+
+
 def xml_escape(s):
     """Escapes for XML.
     """
@@ -36,10 +39,10 @@ def generate(target, configfile, database):
     """
     # Reads package ownership from the configuration
     if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
+        logger.critical("Configuration file does not exist!\n"
+                        "Did you forget to run 'reprozip trace'?\n"
+                        "If not, you might want to use --dir to specify an "
+                        "alternate location.")
         sys.exit(1)
 
     config = load_config(configfile, canonical=False)

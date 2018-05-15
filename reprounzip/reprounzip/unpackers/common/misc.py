@@ -26,8 +26,11 @@ import tarfile
 import reprounzip.common
 from reprounzip.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
-    unicode_, join_root, copyfile
+from reprounzip.utils import PY3, irange, iteritems, itervalues, \
+    stdout_bytes, unicode_, join_root, copyfile
+
+
+logger = logging.getLogger('reprounzip')
 
 
 COMPAT_OK = 0
@@ -60,7 +63,7 @@ def target_must_exist(func):
     def wrapper(args):
         target = Path(args.target[0])
         if not target.is_dir():
-            logging.critical("Error: Target directory doesn't exist")
+            logger.critical("Error: Target directory doesn't exist")
             raise UsageError
         return func(args)
     return wrapper
@@ -170,8 +173,8 @@ class FileUploader(object):
             for filespec in files:
                 filespec_split = filespec.rsplit(':', 1)
                 if len(filespec_split) != 2:
-                    logging.critical("Invalid file specification: %r",
-                                     filespec)
+                    logger.critical("Invalid file specification: %r",
+                                    filespec)
                     sys.exit(1)
                 local_path, input_name = filespec_split
 
@@ -181,14 +184,14 @@ class FileUploader(object):
                     try:
                         input_path = inputs_outputs[input_name].path
                     except KeyError:
-                        logging.critical("Invalid input file: %r", input_name)
+                        logger.critical("Invalid input file: %r", input_name)
                         sys.exit(1)
 
                 temp = None
 
                 if not local_path:
                     # Restore original file from pack
-                    logging.debug("Restoring input file %s", input_path)
+                    logger.debug("Restoring input file %s", input_path)
                     fd, temp = Path.tempfile(prefix='reprozip_input_')
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
@@ -196,16 +199,16 @@ class FileUploader(object):
                                                              temp)
                     if local_path is None:
                         temp.remove()
-                        logging.warning("No original packed, can't restore "
-                                        "input file %s", input_name)
+                        logger.warning("No original packed, can't restore "
+                                       "input file %s", input_name)
                         continue
                 else:
                     local_path = Path(local_path)
-                    logging.debug("Uploading file %s to %s",
-                                  local_path, input_path)
+                    logger.debug("Uploading file %s to %s",
+                                 local_path, input_path)
                     if not local_path.exists():
-                        logging.critical("Local file %s doesn't exist",
-                                         local_path)
+                        logger.critical("Local file %s doesn't exist",
+                                        local_path)
                         sys.exit(1)
 
                 self.upload_file(local_path, input_path)
@@ -275,8 +278,8 @@ class FileDownloader(object):
             elif len(filespec_split) == 2:
                 output_name, local_path = filespec_split
             else:
-                logging.critical("Invalid file specification: %r",
-                                 filespec)
+                logger.critical("Invalid file specification: %r",
+                                filespec)
                 sys.exit(1)
             local_path = Path(local_path) if local_path else None
             all_files.discard(output_name)
@@ -299,11 +302,11 @@ class FileDownloader(object):
                     try:
                         remote_path = inputs_outputs[output_name].path
                     except KeyError:
-                        logging.critical("Invalid output file: %r",
+                        logger.critical("Invalid output file: %r",
                                          output_name)
                         sys.exit(1)
 
-                logging.debug("Downloading file %s", remote_path)
+                logger.debug("Downloading file %s", remote_path)
                 if local_path is None:
                     ret = self.download_and_print(remote_path)
                 else:
@@ -360,11 +363,11 @@ def get_runs(runs, selected_runs, cmdline):
         try:
             r = int(s)
         except ValueError:
-            logging.critical("Error: Unknown run %s", s)
+            logger.critical("Error: Unknown run %s", s)
             raise UsageError
         if r < 0 or r >= len(runs):
-            logging.critical("Error: Expected 0 <= run <= %d, got %d",
-                             len(runs) - 1, r)
+            logger.critical("Error: Expected 0 <= run <= %d, got %d",
+                            len(runs) - 1, r)
             sys.exit(1)
         return r
 
@@ -390,8 +393,8 @@ def get_runs(runs, selected_runs, cmdline):
                 else:
                     last = len(runs) - 1
                 if last < first:
-                    logging.critical("Error: Last run number should be "
-                                     "greater than the first")
+                    logger.critical("Error: Last run number should be "
+                                    "greater than the first")
                     sys.exit(1)
                 run_list.extend(irange(first, last + 1))
 
@@ -449,7 +452,44 @@ def fixup_environment(environ, args):
     return environ
 
 
-def interruptible_call(*args, **kwargs):
+if PY3:
+    def pty_spawn(*args, **kwargs):
+        import pty
+
+        return pty.spawn(*args, **kwargs)
+else:
+    def pty_spawn(argv):
+        """Version of pty.spawn() for PY2, that returns the exit code.
+
+        This works around https://bugs.python.org/issue2489.
+        """
+        logger.info("Using builtin pty.spawn()")
+
+        import pty
+        import tty
+
+        if isinstance(argv, bytes):
+            argv = (argv,)
+        pid, master_fd = pty.fork()
+        if pid == pty.CHILD:
+            os.execlp(argv[0], *argv)
+        try:
+            mode = tty.tcgetattr(pty.STDIN_FILENO)
+            tty.setraw(pty.STDIN_FILENO)
+            restore = 1
+        except tty.error:    # This is the same as termios.error
+            restore = 0
+        try:
+            pty._copy(master_fd, pty._read, pty._read)
+        except (IOError, OSError):
+            if restore:
+                tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
+
+        os.close(master_fd)
+        return os.waitpid(pid, 0)[1]
+
+
+def interruptible_call(cmd, **kwargs):
     assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
     proc = [None]
 
@@ -463,7 +503,23 @@ def interruptible_call(*args, **kwargs):
     signal.signal(signal.SIGINT, _sigint_handler)
 
     try:
-        proc[0] = subprocess.Popen(*args, **kwargs)
+        if kwargs.pop('request_tty', False):
+            try:
+                import pty  # noqa: F401
+            except ImportError:
+                pass
+            else:
+                if hasattr(sys.stdin, 'isatty') and not sys.stdin.isatty():
+                    logger.info("We need a tty and we are not attached to "
+                                "one. Opening pty...")
+                    if kwargs.pop('shell', False):
+                        if not isinstance(cmd, (str, unicode_)):
+                            raise TypeError("shell=True but cmd is not a "
+                                            "string")
+                        cmd = ['/bin/sh', '-c', cmd]
+                    res = pty_spawn(cmd)
+                    return res >> 8 - (res & 0xFF)
+        proc[0] = subprocess.Popen(cmd, **kwargs)
         return proc[0].wait()
     finally:
         signal.signal(signal.SIGINT, signal.default_int_handler)
@@ -489,15 +545,15 @@ def metadata_read(path, type_):
     filename = path / '.reprounzip'
 
     if not filename.exists():
-        logging.critical("Required metadata missing, did you point this "
-                         "command at the directory you created using the "
-                         "'setup' command?")
+        logger.critical("Required metadata missing, did you point this "
+                        "command at the directory you created using the "
+                        "'setup' command?")
         raise UsageError
     with filename.open('rb') as fp:
         dct = pickle.load(fp)
     if type_ is not None and dct['unpacker'] != type_:
-        logging.critical("Wrong unpacker used: %s != %s",
-                         dct['unpacker'], type_)
+        logger.critical("Wrong unpacker used: %s != %s",
+                        dct['unpacker'], type_)
         raise UsageError
     return dct
 
@@ -587,7 +643,7 @@ def parse_ports(specifications):
     for port in specifications:
         m = _port_re.match(port)
         if m is None:
-            logging.critical("Invalid port specification: '%s'", port)
+            logger.critical("Invalid port specification: '%s'", port)
             sys.exit(1)
         host, experiment, proto = m.groups()
         if not host:

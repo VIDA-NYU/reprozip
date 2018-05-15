@@ -17,7 +17,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip-vistrails',
-      version='1.0.8',
+      version='1.0.13',
       packages=['reprounzip', 'reprounzip.plugins'],
       entry_points={
           'reprounzip.plugins': [
@@ -30,7 +30,15 @@ setup(name='reprounzip-vistrails',
       author_email='reprozip-users@vgc.poly.edu',
       maintainer="Remi Rampin",
       maintainer_email='remirampin@gmail.com',
-      url='http://vida-nyu.github.io/reprozip/',
+      url='https://www.reprozip.org/',
+      project_urls={
+          'Homepage': 'https://github.com/ViDA-NYU/reprozip',
+          'Documentation': 'https://docs.reprozip.org/',
+          'Examples': 'https://examples.reprozip.org/',
+          'Say Thanks': 'https://saythanks.io/to/remram44',
+          'Source': 'https://github.com/ViDA-NYU/reprozip',
+          'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
+      },
       long_description=description,
       license='BSD-3-Clause',
       keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',

@@ -41,6 +41,9 @@ from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
     join_root, copyfile
 
 
+logger = logging.getLogger(__name__.split('.', 1)[0])
+
+
 FILE_READ = 0x01
 FILE_WRITE = 0x02
 FILE_WDIR = 0x04
@@ -354,18 +357,18 @@ def load_iofiles(config, runs):
         if name in files:
             if files[name].path != path:
                 old_name, name = name, uniquenames(name)
-                logging.warning("File name appears multiple times: %s\n"
-                                "Using name %s instead",
-                                old_name, name)
+                logger.warning("File name appears multiple times: %s\n"
+                               "Using name %s instead",
+                               old_name, name)
         else:
             uniquenames.insert(name)
         if path in paths:
             if paths[path] == name:
-                logging.warning("File appears multiple times: %s", name)
+                logger.warning("File appears multiple times: %s", name)
             else:
-                logging.warning("Two files have the same path (but different "
-                                "names): %s, %s\nUsing name %s",
-                                name, paths[path], paths[path])
+                logger.warning("Two files have the same path (but different "
+                               "names): %s, %s\nUsing name %s",
+                               name, paths[path], paths[path])
                 name = paths[path]
             files[name].read_runs.update(readers)
             files[name].write_runs.update(writers)
@@ -408,8 +411,8 @@ def load_config(filename, canonical, File=File, Package=Package):
                                 # Deprecated
                                 'input_files', 'output_files'])
     if unknown_keys:
-        logging.warning("Unrecognized sections in configuration: %s",
-                        ', '.join(unknown_keys))
+        logger.warning("Unrecognized sections in configuration: %s",
+                       ', '.join(unknown_keys))
 
     runs = config.get('runs') or []
     packages = read_packages(config.get('packages'), File, Package)
@@ -621,7 +624,7 @@ def setup_logging(tag, verbosity):
                                                            maxBytes=400000,
                                                            backupCount=5)
     except (IOError, OSError):
-        logging.warning("Couldn't create log file %s", dotrpz / 'log')
+        logger.warning("Couldn't create log file %s", dotrpz / 'log')
     else:
         filehandler.setFormatter(formatter)
         filehandler.setLevel(file_level)

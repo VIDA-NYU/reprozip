@@ -40,9 +40,6 @@
 #define SYSCALL_X86_64_x32  2
 
 
-#define verbosity trace_verbosity
-
-
 struct syscall_table_entry {
     const char *name;
     int (*proc_entry)(const char*, struct Process *, unsigned int);
@@ -114,7 +111,7 @@ static void record_connection(struct Process *process, int inbound,
 static int syscall_unhandled_path1(const char *name, struct Process *process,
                                    unsigned int udata)
 {
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
+    if(logging_level <= 30 && process->in_syscall && process->retvalue.i >= 0
      && name != NULL)
     {
         char *pathname = abs_path_arg(process, 0);
@@ -128,8 +125,7 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
 static int syscall_unhandled_other(const char *name, struct Process *process,
                                    unsigned int udata)
 {
-    if(verbosity >= 1 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
+    if(process->in_syscall && process->retvalue.i >= 0 && name != NULL)
         log_info(process->tid, "process used unhandled system call %s", name);
     return 0;
 }
@@ -189,7 +185,7 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
         }
     }
 
-    if(verbosity >= 3)
+    if(logging_level <= 10)
     {
         /* Converts mode to string s_mode */
         char mode_buf[42] = "";
@@ -419,7 +415,84 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             return 0;
         }
         if(buffer[0] != '#' || buffer[1] != '!')
+        {
+            // Check if executable is set-uid or set-gid
+            struct stat statbuf;
+            if(stat(exec_target, &statbuf) != 0)
+            {
+                log_error(process->tid, "couldn't stat executed file %s", exec_target);
+            }
+            else
+            {
+                if((statbuf.st_mode & 04000) == 04000)
+                {
+                    if(statbuf.st_uid != getuid())
+                    {
+                        log_warn(process->tid,
+                                 "executing set-uid binary! For security, "
+                                 "Linux will not give the process any "
+                                 "privileges from set-uid while it is being "
+                                 "traced. This will probably break whatever "
+                                 "you are tracing.");
+                    }
+                    else
+                    {
+                        log_info(process->tid,
+                                 "binary has set-uid bit set, not a problem "
+                                 "because it is owned by our user");
+                    }
+                }
+                if((statbuf.st_mode & 02000) == 02000)
+                {
+                    int is_our_group = 0;
+                    size_t i, size;
+                    // Get the list of groups
+                    gid_t *groups = NULL;
+                    int ret = getgroups(0, NULL);
+                    if(ret >= 0)
+                    {
+                        size = (size_t)ret;
+                        groups = malloc(sizeof(gid_t) * size);
+                        ret = getgroups(ret, groups);
+                    }
+                    if(ret < 0)
+                    {
+                        free(groups);
+                        log_critical(process->tid, "getgroups() failed: %s",
+                                     strerror(errno));
+                        return -1;
+                    }
+
+                    // Check if the gid is one of our groups
+                    for(i = 0; i < size; ++i)
+                    {
+                        if(groups[i] == statbuf.st_gid)
+                        {
+                            is_our_group = 1;
+                            break;
+                        }
+                    }
+                    free(groups);
+
+                    if(!is_our_group)
+                    {
+                        log_warn(process->tid,
+                                 "executing set-gid binary! For security, "
+                                 "Linux will not give the process any "
+                                 "privileges from set-gid while it is being "
+                                 "traced. This will probably break whatever "
+                                 "you are tracing.");
+                    }
+                    else
+                    {
+                        log_info(process->tid,
+                                 "binary has set-gid bit set, not a problem "
+                                 "because it is in one of our groups");
+                    }
+                }
+            }
             return 0;
+        }
         else
         {
             char *start = buffer + 2;
@@ -474,7 +547,7 @@ static int syscall_execve_in(const char *name, struct Process *process,
                                      process->params[1].p);
     execi->envp = tracee_strarraydup(process->mode, process->tid,
                                      process->params[2].p);
-    if(verbosity >= 3)
+    if(logging_level <= 10)
     {
         log_debug(process->tid, "execve called:\n  binary=%s\n  argv:",
                   execi->binary);
@@ -537,10 +610,9 @@ int syscall_execve_event(struct Process *process)
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0, -1) != 0)
             return -1;
-        if(verbosity >= 3)
-            log_debug(exec_process->tid,
-                      "original exec'ing thread removed, tgid: %d",
-                      process->tid);
+        log_debug(exec_process->tid,
+                  "original exec'ing thread removed, tgid: %d",
+                  process->tid);
         exec_process->execve_info = NULL;
         trace_free_process(exec_process);
     }
@@ -560,9 +632,7 @@ int syscall_execve_event(struct Process *process)
         return -1;
     /* Note that here, the database records that the thread leader called
      * execve, instead of thread exec_process->tid. */
-    if(verbosity >= 2)
-        log_info(process->tid, "successfully exec'd %s",
-                 execi->binary);
+    log_info(process->tid, "successfully exec'd %s", execi->binary);
 
     /* Follow shebangs */
     if(record_shebangs(process, execi->binary) != 0)
@@ -632,7 +702,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
         is_thread = process->params[0].u & CLONE_THREAD;
     process->flags &= ~PROCFLAG_FORKING;
 
-    if(verbosity >= 2)
+    if(logging_level <= 20)
         log_info(new_tid, "process created by %d via %s\n"
                  "    (thread: %s) (working directory: %s)",
                  process->tid,
@@ -659,7 +729,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
         }
         new_process->status = PROCSTAT_ATTACHED;
         ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
-        if(verbosity >= 2)
+        if(logging_level <= 20)
         {
             unsigned int nproc, unknown;
             trace_count_processes(&nproc, &unknown);
@@ -682,9 +752,8 @@ int syscall_fork_event(struct Process *process, unsigned int event)
     {
         new_process->threadgroup = process->threadgroup;
         process->threadgroup->refs++;
-        if(verbosity >= 3)
-            log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
-                      process->threadgroup->refs);
+        log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
+                  process->threadgroup->refs);
     }
     else
         new_process->threadgroup = trace_new_threadgroup(
@@ -813,7 +882,7 @@ static int syscall_xxx_at(const char *name, struct Process *process,
         }
         else
         {
-            int ret;
+            int ret = 0;
             /* Shifts arguments */
             size_t i;
             register_type arg0 = process->params[0];
@@ -836,8 +905,8 @@ static int syscall_xxx_at(const char *name, struct Process *process,
                  "process used unhandled system call %s(%d, \"%s\")",
                  name, process->params[0].i, pathname);
         free(pathname);
-        return 0;
     }
+    return 0;
 }
 
 
@@ -1149,27 +1218,27 @@ int syscall_handle(struct Process *process)
     if(process->mode == MODE_I386)
     {
         syscall_type = SYSCALL_I386;
-        if(verbosity >= 4)
+        if(logging_level <= 5)
             log_debug(process->tid, "syscall %d (i386) (%s)", syscall, inout);
     }
     else if(process->current_syscall & __X32_SYSCALL_BIT)
     {
         /* LCOV_EXCL_START : x32 is not supported right now */
         syscall_type = SYSCALL_X86_64_x32;
-        if(verbosity >= 4)
+        if(logging_level <= 5)
             log_debug(process->tid, "syscall %d (x32) (%s)", syscall, inout);
         /* LCOV_EXCL_END */
     }
     else
     {
         syscall_type = SYSCALL_X86_64;
-        if(verbosity >= 4)
+        if(logging_level <= 5)
             log_debug(process->tid, "syscall %d (x64) (%s)", syscall, inout);
     }
 
     if(process->flags & PROCFLAG_EXECD)
     {
-        if(verbosity >= 4)
+        if(logging_level <= 5)
             log_debug(process->tid,
                       "ignoring, EXEC'D is set -- just post-exec syscall-"
                       "return stop");
@@ -1192,7 +1261,7 @@ int syscall_handle(struct Process *process)
         if(entry != NULL)
         {
             int ret = 0;
-            if(entry->name && verbosity >= 3)
+            if(entry->name)
                 log_debug(process->tid, "%c%s()",
                           process->in_syscall?'-':'+',
                           entry->name);

@@ -4,13 +4,13 @@
 
 from __future__ import division, print_function, unicode_literals
 
-import yaml
-
 from PyQt4 import QtCore, QtGui
+import yaml
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
     error_msg, parse_ports
+from reprounzip_qt.usage import record_usage
 
 
 class RunOptions(QtGui.QWidget):
@@ -87,14 +87,20 @@ class DockerOptions(RunOptions):
 
         if self.tunneled_x11.isChecked():
             options['args'].append('--tunneled-x11')
+            record_usage(docker_tunneled_x11=True)
 
         if self.detach.isChecked():
             options['args'].append('--detach')
+            record_usage(docker_detach=True)
 
+        nb_raw = 0
         for opt in self.raw_options.text().split():
             opt = opt.strip()
             if opt:
+                nb_raw += 1
                 options['args'].append('--docker-option=%s' % opt)
+        if nb_raw:
+            record_usage(docker_raw_options=nb_raw)
 
         ports = parse_ports(self.ports.text(), self)
         if ports is None:
@@ -103,6 +109,7 @@ class DockerOptions(RunOptions):
             options['args'].extend(
                 ['--docker-option=-p',
                  '--docker-option=%s:%s/%s' % (host, container, proto)])
+        record_usage(docker_run_port_fwd=bool(ports))
 
         return options
 
@@ -126,6 +133,7 @@ class VagrantOptions(RunOptions):
         for host, container, proto in parse_ports(self.ports.text(), self):
             options['args'].append('--expose-port=%s:%s/%s' %
                                    (host, container, proto))
+        record_usage(vagrant_run_port_fwd=bool(ports))
 
         return options
 
@@ -176,6 +184,7 @@ class FilesManager(QtGui.QDialog):
                                   ("O" if file_status.is_output else ''),
                                   file_status.name)
             self.files_widget.addItem(text)
+        record_usage(iofiles=self.files_widget.count())
 
     def _file_changed(self):
         selected = [i.row() for i in self.files_widget.selectedIndexes()]
@@ -212,6 +221,7 @@ class FilesManager(QtGui.QDialog):
             self, "Pick file to upload",
             QtCore.QDir.currentPath())
         if picked:
+            record_usage(file_upload=True)
             handle_error(self, reprounzip.upload(
                 self.directory, file_status.name, picked,
                 unpacker=self.unpacker, root=self.root))
@@ -224,6 +234,7 @@ class FilesManager(QtGui.QDialog):
             self, "Pick destination",
             QtCore.QDir.currentPath() + '/' + file_status.name)
         if picked:
+            record_usage(file_download=True)
             handle_error(self, reprounzip.download(
                 self.directory, file_status.name, picked,
                 unpacker=self.unpacker, root=self.root))
@@ -232,6 +243,7 @@ class FilesManager(QtGui.QDialog):
     def _reset(self):
         selected = self.files_widget.selectedIndexes()[0].row()
         file_status = self.files_status[selected]
+        record_usage(file_reset=True)
         handle_error(self, reprounzip.upload(
             self.directory, file_status.name, None,
             unpacker=self.unpacker, root=self.root))
@@ -335,6 +347,7 @@ class RunTab(QtGui.QWidget):
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:
+            record_usage(browse_unpacked=True)
             self.directory_widget.setText(picked)
             self._directory_changed()
 
@@ -386,6 +399,7 @@ class RunTab(QtGui.QWidget):
         if not runs:
             error_msg(self, "No run selected", 'warning')
             return
+        record_usage(run='%d/%d' % (len(runs), self.runs_widget.count()))
         handle_error(self, reprounzip.run(
             self.directory, runs=runs,
             unpacker=self.unpacker,
@@ -419,7 +433,10 @@ class RunTab(QtGui.QWidget):
                 "The experiment is still unpacked with '%s'. Are you sure you "
                 "want to exit without removing it?" % self.unpacker,
                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            return r == QtGui.QMessageBox.Yes
+            if r == QtGui.QMessageBox.Yes:
+                record_usage(leave_unpacked=True)
+            else:
+                return False
         else:
             return True
 

@@ -24,6 +24,9 @@ from reprounzip.common import get_reprozip_ca_certificate
 from reprounzip.utils import download_file
 
 
+logger = logging.getLogger('reprounzip')
+
+
 parameters = None
 
 
@@ -53,15 +56,15 @@ def update_parameters():
             cachename='parameters.json',
             ssl_verify=get_reprozip_ca_certificate().path)
     except Exception:
-        logging.info("Can't download parameters.json, using bundled "
-                     "parameters")
+        logger.info("Can't download parameters.json, using bundled "
+                    "parameters")
     else:
         try:
             with filename.open() as fp:
                 parameters = json.load(fp)
         except ValueError:
-            logging.info("Downloaded parameters.json doesn't load, using "
-                         "bundled parameters")
+            logger.info("Downloaded parameters.json doesn't load, using "
+                        "bundled parameters")
             try:
                 filename.remove()
             except OSError:
@@ -71,8 +74,8 @@ def update_parameters():
             if LooseVersion('1.1') <= ver < LooseVersion('1.2'):
                 return
             else:
-                logging.info("parameters.json has incompatible version %s, "
-                             "using bundled parameters", ver)
+                logger.info("parameters.json has incompatible version %s, "
+                            "using bundled parameters", ver)
 
     parameters = json.loads(bundled_parameters)
 

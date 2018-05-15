@@ -27,6 +27,9 @@ from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
 from reprounzip.utils import iteritems, itervalues, unicode_, hsize
 
 
+logger = logging.getLogger('reprounzip')
+
+
 def get_package_info(pack, read_data=False):
     """Get information about a package.
     """
@@ -98,12 +101,12 @@ def get_package_info(pack, read_data=False):
         architecture = runs[0]['architecture']
         if any(r['architecture'] != architecture
                for r in runs):
-            logging.warning("Runs have different architectures")
+            logger.warning("Runs have different architectures")
         information['meta']['architecture'] = architecture
         distribution = runs[0]['distribution']
         if any(r['distribution'] != distribution
                for r in runs):
-            logging.warning("Runs have different distributions")
+            logger.warning("Runs have different distributions")
         information['meta']['distribution'] = distribution
 
         information['runs'] = [
@@ -256,11 +259,11 @@ def showfiles(args):
         try:
             r = int(s)
         except ValueError:
-            logging.critical("Error: Unknown run %s", s)
+            logger.critical("Error: Unknown run %s", s)
             raise UsageError
         if r < 0 or r >= len(runs):
-            logging.critical("Error: Expected 0 <= run <= %d, got %d",
-                             len(runs) - 1, r)
+            logger.critical("Error: Expected 0 <= run <= %d, got %d",
+                            len(runs) - 1, r)
             sys.exit(1)
         return r
 
@@ -280,7 +283,7 @@ def showfiles(args):
     pack = Path(args.pack[0])
 
     if not pack.exists():
-        logging.critical("Pack or directory %s does not exist", pack)
+        logger.critical("Pack or directory %s does not exist", pack)
         sys.exit(1)
 
     if pack.is_dir():

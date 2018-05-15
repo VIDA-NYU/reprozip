@@ -30,9 +30,9 @@ in
         sudo apt-get install -qq libc6-dev-i386 gcc-multilib
         if [ $TEST_MODE = "coverage" ]; then
             pip install coverage codecov
-            pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt
+            pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
         else
-            pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt
+            pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
         fi
         ;;
     checks)
