@@ -22,9 +22,6 @@ import sys
 from reprounzip.common import setup_logging
 
 
-__version__ = '0.1'
-
-
 logger = logging.getLogger('reprozip_jupyter')
 
 

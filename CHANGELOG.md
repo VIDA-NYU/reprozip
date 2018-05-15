@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0.13 (???)
-------------
+1.0.13 (2018-05-15)
+-------------------
 
 Bugfixes:
 * Fix uninitialized return value making some xxx_at() calls abort the trace

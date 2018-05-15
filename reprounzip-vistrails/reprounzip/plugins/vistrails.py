@@ -33,7 +33,7 @@ from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import iteritems
 
 
-__version__ = '1.0.5'
+__version__ = '1.0.13'
 
 
 logger = logging.getLogger('reprounzip.vistrails')

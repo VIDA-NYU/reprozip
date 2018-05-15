@@ -1,6 +1,6 @@
 package:
   name: reprozip-jupyter
-  version: !!str 0.3
+  version: !!str 0.4
 
 source:
   fn: reprozip-jupyter.tar.gz
