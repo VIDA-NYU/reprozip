@@ -13,9 +13,6 @@
 #include "log.h"
 
 
-extern int trace_verbosity;
-
-
 unsigned int flags2mode(int flags)
 {
     unsigned int mode = 0;
@@ -146,7 +143,7 @@ int path_is_dir(const char *pathname)
     struct stat buf;
     if(lstat(pathname, &buf) != 0)
     {
-        if(trace_verbosity >= 1)
+        if(logging_level <= 30)
         {
             /* LCOV_EXCL_START : shouldn't happen because a tracer process just
              * accessed it */

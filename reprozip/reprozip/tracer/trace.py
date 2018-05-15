@@ -11,6 +11,7 @@ generation logic for the config YAML file.
 
 from __future__ import division, print_function, unicode_literals
 
+import warnings
 from collections import defaultdict
 from itertools import count
 import logging
@@ -295,9 +296,13 @@ def tty_prompt(prompt, chars):
             ostream.flush()
 
 
-def trace(binary, argv, directory, append, verbosity=1):
+def trace(binary, argv, directory, append, verbosity='unset'):
     """Main function for the trace subcommand.
     """
+    if verbosity != 'unset':
+        warnings.warn("The 'verbosity' parameter for trace() is deprecated. "
+                      "Please set a level on the 'reprozip' logger intead.",
+                      DeprecationWarning)
     cwd = Path.cwd()
     if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
             not cwd.lies_under('/usr/local')):
@@ -341,7 +346,7 @@ def trace(binary, argv, directory, append, verbosity=1):
     database = directory / 'trace.sqlite3'
     logger.info("Running program")
     # Might raise _pytracer.Error
-    c = _pytracer.execute(binary, argv, database.path, verbosity)
+    c = _pytracer.execute(binary, argv, database.path)
     if c != 0:
         if c & 0x0100:
             logger.warning("Program appears to have been terminated by "
