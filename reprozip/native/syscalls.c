@@ -114,8 +114,7 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
 static int syscall_unhandled_other(const char *name, struct Process *process,
                                    unsigned int udata)
 {
-    if(logging_level <= 30 && process->in_syscall && process->retvalue.i >= 0
-     && name != NULL)
+    if(process->in_syscall && process->retvalue.i >= 0 && name != NULL)
         log_info(process->tid, "process used unhandled system call %s", name);
     return 0;
 }
@@ -600,10 +599,9 @@ int syscall_execve_event(struct Process *process)
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
             return -1;
-        if(logging_level <= 10)
-            log_debug(exec_process->tid,
-                      "original exec'ing thread removed, tgid: %d",
-                      process->tid);
+        log_debug(exec_process->tid,
+                  "original exec'ing thread removed, tgid: %d",
+                  process->tid);
         exec_process->execve_info = NULL;
         trace_free_process(exec_process);
     }
@@ -623,9 +621,7 @@ int syscall_execve_event(struct Process *process)
         return -1;
     /* Note that here, the database records that the thread leader called
      * execve, instead of thread exec_process->tid. */
-    if(logging_level <= 20)
-        log_info(process->tid, "successfully exec'd %s",
-                 execi->binary);
+    log_info(process->tid, "successfully exec'd %s", execi->binary);
 
     /* Follow shebangs */
     if(record_shebangs(process, execi->binary) != 0)
@@ -745,9 +741,8 @@ int syscall_fork_event(struct Process *process, unsigned int event)
     {
         new_process->threadgroup = process->threadgroup;
         process->threadgroup->refs++;
-        if(logging_level <= 10)
-            log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
-                      process->threadgroup->refs);
+        log_debug(process->threadgroup->tgid, "threadgroup refs=%d",
+                  process->threadgroup->refs);
     }
     else
         new_process->threadgroup = trace_new_threadgroup(
@@ -1258,7 +1253,7 @@ int syscall_handle(struct Process *process)
         if(entry != NULL)
         {
             int ret = 0;
-            if(entry->name && logging_level <= 10)
+            if(entry->name)
                 log_debug(process->tid, "%s()", entry->name);
             if(!process->in_syscall && entry->proc_entry)
                 ret = entry->proc_entry(entry->name, process, entry->udata);

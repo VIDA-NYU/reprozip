@@ -138,9 +138,8 @@ struct Process *trace_get_empty_process(void)
     }
 
     /* Allocate more! */
-    if(logging_level <= 10)
-        log_debug(0, "process table full (%d), reallocating",
-                  (int)processes_size);
+    log_debug(0, "process table full (%d), reallocating",
+              (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -164,8 +163,7 @@ struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd)
     threadgroup->tgid = tgid;
     threadgroup->wd = wd;
     threadgroup->refs = 1;
-    if(logging_level <= 10)
-        log_debug(tgid, "threadgroup (= process) created");
+    log_debug(tgid, "threadgroup (= process) created");
     return threadgroup;
 }
 
@@ -175,22 +173,20 @@ void trace_free_process(struct Process *process)
     if(process->threadgroup != NULL)
     {
         process->threadgroup->refs--;
-        if(logging_level <= 10)
-            log_debug(process->tid,
-                      "process died, threadgroup tgid=%d refs=%d",
-                      process->threadgroup->tgid, process->threadgroup->refs);
+        log_debug(process->tid,
+                  "process died, threadgroup tgid=%d refs=%d",
+                  process->threadgroup->tgid, process->threadgroup->refs);
         if(process->threadgroup->refs == 0)
         {
-            if(logging_level <= 10)
-                log_debug(process->threadgroup->tgid,
-                          "deallocating threadgroup");
+            log_debug(process->threadgroup->tgid,
+                      "deallocating threadgroup");
             if(process->threadgroup->wd != NULL)
                 free(process->threadgroup->wd);
             free(process->threadgroup);
         }
         process->threadgroup = NULL;
     }
-    else if(logging_level <= 10)
+    else
         log_debug(process->tid, "threadgroup==NULL");
     if(process->execve_info != NULL)
     {
@@ -371,10 +367,9 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
-            if(logging_level <= 20)
-                log_info(tid, "process exited (%s %d), %d processes remain",
-                         (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
-                         (unsigned int)nprocs);
+            log_info(tid, "process exited (%s %d), %d processes remain",
+                     (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
+                     (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
@@ -394,8 +389,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         process = trace_find_process(tid);
         if(process == NULL)
         {
-            if(logging_level <= 10)
-                log_debug(tid, "process appeared");
+            log_debug(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCSTAT_UNKNOWN;
             process->flags = 0;
@@ -411,8 +405,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         {
             process->status = PROCSTAT_ATTACHED;
 
-            if(logging_level <= 10)
-                log_debug(tid, "process attached");
+            log_debug(tid, "process attached");
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
             if(logging_level <= 20)
@@ -556,8 +549,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             else
             {
                 siginfo_t si;
-                if(logging_level <= 20)
-                    log_info(tid, "caught signal %d", signum);
+                log_info(tid, "caught signal %d", signum);
                 if(ptrace(PTRACE_GETSIGINFO, tid, 0, (long)&si) >= 0)
                     ptrace(PTRACE_SYSCALL, tid, NULL, signum);
                 else
@@ -623,13 +615,12 @@ static void sigint_handler(int signo)
     (void)signo;
     if(now - last_int < 2)
     {
-        if(logging_level <= 30)
-            log_error(0, "cleaning up on SIGINT");
+        log_error(0, "cleaning up on SIGINT");
         cleanup();
         restore_signals();
         exit(128 + 2);
     }
-    else if(logging_level <= 30)
+    else
         log_error(0, "Got SIGINT, press twice to abort...");
     last_int = now;
 }
@@ -668,7 +659,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     child = fork();
 
-    if(child != 0 && logging_level <= 20)
+    if(child != 0)
         log_info(0, "child created, pid=%d", child);
 
     if(child == 0)
@@ -713,8 +704,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->threadgroup = trace_new_threadgroup(child, get_wd());
         process->in_syscall = 0;
 
-        if(logging_level <= 20)
-            log_info(0, "process %d created by initial fork()", child);
+        log_info(0, "process %d created by initial fork()", child);
         if( (db_add_first_process(&process->identifier,
                                   process->threadgroup->wd) != 0)
          || (db_add_file_open(process->identifier, process->threadgroup->wd,
