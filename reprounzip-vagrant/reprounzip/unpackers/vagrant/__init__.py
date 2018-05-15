@@ -65,7 +65,7 @@ def select_box(runs, gui=False):
                     return result
         default = parameter['default']
         logger.warning("Unsupported distribution '%s', using %s",
-                        distribution, default['name'])
+                       distribution, default['name'])
         result = default['architectures'].get(architecture)
         if result:
             return default['distribution'], result

@@ -303,7 +303,7 @@ class FileDownloader(object):
                         remote_path = inputs_outputs[output_name].path
                     except KeyError:
                         logger.critical("Invalid output file: %r",
-                                         output_name)
+                                        output_name)
                         sys.exit(1)
 
                 logger.debug("Downloading file %s", remote_path)

@@ -85,7 +85,7 @@ def select_image(runs):
                     return result
         default = parameter['default']
         logger.warning("Unsupported distribution '%s', using %s",
-                        distribution, default['name'])
+                       distribution, default['name'])
         return default['distribution'], default['image']
 
     def find_version(distrib, version):
