@@ -301,7 +301,7 @@ def trace(binary, argv, directory, append, verbosity='unset'):
     """
     if verbosity != 'unset':
         warnings.warn("The 'verbosity' parameter for trace() is deprecated. "
-                      "Please set a level on the 'reprozip' logger intead.",
+                      "Please set a level on the 'reprozip' logger instead.",
                       DeprecationWarning)
     cwd = Path.cwd()
     if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
