@@ -5,13 +5,13 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
-import subprocess
-
 from PyQt4 import QtCore, QtGui
+import subprocess
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, \
     handle_error, error_msg, parse_ports
+from reprounzip_qt.usage import record_usage
 
 
 class UnpackerOptions(QtGui.QWidget):
@@ -69,6 +69,10 @@ class ChrootOptions(UnpackerOptions):
         elif self.magic_dirs.checkState() == QtCore.Qt.Checked:
             options['args'].append('--bind-magic-dirs')
 
+        record_usage(
+            chroot_preserve_owner=self.preserve_owner.checkState(),
+            chroot_magic_dirs=self.magic_dirs.checkState())
+
         return options
 
 
@@ -91,14 +95,18 @@ class DockerOptions(UnpackerOptions):
                 self.machine.addItem("Custom config from environment", None)
             else:
                 self.machine.addItem("Default (no machine)", None)
+            nb_machines = 0
             for machine in out.splitlines():
                 machine = machine.strip()
                 if machine:
                     self.machine.addItem(machine.decode('utf-8', 'replace'),
                                          machine)
+                    nb_machines += 1
+            record_usage(docker_machines=nb_machines)
         except (OSError, subprocess.CalledProcessError):
             self.machine = QtGui.QComboBox(editable=False, enabled=False)
             self.machine.addItem("docker-machine unavailable", None)
+            record_usage(docker_machines=False)
         self.add_row("docker-machine:", self.machine)
 
         self.image = QtGui.QLineEdit(placeholderText='detect')
@@ -117,18 +125,25 @@ class DockerOptions(UnpackerOptions):
         if self.machine.currentIndex() != -1:
             options['docker-machine'] = self.machine.itemData(
                 self.machine.currentIndex())
+            record_usage(
+                use_docker_machine=options['docker-machine'] is not None)
 
         options['root'] = ROOT.INDEX_TO_OPTION[self.root.currentIndex()]
 
         if self.image.text():
             options['args'].extend(['--base-image', self.image.text()])
+            record_usage(docker_base_image=True)
 
         if self.distribution.text():
             options['args'].extend(['--distribution',
                                     self.distribution.text()])
+            record_usage(docker_distribution=True)
 
         if self.install_pkgs.isChecked():
             options['args'].append('--install-pkgs')
+
+        record_usage(root=options['root'],
+                     docker_install_pkgs=self.install_pkgs.isChecked())
 
         return options
 
@@ -169,29 +184,36 @@ class VagrantOptions(UnpackerOptions):
 
         if self.image.text():
             options['args'].extend(['--base-image', self.image.text()])
+            record_usage(vagrant_base_image=True)
 
         if self.distribution.text():
             options['args'].extend(['--distribution',
                                     self.distribution.text()])
+            record_usage(vagrant_distribution=True)
 
         if self.memory.value() != 99:
             options['args'].extend(['--memory', '%d' % self.memory.value()])
+            record_usage(vagrant_memory=self.memory.value())
 
         if self.gui.isChecked():
             options['args'].append('--use-gui')
+            record_usage(vagrant_gui=True)
 
         ports = parse_ports(self.ports.text(), self)
         if ports is None:
             return None
+        record_usage(vagrant_unpack_port_fwd=bool(ports))
         for host, container, proto in ports:
             options['args'].append('--expose-port=%s:%s/%s' % (
                                    host, container, proto))
 
         if not self.use_chroot.isChecked():
             options['args'].append('--dont-use-chroot')
+            record_usage(vagrant_no_chroot=True)
 
         if not self.magic_dirs.isChecked():
             options['args'].append('--dont-bind-magic-dirs')
+            record_usage(vagrant_magic_dirs=False)
 
         return options
 
@@ -277,6 +299,7 @@ class UnpackTab(QtGui.QWidget):
             self, "Pick package file",
             QtCore.QDir.currentPath(), "ReproZip Packages (*.rpz)")
         if picked:
+            record_usage(browse_pkg=True)
             self.package_widget.setText(picked)
             self._package_changed()
 
@@ -306,6 +329,7 @@ class UnpackTab(QtGui.QWidget):
             return
         unpacker = self.unpackers.checkedButton()
         if unpacker:
+            record_usage(unpacker=unpacker.text())
             options = self.unpacker_options.currentWidget().options()
             if options is None:
                 return

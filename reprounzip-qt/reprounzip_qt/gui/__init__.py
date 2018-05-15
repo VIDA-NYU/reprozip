@@ -4,6 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import logging
 import os
 import platform
 from PyQt4 import QtCore, QtGui
@@ -12,11 +13,16 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import usagestats
 
 import reprounzip_qt
 from reprounzip_qt.gui.common import error_msg
 from reprounzip_qt.gui.unpack import UnpackTab
 from reprounzip_qt.gui.run import RunTab
+from reprounzip_qt.usage import record_usage, _usage_report as usage_report
+
+
+logger = logging.getLogger('reprounzip_qt')
 
 
 class Application(QtGui.QApplication):
@@ -29,6 +35,7 @@ class Application(QtGui.QApplication):
         rcpath = os.path.expanduser('~/.reprozip')
         rcname = 'rpuzqt-nodefault'
         if os.path.exists(os.path.join(rcpath, rcname)):
+            logger.info("Registering application disabled")
             return
         try:
             proc = subprocess.Popen(['xdg-mime', 'query', 'default',
@@ -38,7 +45,8 @@ class Application(QtGui.QApplication):
             out, err = proc.communicate()
             registered = bool(out.strip())
         except OSError:
-            pass
+            record_usage(appregister='fail xdg-mime')
+            logger.info("xdg-mime call failed, not registering application")
         else:
             if not registered:
                 r = QtGui.QMessageBox.question(
@@ -49,18 +57,22 @@ class Application(QtGui.QApplication):
                 if r == QtGui.QMessageBox.Yes:
                     self.linux_register_default(window)
                 elif r == QtGui.QMessageBox.No:
+                    record_usage(appregister='no')
                     if not os.path.exists(rcpath):
                         os.mkdir(rcpath)
                     with open(os.path.join(rcpath, rcname), 'w') as fp:
                         fp.write('1\n')
 
     def linux_register_default(self, window):
+        record_usage(appregister='yes')
         command = os.path.abspath(sys.argv[0])
         if not os.path.isfile(command):
+            logger.error("Couldn't find argv[0] location!")
             return
         dirname = tempfile.mkdtemp(prefix='reprozip_mime_')
         try:
             # Install x-reprozip mimetype
+            logger.info("Installing application/x-reprozip mimetype for .rpz")
             filename = os.path.join(dirname, 'nyuvida-reprozip.xml')
             with open(filename, 'w') as fp:
                 fp.write('''\
@@ -78,6 +90,7 @@ class Application(QtGui.QApplication):
                                                 '.local/share/mime')])
 
             # Install icon
+            logger.info("Copying icon")
             icon_dest_root = os.path.join(os.environ['HOME'],
                                           '.local/share/icons/hicolor')
             icon_dest_subdir = os.path.join(icon_dest_root, '48x48/mimetypes')
@@ -91,6 +104,7 @@ class Application(QtGui.QApplication):
             subprocess.check_call(['update-icon-caches', icon_dest_root])
 
             # Install desktop file
+            logger.info("Installing reprounzip.desktop file")
             app_dir = os.path.join(os.environ['HOME'],
                                    '.local/share/applications')
             if not os.path.exists(app_dir):
@@ -105,14 +119,38 @@ MimeType=application/x-reprozip
 Icon={1}
 '''.format(command, icon_dest_file))
             subprocess.check_call(['update-desktop-database', app_dir])
+
+            logger.info("Application registered!")
         except (OSError, subprocess.CalledProcessError):
             error_msg(window, "Error setting default application",
                       'error', traceback.format_exc())
         finally:
             shutil.rmtree(dirname)
 
+    def ask_enable_usage_report(self):
+        dialog = QtGui.QDialog()
+        dialog.setWindowTitle("Anonymous usage statistics")
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(QtGui.QLabel("Send anonymous usage reports to the "
+                                      "developers?"))
+        dont_ask = QtGui.QCheckBox("Don't ask again")
+        layout.addWidget(dont_ask)
+        buttons = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        layout.addWidget(buttons)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        dialog.setLayout(layout)
+
+        res = dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
+            usage_report.enable_reporting()
+        elif dont_ask.isChecked():
+            usage_report.disable_reporting()
+
     def event(self, event):
         if event.type() == QtCore.QEvent.FileOpen:
+            record_usage(fileopenevent=True)
             # Create new window for this RPZ
             window = ReprounzipUi(unpack=dict(package=event.file()))
             window.setVisible(True)
@@ -130,6 +168,8 @@ Icon={1}
         self.windows.add(window)
         if platform.system().lower() == 'linux':
             self.linux_try_register_default(window)
+        if usage_report.status is usagestats.Stats.UNSET:
+            self.ask_enable_usage_report()
 
 
 class ReprounzipUi(QtGui.QMainWindow):
