@@ -13,12 +13,13 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import usagestats
 
 import reprounzip_qt
 from reprounzip_qt.gui.common import error_msg
 from reprounzip_qt.gui.unpack import UnpackTab
 from reprounzip_qt.gui.run import RunTab
-from reprounzip_qt.usage import record_usage
+from reprounzip_qt.usage import record_usage, _usage_report as usage_report
 
 
 logger = logging.getLogger('reprounzip_qt')
@@ -126,6 +127,27 @@ Icon={1}
         finally:
             shutil.rmtree(dirname)
 
+    def ask_enable_usage_report(self):
+        dialog = QtGui.QDialog()
+        dialog.setWindowTitle("Anonymous usage statistics")
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(QtGui.QLabel("Send anonymous usage reports to the "
+                                      "developers?"))
+        dont_ask = QtGui.QCheckBox("Don't ask again")
+        layout.addWidget(dont_ask)
+        buttons = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        layout.addWidget(buttons)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        dialog.setLayout(layout)
+
+        res = dialog.exec_()
+        if res == QtGui.QDialog.Accepted:
+            usage_report.enable_reporting()
+        elif dont_ask.isChecked():
+            usage_report.disable_reporting()
+
     def event(self, event):
         if event.type() == QtCore.QEvent.FileOpen:
             record_usage(fileopenevent=True)
@@ -146,6 +168,8 @@ Icon={1}
         self.windows.add(window)
         if platform.system().lower() == 'linux':
             self.linux_try_register_default(window)
+        if usage_report.status is usagestats.Stats.UNSET:
+            self.ask_enable_usage_report()
 
 
 class ReprounzipUi(QtGui.QMainWindow):
