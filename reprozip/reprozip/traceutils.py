@@ -19,6 +19,9 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import PY3, listvalues
 
 
+logger = logging.getLogger('reprozip')
+
+
 def create_schema(conn):
     """Create the trace database schema on a given SQLite3 connection.
     """
@@ -142,7 +145,7 @@ def combine_traces(traces, target):
 
     # Do the merge
     for other in traces:
-        logging.info("Attaching database %s", other)
+        logger.info("Attaching database %s", other)
 
         # Attach the other trace
         conn.execute(
@@ -160,7 +163,7 @@ def combine_traces(traces, target):
             ORDER BY run_id;
             ''')
 
-        logging.info(
+        logger.info(
             "%d rows in maps.map_runs",
             list(conn.execute('SELECT COUNT(*) FROM maps.map_runs;'))[0][0])
 
@@ -173,13 +176,13 @@ def combine_traces(traces, target):
             ORDER BY id;
             ''')
 
-        logging.info(
+        logger.info(
             "%d rows in maps.map_processes",
             list(conn.execute('SELECT COUNT(*) FROM maps.map_processes;'))
             [0][0])
 
         # processes
-        logging.info("Insert processes...")
+        logger.info("Insert processes...")
         conn.execute(
             '''
             INSERT INTO processes(id, run_id, parent,
@@ -193,7 +196,7 @@ def combine_traces(traces, target):
             ''')
 
         # opened_files
-        logging.info("Insert opened_files...")
+        logger.info("Insert opened_files...")
         conn.execute(
             '''
             INSERT INTO opened_files(run_id, name, timestamp,
@@ -207,7 +210,7 @@ def combine_traces(traces, target):
             ''')
 
         # executed_files
-        logging.info("Insert executed_files...")
+        logger.info("Insert executed_files...")
         conn.execute(
             '''
             INSERT INTO executed_files(name, run_id, timestamp, process,

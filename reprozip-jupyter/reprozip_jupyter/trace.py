@@ -25,6 +25,9 @@ from reprounzip.common import setup_logging
 __version__ = '0.1'
 
 
+logger = logging.getLogger('reprozip_jupyter')
+
+
 class RPZOptions(object):
     def __init__(self, verbosity=1, dir=None, identify_packages=True,
                  find_inputs_outputs=True, append=None):
@@ -64,9 +67,9 @@ class RPZKernelManager(KernelManager):
     def _launch_kernel(self, kernel_cmd, **kw):
         cmd = self.rpz_options.trace_command_line(kernel_cmd)
 
-        logging.info("Kernel requested, connection file: %s",
-                     self.connection_file)
-        logging.info("Executing: %r", cmd)
+        logger.info("Kernel requested, connection file: %s",
+                    self.connection_file)
+        logger.info("Executing: %r", cmd)
         return launch_kernel(cmd, **kw)
 
     def finish_shutdown(self, *args, **kwargs):
@@ -106,7 +109,7 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         self.log.info("Executing notebook with kernel: %s" % kernel_name)
         # } no change
 
-        logging.info("Starting kernel...")
+        logger.info("Starting kernel...")
 
         # copied from start_new_kernel(), but using our KernelManager class {
         km = RPZKernelManager(kernel_name=kernel_name)
@@ -124,7 +127,7 @@ class RPZExecutePreprocessor(ExecutePreprocessor):
         # } start_new_kernel()
 
         self.km, self.kc = km, kc
-        logging.info("Kernel started")
+        logger.info("Kernel started")
 
         # no change {
         self.kc.allow_stdin = False

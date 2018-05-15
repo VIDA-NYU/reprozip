@@ -38,6 +38,9 @@ from reprounzip.unpackers.vagrant.run_command import IgnoreMissingKey, \
 from reprounzip.utils import unicode_, iteritems, stderr, download_file
 
 
+logger = logging.getLogger('reprounzip.vagrant')
+
+
 def select_box(runs, gui=False):
     """Selects a box for the experiment, with the correct distribution.
     """
@@ -49,7 +52,7 @@ def select_box(runs, gui=False):
                                                          architecture, gui))
 
     if architecture not in ('i686', 'x86_64'):
-        logging.critical("Error: unsupported architecture %s", architecture)
+        logger.critical("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
     def find_distribution(parameter, distribution, version, architecture):
@@ -62,8 +65,8 @@ def select_box(runs, gui=False):
                 if result is not None:
                     return result
         distrib = boxes[default]
-        logging.warning("Unsupported distribution '%s', using %s",
-                        distribution, default)
+        logger.warning("Unsupported distribution '%s', using %s",
+                       distribution, default)
         return find_version(distrib, None, architecture)
 
     def find_version(distrib, version, architecture):
@@ -75,8 +78,8 @@ def select_box(runs, gui=False):
                         return box['distribution'], result
         box = distrib['default']
         if version is not None:
-            logging.warning("Using %s instead of '%s'",
-                            box['name'], version)
+            logger.warning("Using %s instead of '%s'",
+                           box['name'], version)
         result = box['architectures'].get(architecture)
         if result is not None:
             return box['distribution'], result
@@ -91,8 +94,8 @@ def select_box(runs, gui=False):
     result = find_distribution(vagrant_param,
                                distribution, version, architecture)
     if result is None:
-        logging.critical("Error: couldn't find a base box for required "
-                         "architecture")
+        logger.critical("Error: couldn't find a base box for required "
+                        "architecture")
         sys.exit(1)
     return result
 
@@ -114,15 +117,15 @@ def machine_setup(target):
                                       stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
-        logging.info("Calling 'vagrant up'...")
+        logger.info("Calling 'vagrant up'...")
         try:
             retcode = subprocess.check_call(['vagrant', 'up'], cwd=target.path)
         except OSError:
-            logging.critical("vagrant executable not found")
+            logger.critical("vagrant executable not found")
             sys.exit(1)
         else:
             if retcode != 0:
-                logging.critical("vagrant up failed with code %d", retcode)
+                logger.critical("vagrant up failed with code %d", retcode)
                 sys.exit(1)
         # Try again
         out = subprocess.check_output(['vagrant', 'ssh-config'],
@@ -148,9 +151,9 @@ def machine_setup(target):
                 port=int(vagrant_info.get('port', 2222)),
                 username=vagrant_info.get('user', 'vagrant'),
                 key_filename=key_file)
-    logging.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
-                  info['username'], info['hostname'], info['port'],
-                  info['key_filename'])
+    logger.debug("SSH parameters from Vagrant: %s@%s:%s, key=%s",
+                 info['username'], info['hostname'], info['port'],
+                 info['key_filename'])
 
     unpacked_info = read_dict(target)
     use_chroot = unpacked_info['use_chroot']
@@ -171,7 +174,7 @@ def machine_setup(target):
                 'mount -t proc none /experimentroot/proc; '
                 'fi'))
         if chan.recv_exit_status() != 0:
-            logging.critical("Couldn't mount directories in chroot")
+            logger.critical("Couldn't mount directories in chroot")
             sys.exit(1)
         if gui:
             # Mount X11 socket
@@ -185,7 +188,7 @@ def machine_setup(target):
                     '/tmp/.X11-unix /experimentroot/tmp/.X11-unix; '
                     'fi; exit 0'))
             if chan.recv_exit_status() != 0:
-                logging.critical("Couldn't mount X11 sockets in chroot")
+                logger.critical("Couldn't mount X11 sockets in chroot")
                 sys.exit(1)
         ssh.close()
 
@@ -208,13 +211,13 @@ def vagrant_setup_create(args):
     building a chroot.
     """
     if not args.pack:
-        logging.critical("setup/create needs the pack filename")
+        logger.critical("setup/create needs the pack filename")
         sys.exit(1)
 
     pack = Path(args.pack[0])
     target = Path(args.target[0])
     if target.exists():
-        logging.critical("Target directory exists")
+        logger.critical("Target directory exists")
         sys.exit(1)
     use_chroot = args.use_chroot
     mount_bind = args.bind_magic_dirs
@@ -237,7 +240,7 @@ def vagrant_setup_create(args):
         try:
             memory = int(args.memory[-1])
         except ValueError:
-            logging.critical("Invalid value for memory size: %r", args.memory)
+            logger.critical("Invalid value for memory size: %r", args.memory)
             sys.exit(1)
 
     ports = parse_ports(args.expose_port)
@@ -251,8 +254,8 @@ def vagrant_setup_create(args):
             target_distribution = None
     else:
         target_distribution, box = select_box(runs, gui=args.gui)
-    logging.info("Using box %s", box)
-    logging.debug("Distribution: %s", target_distribution or "unknown")
+    logger.info("Using box %s", box)
+    logger.debug("Distribution: %s", target_distribution or "unknown")
 
     # If using chroot, we might still need to install packages to get missing
     # (not packed) files
@@ -260,24 +263,24 @@ def vagrant_setup_create(args):
         packages = [pkg for pkg in packages if not pkg.packfiles]
         if packages:
             record_usage(vagrant_install_pkgs=True)
-            logging.info("Some packages were not packed, so we'll install and "
-                         "copy their files\n"
-                         "Packages that are missing:\n%s",
-                         ' '.join(pkg.name for pkg in packages))
+            logger.info("Some packages were not packed, so we'll install and "
+                        "copy their files\n"
+                        "Packages that are missing:\n%s",
+                        ' '.join(pkg.name for pkg in packages))
 
     if packages:
         try:
             installer = select_installer(pack, runs, target_distribution)
         except CantFindInstaller as e:
-            logging.error("Need to install %d packages but couldn't select a "
-                          "package installer: %s",
-                          len(packages), e)
+            logger.error("Need to install %d packages but couldn't select a "
+                         "package installer: %s",
+                         len(packages), e)
 
     target.mkdir(parents=True)
 
     try:
         # Writes setup script
-        logging.info("Writing setup script %s...", target / 'setup.sh')
+        logger.info("Writing setup script %s...", target / 'setup.sh')
         with (target / 'setup.sh').open('w', encoding='utf-8',
                                         newline='\n') as fp:
             fp.write('#!/bin/sh\n\nset -e\n\n')
@@ -322,7 +325,7 @@ def vagrant_setup_create(args):
                 pathlist = []
                 # Adds intermediate directories, and checks for existence in
                 # the tar
-                logging.info("Generating file list...")
+                logger.info("Generating file list...")
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
                     if f.path.name == 'resolv.conf' and (
@@ -339,7 +342,7 @@ def vagrant_setup_create(args):
                         if path in data_files:
                             pathlist.append(path)
                         else:
-                            logging.info("Missing file %s", path)
+                            logger.info("Missing file %s", path)
                 # FIXME : for some reason we need reversed() here, I'm not sure
                 # why. Need to read more of tar's docs.
                 # TAR bug: --no-overwrite-dir removes --keep-old-files
@@ -370,7 +373,7 @@ mkdir -p /experimentroot/bin
 ''')
 
         # Copies pack
-        logging.info("Copying pack file...")
+        logger.info("Copying pack file...")
         rpz_pack.copy_data_tar(target / 'data.tgz')
 
         rpz_pack.close()
@@ -399,7 +402,7 @@ def write_vagrantfile(target, unpacked_info):
     ports = unpacked_info.get('ports', [])
     memory = unpacked_info.get('memory', None)
 
-    logging.info("Writing %s...", target / 'Vagrantfile')
+    logger.info("Writing %s...", target / 'Vagrantfile')
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
                                        newline='\n') as fp:
         # Vagrant header and version
@@ -495,13 +498,13 @@ def vagrant_run(args):
             for host, (guest, proto) in iteritems(all_ports))
 
         write_vagrantfile(target, unpacked_info)
-        logging.info("Some requested ports are not yet forwarded, running "
-                     "'vagrant reload'")
+        logger.info("Some requested ports are not yet forwarded, running "
+                    "'vagrant reload'")
         retcode = subprocess.call(['vagrant', 'reload', '--no-provision'],
                                   cwd=target.path)
         if retcode != 0:
-            logging.critical("vagrant reload failed with code %d, aborting",
-                             retcode)
+            logger.critical("vagrant reload failed with code %d, aborting",
+                            retcode)
             sys.exit(1)
         write_dict(target, unpacked_info)
 
@@ -586,8 +589,8 @@ class SSHUploader(FileUploader):
         try:
             ssh_info = machine_setup(self.target)
         except subprocess.CalledProcessError:
-            logging.critical("Failed to get the status of the machine -- is "
-                             "it running?")
+            logger.critical("Failed to get the status of the machine -- is "
+                            "it running?")
             sys.exit(1)
 
         # Connect with SSH
@@ -607,11 +610,11 @@ class SSHUploader(FileUploader):
         rtemp = PosixPath('/vagrant') / temp
 
         # Copy file to shared folder
-        logging.info("Copying file to shared folder...")
+        logger.info("Copying file to shared folder...")
         local_path.copyfile(ltemp)
 
         # Move it
-        logging.info("Moving file into place...")
+        logger.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
             shell_escape(remote_path.path),
@@ -625,7 +628,7 @@ class SSHUploader(FileUploader):
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ' && '.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
-            logging.critical("Couldn't move file in virtual machine")
+            logger.critical("Couldn't move file in virtual machine")
             try:
                 ltemp.remove()
             except OSError:
@@ -663,8 +666,8 @@ class SSHDownloader(FileDownloader):
         try:
             info = machine_setup(self.target)
         except subprocess.CalledProcessError:
-            logging.critical("Failed to get the status of the machine -- is "
-                             "it running?")
+            logger.critical("Failed to get the status of the machine -- is "
+                            "it running?")
             sys.exit(1)
 
         # Connect with SSH
@@ -681,7 +684,7 @@ class SSHDownloader(FileDownloader):
         ltemp = self.target / temp
 
         # Copy file to shared folder
-        logging.info("Copying file to shared folder...")
+        logger.info("Copying file to shared folder...")
         chan = self.ssh.get_transport().open_session()
         cp_cmd = '/bin/cp %s %s' % (
             shell_escape(remote_path.path),
@@ -691,7 +694,7 @@ class SSHDownloader(FileDownloader):
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
             ' && '.join((cp_cmd, chown_cmd, chmod_cmd))))
         if chan.recv_exit_status() != 0:
-            logging.critical("Couldn't copy file in virtual machine")
+            logger.critical("Couldn't copy file in virtual machine")
             try:
                 ltemp.remove()
             except OSError:
@@ -702,8 +705,8 @@ class SSHDownloader(FileDownloader):
         try:
             ltemp.rename(local_path)
         except OSError as e:
-            logging.critical("Couldn't download output file: %s\n%s",
-                             remote_path, str(e))
+            logger.critical("Couldn't download output file: %s\n%s",
+                            remote_path, str(e))
             ltemp.remove()
             return False
         return True
@@ -731,8 +734,8 @@ def vagrant_suspend(args):
 
     retcode = subprocess.call(['vagrant', 'suspend'], cwd=target.path)
     if retcode != 0:
-        logging.critical("vagrant suspend failed with code %d, ignoring...",
-                         retcode)
+        logger.critical("vagrant suspend failed with code %d, ignoring...",
+                        retcode)
 
 
 @target_must_exist
@@ -744,8 +747,8 @@ def vagrant_destroy_vm(args):
 
     retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
     if retcode != 0:
-        logging.critical("vagrant destroy failed with code %d, ignoring...",
-                         retcode)
+        logger.critical("vagrant destroy failed with code %d, ignoring...",
+                        retcode)
 
 
 @target_must_exist
@@ -775,16 +778,16 @@ def check_vagrant_version():
     try:
         out = subprocess.check_output(['vagrant', '--version'])
     except (subprocess.CalledProcessError, OSError):
-        logging.error("Couldn't run vagrant")
+        logger.error("Couldn't run vagrant")
         sys.exit(1)
     out = out.decode('ascii').strip().lower().split()
     if out[0] == 'vagrant':
         if LooseVersion(out[1]) < LooseVersion('1.1'):
-            logging.error("Vagrant >=1.1 is required; detected version: %s",
-                          out[1])
+            logger.error("Vagrant >=1.1 is required; detected version: %s",
+                         out[1])
             sys.exit(1)
     else:
-        logging.error("Vagrant >=1.1 is required")
+        logger.error("Vagrant >=1.1 is required")
         sys.exit(1)
 
 

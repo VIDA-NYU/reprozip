@@ -34,6 +34,9 @@ from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
     unicode_, escape, normalize_path
 
 
+logger = logging.getLogger('reprounzip.graph')
+
+
 C_INITIAL = 0   # First process or don't know
 C_FORK = 1      # Might actually be any one of fork, vfork or clone
 C_EXEC = 2      # Replaced image with execve
@@ -229,7 +232,7 @@ class Package(object):
 
     def json(self, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
-            logging.critical("JSON output doesn't support --packages package")
+            logger.critical("JSON output doesn't support --packages package")
             sys.exit(1)
         elif level_pkgs == LVL_PKG_FILE:
             files = sorted(unicode_(f) for f in self.files)
@@ -248,8 +251,8 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                       'ignore': LVL_PKG_IGNORE,
                       'drop': LVL_PKG_DROP}[level_pkgs]
     except KeyError:
-        logging.critical("Unknown level of detail for packages: '%s'",
-                         level_pkgs)
+        logger.critical("Unknown level of detail for packages: '%s'",
+                        level_pkgs)
         sys.exit(1)
     try:
         level_processes = {'thread': LVL_PROC_THREAD,
@@ -259,8 +262,8 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                            'run': LVL_PROC_RUN,
                            'runs': LVL_PROC_RUN}[level_processes]
     except KeyError:
-        logging.critical("Unknown level of detail for processes: '%s'",
-                         level_processes)
+        logger.critical("Unknown level of detail for processes: '%s'",
+                        level_processes)
         sys.exit(1)
     if level_other_files.startswith('depth:'):
         file_depth = int(level_other_files[6:])
@@ -275,8 +278,8 @@ def parse_levels(level_pkgs, level_processes, level_other_files):
                              'none': LVL_OTHER_NO,
                              'drop': LVL_OTHER_NO}[level_other_files]
     except KeyError:
-        logging.critical("Unknown level of detail for other files: '%s'",
-                         level_other_files)
+        logger.critical("Unknown level of detail for other files: '%s'",
+                        level_other_files)
         sys.exit(1)
 
     return level_pkgs, level_processes, level_other_files, file_depth
@@ -346,7 +349,7 @@ def read_events(database, all_forks, has_thread_flag):
         ''')
 
     # Loop on all event lists
-    logging.info("Getting all events from database...")
+    logger.info("Getting all events from database...")
     rows = heapq.merge(((r[2], 'process', r) for r in process_rows),
                        ((r[1], 'open', r) for r in file_rows),
                        ((r[1], 'exec', r) for r in exec_rows))
@@ -355,7 +358,7 @@ def read_events(database, all_forks, has_thread_flag):
     for ts, event_type, data in rows:
         if event_type == 'process':
             r_id, r_parent, r_timestamp, r_thread = data
-            logging.debug("Process %d created (parent %r)", r_id, r_parent)
+            logger.debug("Process %d created (parent %r)", r_id, r_parent)
             if r_parent is not None:
                 parent = processes[r_parent]
                 binary = parent.binary
@@ -384,7 +387,7 @@ def read_events(database, all_forks, has_thread_flag):
         elif event_type == 'open':
             r_name, r_timestamp, r_mode, r_process, r_directory = data
             r_name = normalize_path(r_name)
-            logging.debug("File open: %s, process %d", r_name, r_process)
+            logger.debug("File open: %s, process %d", r_name, r_process)
             if not (r_mode & FILE_WDIR or r_directory):
                 process = processes[r_process]
                 files.add(r_name)
@@ -396,7 +399,7 @@ def read_events(database, all_forks, has_thread_flag):
             argv = tuple(r_argv.split('\0'))
             if not argv[-1]:
                 argv = argv[:-1]
-            logging.debug("File exec: %s, process %d", r_name, r_process)
+            logger.debug("File exec: %s, process %d", r_name, r_process)
             process = processes[r_process]
             binaries.add(r_name)
             # Here we split this process in two "programs", unless the previous
@@ -449,22 +452,22 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
         graph_format = {'dot': FORMAT_DOT, 'DOT': FORMAT_DOT,
                         'json': FORMAT_JSON, 'JSON': FORMAT_JSON}[graph_format]
     except KeyError:
-        logging.critical("Unknown output format %r", graph_format)
+        logger.critical("Unknown output format %r", graph_format)
         sys.exit(1)
 
     level_pkgs, level_processes, level_other_files, file_depth = \
         parse_levels(level_pkgs, level_processes, level_other_files)
 
     if target.exists():
-        logging.critical("Output file %s exists", target)
+        logger.critical("Output file %s exists", target)
         sys.exit(1)
 
     # Reads package ownership from the configuration
     if not configfile.is_file():
-        logging.critical("Configuration file does not exist!\n"
-                         "Did you forget to run 'reprozip trace'?\n"
-                         "If not, you might want to use --dir to specify an "
-                         "alternate location.")
+        logger.critical("Configuration file does not exist!\n"
+                        "Did you forget to run 'reprozip trace'?\n"
+                        "If not, you might want to use --dir to specify an "
+                        "alternate location.")
         sys.exit(1)
     config = load_config(configfile, canonical=False)
     inputs_outputs = config.inputs_outputs
@@ -477,8 +480,8 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
     # Label the runs
     if len(runs) != len(config.runs):
-        logging.warning("Configuration file doesn't list the same number of "
-                        "runs we found in the database!")
+        logger.warning("Configuration file doesn't list the same number of "
+                       "runs we found in the database!")
     else:
         for config_run, run in izip(config.runs, runs):
             run.name = config_run['id']
@@ -494,21 +497,21 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     def filefilter(path):
         pathuni = unicode_(path)
         if include and not any(f(pathuni) for f in include):
-            logging.debug("IGN(include) %s", pathuni)
+            logger.debug("IGN(include) %s", pathuni)
             return None
         if any(f(pathuni) for f in ignore):
-            logging.debug("IGN %s", pathuni)
+            logger.debug("IGN %s", pathuni)
             return None
         if not (replace or aggregates):
             return path
         for fi in replace:
             pathuni_ = fi(pathuni)
             if pathuni_ != pathuni:
-                logging.debug("SUB %s -> %s", pathuni, pathuni_)
+                logger.debug("SUB %s -> %s", pathuni, pathuni_)
             pathuni = pathuni_
         for prefix in aggregates or []:
             if pathuni.startswith(prefix):
-                logging.debug("AGG %s -> %s", pathuni, prefix)
+                logger.debug("AGG %s -> %s", pathuni, prefix)
                 pathuni = prefix
                 break
         return PosixPath(pathuni)
@@ -533,7 +536,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
         packages = []
         other_files = files
     else:
-        logging.info("Organizes packages...")
+        logger.info("Organizes packages...")
         file2package = dict((f.path, pkg)
                             for pkg in config.packages for f in pkg.files)
         packages = {}
@@ -598,7 +601,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
                  'fillcolor=black style="filled,rounded"];\n')
 
         # Programs
-        logging.info("Writing programs...")
+        logger.info("Writing programs...")
         for run in runs:
             run.dot(fp, level_processes)
 
@@ -608,7 +611,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
 
         # Packages
         if level_pkgs not in (LVL_PKG_IGNORE, LVL_PKG_DROP):
-            logging.info("Writing packages...")
+            logger.info("Writing packages...")
             fp.write('\n    /* system packages */\n')
             for package in sorted(packages, key=lambda pkg: pkg.name):
                 package.dot(fp, level_pkgs)
@@ -616,7 +619,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         fp.write('\n    /* other files */\n')
 
         # Other files
-        logging.info("Writing other files...")
+        logger.info("Writing other files...")
         for fi in sorted(other_files):
             if fi in inputs_outputs_map:
                 fp.write('    "%(path)s" [fillcolor="#A3B4E0", '
@@ -629,7 +632,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
         fp.write('\n')
 
         # Edges
-        logging.info("Connecting edges...")
+        logger.info("Connecting edges...")
         done_edges = set()
         for prog, fi, mode, argv in edges:
             endp_prog = prog.dot_endpoint(level_processes)

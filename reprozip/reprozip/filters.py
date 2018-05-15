@@ -10,6 +10,9 @@ from reprozip.tracer.trace import TracedFile
 from reprozip.utils import irange, iteritems
 
 
+logger = logging.getLogger('reprozip')
+
+
 def builtin(input_files, **kwargs):
     """Default heuristics for input files.
     """
@@ -17,7 +20,7 @@ def builtin(input_files, **kwargs):
         lst = []
         for path in input_files[i]:
             if path.unicodename[0] == '.' or path.ext in ('.pyc', '.so'):
-                logging.info("Removing input %s", path)
+                logger.info("Removing input %s", path)
             else:
                 lst.append(path)
 
@@ -31,7 +34,7 @@ def python(files, input_files, **kwargs):
             pyfile = path.parent / path.stem + '.py'
             if pyfile.is_file():
                 if pyfile not in files:
-                    logging.info("Adding %s", pyfile)
+                    logger.info("Adding %s", pyfile)
                     add.append(TracedFile(pyfile))
 
     for fi in add:
@@ -41,7 +44,7 @@ def python(files, input_files, **kwargs):
         lst = []
         for path in input_files[i]:
             if path.ext in ('.py', '.pyc'):
-                logging.info("Removing input %s", path)
+                logger.info("Removing input %s", path)
             else:
                 lst.append(path)
 

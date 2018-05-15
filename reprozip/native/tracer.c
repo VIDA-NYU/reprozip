@@ -94,10 +94,6 @@ static void get_x86_64_reg(register_type *reg, uint64_t value)
 }
 
 
-int trace_verbosity = 0;
-#define verbosity trace_verbosity
-
-
 void free_execve_info(struct ExecveInfo *execi)
 {
     free_strarray(execi->argv);
@@ -131,7 +127,7 @@ struct Process *trace_get_empty_process(void)
     }
 
     /* Count unknown processes */
-    if(verbosity >= 3)
+    if(logging_level <= 10)
     {
         size_t unknown = 0;
         for(i = 0; i < processes_size; ++i)
@@ -142,9 +138,8 @@ struct Process *trace_get_empty_process(void)
     }
 
     /* Allocate more! */
-    if(verbosity >= 3)
-        log_debug(0, "process table full (%d), reallocating",
-                  (int)processes_size);
+    log_debug(0, "process table full (%d), reallocating",
+              (int)processes_size);
     {
         struct Process *pool;
         size_t prev_size = processes_size;
@@ -168,8 +163,7 @@ struct ThreadGroup *trace_new_threadgroup(pid_t tgid, char *wd)
     threadgroup->tgid = tgid;
     threadgroup->wd = wd;
     threadgroup->refs = 1;
-    if(verbosity >= 3)
-        log_debug(tgid, "threadgroup (= process) created");
+    log_debug(tgid, "threadgroup (= process) created");
     return threadgroup;
 }
 
@@ -179,22 +173,20 @@ void trace_free_process(struct Process *process)
     if(process->threadgroup != NULL)
     {
         process->threadgroup->refs--;
-        if(verbosity >= 3)
-            log_debug(process->tid,
-                      "process died, threadgroup tgid=%d refs=%d",
-                      process->threadgroup->tgid, process->threadgroup->refs);
+        log_debug(process->tid,
+                  "process died, threadgroup tgid=%d refs=%d",
+                  process->threadgroup->tgid, process->threadgroup->refs);
         if(process->threadgroup->refs == 0)
         {
-            if(verbosity >= 3)
-                log_debug(process->threadgroup->tgid,
-                          "deallocating threadgroup");
+            log_debug(process->threadgroup->tgid,
+                      "deallocating threadgroup");
             if(process->threadgroup->wd != NULL)
                 free(process->threadgroup->wd);
             free(process->threadgroup);
         }
         process->threadgroup = NULL;
     }
-    else if(verbosity >= 3)
+    else
         log_debug(process->tid, "threadgroup==NULL");
     if(process->execve_info != NULL)
     {
@@ -375,10 +367,9 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
-            if(verbosity >= 2)
-                log_info(tid, "process exited (%s %d), %d processes remain",
-                         (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
-                         (unsigned int)nprocs);
+            log_info(tid, "process exited (%s %d), %d processes remain",
+                     (exitcode & 0x0100)?"signal":"code", exitcode & 0xFF,
+                     (unsigned int)nprocs);
             if(nprocs <= 0)
                 break;
             if(unknown >= nprocs)
@@ -398,8 +389,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
         process = trace_find_process(tid);
         if(process == NULL)
         {
-            if(verbosity >= 3)
-                log_debug(tid, "process appeared");
+            log_debug(tid, "process appeared");
             process = trace_get_empty_process();
             process->status = PROCSTAT_UNKNOWN;
             process->flags = 0;
@@ -415,11 +405,10 @@ static int trace(pid_t first_proc, int *first_exit_code)
         {
             process->status = PROCSTAT_ATTACHED;
 
-            if(verbosity >= 3)
-                log_debug(tid, "process attached");
+            log_debug(tid, "process attached");
             trace_set_options(tid);
             ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
-            if(verbosity >= 2)
+            if(logging_level <= 20)
             {
                 unsigned int nproc, unknown;
                 trace_count_processes(&nproc, &unknown);
@@ -560,8 +549,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             else
             {
                 siginfo_t si;
-                if(verbosity >= 2)
-                    log_info(tid, "caught signal %d", signum);
+                log_info(tid, "caught signal %d", signum);
                 if(ptrace(PTRACE_GETSIGINFO, tid, 0, (long)&si) >= 0)
                     ptrace(PTRACE_SYSCALL, tid, NULL, signum);
                 else
@@ -627,13 +615,12 @@ static void sigint_handler(int signo)
     (void)signo;
     if(now - last_int < 2)
     {
-        if(verbosity >= 1)
-            log_error(0, "cleaning up on SIGINT");
+        log_error(0, "cleaning up on SIGINT");
         cleanup();
         restore_signals();
         exit(128 + 2);
     }
-    else if(verbosity >= 1)
+    else
         log_error(0, "Got SIGINT, press twice to abort...");
     last_int = now;
 }
@@ -672,7 +659,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     child = fork();
 
-    if(child != 0 && verbosity >= 2)
+    if(child != 0)
         log_info(0, "child created, pid=%d", child);
 
     if(child == 0)
@@ -700,32 +687,9 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         exit(127);
     }
 
-    /* Open log file */
-    {
-        char *logfilename;
-        const char *home = getenv("HOME");
-        if(!home || !home[0])
-        {
-            log_critical(0, "couldn't open log file: $HOME not set");
-            restore_signals();
-            return 1;
-        }
-        logfilename = malloc(strlen(home) + 15);
-        strcpy(logfilename, home);
-        strcat(logfilename, "/.reprozip/log");
-        if(log_open_file(logfilename) != 0)
-        {
-            free(logfilename);
-            restore_signals();
-            return 1;
-        }
-        free(logfilename);
-    }
-
     if(db_init(database_path) != 0)
     {
         kill(child, SIGKILL);
-        log_close_file();
         restore_signals();
         return 1;
     }
@@ -740,8 +704,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
         process->threadgroup = trace_new_threadgroup(child, get_wd());
         process->in_syscall = 0;
 
-        if(verbosity >= 2)
-            log_info(0, "process %d created by initial fork()", child);
+        log_info(0, "process %d created by initial fork()", child);
         if( (db_add_first_process(&process->identifier,
                                   process->threadgroup->wd) != 0)
          || (db_add_file_open(process->identifier, process->threadgroup->wd,
@@ -750,7 +713,6 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             /* LCOV_EXCL_START : Database insertion shouldn't fail */
             db_close(1);
             cleanup();
-            log_close_file();
             restore_signals();
             return 1;
             /* LCOV_EXCL_END */
@@ -761,19 +723,16 @@ int fork_and_trace(const char *binary, int argc, char **argv,
     {
         cleanup();
         db_close(1);
-        log_close_file();
         restore_signals();
         return 1;
     }
 
     if(db_close(0) != 0)
     {
-        log_close_file();
         restore_signals();
         return 1;
     }
 
-    log_close_file();
     restore_signals();
     return 0;
 }
