@@ -32,7 +32,7 @@ To run it with reprozip, you just need to use the prefix *reprozip trace*:
 
     $ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
 
-This command creates a *.reprozip* directory, in which you'll find the configuration file, named *config.yml*. You can edit the command line and environment variables, and choose which files to pack.
+This command creates a *.reprozip-trace* directory, in which you'll find the configuration file, named *config.yml*. You can edit the command line and environment variables, and choose which files to pack.
 
 If you are using Debian or Ubuntu, most of these files (library dependencies) are organized by package. You can add or remove files, or choose not to include a package by changing option *packfiles* from true to false. In this way, smaller packs can be created with reprozip (if space is an issue), and reprounzip can download these files from the package manager; however, note this is only available for Debian and Ubuntu for now, and also be aware that package versions might differ. Choosing which files to pack is also important to remove sensitive information and third-party software that is not open source and should not be distributed.
 
