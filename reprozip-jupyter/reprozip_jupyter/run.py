@@ -27,7 +27,7 @@ logger = logging.getLogger('reprozip_jupyter')
 
 @contextlib.contextmanager
 def process_connection_file(original):
-    with original.open('rb') as fp:
+    with original.open('r') as fp:
         data = json.load(fp)
 
     data['ip'] = '0.0.0.0'  # Kernel should listen on all interfaces
@@ -35,7 +35,7 @@ def process_connection_file(original):
     ports = [value for key, value in data.items() if key.endswith('_port')]
 
     fd, fixed_file = Path.tempfile(suffix='.json')
-    with fixed_file.open('wb') as fp:
+    with fixed_file.open('w') as fp:
         json.dump(data, fp)
     os.close(fd)
 
