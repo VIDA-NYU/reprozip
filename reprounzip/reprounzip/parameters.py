@@ -140,12 +140,36 @@ _bundled_parameters = {
                         "distribution": "ubuntu",
                         "image": "ubuntu:16.04",
                         "name": "Ubuntu 16.04 'Xenial'"
+                    },
+                    {
+                        "version": "^16\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:16.10",
+                        "name": "Ubuntu 16.10 'Yakkety'"
+                    },
+                    {
+                        "version": "^17\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:17.04",
+                        "name": "Ubuntu 17.04 'Zesty'"
+                    },
+                    {
+                        "version": "^17\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:17.10",
+                        "name": "Ubuntu 17.10 'Artful'"
+                    },
+                    {
+                        "version": "^18\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:18.04",
+                        "name": "Ubuntu 18.04 'Bionic'"
                     }
                 ],
                 "default": {
                     "distribution": "ubuntu",
-                    "image": "ubuntu:15.10",
-                    "name": "Ubuntu 15.10 'Wily'"
+                    "image": "ubuntu:16.04",
+                    "name": "Ubuntu 16.04 'Xenial'"
                 }
             },
             "debian": {
@@ -173,12 +197,18 @@ _bundled_parameters = {
                         "distribution": "debian",
                         "image": "debian:stretch",
                         "name": "Debian 9 'Stretch'"
+                    },
+                    {
+                        "version": "^(10(\\.|$))|(buster)",
+                        "distribution": "debian",
+                        "image": "debian:buster",
+                        "name": "Debian 10 'Buster'"
                     }
                 ],
                 "default": {
                     "distribution": "debian",
-                    "image": "debian:jessie",
-                    "name": "Debian 8 'Jessie'"
+                    "image": "debian:stretch",
+                    "name": "Debian 9 'Stretch'"
                 }
             },
             "centos": {
@@ -243,17 +273,36 @@ _bundled_parameters = {
                         "image": "fedora:20",
                         "name": "Fedora 20"
                     },
+                    # Fedora 21-24 omitted because they don't include tar
                     {
                         "version": "^25$",
                         "distribution": "fedora",
                         "image": "fedora:25",
                         "name": "Fedora 25"
+                    },
+                    {
+                        "version": "^26$",
+                        "distribution": "fedora",
+                        "image": "fedora:26",
+                        "name": "Fedora 26"
+                    },
+                    {
+                        "version": "^27$",
+                        "distribution": "fedora",
+                        "image": "fedora:27",
+                        "name": "Fedora 27"
+                    },
+                    {
+                        "version": "^28$",
+                        "distribution": "fedora",
+                        "image": "fedora:28",
+                        "name": "Fedora 28"
                     }
                 ],
                 "default": {
                     "distribution": "fedora",
-                    "image": "fedora:25",
-                    "name": "Fedora 25"
+                    "image": "fedora:28",
+                    "name": "Fedora 28"
                 }
             }
         }
