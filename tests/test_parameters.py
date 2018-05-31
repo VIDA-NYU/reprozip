@@ -4,7 +4,6 @@
 
 from __future__ import print_function, unicode_literals
 
-import json
 import unittest
 
 from reprounzip import parameters
@@ -20,7 +19,7 @@ class TestSelection(unittest.TestCase):
 
         # Reset them to bundled parameters temporarily
         cls._old_parameters = parameters.parameters
-        parameters.parameters = json.loads(parameters.bundled_parameters)
+        parameters.parameters = parameters._bundled_parameters
 
     @classmethod
     def tearDownClass(cls):
