@@ -356,15 +356,51 @@ _bundled_parameters = {
                             "x86_64": "bento/ubuntu-16.04"
                         },
                         "name": "Ubuntu 16.04 'Xenial'"
+                    },
+                    {
+                        "version": "^16\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-16.10-i386",
+                            "x86_64": "bento/ubuntu-16.10"
+                        },
+                        "name": "Ubuntu 16.10 'Yakkety'"
+                    },
+                    {
+                        "version": "^17\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-17.04-i386",
+                            "x86_64": "bento/ubuntu-17.04"
+                        },
+                        "name": "Ubuntu 17.04 'Zesty'"
+                    },
+                    {
+                        "version": "^17\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-17.10-i386",
+                            "x86_64": "bento/ubuntu-17.10"
+                        },
+                        "name": "Ubuntu 17.10 'Artful'"
+                    },
+                    {
+                        "version": "^18\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-18.04-i386",
+                            "x86_64": "bento/ubuntu-18.04"
+                        },
+                        "name": "Ubuntu 18.04 'Bionic'"
                     }
                 ],
                 "default": {
                     "distribution": "ubuntu",
                     "architectures": {
-                        "i686": "bento/ubuntu-16.04-i386",
-                        "x86_64": "bento/ubuntu-16.04"
+                        "i686": "bento/ubuntu-18.04-i386",
+                        "x86_64": "bento/ubuntu-18.04"
                     },
-                    "name": "Ubuntu 16.04 'Xenial'"
+                    "name": "Ubuntu 18.04 'Bionic'"
                 }
             },
             "debian": {
