@@ -45,7 +45,7 @@ def update_parameters():
         # Note that this still expects the ReproZip CA
         url = env_var
     elif env_var not in (None, '', '1', 'on', 'enabled', 'yes', 'true'):
-        parameters = json.loads(bundled_parameters)
+        parameters = _bundled_parameters
         return
 
     try:
@@ -77,7 +77,7 @@ def update_parameters():
                 logger.info("parameters.json has incompatible version %s, "
                             "using bundled parameters", ver)
 
-    parameters = json.loads(bundled_parameters)
+    parameters = _bundled_parameters
 
 
 def get_parameter(section):
@@ -89,439 +89,521 @@ def get_parameter(section):
     return parameters.get(section, None)
 
 
-bundled_parameters = (
-    '{\n'
-    '  "busybox_url": {\n'
-    '    "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",\n'
-    '    "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"\n'
-    '  },\n'
-    '  "rpzsudo_url": {\n'
-    '    "x86_64": "https://github.com/remram44/static-sudo/releases/download/'
-    'current/rpzsudo-x86_64",\n'
-    '    "i686": "https://github.com/remram44/static-sudo/releases/download/cu'
-    'rrent/rpzsudo-i686"\n'
-    '  },\n'
-    '  "docker_images": {\n'
-    '    "default": "debian",\n'
-    '    "images": {\n'
-    '      "ubuntu": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^12\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:12.04",\n'
-    '            "name": "Ubuntu 12.04 \'Precise\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^14\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:14.04",\n'
-    '            "name": "Ubuntu 14.04 \'Trusty\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^14\\\\.10$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:14.10",\n'
-    '            "name": "Ubuntu 14.10 \'Utopic\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^15\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:15.04",\n'
-    '            "name": "Ubuntu 15.04 \'Vivid\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^15\\\\.10$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:15.10",\n'
-    '            "name": "Ubuntu 15.10 \'Wily\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^16\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "image": "ubuntu:16.04",\n'
-    '            "name": "Ubuntu 16.04 \'Xenial\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "ubuntu",\n'
-    '          "image": "ubuntu:15.10",\n'
-    '          "name": "Ubuntu 15.10 \'Wily\'"\n'
-    '        }\n'
-    '      },\n'
-    '      "debian": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^(6(\\\\.|$))|(squeeze)",\n'
-    '            "distribution": "debian",\n'
-    '            "image": "debian:squeeze",\n'
-    '            "name": "Debian 6 \'Squeeze\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^(7(\\\\.|$))|(wheezy)",\n'
-    '            "distribution": "debian",\n'
-    '            "image": "debian:wheezy",\n'
-    '            "name": "Debian 7 \'Wheezy\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
-    '            "distribution": "debian",\n'
-    '            "image": "debian:jessie",\n'
-    '            "name": "Debian 8 \'Jessie\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^(9(\\\\.|$))|(stretch)",\n'
-    '            "distribution": "debian",\n'
-    '            "image": "debian:stretch",\n'
-    '            "name": "Debian 9 \'Stretch\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "debian",\n'
-    '          "image": "debian:jessie",\n'
-    '          "name": "Debian 8 \'Jessie\'"\n'
-    '        }\n'
-    '      },\n'
-    '      "centos": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^5(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos5",\n'
-    '            "name": "CentOS 5"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^6(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos6",\n'
-    '            "name": "CentOS 6"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^7(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos7",\n'
-    '            "name": "CentOS 7"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "centos",\n'
-    '          "image": "centos:centos7",\n'
-    '          "name": "CentOS 7"\n'
-    '        }\n'
-    '      },\n'
-    '      "centos linux": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^5(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos5",\n'
-    '            "name": "CentOS 5"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^6(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos6",\n'
-    '            "name": "CentOS 6"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^7(\\\\.|$)",\n'
-    '            "distribution": "centos",\n'
-    '            "image": "centos:centos7",\n'
-    '            "name": "CentOS 7"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "centos",\n'
-    '          "image": "centos:centos7",\n'
-    '          "name": "CentOS 7"\n'
-    '        }\n'
-    '      },\n'
-    '      "fedora": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^20$",\n'
-    '            "distribution": "fedora",\n'
-    '            "image": "fedora:20",\n'
-    '            "name": "Fedora 20"\n'
-    '          },\n'
-    # Fedora 21-24 don't have tar
-    '          {\n'
-    '            "version": "^25$",\n'
-    '            "distribution": "fedora",\n'
-    '            "image": "fedora:25",\n'
-    '            "name": "Fedora 25"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "fedora",\n'
-    '          "image": "fedora:25",\n'
-    '          "name": "Fedora 25"\n'
-    '        }\n'
-    '      }\n'
-    '    }\n'
-    '  },\n'
-    '  "vagrant_boxes": {\n'
-    '    "default": "debian",\n'
-    '    "boxes": {\n'
-    '      "ubuntu": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^12\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "hashicorp/precise32",\n'
-    '              "x86_64": "hashicorp/precise64"\n'
-    '            },\n'
-    '            "name": "Ubuntu 12.04 \'Precise\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^14\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "ubuntu/trusty32",\n'
-    '              "x86_64": "ubuntu/trusty64"\n'
-    '            },\n'
-    '            "name": "Ubuntu 14.04 \'Trusty\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^15\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "ubuntu/vivid32",\n'
-    '              "x86_64": "ubuntu/vivid64"\n'
-    '            },\n'
-    '            "name": "Ubuntu 15.04 \'Vivid\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^15\\\\.10$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "ubuntu/wily32",\n'
-    '              "x86_64": "ubuntu/wily64"\n'
-    '            },\n'
-    '            "name": "Ubuntu 15.10 \'Wily\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^16\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "bento/ubuntu-16.04-i386",\n'
-    '              "x86_64": "bento/ubuntu-16.04"\n'
-    '            },\n'
-    '            "name": "Ubuntu 16.04 \'Xenial\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "ubuntu",\n'
-    '          "architectures": {\n'
-    '            "i686": "bento/ubuntu-16.04-i386",\n'
-    '            "x86_64": "bento/ubuntu-16.04"\n'
-    '          },\n'
-    '          "name": "Ubuntu 16.04 \'Xenial\'"\n'
-    '        }\n'
-    '      },\n'
-    '      "debian": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^(7(\\\\.|$))|(wheezy)",\n'
-    '            "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-7-i386",\n'
-    '              "x86_64": "remram/debian-7-amd64"\n'
-    '            },\n'
-    '            "name": "Debian 7 \'Wheezy\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
-    '            "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-8-i386",\n'
-    '              "x86_64": "remram/debian-8-amd64"\n'
-    '            },\n'
-    '            "name": "Debian 8 \'Jessie\'"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^(9(\\\\.|$))|(stretch)",\n'
-    '            "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-9-i386",\n'
-    '              "x86_64": "remram/debian-9-amd64"\n'
-    '            },\n'
-    '            "name": "Debian 9 \'Stretch\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-8-i386",\n'
-    '              "x86_64": "remram/debian-8-amd64"\n'
-    '            },\n'
-    '          "name": "Debian 8 \'Jessie\'"\n'
-    '        }\n'
-    '      },\n'
-    '      "centos": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^5\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "i686": "bento/centos-5.11-i386",\n'
-    '              "x86_64": "bento/centos-5.11"\n'
-    '            },\n'
-    '            "name": "CentOS 5.11"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^6\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "i686": "bento/centos-6.7-i386",\n'
-    '              "x86_64": "bento/centos-6.7"\n'
-    '            },\n'
-    '            "name": "CentOS 6.7"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^7\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "x86_64": "bento/centos-7.2"\n'
-    '            },\n'
-    '            "name": "CentOS 7.2"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "centos",\n'
-    '          "architectures": {\n'
-    '            "i686": "bento/centos-6.7-i386",\n'
-    '            "x86_64": "bento/centos-6.7"\n'
-    '          },\n'
-    '          "name": "CentOS 6.7"\n'
-    '        }\n'
-    '      },\n'
-    '      "centos linux": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^5\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "i686": "bento/centos-5.11-i386",\n'
-    '              "x86_64": "bento/centos-5.11"\n'
-    '            },\n'
-    '            "name": "CentOS 5.11"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^6\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "i686": "bento/centos-6.7-i386",\n'
-    '              "x86_64": "bento/centos-6.7"\n'
-    '            },\n'
-    '            "name": "CentOS 6.7"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^7\\\\.",\n'
-    '            "distribution": "centos",\n'
-    '            "architectures": {\n'
-    '              "x86_64": "bento/centos-7.2"\n'
-    '            },\n'
-    '            "name": "CentOS 7.2"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "centos",\n'
-    '          "architectures": {\n'
-    '            "i686": "bento/centos-6.7-i386",\n'
-    '            "x86_64": "bento/centos-6.7"\n'
-    '          },\n'
-    '          "name": "CentOS 6.7"\n'
-    '        }\n'
-    '      },\n'
-    '      "fedora": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^22$",\n'
-    '            "distribution": "fedora",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/fedora-22-i386",\n'
-    '              "x86_64": "remram/fedora-22-amd64"\n'
-    '            },\n'
-    '            "name": "Fedora 22"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^23$",\n'
-    '            "distribution": "fedora",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/fedora-23-i386",\n'
-    '              "x86_64": "remram/fedora-23-amd64"\n'
-    '            },\n'
-    '            "name": "Fedora 23"\n'
-    '          },\n'
-    '          {\n'
-    '            "version": "^24$",\n'
-    '            "distribution": "fedora",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/fedora-24-i386",\n'
-    '              "x86_64": "remram/fedora-24-amd64"\n'
-    '            },\n'
-    '            "name": "Fedora 24"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "fedora",\n'
-    '          "architectures": {\n'
-    '            "i686": "remram/fedora-24-i386",\n'
-    '            "x86_64": "remram/fedora-24-amd64"\n'
-    '          },\n'
-    '          "name": "Fedora 24"\n'
-    '        }\n'
-    '      }\n'
-    '    }\n'
-    '  },\n'
-    '  "vagrant_boxes_x": {\n'
-    '    "default": "debian",\n'
-    '    "boxes": {\n'
-    '      "ubuntu": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^16\\\\.04$",\n'
-    '            "distribution": "ubuntu",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/ubuntu-1604-amd64-x",\n'
-    '              "x86_64": "remram/ubuntu-1604-amd64-x"\n'
-    '            },\n'
-    '            "name": "Ubuntu 16.04 \'Xenial\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "ubuntu",\n'
-    '          "architectures": {\n'
-    '            "i686": "remram/ubuntu-1604-amd64-x",\n'
-    '            "x86_64": "remram/ubuntu-1604-amd64-x"\n'
-    '          },\n'
-    '          "name": "Ubuntu 16.04 \'Xenial\'"\n'
-    '        }\n'
-    '      },\n'
-    '      "debian": {\n'
-    '        "versions": [\n'
-    '          {\n'
-    '            "version": "^(8(\\\\.|$))|(jessie)",\n'
-    '            "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-8-amd64-x",\n'
-    '              "x86_64": "remram/debian-8-amd64-x"\n'
-    '            },\n'
-    '            "name": "Debian 8 \'Jessie\'"\n'
-    '          }\n'
-    '        ],\n'
-    '        "default": {\n'
-    '          "distribution": "debian",\n'
-    '            "architectures": {\n'
-    '              "i686": "remram/debian-8-amd64-x",\n'
-    '              "x86_64": "remram/debian-8-amd64-x"\n'
-    '            },\n'
-    '          "name": "Debian 8 \'Jessie\'"\n'
-    '        }\n'
-    '      }\n'
-    '    }\n'
-    '  }\n'
-    '}\n'
-)
+_bundled_parameters = {
+    "busybox_url": {
+        "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",
+        "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"
+    },
+    "rpzsudo_url": {
+        "x86_64": "https://github.com/remram44/static-sudo/releases/download/"
+                  "current/rpzsudo-x86_64",
+        "i686": "https://github.com/remram44/static-sudo/releases/download/"
+                "current/rpzsudo-i686"
+    },
+    "docker_images": {
+        "default": "debian",
+        "images": {
+            "ubuntu": {
+                "versions": [
+                    {
+                        "version": "^12\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:12.04",
+                        "name": "Ubuntu 12.04 'Precise'"
+                    },
+                    {
+                        "version": "^14\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:14.04",
+                        "name": "Ubuntu 14.04 'Trusty'"
+                    },
+                    {
+                        "version": "^14\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:14.10",
+                        "name": "Ubuntu 14.10 'Utopic'"
+                    },
+                    {
+                        "version": "^15\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:15.04",
+                        "name": "Ubuntu 15.04 'Vivid'"
+                    },
+                    {
+                        "version": "^15\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:15.10",
+                        "name": "Ubuntu 15.10 'Wily'"
+                    },
+                    {
+                        "version": "^16\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:16.04",
+                        "name": "Ubuntu 16.04 'Xenial'"
+                    },
+                    {
+                        "version": "^16\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:16.10",
+                        "name": "Ubuntu 16.10 'Yakkety'"
+                    },
+                    {
+                        "version": "^17\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:17.04",
+                        "name": "Ubuntu 17.04 'Zesty'"
+                    },
+                    {
+                        "version": "^17\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:17.10",
+                        "name": "Ubuntu 17.10 'Artful'"
+                    },
+                    {
+                        "version": "^18\\.04$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:18.04",
+                        "name": "Ubuntu 18.04 'Bionic'"
+                    }
+                ],
+                "default": {
+                    "distribution": "ubuntu",
+                    "image": "ubuntu:16.04",
+                    "name": "Ubuntu 16.04 'Xenial'"
+                }
+            },
+            "debian": {
+                "versions": [
+                    {
+                        "version": "^(6(\\.|$))|(squeeze)",
+                        "distribution": "debian",
+                        "image": "debian:squeeze",
+                        "name": "Debian 6 'Squeeze'"
+                    },
+                    {
+                        "version": "^(7(\\.|$))|(wheezy)",
+                        "distribution": "debian",
+                        "image": "debian:wheezy",
+                        "name": "Debian 7 'Wheezy'"
+                    },
+                    {
+                        "version": "^(8(\\.|$))|(jessie)",
+                        "distribution": "debian",
+                        "image": "debian:jessie",
+                        "name": "Debian 8 'Jessie'"
+                    },
+                    {
+                        "version": "^(9(\\.|$))|(stretch)",
+                        "distribution": "debian",
+                        "image": "debian:stretch",
+                        "name": "Debian 9 'Stretch'"
+                    },
+                    {
+                        "version": "^(10(\\.|$))|(buster)",
+                        "distribution": "debian",
+                        "image": "debian:buster",
+                        "name": "Debian 10 'Buster'"
+                    }
+                ],
+                "default": {
+                    "distribution": "debian",
+                    "image": "debian:stretch",
+                    "name": "Debian 9 'Stretch'"
+                }
+            },
+            "centos": {
+                "versions": [
+                    {
+                        "version": "^5(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos5",
+                        "name": "CentOS 5"
+                    },
+                    {
+                        "version": "^6(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos6",
+                        "name": "CentOS 6"
+                    },
+                    {
+                        "version": "^7(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos7",
+                        "name": "CentOS 7"
+                    }
+                ],
+                "default": {
+                    "distribution": "centos",
+                    "image": "centos:centos7",
+                    "name": "CentOS 7"
+                }
+            },
+            "centos linux": {
+                "versions": [
+                    {
+                        "version": "^5(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos5",
+                        "name": "CentOS 5"
+                    },
+                    {
+                        "version": "^6(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos6",
+                        "name": "CentOS 6"
+                    },
+                    {
+                        "version": "^7(\\.|$)",
+                        "distribution": "centos",
+                        "image": "centos:centos7",
+                        "name": "CentOS 7"
+                    }
+                ],
+                "default": {
+                    "distribution": "centos",
+                    "image": "centos:centos7",
+                    "name": "CentOS 7"
+                }
+            },
+            "fedora": {
+                "versions": [
+                    {
+                        "version": "^20$",
+                        "distribution": "fedora",
+                        "image": "fedora:20",
+                        "name": "Fedora 20"
+                    },
+                    # Fedora 21-24 omitted because they don't include tar
+                    {
+                        "version": "^25$",
+                        "distribution": "fedora",
+                        "image": "fedora:25",
+                        "name": "Fedora 25"
+                    },
+                    {
+                        "version": "^26$",
+                        "distribution": "fedora",
+                        "image": "fedora:26",
+                        "name": "Fedora 26"
+                    },
+                    {
+                        "version": "^27$",
+                        "distribution": "fedora",
+                        "image": "fedora:27",
+                        "name": "Fedora 27"
+                    },
+                    {
+                        "version": "^28$",
+                        "distribution": "fedora",
+                        "image": "fedora:28",
+                        "name": "Fedora 28"
+                    }
+                ],
+                "default": {
+                    "distribution": "fedora",
+                    "image": "fedora:28",
+                    "name": "Fedora 28"
+                }
+            }
+        }
+    },
+    "vagrant_boxes": {
+        "default": "debian",
+        "boxes": {
+            "ubuntu": {
+                "versions": [
+                    {
+                        "version": "^12\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "hashicorp/precise32",
+                            "x86_64": "hashicorp/precise64"
+                        },
+                        "name": "Ubuntu 12.04 'Precise'"
+                    },
+                    {
+                        "version": "^14\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "ubuntu/trusty32",
+                            "x86_64": "ubuntu/trusty64"
+                        },
+                        "name": "Ubuntu 14.04 'Trusty'"
+                    },
+                    {
+                        "version": "^15\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "ubuntu/vivid32",
+                            "x86_64": "ubuntu/vivid64"
+                        },
+                        "name": "Ubuntu 15.04 'Vivid'"
+                    },
+                    {
+                        "version": "^15\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "ubuntu/wily32",
+                            "x86_64": "ubuntu/wily64"
+                        },
+                        "name": "Ubuntu 15.10 'Wily'"
+                    },
+                    {
+                        "version": "^16\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-16.04-i386",
+                            "x86_64": "bento/ubuntu-16.04"
+                        },
+                        "name": "Ubuntu 16.04 'Xenial'"
+                    },
+                    {
+                        "version": "^16\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-16.10-i386",
+                            "x86_64": "bento/ubuntu-16.10"
+                        },
+                        "name": "Ubuntu 16.10 'Yakkety'"
+                    },
+                    {
+                        "version": "^17\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-17.04-i386",
+                            "x86_64": "bento/ubuntu-17.04"
+                        },
+                        "name": "Ubuntu 17.04 'Zesty'"
+                    },
+                    {
+                        "version": "^17\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-17.10-i386",
+                            "x86_64": "bento/ubuntu-17.10"
+                        },
+                        "name": "Ubuntu 17.10 'Artful'"
+                    },
+                    {
+                        "version": "^18\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "bento/ubuntu-18.04-i386",
+                            "x86_64": "bento/ubuntu-18.04"
+                        },
+                        "name": "Ubuntu 18.04 'Bionic'"
+                    }
+                ],
+                "default": {
+                    "distribution": "ubuntu",
+                    "architectures": {
+                        "i686": "bento/ubuntu-18.04-i386",
+                        "x86_64": "bento/ubuntu-18.04"
+                    },
+                    "name": "Ubuntu 18.04 'Bionic'"
+                }
+            },
+            "debian": {
+                "versions": [
+                    {
+                        "version": "^(7(\\.|$))|(wheezy)",
+                        "distribution": "debian",
+                        "architectures": {
+                            "i686": "remram/debian-7-i386",
+                            "x86_64": "remram/debian-7-amd64"
+                        },
+                        "name": "Debian 7 'Wheezy'"
+                    },
+                    {
+                        "version": "^(8(\\.|$))|(jessie)",
+                        "distribution": "debian",
+                        "architectures": {
+                            "i686": "remram/debian-8-i386",
+                            "x86_64": "remram/debian-8-amd64"
+                        },
+                        "name": "Debian 8 'Jessie'"
+                    },
+                    {
+                        "version": "^(9(\\.|$))|(stretch)",
+                        "distribution": "debian",
+                        "architectures": {
+                            "i686": "remram/debian-9-i386",
+                            "x86_64": "remram/debian-9-amd64"
+                        },
+                        "name": "Debian 9 'Stretch'"
+                    }
+                ],
+                "default": {
+                    "distribution": "debian",
+                    "architectures": {
+                        "i686": "remram/debian-8-i386",
+                        "x86_64": "remram/debian-8-amd64"
+                    },
+                    "name": "Debian 8 'Jessie'"
+                }
+            },
+            "centos": {
+                "versions": [
+                    {
+                        "version": "^5\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "i686": "bento/centos-5.11-i386",
+                            "x86_64": "bento/centos-5.11"
+                        },
+                        "name": "CentOS 5.11"
+                    },
+                    {
+                        "version": "^6\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "i686": "bento/centos-6.7-i386",
+                            "x86_64": "bento/centos-6.7"
+                        },
+                        "name": "CentOS 6.7"
+                    },
+                    {
+                        "version": "^7\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "x86_64": "bento/centos-7.2"
+                        },
+                        "name": "CentOS 7.2"
+                    }
+                ],
+                "default": {
+                    "distribution": "centos",
+                    "architectures": {
+                        "i686": "bento/centos-6.7-i386",
+                        "x86_64": "bento/centos-6.7"
+                    },
+                    "name": "CentOS 6.7"
+                }
+            },
+            "centos linux": {
+                "versions": [
+                    {
+                        "version": "^5\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "i686": "bento/centos-5.11-i386",
+                            "x86_64": "bento/centos-5.11"
+                        },
+                        "name": "CentOS 5.11"
+                    },
+                    {
+                        "version": "^6\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "i686": "bento/centos-6.7-i386",
+                            "x86_64": "bento/centos-6.7"
+                        },
+                        "name": "CentOS 6.7"
+                    },
+                    {
+                        "version": "^7\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "x86_64": "bento/centos-7.2"
+                        },
+                        "name": "CentOS 7.2"
+                    }
+                ],
+                "default": {
+                    "distribution": "centos",
+                    "architectures": {
+                        "i686": "bento/centos-6.7-i386",
+                        "x86_64": "bento/centos-6.7"
+                    },
+                    "name": "CentOS 6.7"
+                }
+            },
+            "fedora": {
+                "versions": [
+                    {
+                        "version": "^22$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "i686": "remram/fedora-22-i386",
+                            "x86_64": "remram/fedora-22-amd64"
+                        },
+                        "name": "Fedora 22"
+                    },
+                    {
+                        "version": "^23$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "i686": "remram/fedora-23-i386",
+                            "x86_64": "remram/fedora-23-amd64"
+                        },
+                        "name": "Fedora 23"
+                    },
+                    {
+                        "version": "^24$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "i686": "remram/fedora-24-i386",
+                            "x86_64": "remram/fedora-24-amd64"
+                        },
+                        "name": "Fedora 24"
+                    }
+                ],
+                "default": {
+                    "distribution": "fedora",
+                    "architectures": {
+                        "i686": "remram/fedora-24-i386",
+                        "x86_64": "remram/fedora-24-amd64"
+                    },
+                    "name": "Fedora 24"
+                }
+            }
+        }
+    },
+    "vagrant_boxes_x": {
+        "default": "debian",
+        "boxes": {
+            "ubuntu": {
+                "versions": [
+                    {
+                        "version": "^16\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "i686": "remram/ubuntu-1604-amd64-x",
+                            "x86_64": "remram/ubuntu-1604-amd64-x"
+                        },
+                        "name": "Ubuntu 16.04 'Xenial'"
+                    }
+                ],
+                "default": {
+                    "distribution": "ubuntu",
+                    "architectures": {
+                        "i686": "remram/ubuntu-1604-amd64-x",
+                        "x86_64": "remram/ubuntu-1604-amd64-x"
+                    },
+                    "name": "Ubuntu 16.04 'Xenial'"
+                }
+            },
+            "debian": {
+                "versions": [
+                    {
+                        "version": "^(8(\\.|$))|(jessie)",
+                        "distribution": "debian",
+                        "architectures": {
+                            "i686": "remram/debian-8-amd64-x",
+                            "x86_64": "remram/debian-8-amd64-x"
+                        },
+                        "name": "Debian 8 'Jessie'"
+                    }
+                ],
+                "default": {
+                    "distribution": "debian",
+                    "architectures": {
+                        "i686": "remram/debian-8-amd64-x",
+                        "x86_64": "remram/debian-8-amd64-x"
+                    },
+                    "name": "Debian 8 'Jessie'"
+                }
+            }
+        }
+    }
+}
