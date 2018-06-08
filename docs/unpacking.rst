@@ -351,7 +351,7 @@ Running the Experiment in VisTrails
 
 In addition to reproducing the experiment, you may want to edit its dataflow by inserting your own processes between and around the experiment steps, or even by connecting multiple ReproZip'd experiments. However, manually managing the experiment workflow (with the help of ``reprounzip upload/download`` commands) can quickly become painful.
 
-To allow users to easily manage these workflows, `reprounzip` provides a plugin for the `VisTrails <http://www.vistrails.org/>`__ scientific workflow management system, which has easy-to-use interfaces to run and modify a dataflow. See :ref:`vistrails` for more information.
+To allow users to easily manage these workflows, `reprounzip` provides a plugin for the `VisTrails <https://www.vistrails.org/>`__ scientific workflow management system, which has easy-to-use interfaces to run and modify a dataflow. See :ref:`vistrails` for more information.
 
 Further Considerations
 ======================

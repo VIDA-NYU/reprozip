@@ -60,7 +60,7 @@ Please feel free to contact us at users@reprozip.org if you encounter issues whi
 
 :Issue: **"** `reprounzip-vagrant` **installation fails with error** ``Unable to find vcvarsall.bat`` **on Windows."**
 :Diagnosis: Python is trying to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__, one of the dependencies of `reprounzip-vagrant`, but there is no C compiler available.
-:Solution: You can either build PyCrypto from source, or follow the instructions on `this website <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__ to get the non-official binaries.
+:Solution: You can either build PyCrypto from source, or follow the instructions on `this website <https://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__ to get the non-official binaries.
 
 ------------
 

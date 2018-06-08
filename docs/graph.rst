@@ -3,7 +3,7 @@
 Visualizing the Provenance Graph
 ********************************
 
-..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <http://bugs.python.org/issue13676>`__ related to sqlite3.
+..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 13676 <https://bugs.python.org/issue13676>`__ related to sqlite3.
 
 To generate a *provenance graph* related to the experiment execution, the ``reprounzip graph`` command should be used::
 
@@ -15,7 +15,7 @@ Alternatively, you can generate the graph after running ``reprozip trace`` witho
 
     $ reprounzip graph [-d tracedirectory] graphfile.dot
 
-The graph is outputted in the `DOT <http://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph::
+The graph is outputted in the `DOT <https://en.wikipedia.org/wiki/DOT_(graph_description_language)>`__ language. You can use `Graphviz <http://www.graphviz.org/>`__ to load and visualize the graph::
 
     $ dot -Tpng graphfile.dot -o graph.png
 

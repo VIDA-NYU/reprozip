@@ -3,7 +3,7 @@
 VisTrails Plugin
 ****************
 
-The `reprounzip-vistrails` plugin is a component that interacts with the existing unpackers to generate and execute a `VisTrails <http://www.vistrails.org/>`__ workflow from the packed experiment. By using VisTrails, you can better manage the experiment workflow: it allows you to run unpacked ReproZip experiments, replace input files, visualize and retrieve output files, and modify the dataflow to re-use steps of the original experiment. For more information about VisTrails, please see their `user's guide <http://www.vistrails.org/index.php/Users_Guide>`__.
+The `reprounzip-vistrails` plugin is a component that interacts with the existing unpackers to generate and execute a `VisTrails <https://www.vistrails.org/>`__ workflow from the packed experiment. By using VisTrails, you can better manage the experiment workflow: it allows you to run unpacked ReproZip experiments, replace input files, visualize and retrieve output files, and modify the dataflow to re-use steps of the original experiment. For more information about VisTrails, please see their `user's guide <https://www.vistrails.org/index.php/Users_Guide>`__.
 
 ..  note:: This plugin is **not** distributed with `reprounzip`; it is a separate component that should be installed beforehand (see :ref:`install` for more details).
 
@@ -35,4 +35,4 @@ In a ``Run`` module, the ports (except the ``Directory`` one) represent the inpu
 
 Note that a file exposed as an output port in one ``Run`` module may be the input port of the next ``Run`` module, and yet these are not connected. The dataflow, however, still works since the entire machine state is carried to the next execution. Connecting these ports would work, but would also make *reprounzip* download the file to VisTrails and then upload it again in the same location. You can speed up the workflow by not connecting the files that you do not want to examine or change, since downloading and uploading may take time.
 
-You are encouraged to go through the `VisTrails documentation <http://www.vistrails.org/index.php/Users_Guide>`__ to get familiar with the system.
+You are encouraged to go through the `VisTrails documentation <https://www.vistrails.org/index.php/Users_Guide>`__ to get familiar with the system.
