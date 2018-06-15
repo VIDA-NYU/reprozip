@@ -348,7 +348,7 @@ def docker_setup_create(args):
                 'export RUNCOMMAND\n'
                 '            /rpzsudo "#$RUNUID" "#$RUNGID" /busybox sh -c '
                 '"cd \\"\\$RUNWD\\" && /busybox env -i $RUNENV $ENVVARS '
-                '$RUNCOMMAND"\n'
+                '$RUNCOMMAND; echo \\"*** Command finished, status: \\$?\\""\n'
                 '            ENVVARS=\n'
                 '        ;;\n'
                 '        *)\n'
@@ -636,21 +636,11 @@ def docker_run(args):
                                  [image] + cmd,
                                  request_tty=True)
 
-    # Get exit status from "docker inspect"
-    try:
-        out = subprocess.check_output(args.docker_cmd.split() +
-                                      ['inspect', container])
-    except subprocess.CalledProcessError:
+    # The image prints out the exit status(es) itself
+    if retcode != 0:
         logger.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
-    outjson = json.loads(out.decode('ascii'))
-    if (outjson[0]["State"]["Running"] is not False or
-            outjson[0]["State"]["Paused"] is not False):
-        logger.error("Invalid container state after execution:\n%s",
-                     json.dumps(outjson[0]["State"]))
-    retcode = outjson[0]["State"]["ExitCode"]
-    stderr.write("\n*** Command finished, status: %d\n" % retcode)
 
     # Commit to create new image
     new_image = make_unique_name(b'reprounzip_image_')
