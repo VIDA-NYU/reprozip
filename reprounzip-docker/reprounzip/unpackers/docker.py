@@ -14,7 +14,6 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 from itertools import chain
-import json
 import logging
 import os
 import re
