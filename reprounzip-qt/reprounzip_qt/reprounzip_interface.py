@@ -403,7 +403,7 @@ end tell
                                   ('rxvt', lambda a: ['-e', a]),
                                   ('xterm', lambda a: ['-e', a]),
                                   # gnome-terminal needs some kind of --nofork
-                                  ('gnome-terminal', lambda a: ['-x', 'a'])]:
+                                  ('gnome-terminal', lambda a: ['-x', a])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
                 subprocess.check_call([term] + args, stdin=subprocess.PIPE)
