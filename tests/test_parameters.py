@@ -4,7 +4,6 @@
 
 from __future__ import print_function, unicode_literals
 
-import json
 import unittest
 
 from reprounzip import parameters
@@ -20,7 +19,7 @@ class TestSelection(unittest.TestCase):
 
         # Reset them to bundled parameters temporarily
         cls._old_parameters = parameters.parameters
-        parameters.parameters = json.loads(parameters.bundled_parameters)
+        parameters.parameters = parameters._bundled_parameters
 
     @classmethod
     def tearDownClass(cls):
@@ -36,12 +35,12 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Ubuntu', '14.10'),
                          ('ubuntu', 'ubuntu:14.10'))
         self.assertEqual(get('x86_64', 'Ubuntu', '1.1'),
-                         ('ubuntu', 'ubuntu:15.10'))
+                         ('ubuntu', 'ubuntu:16.04'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
         self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
-                         ('debian', 'debian:jessie'))
+                         ('debian', 'debian:stretch'))
         self.assertEqual(get('x86_64', 'Debian', '1'),
-                         ('debian', 'debian:jessie'))
+                         ('debian', 'debian:stretch'))
         self.assertEqual(get('x86_64', 'CentOS', '1'),
                          ('centos', 'centos:centos7'))
 
@@ -56,7 +55,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Ubuntu', '12.04'),
                          ('ubuntu', 'hashicorp/precise64'))
         self.assertEqual(get('i686', 'Ubuntu', '1.1'),
-                         ('ubuntu', 'bento/ubuntu-16.04-i386'))
+                         ('ubuntu', 'bento/ubuntu-18.04-i386'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
         self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
                          ('debian', 'remram/debian-8-amd64'))

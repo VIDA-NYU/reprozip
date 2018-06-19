@@ -18,14 +18,6 @@ If you are using Anaconda2, you can install *reprounzip-qt* from anaconda.org::
 
 Otherwise, you will need to `install PyQt4 <https://www.riverbankcomputing.com/software/pyqt/download>`__ before you can install *reprounzip-qt* from pip (on Debian or Ubuntu, you can use ``apt-get install python-qt4``).
 
-On Linux, setting it as the default to open ``.rpz`` files is a bit more involved. Once the application is setup, run `this script <https://gist.github.com/remram44/0092c0b27269cfd0e5530428612d9309>`__ by  opening up a terminal window and entering ``bash register-linux.sh``. From there, you can back-click on a ``.rpz`` file, and set the default application to ReproUnzip. The following is an example of this process on Ubuntu 16.04:
-
-..  image:: figures/reprounzip-qt-defaultApp.png
-
-If ReproUnzip doesn't appear right away, simply click "Other Application" and find it in the menu, alphabetically.
-
-..  image:: figures/reprounzip-qt-defaultApp-1.png
-
 Usage
 ============
 

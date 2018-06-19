@@ -4,7 +4,7 @@
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/remram44)
 [![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.1210301-green.svg)](https://doi.org/10.5281/zenodo.1210301)
+[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.1247557-green.svg)](https://doi.org/10.5281/zenodo.1247557)
 
 ReproZip
 ========
@@ -32,7 +32,7 @@ To run it with reprozip, you just need to use the prefix *reprozip trace*:
 
     $ reprozip trace ./myexperiment -my --options inputs/somefile.csv other_file_here.bin
 
-This command creates a *.reprozip* directory, in which you'll find the configuration file, named *config.yml*. You can edit the command line and environment variables, and choose which files to pack.
+This command creates a *.reprozip-trace* directory, in which you'll find the configuration file, named *config.yml*. You can edit the command line and environment variables, and choose which files to pack.
 
 If you are using Debian or Ubuntu, most of these files (library dependencies) are organized by package. You can add or remove files, or choose not to include a package by changing option *packfiles* from true to false. In this way, smaller packs can be created with reprozip (if space is an issue), and reprounzip can download these files from the package manager; however, note this is only available for Debian and Ubuntu for now, and also be aware that package versions might differ. Choosing which files to pack is also important to remove sensitive information and third-party software that is not open source and should not be distributed.
 

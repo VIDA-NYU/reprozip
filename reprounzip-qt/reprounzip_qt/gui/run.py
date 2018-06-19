@@ -435,6 +435,7 @@ class RunTab(QtGui.QWidget):
                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
             if r == QtGui.QMessageBox.Yes:
                 record_usage(leave_unpacked=True)
+                return True
             else:
                 return False
         else:
