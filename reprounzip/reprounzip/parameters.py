@@ -292,10 +292,10 @@ _bundled_parameters = {
     "vagrant_boxes": {
         "default": {
             "distribution": "debian",
-                "architectures": {
-                    "i686": "remram/debian-8-i386",
-                    "x86_64": "remram/debian-8-amd64"
-                },
+            "architectures": {
+                "i686": "remram/debian-8-i386",
+                "x86_64": "remram/debian-8-amd64"
+            },
             "name": "Debian 8 'Jessie'"
         },
         "boxes": [
@@ -426,10 +426,10 @@ _bundled_parameters = {
                 ],
                 "default": {
                     "distribution": "debian",
-                        "architectures": {
-                            "i686": "remram/debian-8-i386",
-                            "x86_64": "remram/debian-8-amd64"
-                        },
+                    "architectures": {
+                        "i686": "remram/debian-8-i386",
+                        "x86_64": "remram/debian-8-amd64"
+                    },
                     "name": "Debian 8 'Jessie'"
                 }
             },
@@ -517,10 +517,10 @@ _bundled_parameters = {
     "vagrant_boxes_x": {
         "default": {
             "distribution": "debian",
-                "architectures": {
-                    "i686": "remram/debian-8-amd64-x",
-                    "x86_64": "remram/debian-8-amd64-x"
-                },
+            "architectures": {
+                "i686": "remram/debian-8-amd64-x",
+                "x86_64": "remram/debian-8-amd64-x"
+            },
             "name": "Debian 8 'Jessie'"
         },
         "boxes": [
@@ -561,10 +561,10 @@ _bundled_parameters = {
                 ],
                 "default": {
                     "distribution": "debian",
-                        "architectures": {
-                            "i686": "remram/debian-8-amd64-x",
-                            "x86_64": "remram/debian-8-amd64-x"
-                        },
+                    "architectures": {
+                        "i686": "remram/debian-8-amd64-x",
+                        "x86_64": "remram/debian-8-amd64-x"
+                    },
                     "name": "Debian 8 'Jessie'"
                 }
             }
