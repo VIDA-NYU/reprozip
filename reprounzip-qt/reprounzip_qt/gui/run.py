@@ -364,7 +364,7 @@ class RunTab(QtGui.QWidget):
         self.runs_widget.clear()
         if unpacker is not None:
             with open(self.directory + '/config.yml') as fp:
-                self.config = yaml.load(fp)
+                self.config = yaml.safe_load(fp)
             self.run_widget.setEnabled(True)
             self.destroy_widget.setEnabled(True)
             self.files_button.setEnabled(True)
