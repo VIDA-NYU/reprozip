@@ -258,7 +258,6 @@ class renameFilesWindow(tk.Frame):
         
         self.iofilesListbox.delete(0,tk.END)
         self._writeList()
-        
 
 if __name__ == "__main__":
     app = ReprozipApp()
