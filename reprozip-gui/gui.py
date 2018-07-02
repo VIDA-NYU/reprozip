@@ -17,7 +17,7 @@ class ReprozipApp(tk.Tk):
         self.switch_frame(TraceWindow)
 
     def switch_frame(self, frame_class):
-        """Destroys current frame and replaces it with a new one."""
+        #Destroys current frame and replaces it with a new one.
         new_frame = frame_class(self)
         if self._frame is not None:
             self._frame.destroy()
@@ -50,19 +50,15 @@ class TraceWindow(tk.Frame):
         # Asking for the Name of Run
         labelRunName = tk.Label(self, text = "Name of Run",  font = "Helvetica 14")
         labelRunName.place(x= 80, y = 60)
-        
         # Textbox for Terminal using Text
         textTerminal = tk.Text(self, width = "40",height = "8", fg="black" )
         textTerminal.place(x= 80, y = 100)
-        
         # Browse button
         browseButton = tk.Button(self, text="Browse",command = self._askopenfile, highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
         browseButton.place(x=80,y=280)
-       
         # Display file path
         workDir = tk.Label(self, textvariable =self.tempPath, fg="white", font = "Helvetica 11 italic", width ="40")
         workDir.place(x= 80, y = 230)
-        
         # Trace button
         traceButton = tk.Button(self, text="Trace", command= self._reproTrace,highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
         traceButton.place(x= 300, y = 280)
@@ -98,18 +94,15 @@ class AddRunWindow(tk.Frame):
         # Button for adding a new run 
         addRunButton = tk.Button(self, text = "Add another Run", command= self._addRun, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "15")
         addRunButton.place(x= 260, y = 105)
-       
         # Button to edit configuration window 
         nextButton = tk.Button(self, text=" Next ", command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "15")
         nextButton.place(x = 260, y = 220)
-        
         # Label for naming runs
         runLabel = tk. Label(self, text = "Existing Runs",  font = "Helvetica 14")
         runLabel.place(x = 85, y = 70 )
         
         # to read the runs from yaml file
         self.filepath = "./config.yml"
-        
         with open(self.filepath) as fr:
             data = yaml.safe_load(fr)  
            
@@ -151,19 +144,15 @@ class editConfigurationWindow(tk.Frame):
         # button to go back to Add Run Window
         backButton = tk.Button(self, text = "Back",  command = self._back, highlightbackground="black", highlightthickness="0",fg='white', height ="2")
         backButton.place(x = 40, y = 10)
-        
         # button to Rename input/output files
         renameButton = tk.Button(self, text= "Rename Input/Output Files", command = lambda : master.switch_frame(renameFilesWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "19")
         renameButton.place(x = 30, y = 200)
-        
         # button to switch to add/remove files window
         addFilesButton = tk.Button(self, text = "Add/Remove Files",  command = self._back, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "19")
         addFilesButton.place(x = 245, y = 200)
-        
         # button to go back to Add Run Window
         packButton = tk.Button(self, text = "Pack",  command = self._back, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "14")
         packButton.place(x = 163, y = 300)
-        
         # Label for showing Trace Successfull
         traceSuccessfulLabel = tk.Label(self, text = "Trace Successfull !",font = "Helvetica 17", fg = "white" )
         traceSuccessfulLabel.place(x=150, y = 80)
@@ -191,15 +180,12 @@ class renameFilesWindow(tk.Frame):
         #Label for input/output files 
         ioFilesLabel = tk.Label(self, text = "Input/Output Files", fg="white", font = "Helvetica 14")
         ioFilesLabel.place(x = 70, y = 50 )
-        
         # Label for Rename As
         renameLabel = tk.Label(self, text = "Rename As", fg="white", font = "Helvetica 14")
         renameLabel.place(x = 260, y = 78 )
-        
         # Button to rename the file
         confirmButton = tk.Button(self, text = "Confirm",command = self._rename, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
         confirmButton.place (x = 300, y = 150)
-        
         # Button to Proceed
         proceedButton = tk.Button(self, text = "Back",command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
         proceedButton.place (x = 300, y = 240)
