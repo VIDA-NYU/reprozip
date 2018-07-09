@@ -393,11 +393,18 @@ end tell
             time.sleep(0.5)
         return None
     elif system == 'windows':
-        subprocess.check_call('start /wait cmd /c %s' %
-                              win_escape(cmd + ' & pause'),
+        if not close_on_success:
+            cmd = cmd + ' & pause'
+        subprocess.check_call('start%s cmd /c %s' % (
+                                  ' /wait' if wait else '',
+                                  win_escape(cmd),
+                              ),
                               shell=True)
         return None
     elif system == 'linux':
+        if not close_on_success:
+            cmd = '/bin/sh -c %s' % \
+                shell_escape(cmd + ' ; echo "Press enter..."; read r')
         for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),
                                   ('gnome-terminal', lambda a: [
                                       '--disable-factory-', '--',
@@ -407,6 +414,11 @@ end tell
                                   ('xterm', lambda a: ['-e', a])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
-                subprocess.check_call([term] + args, stdin=subprocess.PIPE)
+                if wait:
+                    subprocess.check_call([term] + args,
+                                          stdin=subprocess.DEVNULL)
+                else:
+                    subprocess.Popen([term] + args,
+                                     stdin=subprocess.DEVNULL)
                 return None
     return "Couldn't start a terminal", 'critical'
