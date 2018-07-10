@@ -15,6 +15,12 @@ class ReprozipApp(tk.Tk):
         tk.Tk.__init__(self)
         self._frame = None
         self.switch_frame(TraceWindow)
+        #setting template for all the windows
+        self.title("ReproZip")
+        self.tk_setPalette(background= '#6E53BE')
+        self.resizable(False,False)
+        self.geometry("450x400")
+      
 
     def switch_frame(self, frame_class):
         #Destroys current frame and replaces it with a new one.
@@ -31,12 +37,6 @@ class TraceWindow(tk.Frame):
         
         self.tempPath = tk.StringVar()
         tk.Frame.__init__(self, master)
-
-        # setting the parameter for the whole frame
-        self.master.title("ReproZip")
-        self.master.tk_setPalette(background= '#6E53BE')
-        self.master.resizable(False,False)
-        self.master.geometry("450x400")
         self.pack(fill=tk.BOTH, expand = 1)
         self.tempPath.set("Set working directory using Browse")
      
@@ -83,12 +83,7 @@ class AddRunWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        
-      # setting the parameter for the whole frame
-        self.master.title("ReproZip")
-        self.master.tk_setPalette(background= '#6E53BE')
-        self.master.resizable(False,False)
-        self.master.geometry("450x400")
+       
         self.pack(fill=tk.BOTH, expand = 1)
     
         # Button for adding a new run 
@@ -133,12 +128,7 @@ class editConfigurationWindow(tk.Frame):
       
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
-        
-        # setting the parameter for the whole frame
-        self.master.title("ReproZip")
-        self.master.tk_setPalette(background= '#6E53BE')
-        self.master.resizable(False,False)
-        self.master.geometry("450x400")
+  
         self.pack(fill=tk.BOTH, expand = 1)
         
         # button to go back to Add Run Window
@@ -167,12 +157,7 @@ class renameFilesWindow(tk.Frame):
  
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
-        
-        # setting the parameter for the whole frame
-        self.master.title("ReproZip")
-        self.master.tk_setPalette(background= '#6E53BE')
-        self.master.resizable(False,False)
-        self.master.geometry("450x400")
+
         self.pack(fill=tk.BOTH, expand = 1)
         self.index = tk.StringVar(self,value= " ")
         self.varEntry= tk.StringVar(self,value= "Select file from list")
