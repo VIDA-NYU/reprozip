@@ -1,7 +1,13 @@
 import os
 import subprocess
-import tkinter as tk
+try:
+    # for Python2
+    import Tkinter as tk
+except ImportError:
+    # for Python3
+    import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 import yaml
 
 # Run 0 being the first run
