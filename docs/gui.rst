@@ -8,18 +8,16 @@ ReproUnzip GUI
 Installation
 ============
 
-..  warning:: ``reprounzip-qt`` is Python 2 only. You can't install it with Python 3 or Anaconda3 (without a virtual environment)!
-
 *reprounzip-qt* comes with the installer on `Windows <http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer>`_ and `Mac <http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer>`_. If you used one of these, you will be able to double click on any ``.rpz`` file to boot up the GUI.
 
-If you are using Anaconda2, you can install *reprounzip-qt* from anaconda.org::
+If you are using Anaconda, you can install *reprounzip-qt* from anaconda.org::
 
     $ conda install --channel vida-nyu reprounzip-qt
 
 Otherwise, you will need to `install PyQt4 <https://www.riverbankcomputing.com/software/pyqt/download>`__ before you can install *reprounzip-qt* from pip (on Debian or Ubuntu, you can use ``apt-get install python-qt4``).
 
 Usage
-============
+=====
 
 The first tab in the window that appears is for you to set up the experiment. This will allow you to choose which `unpacker <unpacking.html#unpackers>`_ you'd like to use to reproduce the experiment, and in which directory you'd like to unpack it.
 
