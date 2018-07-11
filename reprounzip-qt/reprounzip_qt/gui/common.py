@@ -4,21 +4,22 @@
 
 from __future__ import division, print_function, unicode_literals
 
-from PyQt4 import QtCore, QtGui
+from reprounzip_qt.gui.qt import QtCore, QtWidgets
 import re
 
 
 def error_msg(parent, message, severity, details=None):
     if severity == 'information':
-        icon = QtGui.QMessageBox.Information
+        icon = QtWidgets.QMessageBox.Information
     elif severity == 'warning':
-        icon = QtGui.QMessageBox.Warning
+        icon = QtWidgets.QMessageBox.Warning
     else:
-        icon = QtGui.QMessageBox.Critical
+        icon = QtWidgets.QMessageBox.Critical
 
-    msgbox = QtGui.QMessageBox(icon, "Error", message, QtGui.QMessageBox.Ok,
-                               parent, detailedText=details,
-                               textFormat=QtCore.Qt.PlainText)
+    msgbox = QtWidgets.QMessageBox(icon, "Error", message,
+                                   QtWidgets.QMessageBox.Ok, parent,
+                                   detailedText=details,
+                                   textFormat=QtCore.Qt.PlainText)
     msgbox.exec_()
 
 
@@ -30,7 +31,7 @@ def handle_error(parent, result):
         return False
 
 
-class ResizableStack(QtGui.QStackedWidget):
+class ResizableStack(QtWidgets.QStackedWidget):
     # See http://stackoverflow.com/a/14485901/711380
     def __init__(self, **kwargs):
         super(ResizableStack, self).__init__(**kwargs)
@@ -38,14 +39,14 @@ class ResizableStack(QtGui.QStackedWidget):
         self.currentChanged[int].connect(self._current_changed)
 
     def addWidget(self, widget):
-        widget.setSizePolicy(QtGui.QSizePolicy.Ignored,
-                             QtGui.QSizePolicy.Ignored)
+        widget.setSizePolicy(QtWidgets.QSizePolicy.Ignored,
+                             QtWidgets.QSizePolicy.Ignored)
         super(ResizableStack, self).addWidget(widget)
 
     def _current_changed(self, idx):
         widget = self.widget(idx)
-        widget.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                             QtGui.QSizePolicy.Expanding)
+        widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                             QtWidgets.QSizePolicy.Expanding)
         widget.adjustSize()
         self.adjustSize()
 
