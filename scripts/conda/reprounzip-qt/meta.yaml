@@ -34,7 +34,7 @@ requirements:
     - python
     - setuptools
     - pyyaml
-    - pyqt <5
+    - pyqt
     - reprounzip >=1.0
 
 test:
