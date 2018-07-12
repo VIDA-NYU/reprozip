@@ -26,5 +26,8 @@ in
             fi
         done)
         find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -exec sh -c "grep 'logging\\.\\(debug\\|warning\\|critical\\|error\\|info\\)' \"\$@\" && exit 1; exit 0" {} +
+        for pkg in reprozip reprounzip reprozip-* reprounzip-*; do
+            (cd $pkg && python setup.py check -r -s)
+        done
         ;;
 esac
