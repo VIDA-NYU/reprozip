@@ -36,6 +36,6 @@ in
         fi
         ;;
     checks)
-        pip install flake8
+        pip install flake8 readme_renderer
         ;;
 esac
