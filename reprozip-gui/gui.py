@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 16 12:47:30 2018
-
-@author: binaljmodigmail.com
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os
 import subprocess
 try:
