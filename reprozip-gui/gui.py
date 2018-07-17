@@ -39,44 +39,32 @@ class ReprozipApp(tk.Tk):
 
 
 class TraceWindow(tk.Frame):
-
-    def __init__(self, master):
-        
+    def __init__(self, master)
         self.tempPath = tk.StringVar()
         tk.Frame.__init__(self, master)
-
         #self.pack(fill=tk.BOTH, expand = 1)
         self.tempPath.set("Set working directory using Browse")
-     
         default = tk.StringVar(self, value= "run " + str(numberOfRuns) )
-        
         # Entry widget for entering the name
         self.master.runName = tk.Entry(self, textvariable = default, bg = "white", width= "18", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
         self.master.runName.focus_set()
         self.master.runName.grid(row = 0, column=1,  sticky = "nsew" )
-        
         # Asking for the Name of Run
         labelRunName = tk.Label(self, text = "Name of Run",  font = "Helvetica 14", width = "15")
-        labelRunName.grid(row = 0, column = 0, sticky = "nsew", padx = (30,0))
-        
+        labelRunName.grid(row = 0, column = 0, sticky = "nsew", padx = (30,0))     
         # Textbox for Terminal using Text
         textTerminal = tk.Text(self, width = "40",height = "8", fg="black" )
         textTerminal.grid(row = 2, columnspan = 2, pady = (20,0) ,sticky = "nsew", padx = (30,0))
-        
         # Browse button
         browseButton = tk.Button(self, text="Browse",command = self._askopenfile, highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
         browseButton.grid(row = 4, pady = (20,0), sticky = "nw", padx = (30,0))
-       
         # Display file path
         workDir = tk.Label(self, textvariable =self.tempPath, fg="white", font = "Helvetica 11 italic", width ="40")
         workDir.grid(row = 3, columnspan = 2, pady = (20,0),sticky = "nsew", padx = (30,0))
-        
         # Trace button
         traceButton = tk.Button(self, text="Trace", command= self._reproTrace,highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
         traceButton.grid(row = 4, column =1, pady = (20,0), sticky = "ne")
-        
-        
-        
+
     def _askopenfile(self):
         path = tk.filedialog.askopenfilename()
         self.tempPath.set(path)
@@ -91,35 +79,27 @@ class TraceWindow(tk.Frame):
         global flag
         flag = 0
         self.master.switch_frame(AddRunWindow)
-        
-        
+ 
 class AddRunWindow(tk.Frame):
-    
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-    
         # Button for adding a new run 
         addRunButton = tk.Button(self, text = "Add Run", command= self._addRun, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "10")
         addRunButton.grid(row = 1, column =2, padx= (40,0))
-       
         # Button to edit configuration window 
         nextButton = tk.Button(self, text=" Next ", command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "10")
         nextButton.grid(row = 3, column =2 ,padx= (40,0))
-        
         # Label for naming runs
         runLabel = tk. Label(self, text = "Existing Runs",  font = "Helvetica 14")
         runLabel.grid(row = 0, column =0, sticky= "nw", pady = (10,5))
-        
         # to read the runs from yaml file
         with open(self.master.filepath) as fr:
-            data = yaml.safe_load(fr)  
-           
+            data = yaml.safe_load(fr)           
         if(flag != 3):
         #if data['runs'][numberOfRuns]['id'] == "run "+ str(numberOfRuns) :
             data['runs'][numberOfRuns]['id'] = self.master.runName.get()
             with open("config.yml", "w") as fw:
                 yaml.safe_dump(data, fw)
-        
         
         # Listbox to display existing runs
         runsList = tk.Listbox(self, bg = "white", fg= "black", width=23, height=12,font = "Helvetica 14")
@@ -136,32 +116,23 @@ class AddRunWindow(tk.Frame):
         global flag
         flag = 1
         self.master.switch_frame(TraceWindow)
-       
-        
-        
-        
+
 class editConfigurationWindow(tk.Frame):
-      
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
-        
         self.image = tk.PhotoImage(file = "back.png")
         # button to go back to Add Run Window
         backButton = tk.Button(self, text = "Back", image = self.image,  command = self._back, height ="10", width = "30")
         backButton.grid(row =0, column = 0, sticky = "nw")
-        
         # button to Rename input/output files
         renameButton = tk.Button(self, text= "Rename I/O Files", command = lambda : master.switch_frame(renameFilesWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "13")
         renameButton.grid(row =2, column = 0)
-        
         # button to switch to add/remove files window
         addFilesButton = tk.Button(self, text = "Add/Remove Files",  command = lambda: master.switch_frame(AddFilesWindow) , highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "13")
         addFilesButton.grid(row =2, column =3)
-        
         # button to go back to Add Run Wind
         proceedButton = tk.Button(self, text = "Proceed",  command = lambda : master.switch_frame(PackWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "14")
         proceedButton.grid(row =3, column = 2, pady = (30,0))
-        
         # Label for showing Trace Successfull
         traceSuccessfulLabel = tk.Label(self, text = "Trace Successfull !",font = "Helvetica 17", fg = "white" )
         traceSuccessfulLabel.grid(row =1, column = 0, columnspan = 3,pady= (30, 50), sticky = "e")
@@ -170,26 +141,20 @@ class editConfigurationWindow(tk.Frame):
         global flag
         flag = 3
         self.master.switch_frame(AddRunWindow)
-     
-        
         
 class renameFilesWindow(tk.Frame):
  
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
-        
         #Label for input/output files 
         ioFilesLabel = tk.Label(self, text = "Input/Output Files", fg="white", font = "Helvetica 14")
         ioFilesLabel.grid(row= 0, column =0, sticky ="nw")
-        
         # Label for Rename As
         renameLabel = tk.Label(self, text = "Rename As", fg="white", font = "Helvetica 14")
         renameLabel.grid(row = 1, column = 2, rowspan=2,  sticky ="nw", padx=(10,0))
-        
         # Button to rename the file
         confirmButton = tk.Button(self, text = "Confirm",command = self._rename, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
-        confirmButton.grid(row = 4, column = 2,padx=(10,0) )
-        
+        confirmButton.grid(row = 4, column = 2,padx=(10,0))
         # Button to Proceed
         proceedButton = tk.Button(self, text = "Back",command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
         proceedButton.grid(row = 8, column = 2, padx=(10,0))
@@ -212,7 +177,6 @@ class renameFilesWindow(tk.Frame):
         self.iofilesListbox.grid(row = 1, column = 0, sticky = "nsew", rowspan = 10)
         self._writeList()
 
-        
         self.vsb['command'] = self.iofilesListbox.yview
         self.hsb['command'] = self.iofilesListbox.xview
         
@@ -249,33 +213,26 @@ class renameFilesWindow(tk.Frame):
             prefix += " "
             prefix += data['inputs_outputs'][i]['name'] 
             self.iofilesListbox.insert(tk.END, prefix)
-            
-            
+
     def _rename(self):
         with open(self.master.filepath) as fr:
             data = yaml.safe_load(fr) 
-     
         data['inputs_outputs'][self.index]['name'] = self.fileNameEntry.get()
         with open(self.master,filepath, "w") as fw:
             yaml.safe_dump(data, fw)
-        
         self.iofilesListbox.delete(0,tk.END)
         self._writeList()
         
         
 class AddFilesWindow(tk.Frame):
-    
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         
         self.filepath = "config.yml"
-        
         AddRemoveLabel = tk.Label(self, text = "Add/Remove Files",  font = "Helvetica 14")
         AddRemoveLabel.grid(row = 0, sticky= "nsew", padx=(20,0))
-        
         backButton = tk.Button(self, text = "Back",command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
         backButton.grid(row = 3, sticky= "n", pady=(20,0), padx=(20,0))
-        
         t = CheckboxTreeview(self, show="tree")
         t.grid(row = 1, sticky= "nsew", pady=(10,0), padx=(20,0))
 
@@ -284,7 +241,6 @@ class CheckboxTreeview(ttk.Treeview):
     
     def __init__(self, master, **kw):
         ttk.Treeview.__init__(self, master, columns=("fullpath", "type"),displaycolumns="")
-        
         # checkboxes are implemented with pictures
         self.im_checked = tk.PhotoImage(file='checked.png')
         self.im_unchecked = tk.PhotoImage(file='unchecked.png')
@@ -292,14 +248,12 @@ class CheckboxTreeview(ttk.Treeview):
         self.tag_configure("unchecked", image=self.im_unchecked)
         self.tag_configure("tristate", image=self.im_tristate)
         self.tag_configure("checked", image=self.im_checked)
-        
         self.alreadyExists = tk.StringVar()
         self.alreadyExists = "0"
 
         with open(self.master.filepath) as fr:
             self.data = yaml.safe_load(fr) 
     
-        
         self.heading("#0", text="Directory Structure")
         self.column("#0", stretch=1, width=300)
         # check / uncheck boxes on click
@@ -327,7 +281,6 @@ class CheckboxTreeview(ttk.Treeview):
     def populate_tree(self, node):
         if self.set(node, "type") != 'directory':
             return
-
         path = self.set(node, "fullpath")
         self.delete(*self.get_children(node))
         parent = self.parent(node)
@@ -349,9 +302,7 @@ class CheckboxTreeview(ttk.Treeview):
         tree = event.widget
         self.populate_tree(tree.focus())
 
-
     def _insert(self, parent, index, iid=None, **kw):
-        
         if not "tags" in kw:
             kw["tags"] = ("unchecked",)
         elif not ("unchecked" in kw["tags"] or "checked" in kw["tags"]
@@ -413,7 +364,7 @@ class CheckboxTreeview(ttk.Treeview):
                 self.uncheck_ancestor(parent)
 
     def box_click(self, event):
-        """ check or uncheck box when clicked """
+       # check or uncheck box when clicked
         x, y, widget = event.x, event.y, event.widget
         elem = widget.identify("element", x, y)
         if "image" in elem:
@@ -432,8 +383,6 @@ class CheckboxTreeview(ttk.Treeview):
                          self.data["other_files"].append(childToAdd[0])
                 else:
                     self.data["other_files"].append(pathToAdd[0])
-
-                
             else:
                 self.uncheck_descendant(item)
                 self.uncheck_ancestor(item)
@@ -449,41 +398,30 @@ class CheckboxTreeview(ttk.Treeview):
             with open(self.master.filepath, "w") as fw:
                 yaml.safe_dump(self.data, fw)
 
-
-
 class PackWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-
-        
-        self.rpzFileName = tk.StringVar(self, value= ".rpz")
-                
+        self.rpzFileName = tk.StringVar(self, value= ".rpz")          
         Namelabel = tk.Label(self, text = "Name the RPZ Package as",  font = "Helvetica 14")
         Namelabel.grid(row =0, sticky="nsew", padx=(80,0))
-        
         SaveAsbutton = tk.Button(self, text = "Pack",command = self.packRpz, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10") 
         SaveAsbutton.grid(row =2, padx=(80,0))
-        
         rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
         rpzFileNameEntry.grid(row =1, sticky="nsew", padx=(70,0), pady= (10,20))
 
-  
     def packRpz(self):
         successlabel = tk.Label(self, text = "Successfully Packed!",  font = "Helvetica 17")
         successlabel.grid(row =3,sticky="nsew", pady=(50, 0))
-        
         fileName = self.rpzFileName.get()
         size = os.stat(fileName).st_size
         size = self.convert_bytes(size)
         fileSize = tk.StringVar(self, value= "Package size: "+size)
-        
         displayName = tk.Label(self, textvariable = self.rpzFileName,  font = "Helvetica 15")
         displayName.grid(row =4, sticky="nsew", pady=(30, 0))
         displaySize = tk.Label(self, textvariable = fileSize,  font = "Helvetica 15")
         displaySize.grid(row =5, sticky="nsew") 
-        
-  
+ 
     def convert_bytes(self,size):
        if size == 0:
            return "0B"
