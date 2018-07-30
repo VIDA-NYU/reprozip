@@ -220,19 +220,19 @@ def run(IMAGE_TAR_FILE, app):
         except subprocess.CalledProcessError:
             print("Error running image '{0}'".format(IMAGE_TAR_FILE))
 
-def download(IMAGE_TAR_FILE, filename):
+def download(IMAGE_DIR,filename):
     home = os.environ['HOME']
     current_dir = os.getcwd()
-    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} download {5}".format(current_dir,MOUNT_DIR,OVERLAY_IMAGE, home, IMAGE_TAR_FILE, filename)
+    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} download {5}".format(current_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, filename)
     try:
         subprocess.check_call([bashCommand],shell=True)
     except subprocess.CalledProcessError:
         print("Error downloading '{0}'".format(filename))
 
-def upload(IMAGE_TAR_FILE, filename):
+def upload(IMAGE_DIR, filename):
     home = os.environ['HOME']
     current_dir = os.getcwd()
-    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} upload {5}".format(current_dir,MOUNT_DIR,OVERLAY_IMAGE, home, IMAGE_TAR_FILE, filename)
+    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} upload {5}".format(current_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, filename)
     try:
         subprocess.check_call([bashCommand],shell=True)
     except subprocess.CalledProcessError:
@@ -268,10 +268,9 @@ elif cmd=="run":
     run(IMAGE_TAR_FILE,app)
 elif cmd in ["upload","download"]:
     IMAGE_DIR,filename = args[1:]
-    os.chdir(IMAGE_DIR)
     if not filename:
         print("output file missing!")
-    globals()[cmd](IMAGE_TAR_FILE,filename)
+    globals()[cmd](IMAGE_DIR,filename)
 elif cmd=="destroy":
      IMAGE_DIR = args[1]
      destroy(IMAGE_DIR)
