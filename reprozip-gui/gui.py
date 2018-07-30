@@ -6,12 +6,14 @@ import os
 import subprocess
 try:
     # for Python2
-    import Tkinter as tk
+    import tkinter as tk
+    from tkinter import filedialog
+    from tkinter import ttk
 except ImportError:
     # for Python3
-    import tkinter as tk
-import tkFileDialog as filedialog
-import ttk
+    import Tkinter as tk
+    import tkFileDialog as filedialog
+    import ttk
 import yaml
 import math
 import sys
@@ -32,7 +34,7 @@ class ReprozipApp(tk.Tk):
         self.switch_frame(TraceWindow)
         self.title("ReproZip")
         self.tk_setPalette(background= '#6E53BE')
-        self.resizable(False,False)
+        self.resizable(True,True)
         self.geometry("600x550")
         self.filepath =".reprozip-trace/config.yml"
         
@@ -111,9 +113,6 @@ class TraceWindow(tk.Frame):
 	
 
     def shell_escape(self,s):
-    	print("s = ", s) 
-	
-	
 	safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"
@@ -282,7 +281,7 @@ class editConfigurationWindow(tk.Frame):
 	
     def _renameFilesWindow(self):
 	if (self.data['inputs_outputs']) :
-		master.switch_frame(renameFilesWindow)
+		self.master.switch_frame(renameFilesWindow)
 	else:
 		messagebox.showerror("Error", "No Input/Output Files traced running the experiment!") 	
 	
@@ -391,6 +390,7 @@ class AddFilesWindow(tk.Frame):
         
         t = CheckboxTreeview(self, show="tree")
         t.grid(row = 1, sticky= "nsew", pady=(10,0), padx=(100,0))
+
 
 
 class CheckboxTreeview(ttk.Treeview):
@@ -591,7 +591,7 @@ class PackWindow(tk.Frame):
         SaveAsbutton = tk.Button(self, text = "Pack",command = self.packRpz, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10") 
         SaveAsbutton.grid(row =2, padx=(120,0))
         
-        self.rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
+        self.rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "white",  font = "Helvetica 13 italic", insertbackground = "black")
         self.rpzFileNameEntry.grid(row =1, sticky="nsew", padx=(110,0), pady= (10,20))
         
 
