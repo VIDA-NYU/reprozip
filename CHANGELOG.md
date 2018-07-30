@@ -4,6 +4,8 @@ Changelog
 1.0.14 (2018-07-30)
 -------------------
 
+(reprozip, reprounzip-qt and reprozip-jupyter only)
+
 Bugfixes:
 * Fixed reprounzip-qt refusing to close when an experiment is still unpacked, even after the user provided confirmation
 * Fixed reprozip-jupyter on Python 3
