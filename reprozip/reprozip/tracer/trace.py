@@ -424,9 +424,10 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
                 LIMIT 1
             )
             WHERE p.parent ISNULL
-            ORDER BY p.id DESC
-            LIMIT 1;
-            ''')
+            ORDER BY p.id
+            LIMIT 2147483647 OFFSET ?;
+            ''',
+            (len(runs),))
     for r_name, r_argv, r_envp, r_workingdir, r_exitcode in executions:
         # Decodes command-line
         argv = r_argv.split('\0')
