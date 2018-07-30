@@ -1,14 +1,22 @@
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import subprocess
 try:
+    # for Python2
     import Tkinter as tk
 except ImportError:
+    # for Python3
     import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk
+import tkFileDialog as filedialog
+import ttk
 import yaml
 import math
-from tkinter import messagebox
+import sys
+import itertools
+import tkMessageBox as messagebox
 
 
 # Run 0 being the first run
@@ -25,8 +33,8 @@ class ReprozipApp(tk.Tk):
         self.title("ReproZip")
         self.tk_setPalette(background= '#6E53BE')
         self.resizable(False,False)
-        self.geometry("450x400")
-        self.filepath ="config.yml"
+        self.geometry("600x550")
+        self.filepath =".reprozip-trace/config.yml"
         
     def switch_frame(self, frame_class):
         """Destroys current frame and replaces it with a new one."""
@@ -34,64 +42,178 @@ class ReprozipApp(tk.Tk):
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
-        self._frame.grid(padx = 50, pady = 50)
+        self._frame.grid(padx = 40, pady = 70)
 
 
 class TraceWindow(tk.Frame):
 
     def __init__(self, master):
+        
         self.tempPath = tk.StringVar()
+	self.tempWorkDir = tk.StringVar()
+
         tk.Frame.__init__(self, master)
-        self.tempPath.set("Set working directory using Browse")
-        default = tk.StringVar(self, value= "run " + str(numberOfRuns) )
+
+        self.tempPath.set("Select your script using Browse")
+	self.tempWorkDir.set("Set your working directory using Browse")
+	
+        default = tk.StringVar(self, value= "run " + str(numberOfRuns))
+	self.arguments = []
+
         # Entry widget for entering the name
-        self.master.runName = tk.Entry(self, textvariable = default, bg = "white", width= "18", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
+        self.master.runName = tk.Entry(self, textvariable = default, bg = "white", width= "15", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
         self.master.runName.focus_set()
-        self.master.runName.grid(row = 0, column=1,  sticky = "nsew" )
-        # Asking for the Name of Run
-        labelRunName = tk.Label(self, text = "Name of Run",  font = "Helvetica 14", width = "15")
-        labelRunName.grid(row = 0, column = 0, sticky = "nsew", padx = (30,0))
-        # Textbox for Terminal using Text
-        textTerminal = tk.Text(self, width = "40",height = "8", fg="black" )
-        textTerminal.grid(row = 2, columnspan = 2, pady = (20,0) ,sticky = "nsew", padx = (30,0))
-        # Browse button
-        browseButton = tk.Button(self, text="Browse",command = self._askopenfile, highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
-        browseButton.grid(row = 4, pady = (20,0), sticky = "nw", padx = (30,0))
-        # Display file path
-        workDir = tk.Label(self, textvariable =self.tempPath, fg="white", font = "Helvetica 11 italic", width ="40")
-        workDir.grid(row = 3, columnspan = 2, pady = (20,0),sticky = "nsew", padx = (30,0))
+        self.master.runName.grid(row = 0, column=1, sticky = "nw", columnspan=3)
+        
+        # For the Name of Run
+        labelRunName = tk.Label(self, text = "Name of Run:",  font = "Helvetica 14", width = "15")
+        labelRunName.grid(row = 0, column = 0, sticky ="nsew")
+	
+	# For getting Arguments
+	labelArgs = tk.Label(self, text = "Arguments:",  font = "Helvetica 14", width = "15")
+        labelArgs.grid(row = 1, column = 0, sticky ="nw", pady= (50,0))
+
+	# Entry widget for entering arguments
+	self.argumentsEntry = tk.Entry(self, bg = "white", width= "15", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
+	self.argumentsEntry.focus_set()
+        self.argumentsEntry.grid(row = 1, column=1, sticky = "nsew", columnspan=3, pady= (50,0) )
+
+	# Label for Working Directory 
+	labelWorkDir = tk.Label(self, text = "Working Directory:",  font = "Helvetica 14", width = "15")
+        labelWorkDir.grid(row = 2, column = 0, sticky ="nw" , pady= (50,0))
+        
+	# Browse button for Working Directory
+        browseButton = tk.Button(self, text="...",command = self._askopendir, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2")
+        browseButton.grid(row = 2, column=4, pady= (50,0), sticky = "ne")
+	
+	# Display WorkDir 
+        self.workDir = tk.Label(self, textvariable =self.tempWorkDir, fg="white", font = "Helvetica 11 italic", width ="40")
+        self.workDir.grid(row = 2, column = 2,sticky = "w", columnspan =2,pady= (50,0))
+
+	# Label for selecting the script 
+	labelScript = tk.Label(self, text = "Program executable:",  font = "Helvetica 14", width = "15")
+        labelScript.grid(row = 3, column = 0, sticky ="nw" , pady= (50,0))
+ 
+	# Browse button for Script
+        browseScriptButton = tk.Button(self, text="...",command = self._askopenfile, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2")
+        browseScriptButton.grid(row = 3, column=4, sticky = "ne", pady= (50,0))
+       
+        # Display Script 
+        self.selectedScript = tk.Label(self, textvariable =self.tempPath, fg="white", font = "Helvetica 11 italic", width ="40")
+        self.selectedScript.grid(row = 3, column = 2, columnspan =2, sticky = "w", pady= (50,0))
+        
         # Trace button
         traceButton = tk.Button(self, text="Trace", command= self._reproTrace,highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
-        traceButton.grid(row = 4, column =1, pady = (20,0), sticky = "ne")
-        
+        traceButton.grid(row = 5, column =1,columnspan =2,  pady = (60,0), padx = (40,0),  sticky = "ne")
+
+	# for Native terminal
+	self.native_escape = self.shell_escape
+	
+
+    def shell_escape(self,s):
+    	print("s = ", s) 
+	
+	
+	safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                       "abcdefghijklmnopqrstuvwxyz"
+                       "0123456789"
+                       "-+=/:.,%_")
+
+    	if not s or any(c not in safe_shell_chars for c in s):
+        	return '"%s"' % (s.replace('\\', '\\\\')
+        	                  .replace('"', '\\"')
+        	                  .replace('`', '\\`')
+        	                  .replace('$', '\\$'))
+    	else:
+        	return s
+
+    def find_command(self,cmd):
+	for path in itertools.chain(os.environ.get('PATH', '').split(os.pathsep),['/usr/local/bin']):	      
+		filename = os.path.join(path, cmd)
+		if os.path.exists(filename):
+			print(filename)
+	              	return filename
+	return None
+
+
+    def run_in_system_terminal(self,cmd,wait=True, close_on_success=False):
+    
+    	cmd = ' '.join(self.native_escape(c) for c in cmd)
+	# setting default Working Directory
+	work_dir = (str(self.tempWorkDir.get()))
+
+    	if not close_on_success:
+    		cmd = '/bin/sh -c %s' % \
+		self.shell_escape(cmd + ' ; echo "Press enter..."; read r')
+    
+    	for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),('gnome-terminal', lambda a: ['--disable-factory-', '--', '/bin/sh', '-c', a]),('lxterminal', lambda a: ['--command=' + a]),('rxvt', lambda a: ['-e', a]),('xterm', lambda a:['-e', a])]:
+	    	
+		if self.find_command(term) is not None:
+	        	args = arg_factory(cmd)
+		
+			if wait:
+                    		returnCode = subprocess.check_call([term] + args,stdin=subprocess.PIPE, cwd = work_dir)
+			
+                	else:
+                	        subprocess.Popen([term] + args, stdin=subprocess.PIPE, cwd = work_dir)
+			
+			return None
+    	return "Couldn't start a terminal", 'critical'
+
+    def _askopendir(self):
+        selectedWorkDir = filedialog.askdirectory(initialdir="/",title='Please select a directory')
+	if(selectedWorkDir):
+		self.tempWorkDir.set(selectedWorkDir)
+	else:
+		self.tempWorkDir.set("Set your working directory using Browse")
+  
     def _askopenfile(self):
-        path = tk.filedialog.askopenfilename()
-        self.tempPath.set(path)
+        selectedScript = filedialog.askopenfilename()
+	if(selectedScript):
+		selectedScript = os.path.basename(selectedScript)
+		self.tempPath.set(selectedScript)
+	else:
+		self.tempPath.set("Select your script using Browse")
         #print(self.master.runName.get())
         
     def _reproTrace(self):
-        tempCommand = "ls"
-        p_status = subprocess.Popen(tempCommand, stdout=subprocess.PIPE, shell=True)
-        (output, err) = p_status.communicate()  
-        #This makes the wait possible
-        p_status.wait()
-        global flag
-        flag = 0
-        self.master.switch_frame(AddRunWindow)
-
+	try:
+		#fetching the arguments entered by user
+		self.arguments = (str(self.argumentsEntry.get())).split(" ")
+		if (numberOfRuns == 0):	
+			reprozipCmd = ['reprozip','trace']
+		else:
+			reprozipCmd = ['reprozip','trace', '--continue']
+		
+		reprozipCmd.append(str(self.tempPath.get()))
+		
+		#concatnating the reprozip trace command with user arguments
+		self.arguments = reprozipCmd + self.arguments
+		self.run_in_system_terminal(self.arguments)
+		global flag
+		flag = 0
+	   	self.master.switch_frame(AddRunWindow)
+	except:
+		messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!") 
+        
+        
 class AddRunWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
+    	
         # Button for adding a new run 
         addRunButton = tk.Button(self, text = "Add Run", command= self._addRun, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "10")
-        addRunButton.grid(row = 1, column =2, padx= (40,0))
+        addRunButton.grid(row = 1, column =2, padx= (80,0))
+       
         # Button to edit configuration window 
         nextButton = tk.Button(self, text=" Next ", command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "10")
-        nextButton.grid(row = 3, column =2 ,padx= (40,0))
+        nextButton.grid(row = 3, column =2 ,padx= (80,0))
+        
         # Label for naming runs
         runLabel = tk. Label(self, text = "Existing Runs",  font = "Helvetica 14")
-        runLabel.grid(row = 0, column =0, sticky= "nw", pady = (10,5))
+        runLabel.grid(row = 0, column =0, sticky= "nw", pady = (10,5), padx = (40,0))
+        
         # to read the runs from yaml file
         with open(self.master.filepath) as fr:
             data = yaml.safe_load(fr)  
@@ -101,13 +223,15 @@ class AddRunWindow(tk.Frame):
             data['runs'][numberOfRuns]['id'] = self.master.runName.get()
             with open("config.yml", "w") as fw:
                 yaml.safe_dump(data, fw)
-                
+        
+        
         # Listbox to display existing runs
         runsList = tk.Listbox(self, bg = "white", fg= "black", width=23, height=12,font = "Helvetica 14")
         # Output the read run id to the GUI 
         for i in range(0, numberOfRuns+1):
             runsList.insert(tk.END, data['runs'][i]['id'])
-        runsList.grid(row = 1, rowspan =3, columnspan = 2, sticky= "nw")
+         
+        runsList.grid(row = 1, rowspan =3, columnspan = 2, sticky= "nw", padx = (40,0))
 
     def _addRun(self):
         global numberOfRuns
@@ -116,55 +240,85 @@ class AddRunWindow(tk.Frame):
         global flag
         flag = 1
         self.master.switch_frame(TraceWindow)
-           
+       
+        
+        
+        
 class editConfigurationWindow(tk.Frame):
       
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
+        
+	#reading config file 
+	with open(self.master.filepath) as fr:
+            self.data = yaml.safe_load(fr) 
+
         self.image = tk.PhotoImage(file = "back.png")
         # button to go back to Add Run Window
         backButton = tk.Button(self, text = "Back", image = self.image,  command = self._back, height ="10", width = "30")
-        backButton.grid(row =0, column = 0, sticky = "nw")
+        backButton.grid(row =0, column = 0, sticky = "nw", padx = (40,0))
+        
         # button to Rename input/output files
-        renameButton = tk.Button(self, text= "Rename I/O Files", command = lambda : master.switch_frame(renameFilesWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "13")
-        renameButton.grid(row =2, column = 0)
+        renameButton = tk.Button(self, text= "Rename I/O Files", command = self._renameFilesWindow , highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "13")
+        renameButton.grid(row =2, column = 0, padx = (40,0))
+        
         # button to switch to add/remove files window
         addFilesButton = tk.Button(self, text = "Add/Remove Files",  command = lambda: master.switch_frame(AddFilesWindow) , highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "13")
-        addFilesButton.grid(row =2, column =3)
+        addFilesButton.grid(row =2, column =3, padx = (40,0))
+        
         # button to go back to Add Run Wind
         proceedButton = tk.Button(self, text = "Proceed",  command = lambda : master.switch_frame(PackWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width= "14")
-        proceedButton.grid(row =3, column = 2, pady = (60,0))
+        proceedButton.grid(row =3, column = 2, pady = (60,0), padx = (40,0))
+        
         # Label for showing Trace Successfull
         traceSuccessfulLabel = tk.Label(self, text = "Trace Successfull !",font = "Helvetica 17", fg = "white" )
-        traceSuccessfulLabel.grid(row =1, column = 0, columnspan = 3,pady= (30, 50), sticky = "e")
-
+        traceSuccessfulLabel.grid(row =1, column = 0, columnspan = 4 ,pady= (30, 80), padx = (40,0), sticky = "nsew")
+        
+        
     def _back(self):
         global flag
         flag = 3
         self.master.switch_frame(AddRunWindow)
-
+	
+    def _renameFilesWindow(self):
+	if (self.data['inputs_outputs']) :
+		master.switch_frame(renameFilesWindow)
+	else:
+		messagebox.showerror("Error", "No Input/Output Files traced running the experiment!") 	
+	
+     
+        
+        
 class renameFilesWindow(tk.Frame):
  
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
+	
+	#reading config file 
+	with open(self.master.filepath) as fr:
+            self.data = yaml.safe_load(fr) 
+        
         #Label for input/output files 
         ioFilesLabel = tk.Label(self, text = "Input/Output Files", fg="white", font = "Helvetica 14")
         ioFilesLabel.grid(row= 0, column =0, sticky ="nw")
+        
         # Label for Rename As
         renameLabel = tk.Label(self, text = "Rename As", fg="white", font = "Helvetica 14")
-        renameLabel.grid(row = 1, column = 2, rowspan=2,  sticky ="nw", padx=(10,0))
+        renameLabel.grid(row = 1, column = 2, rowspan=2,  sticky ="nw", padx=(50,0))
+        
         # Button to rename the file
         confirmButton = tk.Button(self, text = "Confirm",command = self._rename, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
-        confirmButton.grid(row = 4, column = 2,padx=(10,0) )
+        confirmButton.grid(row = 4, column = 2,padx=(50,0) )
+        
         # Button to Proceed
         proceedButton = tk.Button(self, text = "Back",command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
-        proceedButton.grid(row = 8, column = 2, padx=(10,0))
+        proceedButton.grid(row = 8, column = 2, padx=(50,0))
         
         self.index = tk.StringVar(self,value= " ")
         self.varEntry= tk.StringVar(self,value= "Select file from list")
         # entry for changing file name
         self.fileNameEntry = tk.Entry(self, textvariable = self.varEntry, bg = "white", width= "19", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
-        self.fileNameEntry.grid(row = 2, column = 2, padx=(10,0))
+        self.fileNameEntry.grid(row = 2, column = 2, padx=(50,0))
     
         self.vsb = tk.Scrollbar(self,orient=tk.VERTICAL)
         self.vsb.grid(row = 1, column = 1,sticky = "ns", rowspan = 10 )
@@ -175,9 +329,9 @@ class renameFilesWindow(tk.Frame):
         self.iofilesListbox = tk.Listbox(self, yscrollcommand=lambda f, l: self.autoscroll(self.vsb, f, l),
     xscrollcommand=lambda f, l: self.autoscroll(self.hsb, f, l), bg = "white", fg= "black", font = "Helvetica 15", width=20, height=13)
         self.iofilesListbox.bind('<<ListboxSelect>>', self._onSelect)
-        self.iofilesListbox.grid(row = 1, column = 0, sticky = "nsew", rowspan = 10)
-        self._writeList()
-
+        self.iofilesListbox.grid(row = 1, column = 0, sticky = "nsew", rowspan = 10)      
+	self._writeList()
+	
         self.vsb['command'] = self.iofilesListbox.yview
         self.hsb['command'] = self.iofilesListbox.xview
         
@@ -191,60 +345,59 @@ class renameFilesWindow(tk.Frame):
         sbar.set(first, last)
         
     def _onSelect(self,event):
-        w = event.widget
-        with open(self.master.filepath) as fr:
-            data = yaml.safe_load(fr)   
+        w = event.widget  
         if(w.curselection()):
             self.index = int(w.curselection()[0])
-            self.varEntry.set(data['inputs_outputs'][self.index]['name'])
+            self.varEntry.set(self.data['inputs_outputs'][self.index]['name'])
             self.fileNameEntry.focus_set()
             
     def _writeList(self):
-        with open(self.master.filepath) as fr:
-            data = yaml.safe_load(fr) 
+ 	
         # looping through the config file for input and output
-        for i in range(0, len(data['inputs_outputs'])):
+        for i in range(0, len(self.data['inputs_outputs'])):
             prefix = ""
-            if data['inputs_outputs'][i]['read_by_runs']:
+            if self.data['inputs_outputs'][i]['read_by_runs']:
                 prefix += "[I]"
             
-            if data['inputs_outputs'][i]['written_by_runs']:
+            if self.data['inputs_outputs'][i]['written_by_runs']:
                 prefix += "[O]"
             
             prefix += " "
-            prefix += data['inputs_outputs'][i]['name'] 
+            prefix += self.data['inputs_outputs'][i]['name'] 
             self.iofilesListbox.insert(tk.END, prefix)
-  
+            
     def _rename(self):
-        with open(self.master.filepath) as fr:
-            data = yaml.safe_load(fr) 
-     
-        data['inputs_outputs'][self.index]['name'] = self.fileNameEntry.get()
-        with open(self.master,filepath, "w") as fw:
+
+        self.data['inputs_outputs'][self.index]['name'] = self.fileNameEntry.get()
+        with open(self.master.filepath, "w") as fw:
             yaml.safe_dump(data, fw)
         
         self.iofilesListbox.delete(0,tk.END)
-        self._writeList()
-
+	self._writeList()
+        
+        
 class AddFilesWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
+        
         self.filepath = ".reprozip-trace/config.yml"
+        
         AddRemoveLabel = tk.Label(self, text = "Add/Remove Files",  font = "Helvetica 14")
-        AddRemoveLabel.grid(row = 0, sticky= "nsew", padx=(20,0))
+        AddRemoveLabel.grid(row = 0, sticky= "nsew", padx=(100,0))
         
         backButton = tk.Button(self, text = "Back",command = lambda : master.switch_frame(editConfigurationWindow), highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10")
-        backButton.grid(row = 3, sticky= "n", pady=(20,0), padx=(20,0))
+        backButton.grid(row = 3, sticky= "n", pady=(20,0), padx=(100,0))
         
         t = CheckboxTreeview(self, show="tree")
-        t.grid(row = 1, sticky= "nsew", pady=(10,0), padx=(20,0))
+        t.grid(row = 1, sticky= "nsew", pady=(10,0), padx=(100,0))
 
-class CheckboxTreeview(ttk.Treeview): 
+
+class CheckboxTreeview(ttk.Treeview):
     
     def __init__(self, master, **kw):
         ttk.Treeview.__init__(self, master, columns=("fullpath", "type"),displaycolumns="")
-
+        
         # checkboxes are implemented with pictures
         self.im_checked = tk.PhotoImage(file='checked.png')
         self.im_unchecked = tk.PhotoImage(file='unchecked.png')
@@ -258,7 +411,8 @@ class CheckboxTreeview(ttk.Treeview):
 
         with open(self.master.filepath) as fr:
             self.data = yaml.safe_load(fr) 
-            
+    
+        
         self.heading("#0", text="Directory Structure")
         self.column("#0", stretch=1, width=300)
         # check / uncheck boxes on click
@@ -282,9 +436,11 @@ class CheckboxTreeview(ttk.Treeview):
         node = self._insert('', 'end', text=dir, values=[dir, "directory"])
         self.populate_tree(node)
 
+    
     def populate_tree(self, node):
         if self.set(node, "type") != 'directory':
             return
+
         path = self.set(node, "fullpath")
         self.delete(*self.get_children(node))
         parent = self.parent(node)
@@ -306,7 +462,9 @@ class CheckboxTreeview(ttk.Treeview):
         tree = event.widget
         self.populate_tree(tree.focus())
 
-    def _insert(self, parent, index, iid=None, **kw): 
+
+    def _insert(self, parent, index, iid=None, **kw):
+        
         if not "tags" in kw:
             kw["tags"] = ("unchecked",)
         elif not ("unchecked" in kw["tags"] or "checked" in kw["tags"]
@@ -394,10 +552,11 @@ class CheckboxTreeview(ttk.Treeview):
                      children = self.get_children(item)
                      for iid in children:
                          childToAdd = self.item(iid, "values")
-                         self.data["other_files"].append(childToAdd[0])
+                         self.data["additional_patterns"].append(childToAdd[0])
                 else:
-                    self.data["other_files"].append(pathToAdd[0])
+                    self.data["additional_patterns"].append(pathToAdd[0])
 
+                
             else:
                 self.uncheck_descendant(item)
                 self.uncheck_ancestor(item)
@@ -413,40 +572,56 @@ class CheckboxTreeview(ttk.Treeview):
  
             with open(self.master.filepath, "w") as fw:
                 yaml.safe_dump(self.data, fw)
+                
+            
+
+
 
 class PackWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
+
+        
         self.rpzFileName = tk.StringVar(self, value= ".rpz")
-        #Label to ask for the RPZ package name        
+                
         Namelabel = tk.Label(self, text = "Name the RPZ Package as",  font = "Helvetica 14")
-        Namelabel.grid(row =0, sticky="nsew", padx=(80,0))
-        #button to confirm the name
+        Namelabel.grid(row =0, sticky="nsew", padx=(120,0))
+        
         SaveAsbutton = tk.Button(self, text = "Pack",command = self.packRpz, highlightbackground="black", highlightthickness="0",fg='white', height ="2", width = "10") 
-        SaveAsbutton.grid(row =2, padx=(80,0))
-        #Entry box for the name input
-        rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
-        rpzFileNameEntry.grid(row =1, sticky="nsew", padx=(70,0), pady= (10,20))
+        SaveAsbutton.grid(row =2, padx=(120,0))
+        
+        self.rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "black",  font = "Helvetica 13 italic", insertbackground = "black")
+        self.rpzFileNameEntry.grid(row =1, sticky="nsew", padx=(110,0), pady= (10,20))
+        
+
   
     def packRpz(self):
+        
         try:
+	    self.fileToPack= (str(self.rpzFileNameEntry.get())).split()	
+	    reprozipCmd = ['reprozip','pack']
+	
+	#concatnating the reprozip pack command with user arguments
+	    self.fileToPack = reprozipCmd + self.fileToPack
+	    subprocess.check_call(self.fileToPack)
             fileName = self.rpzFileName.get()
             size = os.stat(fileName).st_size
             size = self.convert_bytes(size)
             successlabel = tk.Label(self, text = "Successfully Packed!",  font = "Helvetica 17")
-            successlabel.grid(row =3, pady=(50, 0), padx=(80,0))
+            successlabel.grid(row =3, pady=(50, 0), padx=(120,0))
             
             fileSize = tk.StringVar(self, value= "Package size: "+size)
             
             displayName = tk.Label(self, textvariable = self.rpzFileName,  font = "Helvetica 15")
-            displayName.grid(row =4, pady=(30, 0), padx=(80,0))
+            displayName.grid(row =4, pady=(30, 0), padx=(120,0))
             displaySize = tk.Label(self, textvariable = fileSize,  font = "Helvetica 15")
-            displaySize.grid(row =5, padx=(80,0)) 
+            displaySize.grid(row =5, padx=(120,0)) 
         
         except os.error:
             messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!")
-
+        
+  
     def convert_bytes(self,size):
        if size == 0:
            return "0B"
@@ -455,7 +630,8 @@ class PackWindow(tk.Frame):
        p = math.pow(1024, i)
        s = round(size / p, 2)
        return "%s %s" % (s, size_name[i])
-
+        
+        
 if __name__ == "__main__":
     app = ReprozipApp()
     app.mainloop()
