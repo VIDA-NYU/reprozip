@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.15 (2018-07-31)
+-------------------
+
+(reprounzip-qt only)
+
+Bugfixes:
+* Fixed running command from reprounzip-qt on Windows
+* Fixed using Jupyter from reprounzip-qt
+
 1.0.14 (2018-07-30)
 -------------------
 
