@@ -7,7 +7,6 @@ source:
   url: _REPLACE_url_REPLACE_
 
 build:
-  #preserve_egg_dir: True
   entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
     # syntax is module:function.  For example
@@ -21,14 +20,13 @@ build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   # number: 1
-  string: _REPLACE_buildstr_REPLACE_
 
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: $PYTHON -m pip install --no-deps --ignore-installed .
 
 requirements:
-  build:
+  host:
     - python
-    - setuptools
+    - pip
 
   run:
     - python

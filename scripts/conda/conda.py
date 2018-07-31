@@ -86,10 +86,6 @@ def build_pkg(python_ver, package_name):
                         '_REPLACE_url_REPLACE_',
                         'file://{0}/{1}.tar.gz'.format(temp_dir,
                                                        package_name))
-                    # Change build string
-                    line = line.replace('_REPLACE_buildstr_REPLACE_',
-                                        'py{0}'.format(python_ver))
-
                 fp.write(line)
 
         # Builds Conda package
