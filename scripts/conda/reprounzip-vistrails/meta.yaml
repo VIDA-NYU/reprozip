@@ -7,6 +7,7 @@ source:
   url: _REPLACE_url_REPLACE_
 
 build:
+  noarch: python
   entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
     # syntax is module:function.  For example

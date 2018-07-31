@@ -116,11 +116,15 @@ def build_pkg(python_ver, package_name):
 
 
 if __name__ == '__main__':
-    for python_ver in ('2.7', '3.4', '3.5', '3.6'):
-        for package_name in ('reprozip', 'reprounzip', 'reprounzip-docker',
-                             'reprounzip-vagrant', 'reprounzip-vistrails',
-                             'reprozip-jupyter', 'reprounzip-qt'):
+    for python_ver in ('2.7', '3.4', '3.5', '3.6', '3.7'):
+        for package_name in ('reprozip',):
             if package_name == 'reprozip' and osname != 'linux':
                 continue
 
             build_pkg(python_ver, package_name)
+
+    # noarch packages
+    for package_name in ('reprounzip', 'reprounzip-docker',
+                         'reprounzip-vagrant', 'reprounzip-vistrails',
+                         'reprozip-jupyter', 'reprounzip-qt'):
+        build_pkg('3.6', package_name)
