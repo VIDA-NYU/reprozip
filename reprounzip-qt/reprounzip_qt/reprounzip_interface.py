@@ -394,11 +394,11 @@ end tell
         return None
     elif system == 'windows':
         if not close_on_success:
-            cmd = cmd + ' & pause'
+            cmd = cmd + ' ^& pause'
         subprocess.check_call(
             'start%s cmd /c %s' % (
                 ' /wait' if wait else '',
-                win_escape(cmd),
+                cmd,
             ),
             shell=True)
         return None
