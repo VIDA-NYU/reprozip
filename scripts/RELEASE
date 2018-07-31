@@ -5,7 +5,7 @@ Bump versions in setup.py files, __init__.py files, docs/conf.py, installers
 Create a signed tag for the version
     git tag -s 1.0.11
 
-Make sdists, gpg sigs, upload to PyPI using twine
+Make sdists, wheels, gpg sigs, upload to PyPI using twine
 
 Make binary Linux wheels using scripts/linux-wheels.sh
 
@@ -15,6 +15,8 @@ Create a release on GitHub, add the CHANGELOG to it, link to the attached files
     Don't forget to link to previous releases of packages that didn't change
     Attach tarballs and wheels
     Attach installers
+
+Update conda-forge feedstocks
 
 Build Windows installer using native Python installer & InnoDB
 
