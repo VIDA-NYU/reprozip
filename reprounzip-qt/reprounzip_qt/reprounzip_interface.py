@@ -415,11 +415,14 @@ end tell
                                   ('xterm', lambda a: ['-e', a])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
+                proc = subprocess.Popen([term] + args,
+                                        stdin=subprocess.PIPE)
+                proc.stdin.close()
                 if wait:
-                    subprocess.check_call([term] + args,
-                                          stdin=subprocess.DEVNULL)
-                else:
-                    subprocess.Popen([term] + args,
-                                     stdin=subprocess.DEVNULL)
+                    retcode = proc.wait()
+                    if retcode != 0:
+                        raise subprocess.CalledProcessError(retcode,
+                                                            [term] + args)
+
                 return None
     return "Couldn't start a terminal", 'critical'

@@ -90,7 +90,7 @@ Remember that you can open the help message and learn more about other available
 Citing ReproZip
 ---------------
 
-Please use the following when citing ReproZip:
+Please use the following when citing ReproZip ([BibTeX](CITATION.txt)):
 
     ReproZip: Computational Reproducibility With Ease
     F. Chirigati, R. Rampin, D. Shasha, and J. Freire.

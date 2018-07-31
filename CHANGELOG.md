@@ -11,6 +11,22 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
+1.0.14 (2018-07-30)
+-------------------
+
+(reprozip, reprounzip-qt and reprozip-jupyter only)
+
+Bugfixes:
+* Fixed reprounzip-qt refusing to close when an experiment is still unpacked, even after the user provided confirmation
+* Fixed reprozip-jupyter on Python 3
+* Fixed running gnome-terminal from reprounzip-qt, made it preferred over xterm
+* Don't duplicate the latest run in the config file when the trace didn't add a run (for example because the command does not exist)
+
+Enhancements:
+* Uniformized logos and icons
+* Native terminal opened by reprounzip-qt waits for a key after success before closing
+* Officially support reprounzip-qt and reprozip-jupyter on Python 3
+
 1.0.13 (2018-05-15)
 -------------------
 
