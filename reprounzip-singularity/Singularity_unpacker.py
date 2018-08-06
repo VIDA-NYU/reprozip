@@ -65,14 +65,14 @@ def make_app_runscript(tar, cmd, app_name=None):
     tar.addfile(t, io.BytesIO(cmd))
 
    
-def make_runscript(tar, cmd, workingdir):
+def make_runscript(tar, cmd):
     run_cmd = "run()\n"
     run_cmd += "{"+ cmd + "\n}\n\n"
     upload_download_cmd = "upload()\n{\n"
-    upload_download_cmd += "\tcp " + MOUNT_DIR + "\"$1\" " + workingdir + "\n}\n\n"
+    upload_download_cmd += "\tcp " + MOUNT_DIR + "\"$1\" \"$2\"\n}\n\n"
     upload_download_cmd += "download()\n{\n"
-    upload_download_cmd += "\tcp {0}/".format(workingdir) + "\"$1\" " + MOUNT_DIR + "\n}\n\n"
-    upload_download_cmd += "if [ \"$#\" -gt 0 ]\nthen \n \tcase \"$1\" in \n\t\t\"upload\"|\"download\")\n\t\t\t\"$1\" \"$2\" \n\t\t;;\n\t\t*)\n\t\techo \"Invalid arguments!!\" >&2\n\t\texit 1\n\t\t;;\n\tesac\nelse\n\trun\nfi"
+    upload_download_cmd += "\tcp \"$1\" " + MOUNT_DIR + "\"$2\"\n}\n\n"
+    upload_download_cmd += "if [ \"$#\" -gt 0 ]\nthen \n \tcase \"$1\" in \n\t\t\"download\"|\"upload\")\n\t\t\t\"$1\" \"$2\" \"$3\" \n\t\t;;\n\t\t*)\n\t\techo \"Invalid arguments!!\" >&2\n\t\texit 1\n\t\t;;\n\tesac\nelse\n\trun\nfi"
     file = ".singularity.d/"+ RUNSCRIPT
     run_cmd = run_cmd + upload_download_cmd
     run_cmd=run_cmd.encode("utf-8")
@@ -160,7 +160,7 @@ def add_singularity_folder(tar):
         main_run_cmd += "\n\tsource /scif/apps/"+ app_name + "/scif/env/" + RUN_ENV_FILE 
         main_run_cmd += "\n\tsource /scif/apps/"+ app_name + "/scif/" + RUNSCRIPT 
     if main_run_cmd:
-         make_runscript(tar,main_run_cmd,runs[0]['workingdir'])
+         make_runscript(tar,main_run_cmd)
     if main_app_base_cmd:
         make_main_app_base_script(tar,main_app_base_cmd)
 
@@ -220,23 +220,32 @@ def run(IMAGE_TAR_FILE, app):
         except subprocess.CalledProcessError:
             print("Error running image '{0}'".format(IMAGE_TAR_FILE))
 
-def download(IMAGE_DIR,filename):
+def download(IMAGE_DIR, src, dest):
     home = os.environ['HOME']
-    current_dir = os.getcwd()
-    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} download {5}".format(current_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, filename)
+    dest_dir = os.path.dirname(dest)
+    if os.path.isdir(dest):
+        filename = ""
+    else:
+        filename = os.path.basename(dest)
+    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} download {5} {6}".format(dest_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, src, filename)
+    print(bashCommand)
     try:
         subprocess.check_call([bashCommand],shell=True)
     except subprocess.CalledProcessError:
         print("Error downloading '{0}'".format(filename))
 
-def upload(IMAGE_DIR, filename):
+def upload(IMAGE_DIR, src, dest):
+    src_dir = os.path.dirname(src)
     home = os.environ['HOME']
-    current_dir = os.getcwd()
-    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} upload {5}".format(current_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, filename)
+    if os.path.isdir(src):
+        filename = ""
+    else:
+        filename = os.path.basename(src)
+    bashCommand = "singularity run  -B {0}:{1} --overlay {2} -C -H {3}:/temp_home {4} upload {5} {6}".format(src_dir,MOUNT_DIR,IMAGE_DIR+"/"+OVERLAY_IMAGE, home, IMAGE_DIR+"/"+IMAGE_TAR_FILE, filename, dest)
     try:
         subprocess.check_call([bashCommand],shell=True)
     except subprocess.CalledProcessError:
-        error_out("Error uploading '{0}' to '{1}".format(filename,IMAGE_DIR))
+        print("Error uploading '{0}' to '{1}".format(filename,IMAGE_DIR))
 
 def destroy(IMAGE_DIR):
     bashCommand = "rm -rf {}".format(IMAGE_DIR)
@@ -248,8 +257,8 @@ def destroy(IMAGE_DIR):
 args = sys.argv[1:]
 cmd = args[0]
 
-if cmd not in ["setup","run","upload","download"]:
-    print("Invalid Commands - only setup/run/download/upload are allowed")
+if cmd not in ["setup","run","upload","download", "destroy"]:
+    print("Invalid Commands - only setup/run/download/upload/destroy are allowed")
     exit()
 
 if cmd=="setup":
@@ -267,10 +276,10 @@ elif cmd=="run":
     os.chdir(IMAGE_DIR)
     run(IMAGE_TAR_FILE,app)
 elif cmd in ["upload","download"]:
-    IMAGE_DIR,filename = args[1:]
-    if not filename:
-        print("output file missing!")
-    globals()[cmd](IMAGE_DIR,filename)
+    IMAGE_DIR, src, dest = args[1:]
+    if not dest:
+        print("file missing!")
+    globals()[cmd](IMAGE_DIR, src, dest)
 elif cmd=="destroy":
      IMAGE_DIR = args[1]
      destroy(IMAGE_DIR)
