@@ -6,10 +6,11 @@ import yaml
 import subprocess
 import io
 import string
+import requests 
 
 SINGULARITY_DIR = "../.singularity.d"
 APP_DIR = "../sample_app"
-MOUNT_DIR = "/mnt/"
+MOUNT_DIR = "/tmp/"
 RUN_ENV_FILE = "90-environment.sh"
 APP_BASE_FILE = "01-base.sh"
 MAIN_APP_BASE_FILE = ".singularity.d/env/94-appsbase.sh"
@@ -22,6 +23,14 @@ safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
                        "0123456789"
                        "-+=/:.,%_")
+
+busybox_urls = {
+"x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",
+"i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"
+}
+
+
+
 
 def sanitize_appname(name):
     name = name.strip()
@@ -120,8 +129,15 @@ def make_app_specific_base_script(tar, file, app_name=None):
     tar.addfile(t, io.BytesIO(cmd))
 
 # Check if bin is present in the tar if not add bin and sh
-def copy_busybox(tar):
-  tar.add("../bin",arcname="bin")
+def copy_busybox(tar,busybox_url):
+    r = requests.get(busybox_url)
+    for cmd in ["sh","cp","ls"]:
+        file = "bin/" + cmd
+        t = tarfile.TarInfo(file)
+        t.size = len(r.content)
+        t.mode=0o755
+        tar.addfile(t, io.BytesIO(r.content))
+
 
 def add_singularity_folder(tar):
     # check if the runs are multiple or single
@@ -130,8 +146,11 @@ def add_singularity_folder(tar):
     runs = my_dict['runs']
     main_app_base_cmd = ''
     main_run_cmd = ''
-    copy_busybox(tar)
     # Add scif folders - apps and data
+    arch = runs[0]['architecture']
+    busybox_url = busybox_urls[arch]
+    copy_busybox(tar,busybox_url)
+
     for folder in ["apps","data"]:
         new_info = tarfile.TarInfo("scif/"+folder)
         new_info.type = tarfile.DIRTYPE
@@ -222,7 +241,7 @@ def run(IMAGE_TAR_FILE, app):
 
 def download(IMAGE_DIR, src, dest):
     home = os.environ['HOME']
-    dest_dir = os.path.dirname(dest)
+    dest_dir = os.path.dirname(dest) or os.getcwd()
     if os.path.isdir(dest):
         filename = ""
     else:
