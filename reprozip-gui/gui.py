@@ -21,8 +21,12 @@ import itertools
 import tkMessageBox as messagebox
 import shutil 
 
+
+# Run 0 being the first run
+
 #to keep a check on which was the last window visited, -1 saying no widnows prior
 flag = -1
+
 
 class ReprozipApp(tk.Tk):
     def __init__(self):
@@ -45,14 +49,19 @@ class ReprozipApp(tk.Tk):
         self._frame = new_frame
 	self._frame.grid(padx = 40, pady = 70)
 
+
+
 class TraceWindow(tk.Frame):
+
     def __init__(self, master):
         
         self.tempPath = tk.StringVar()
 	self.tempWorkDir = tk.StringVar()
 	
+	
 	if os.path.isdir(".reprozip-trace") and (flag !=1):
 		self.messageWindow()
+
 
         tk.Frame.__init__(self, master)
 
@@ -185,7 +194,10 @@ class TraceWindow(tk.Frame):
 		self.tempPath.set(selectedScript)
 	else:
 		self.tempPath.set("Select your script using Browse")
+        #print(self.master.runName.get())
      
+
+
     def messageWindow(self):
 		
 	def deleteDir():
@@ -221,6 +233,9 @@ class TraceWindow(tk.Frame):
 	win.columnconfigure(0,weight = 2)
 	win.columnconfigure(2,weight = 2)
 	
+
+
+
     def _reproTrace(self):
 	#try:
 
@@ -243,8 +258,9 @@ class TraceWindow(tk.Frame):
 		self.master.data = yaml.safe_load(fr)  
 	
 	self.numberOfRuns = len(self.master.data['runs'])
+	print(self.numberOfRuns)
 		
-	self.master.data['runs'][self.numberOfRuns]['id'] = self.runName.get()
+	self.master.data['runs'][self.numberOfRuns-1]['id'] = self.runName.get()
 		    	
 	#with open(self.master.filepath, "w") as fw:
 	 #       yaml.safe_dump(data, fw)
@@ -306,7 +322,7 @@ class editConfigurationWindow(tk.Frame):
 
         #self.image = tk.PhotoImage(file = "back.png")
         # button to go back to Add Run Window
-        backButton = tk.Button(self, text = "Back",  command = self._back, height ="3", width = "10")
+        backButton = tk.Button(self, text = "Back",  command = self._back, height ="2", width = "6")
         backButton.grid(row =0, column = 0, sticky = "nw", padx = (40,0))
         
         # button to Rename input/output files
@@ -481,8 +497,9 @@ class CheckboxTreeview(ttk.Treeview):
     def checkInConfigfile(self,p): 
         if(p in self.data["other_files"]):
             self.alreadyExists = "1"
-        elif any(i['path'] == p for i in self.data["inputs_outputs"]):
-            self.alreadyExists = "1"
+        elif (self.data["inputs_outputs"]!= None) :
+	    if any(i['path'] == p for i in self.data["inputs_outputs"]):
+            	self.alreadyExists = "1"
         else:
             self.alreadyExists = "0" 
         for i in range(len(self.data["packages"])):
@@ -610,7 +627,7 @@ class CheckboxTreeview(ttk.Treeview):
                      children = self.get_children(item)
                      for iid in children:
                          childToAdd = self.item(iid, "values")
-                         self.data["additional_patterns"].append(childToAdd[0])
+                         self.data["other_files"].append(childToAdd[0])
                 else:
                     self.data["additional_patterns"].append(pathToAdd[0])
 
@@ -663,6 +680,7 @@ class PackWindow(tk.Frame):
 
 	    self.fileToPack= (str(self.rpzFileNameEntry.get())).split()	
 	    reprozipCmd = ['reprozip','pack']
+	  
 	
 	#concatnating the reprozip pack command with user arguments
 	    self.fileToPack = reprozipCmd + self.fileToPack
@@ -679,9 +697,13 @@ class PackWindow(tk.Frame):
             displayName.grid(row =4, pady=(30, 0), padx=(120,0))
             displaySize = tk.Label(self, textvariable = fileSize,  font = "Helvetica 15")
             displaySize.grid(row =5, padx=(120,0)) 
-        
-        except os.error:
-            messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!")
+
+	except:
+    	    if os.path.isfile(self.rpzFileName.get()):
+		messagebox.showerror("Error", "Target File Exists! \nPlease enter a new File Name") 
+	    else:
+		messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!") 
+            
         
   
     def convert_bytes(self,size):
