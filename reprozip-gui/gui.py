@@ -39,11 +39,23 @@ class ReprozipApp(tk.Tk):
         self.title("ReproZip")
         self.tk_setPalette(background= '#6E53BE')
         self.resizable(False,False)
-        self.geometry("650x600")
+   	
+        # to set the geometry
+	self.centerWindow()
 	self.tk.call('wm', 'iconphoto', self._w, tk.PhotoImage(file='icon.png'))
 
 	self.filepath =os.path.expanduser('~') + "/.reprozip-trace/config.yml"
 	self.workDirForExp = os.path.expanduser('~') + "/.reprozip-trace"
+	
+    def centerWindow(self,width=650, height=600):
+    	# get screen width and height
+    	screen_width = self.winfo_screenwidth()
+   	screen_height = self.winfo_screenheight()
+
+   	 # calculate position x and y coordinates
+    	x = (screen_width/2) - (width/2)
+    	y = (screen_height/2) - (height/2)
+    	self.geometry('%dx%d+%d+%d' % (width, height, x, y))
 
         
     def switch_frame(self, frame_class):
@@ -239,9 +251,18 @@ class TraceWindow(tk.Frame):
 	self.win = tk.Toplevel()
 	self.win.title('Warning')
         self.win.resizable(False,False)
-        self.win.geometry("400x250")
+
+    	screen_width = self.win.winfo_screenwidth()
+    	screen_height = self.win.winfo_screenheight()
+
+ 	# calculate position x and y coordinates
+    	x = (screen_width/2) - (400/2)
+    	y = (screen_height/2) - (250/2)
+
+   	self.win.geometry('%dx%d+%d+%d' % (400, 250, x, y))
+	self.win.attributes("-topmost", True)
+
 	self.win.grab_set()
-	self.win.lift(aboveThis=None)
 	
 	with open(os.path.expanduser('~') + "/.reprozip-trace/config.yml") as fr:
 		self.master.data = yaml.safe_load(fr)  
