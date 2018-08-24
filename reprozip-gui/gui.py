@@ -178,7 +178,7 @@ class TraceWindow(tk.Frame):
 	for path in itertools.chain(os.environ.get('PATH', '').split(os.pathsep),['/usr/local/bin']):	      
 		filename = os.path.join(path, cmd)
 		if os.path.exists(filename):
-			print(filename)
+			#print(filename)
 	              	return filename
 	return None
 
@@ -565,7 +565,7 @@ class CheckboxTreeview(ttk.Treeview):
         self.bind('<<TreeviewOpen>>', self.update_tree)
 
     def checkInConfigfile(self,p): 
-	print(p)        
+	        
 	if(p in self.data["other_files"]):
             self.alreadyExists = "1"
 
