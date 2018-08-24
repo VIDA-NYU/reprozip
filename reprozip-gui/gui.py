@@ -5,15 +5,18 @@
 import os
 import subprocess
 try:
-    # for Python2
+    # for Python3
     import tkinter as tk
     from tkinter import filedialog
     from tkinter import ttk
+    
 except ImportError:
-    # for Python3
+    # for Python2
     import Tkinter as tk
     import tkFileDialog as filedialog
     import ttk
+    import tkFont
+
 import yaml
 import math
 import sys
@@ -37,8 +40,10 @@ class ReprozipApp(tk.Tk):
         self.tk_setPalette(background= '#6E53BE')
         self.resizable(False,False)
         self.geometry("650x600")
-        #self.filepath ="config.yml"
-	self.filepath = ".reprozip-trace/config.yml"
+	self.tk.call('wm', 'iconphoto', self._w, tk.PhotoImage(file='icon.png'))
+
+	self.filepath =os.path.expanduser('~') + "/.reprozip-trace/config.yml"
+	self.workDirForExp = os.path.expanduser('~') + "/.reprozip-trace"
 
         
     def switch_frame(self, frame_class):
@@ -49,6 +54,13 @@ class ReprozipApp(tk.Tk):
         self._frame = new_frame
 	self._frame.grid(padx = 40, pady = 70)
 
+    def on_closing(self):
+    	if messagebox.askyesno("Quit", "Do you want to save the progress?"):
+		with open(self.filepath, "w") as fw:
+          		 yaml.safe_dump(self.data, fw)
+        	self.destroy()
+	else:
+		self.destroy()
 
 
 class TraceWindow(tk.Frame):
@@ -57,10 +69,6 @@ class TraceWindow(tk.Frame):
         
         self.tempPath = tk.StringVar()
 	self.tempWorkDir = tk.StringVar()
-	
-	
-	if os.path.isdir(".reprozip-trace") and (flag !=1):
-		self.messageWindow()
 
 
         tk.Frame.__init__(self, master)
@@ -94,10 +102,11 @@ class TraceWindow(tk.Frame):
         labelWorkDir.grid(row = 2, column = 0, sticky ="nse" , pady= (50,0))
         
 	# Browse button for Working Directory
-        browseButton = tk.Button(self, text="...",command = self._askopendir, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2")
+
+        browseButton = tk.Button(self, text="...",command = self._askopendir, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2", cursor = "hand1")
         browseButton.grid(row = 2, column=4, pady= (50,0), sticky = "ne")
 	
-	# Display WorkDir 
+	# Display  
         self.workDir = tk.Entry(self, textvariable =self.tempWorkDir, fg="white", font = "Helvetica 11 italic", width ="40")
         self.workDir.grid(row = 2, column = 2,sticky = "w", columnspan =2,pady= (50,0))
 
@@ -106,7 +115,7 @@ class TraceWindow(tk.Frame):
         labelScript.grid(row = 3, column = 0, sticky ="nse" , pady= (50,0))
 
 	# Browse button for Script
-        browseScriptButton = tk.Button(self, text="...",command = self._askopenfile, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2")
+        browseScriptButton = tk.Button(self, text="...",command = self._askopenfile, highlightbackground="black", highlightthickness="0",fg='white', height ="1", width = "2", cursor = "hand1")
         browseScriptButton.grid(row = 3, column=4, sticky = "ne", pady= (50,0))
        
         # Display Script 
@@ -114,7 +123,7 @@ class TraceWindow(tk.Frame):
         self.selectedScript.grid(row = 3, column = 2, columnspan =2, sticky = "w", pady= (50,0))
         
         # Trace button
-        traceButton = tk.Button(self, text="Trace", command= self._reproTrace,highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8")
+        traceButton = tk.Button(self, text="Trace", command= self._reproTrace,highlightbackground="#404040", highlightthickness="0",fg='white', height ="2", width = "8", cursor = "hand1")
         traceButton.grid(row = 5, column =1,columnspan =2,  pady = (60,0), padx = (40,0),  sticky = "ne")
 	
 	self.grid_columnconfigure(0, weight =1)
@@ -133,6 +142,11 @@ class TraceWindow(tk.Frame):
 	self.native_escape = self.shell_escape
 
 
+	#checks if the trace already exists and if the number of runs window is visited already	
+	if os.path.isdir(os.path.expanduser('~') + "/.reprozip-trace" ) and (flag !=1):
+		self.messageWindow()
+
+
     def shell_escape(self,s):
 	safe_shell_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                        "abcdefghijklmnopqrstuvwxyz"
@@ -147,6 +161,7 @@ class TraceWindow(tk.Frame):
     	else:
         	return s
 
+
     def find_command(self,cmd):
 	for path in itertools.chain(os.environ.get('PATH', '').split(os.pathsep),['/usr/local/bin']):	      
 		filename = os.path.join(path, cmd)
@@ -154,6 +169,7 @@ class TraceWindow(tk.Frame):
 			print(filename)
 	              	return filename
 	return None
+
 
 
     def run_in_system_terminal(self,cmd,wait=True, close_on_success=False):
@@ -180,6 +196,7 @@ class TraceWindow(tk.Frame):
 			return None
     	return "Couldn't start a terminal", 'critical'
 
+
     def _askopendir(self):
         selectedWorkDir = filedialog.askdirectory(initialdir="/",title='Please select a directory')
 	if(selectedWorkDir):
@@ -194,46 +211,87 @@ class TraceWindow(tk.Frame):
 		self.tempPath.set(selectedScript)
 	else:
 		self.tempPath.set("Select your script using Browse")
-        #print(self.master.runName.get())
-     
+
 
 
     def messageWindow(self):
 		
 	def deleteDir():
-		shutil.rmtree(".reprozip-trace")
-		win.destroy()   
+		shutil.rmtree(self.master.workDirForExp )
+		self.win.destroy()   
 	
 	def continueTrace():
-		with open(self.master.filepath) as fr:
-			self.master.data = yaml.safe_load(fr)  
 		self.master.switch_frame(AddRunWindow)
-		win.destroy()
+		self.win.destroy()
 
-	win = tk.Toplevel()
-	win.title('Warning')
-        win.resizable(False,False)
-        win.geometry("350x200")
+	def onClick(event):
+		self.win.geometry("600x450")
+		showMoreLabel['text'] = "Select Run for details"
+        	runsList = tk.Listbox(self.win, fg= "black", width=15, height=8,font = "Helvetica 14")
+        	# Output the read run id to the GUI 
+        	for i in range(0, len(self.master.data['runs'])):
+            		runsList.insert(tk.END, self.master.data['runs'][i]['id'])
+      		runsList.grid(row = 4, column=0, columnspan =2  , sticky= "nsw", pady = (10,0), padx =(20,0))
+		runsList.bind('<<ListboxSelect>>', self.onSelect)
+		
+
+
+	self.win = tk.Toplevel()
+	self.win.title('Warning')
+        self.win.resizable(False,False)
+        self.win.geometry("400x250")
+	self.win.grab_set()
+	self.win.lift(aboveThis=None)
+	
+	with open(os.path.expanduser('~') + "/.reprozip-trace/config.yml") as fr:
+		self.master.data = yaml.safe_load(fr)  
 
 	message1 = "A trace already exists!" 
 	message2 = "Select from the options below"
 	
-	warningLabel = tk.Label(win, text= message1 ,font = "Helvetica 13", width = "20")
-        warningLabel.grid(column= 0, row= 0, sticky = "nsew", columnspan = 3, padx =(20,0), pady = (30,0)) 
+	warningLabel = tk.Label(self.win, text= message1 ,font = "Helvetica 13", width = "20")
+        warningLabel.grid(column= 0, row= 0, sticky = "nsew", columnspan = 4, padx =(20,0), pady = (30,0)) 
 	
-	questionLabel = tk.Label(win, text= message2 ,font = "Helvetica 13", width = "20")
-	questionLabel.grid(column= 0, row= 1, sticky = "nsew", columnspan = 3, padx =(10,0), pady = (10,0)) 
+	questionLabel = tk.Label(self.win, text= message2 ,font = "Helvetica 13", width = "20")
+	questionLabel.grid(column= 0, row= 1, sticky = "nsew", columnspan = 4, padx =(10,0), pady = (10,0)) 
 
-	deleteButton = tk.Button(win, text='Delete', command= deleteDir)
+	deleteButton = tk.Button(self.win, text='Delete', command= deleteDir, cursor = "hand1")
 	deleteButton.grid(column = 0, row=2, sticky = "nse", padx =(10,0), pady = (20,0))
-	appendButton = tk.Button(win, text='Append', command= continueTrace)
+	appendButton = tk.Button(self.win, text='Append', command= continueTrace, cursor = "hand1")
 	appendButton.grid(column = 2, row=2, sticky = "nsw", padx =(10,0), pady = (20,0))
 
-	win.columnconfigure(1,weight = 2)
-	win.columnconfigure(0,weight = 2)
-	win.columnconfigure(2,weight = 2)
+	showMoreLabel = tk.Label(self.win, text = "Show more" ,font = "Helvetica 11", width = "20", cursor = "hand1")
+	showMoreLabel.grid(column = 1, row = 3, padx = (10,0) ,pady = (30,0), sticky = "ns" )
+	showMoreLabel.bind("<Button-1>", onClick)
+
+	f = tkFont.Font(showMoreLabel, showMoreLabel.cget("font"))
+	f.configure(underline = True)
+	showMoreLabel.configure(font = f)
+
+	self.win.columnconfigure(1,weight = 2)
+	self.win.columnconfigure(0,weight = 2)
+	self.win.columnconfigure(2,weight = 2)
+
+	
+    def onSelect(self, event):
 	
 
+	argvLabel = tk.Label(self.win, text= "" ,font = "Helvetica 12 italic")	
+	argvLabel.grid(column = 1, row = 3 , columnspan = 2, rowspan = 2)
+
+	dirLabel = tk.Label(self.win, text= "" ,font = "Helvetica 12 italic")	
+	dirLabel.grid(column = 1, row = 4 , columnspan = 2, rowspan = 2)	
+	
+	w = event.widget
+	if(w.curselection()):
+		self.win.index = int(w.curselection()[0])
+		dirLabel['text'] = (self.master.data['runs'][self.win.index]['workingdir'])
+		argvString = (self.master.data['runs'][self.win.index]['argv'])
+		argvString = ' '.join(str(x) for x in argvString)
+		argvLabel['text'] = argvString
+	
+	
+	
 
 
     def _reproTrace(self):
@@ -242,31 +300,30 @@ class TraceWindow(tk.Frame):
 	#fetching the arguments entered by user
 	self.arguments = (str(self.argumentsEntry.get())).split(" ")
 	
-	#if (numberOfRuns == 0):
-	#	reprozipCmd = ['reprozip','trace']
-	#else:
-	reprozipCmd = ['reprozip','trace', '--continue']					
+	reprozipCmd = ['reprozip','trace', '--continue', '-d', self.master.workDirForExp]			
 	reprozipCmd.append(str(self.tempPath.get()))
 				
 	#concatnating the reprozip trace command with user arguments
 	self.arguments = reprozipCmd + self.arguments
 	self.run_in_system_terminal(self.arguments)
+
 	global flag
 	flag = 0	
-		
+
 	with open(self.master.filepath) as fr:
 		self.master.data = yaml.safe_load(fr)  
 	
 	self.numberOfRuns = len(self.master.data['runs'])
-	print(self.numberOfRuns)
+	#print(self.numberOfRuns)
 		
 	self.master.data['runs'][self.numberOfRuns-1]['id'] = self.runName.get()
-		    	
-	#with open(self.master.filepath, "w") as fw:
-	 #       yaml.safe_dump(data, fw)
-		
-			
+	
+	#writing the run name since the next window needs to show updated runs
+	with open(self.master.filepath, "w") as fw:
+		yaml.safe_dump(self.master.data, fw)
+	
 	self.master.switch_frame(AddRunWindow)
+
 	#except:
 		#messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!") 
         
@@ -276,6 +333,7 @@ class AddRunWindow(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
     	
+	self.master.protocol("WM_DELETE_WINDOW", self.master.on_closing)	
 
 	self.numberOfRuns = len(self.master.data['runs'])
 
@@ -291,11 +349,6 @@ class AddRunWindow(tk.Frame):
         runLabel = tk. Label(self, text = "Existing Runs",  font = "Helvetica 14")
         runLabel.grid(row = 0, column =0, sticky= "nw", pady = (10,5), padx = (40,0))
         
-        # to read the runs from yaml file
-        #with open(self.master.filepath) as fr:
-         #   data = yaml.safe_load(fr)  
-                  
-        
         # Listbox to display existing runs
         runsList = tk.Listbox(self, bg = "white", fg= "black", width=23, height=12,font = "Helvetica 14")
         # Output the read run id to the GUI 
@@ -305,22 +358,18 @@ class AddRunWindow(tk.Frame):
         runsList.grid(row = 1, rowspan =3, columnspan = 2, sticky= "nw", padx = (40,0))
 
     def _addRun(self):
-        self.numberOfRuns = self.numberOfRuns + 1 
+
         global flag
         flag = 1
         self.master.switch_frame(TraceWindow)
        
         
         
-        
 class editConfigurationWindow(tk.Frame):
       
     def __init__(self, master):
-        tk.Frame.__init__(self, master)  
-        
-	#reading config file 
+        tk.Frame.__init__(self, master)   
 
-        #self.image = tk.PhotoImage(file = "back.png")
         # button to go back to Add Run Window
         backButton = tk.Button(self, text = "Back",  command = self._back, height ="2", width = "6")
         backButton.grid(row =0, column = 0, sticky = "nw", padx = (40,0))
@@ -361,9 +410,7 @@ class renameFilesWindow(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)  
 	
-	#reading config file 
-	#with open(self.master.filepath) as fr:
-         #   self.data = yaml.safe_load(fr) 
+	self.master.protocol("WM_DELETE_WINDOW", self.master.on_closing)
         
         #Label for input/output files 
         ioFilesLabel = tk.Label(self, text = "Input/Output Files", fg="white", font = "Helvetica 14")
@@ -435,25 +482,24 @@ class renameFilesWindow(tk.Frame):
     def _rename(self):
 
 	self.master.data['inputs_outputs'][self.index]['name'] = self.fileNameEntry.get()
-        #with open(self.master.filepath, "w") as fw:
-           # yaml.safe_dump(self.data, fw)
-	
+
 	updatedName = self.iofilesListbox.get(self.index)
 	updatedName = updatedName[:updatedName.find(" ")]	
 	updatedName = updatedName + " " + self.fileNameEntry.get()
 	self.iofilesListbox.delete(self.index)
 	self.iofilesListbox.insert(self.index, updatedName) 
-        #self.iofilesListbox.delete(0,tk.END)
-	#self._writeList()
-        
-        
+
+
+
+
 class AddFilesWindow(tk.Frame):
     
     def __init__(self, master):
         tk.Frame.__init__(self, master)
-        
-        #self.filepath = "config.yml"
-	self.filepath = ".reprozip-trace/config.yml"
+	
+	self.master.protocol("WM_DELETE_WINDOW", self.master.on_closing)
+
+	self.filepath = os.path.expanduser('~') + "/.reprozip-trace/config.yml"
         
         AddRemoveLabel = tk.Label(self, text = "Add/Remove Files",  font = "Helvetica 14")
         AddRemoveLabel.grid(row = 0, sticky= "nsew", padx=(100,0))
@@ -485,6 +531,9 @@ class CheckboxTreeview(ttk.Treeview):
 	
         with open(self.master.filepath) as fr:
             self.data = yaml.safe_load(fr) 
+	
+	if (self.data["additional_patterns"] == None):
+		(self.data["additional_patterns"]) = []
     
         
         self.heading("#0", text="Directory Structure")
@@ -495,13 +544,20 @@ class CheckboxTreeview(ttk.Treeview):
         self.bind('<<TreeviewOpen>>', self.update_tree)
 
     def checkInConfigfile(self,p): 
-        if(p in self.data["other_files"]):
+	print(p)        
+	if(p in self.data["other_files"]):
             self.alreadyExists = "1"
+
         elif (self.data["inputs_outputs"]!= None) :
 	    if any(i['path'] == p for i in self.data["inputs_outputs"]):
             	self.alreadyExists = "1"
+
+	elif (self.data["additional_patterns"]!= None) :
+	    if p in self.data["additional_patterns"]:
+            	self.alreadyExists = "1"
         else:
             self.alreadyExists = "0" 
+
         for i in range(len(self.data["packages"])):
             if p in self.data["packages"][i]["files"]:
                 self.alreadyExists = "1"
@@ -548,7 +604,8 @@ class CheckboxTreeview(ttk.Treeview):
         item = ttk.Treeview.insert(self, parent, index, iid, **kw)
         if (self.alreadyExists == "1"):
             self.check_ancestor(item)
-            self.check_descendant(item)    
+            self.check_descendant(item)   
+	    self.alreadyExists = 0
         return item
 
     def check_descendant(self, item):
@@ -603,12 +660,19 @@ class CheckboxTreeview(ttk.Treeview):
     def removingFiles(self, pathToRemove):
         if((pathToRemove[0]) in self.data["other_files"]):
             self.data["other_files"].remove(pathToRemove[0])
+
+	if(self.data["additional_patterns"] != None):
+		if((pathToRemove[0]) in self.data["additional_patterns"]):
+		    self.data["additional_patterns"].remove(pathToRemove[0])
+
         for i in range(len(self.data["packages"])):
             if pathToRemove[0] in self.data["packages"][i]["files"]:
                 self.data["packages"][i]['files'].remove(pathToRemove[0])
-        for i in range(len(self.data["inputs_outputs"])):
-            if self.data["inputs_outputs"][i]["path"] == pathToRemove[0]:
-                self.data["inputs_outputs"][i]["path"]= None 
+        
+	if(self.data["inputs_outputs"] != None):
+		for i in range(len(self.data["inputs_outputs"])):
+		    if self.data["inputs_outputs"][i]["path"] == pathToRemove[0]:
+		        self.data["inputs_outputs"][i]["path"]= None 
 
     def box_click(self, event):
         #check or uncheck box when clicked#
@@ -627,7 +691,7 @@ class CheckboxTreeview(ttk.Treeview):
                      children = self.get_children(item)
                      for iid in children:
                          childToAdd = self.item(iid, "values")
-                         self.data["other_files"].append(childToAdd[0])
+                         self.data["additional_patterns"].append(childToAdd[0])
                 else:
                     self.data["additional_patterns"].append(pathToAdd[0])
 
@@ -647,8 +711,8 @@ class CheckboxTreeview(ttk.Treeview):
  
             with open(self.master.filepath, "w") as fw:
                 yaml.safe_dump(self.data, fw)
-                
             
+
 
 
 
@@ -657,8 +721,9 @@ class PackWindow(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
+        self.master.protocol("WM_DELETE_WINDOW", self.master.on_closing)
         
-        self.rpzFileName = tk.StringVar(self, value= ".rpz")
+	self.rpzFileName = tk.StringVar(self, value= ".rpz")
                 
         Namelabel = tk.Label(self, text = "Name the RPZ Package as",  font = "Helvetica 14")
         Namelabel.grid(row =0, sticky="nsew", padx=(120,0))
@@ -669,42 +734,47 @@ class PackWindow(tk.Frame):
         self.rpzFileNameEntry = tk.Entry(self, textvariable = self.rpzFileName, width= "25", fg = "white",  font = "Helvetica 13 italic", insertbackground = "black")
         self.rpzFileNameEntry.grid(row =1, sticky="nsew", padx=(110,0), pady= (10,20))
         
+	
+    def successfulClose(self):
+	self.master.destroy()
 
   
     def packRpz(self):
         
         try:
-	    
-	    with open(self.master.filepath, "w") as fw:
-           	yaml.safe_dump(self.master.data, fw)
-
-	    self.fileToPack= (str(self.rpzFileNameEntry.get())).split()	
-	    reprozipCmd = ['reprozip','pack']
-	  
 	
-	#concatnating the reprozip pack command with user arguments
-	    self.fileToPack = reprozipCmd + self.fileToPack
-	    subprocess.check_call(self.fileToPack)
-            fileName = self.rpzFileName.get()
-            size = os.stat(fileName).st_size
-            size = self.convert_bytes(size)
-            successlabel = tk.Label(self, text = "Successfully Packed!",  font = "Helvetica 17")
-            successlabel.grid(row =3, pady=(50, 0), padx=(120,0))
-            
-            fileSize = tk.StringVar(self, value= "Package size: "+size)
-            
-            displayName = tk.Label(self, textvariable = self.rpzFileName,  font = "Helvetica 15")
-            displayName.grid(row =4, pady=(30, 0), padx=(120,0))
-            displaySize = tk.Label(self, textvariable = fileSize,  font = "Helvetica 15")
-            displaySize.grid(row =5, padx=(120,0)) 
+		self.master.protocol("WM_DELETE_WINDOW", self.successfulClose)
+			    
+		with open(self.master.filepath, "w") as fw:
+			yaml.safe_dump(self.master.data, fw)
+
+		self.fileToPack= (str(self.rpzFileNameEntry.get())).split()	
+		reprozipCmd = ['reprozip','pack', '-d', self.master.workDirForExp ]
+
+		#concatnating the reprozip pack command with user arguments
+		self.fileToPack = reprozipCmd + self.fileToPack
+		subprocess.check_call(self.fileToPack, cwd = os.path.expanduser('~') )
+		fileName = self.rpzFileName.get()
+		size = os.stat(os.path.expanduser('~')+"/"+fileName).st_size
+		size = self.convert_bytes(size)
+
+
+		successlabel = tk.Label(self, text = "Successfully Packed!",  font = "Helvetica 17")
+		successlabel.grid(row =3, pady=(50, 0), padx=(120,0))
+			    
+		fileSize = tk.StringVar(self, value= "Package size: "+size)
+			    
+		displayName = tk.Label(self, textvariable = self.rpzFileName,  font = "Helvetica 15")
+		displayName.grid(row =4, pady=(30, 0), padx=(120,0))
+		displaySize = tk.Label(self, textvariable = fileSize,  font = "Helvetica 15")
+		displaySize.grid(row =5, padx=(120,0)) 
 
 	except:
-    	    if os.path.isfile(self.rpzFileName.get()):
-		messagebox.showerror("Error", "Target File Exists! \nPlease enter a new File Name") 
-	    else:
-		messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!") 
+    		if os.path.isfile(self.rpzFileName.get()):
+			messagebox.showerror("Error", "Target File Exists! \nPlease enter a new file name") 
+	        else:
+			messagebox.showerror("Error", "Oops! Something went wrong! \nPlease Try Again!") 
             
-        
   
     def convert_bytes(self,size):
        if size == 0:
