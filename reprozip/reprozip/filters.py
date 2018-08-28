@@ -19,7 +19,7 @@ def builtin(input_files, **kwargs):
     for i in irange(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.unicodename[0] == '.' or path.ext in ('.pyc', '.so'):
+            if path.unicodename[0] == '.' or path.ext in (b'.pyc', b'.so'):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
@@ -30,7 +30,7 @@ def builtin(input_files, **kwargs):
 def python(files, input_files, **kwargs):
     add = []
     for path, fi in iteritems(files):
-        if path.ext == '.pyc':
+        if path.ext == b'.pyc':
             pyfile = path.parent / path.stem + '.py'
             if pyfile.is_file():
                 if pyfile not in files:
@@ -43,7 +43,7 @@ def python(files, input_files, **kwargs):
     for i in irange(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.ext in ('.py', '.pyc'):
+            if path.ext in (b'.py', b'.pyc'):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
