@@ -14,6 +14,7 @@ It dispatchs to plugins registered through pkg_resources as entry point
 from __future__ import division, print_function, unicode_literals
 
 import argparse
+import distro
 import json
 import logging
 import platform
@@ -179,7 +180,7 @@ def _print_package_info(pack, info, verbosity=1):
                                                   platform.machine().lower()))
     if 'distribution' in info_meta:
         distribution = ' '.join(t for t in info_meta['distribution'] if t)
-        current_distribution = platform.linux_distribution()[0:2]
+        current_distribution = [distro.id(), distro.version()]
         current_distribution = ' '.join(t for t in current_distribution if t)
         print("Distribution: %s (current: %s)" % (
               distribution, current_distribution or "(not Linux)"))
