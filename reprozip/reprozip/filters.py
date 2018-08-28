@@ -14,7 +14,7 @@ from reprozip.utils import irange, iteritems
 logger = logging.getLogger('reprozip')
 
 
-_so_file = re.compile(rb'\.so(\.[0-9]+)*$')
+_so_file = re.compile(br'\.so(\.[0-9]+)*$')
 
 
 def builtin(input_files, **kwargs):
