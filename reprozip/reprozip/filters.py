@@ -5,6 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import logging
+import re
 
 from reprozip.tracer.trace import TracedFile
 from reprozip.utils import irange, iteritems
@@ -13,13 +14,20 @@ from reprozip.utils import irange, iteritems
 logger = logging.getLogger('reprozip')
 
 
+_so_file = re.compile(rb'\.so(\.[0-9]+)*$')
+
+
 def builtin(input_files, **kwargs):
     """Default heuristics for input files.
     """
     for i in irange(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.unicodename[0] == '.' or path.ext in (b'.pyc', b'.so'):
+            if (
+                    # Hidden files
+                    path.unicodename[0] == '.' or
+                    # Shared libraries
+                    _so_file.search(path.name)):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
