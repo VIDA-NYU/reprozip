@@ -30,18 +30,18 @@ class TestSelection(unittest.TestCase):
             return select_image([{'architecture': architecture,
                                   'distribution': (distribution, version)}])
 
-        self.assertEqual(get('i686', 'Ubuntu', '14.10'),
+        self.assertEqual(get('i686', 'ubuntu', '14.10'),
                          ('ubuntu', 'ubuntu:14.10'))
-        self.assertEqual(get('x86_64', 'Ubuntu', '14.10'),
+        self.assertEqual(get('x86_64', 'ubuntu', '14.10'),
                          ('ubuntu', 'ubuntu:14.10'))
-        self.assertEqual(get('x86_64', 'Ubuntu', '1.1'),
+        self.assertEqual(get('x86_64', 'ubuntu', '1.1'),
                          ('ubuntu', 'ubuntu:16.04'))
-        self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
-        self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
+        self.assertRaises(SystemExit, get, 'armv7', 'debian', '8.2')
+        self.assertEqual(get('x86_64', 'arch', '2015.06.01'),
                          ('debian', 'debian:stretch'))
-        self.assertEqual(get('x86_64', 'Debian', '1'),
+        self.assertEqual(get('x86_64', 'debian', '1'),
                          ('debian', 'debian:stretch'))
-        self.assertEqual(get('x86_64', 'CentOS', '1'),
+        self.assertEqual(get('x86_64', 'centos', '1'),
                          ('centos', 'centos:centos7'))
 
     def test_vagrant(self):
@@ -50,22 +50,22 @@ class TestSelection(unittest.TestCase):
                                 'distribution': (distribution, version)}],
                               gui=gui)
 
-        self.assertEqual(get('i686', 'Ubuntu', '14.04'),
+        self.assertEqual(get('i686', 'ubuntu', '14.04'),
                          ('ubuntu', 'ubuntu/trusty32'))
-        self.assertEqual(get('x86_64', 'Ubuntu', '12.04'),
+        self.assertEqual(get('x86_64', 'ubuntu', '12.04'),
                          ('ubuntu', 'hashicorp/precise64'))
-        self.assertEqual(get('i686', 'Ubuntu', '1.1'),
+        self.assertEqual(get('i686', 'ubuntu', '1.1'),
                          ('ubuntu', 'bento/ubuntu-18.04-i386'))
-        self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
-        self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
+        self.assertRaises(SystemExit, get, 'armv7', 'debian', '8.2')
+        self.assertEqual(get('x86_64', 'arch', '2015.06.01'),
                          ('debian', 'remram/debian-8-amd64'))
-        self.assertEqual(get('x86_64', 'Debian', '1'),
+        self.assertEqual(get('x86_64', 'debian', '1'),
                          ('debian', 'remram/debian-8-amd64'))
-        self.assertEqual(get('x86_64', 'CentOS', '1'),
+        self.assertEqual(get('x86_64', 'centos', '1'),
                          ('centos', 'bento/centos-6.7'))
-        self.assertEqual(get('x86_64', 'Fedora', '22'),
+        self.assertEqual(get('x86_64', 'fedora', '22'),
                          ('fedora', 'remram/fedora-22-amd64'))
-        self.assertEqual(get('x86_64', 'Fedora', '22', gui=True),
+        self.assertEqual(get('x86_64', 'fedora', '22', gui=True),
                          ('debian', 'remram/debian-8-amd64-x'))
-        self.assertEqual(get('x86_64', 'Ubuntu', '14.04', gui=True),
+        self.assertEqual(get('x86_64', 'ubuntu', '14.04', gui=True),
                          ('ubuntu', 'remram/ubuntu-1604-amd64-x'))
