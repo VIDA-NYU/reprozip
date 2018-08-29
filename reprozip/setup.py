@@ -1,6 +1,5 @@
 import io
 import os
-import platform
 from setuptools import setup, Extension
 import sys
 
@@ -10,7 +9,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
 # This won't build on non-Linux -- don't even try
-if platform.system().lower() != 'linux':
+if not sys.platform.startswith('linux'):
     sys.stderr.write("reprozip uses ptrace and thus only works on Linux\n"
                      "You can however install reprounzip and plugins on other "
                      "platforms\n")
@@ -40,7 +39,8 @@ req = [
     'PyYAML',
     'rpaths>=0.8',
     'usagestats>=0.3',
-    'requests']
+    'requests',
+    'distro']
 setup(name='reprozip',
       version='1.0.14',
       ext_modules=[pytracer],
