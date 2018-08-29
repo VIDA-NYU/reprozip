@@ -6,7 +6,6 @@ from __future__ import division, print_function, unicode_literals
 
 import logging
 import os
-import platform
 from PyQt4 import QtCore, QtGui
 import shutil
 import subprocess
@@ -166,7 +165,7 @@ Icon={1}
     def set_first_window(self, window):
         self.first_window = window
         self.windows.add(window)
-        if platform.system().lower() == 'linux':
+        if sys.platform.startswith('linux'):
             self.linux_try_register_default(window)
         if usage_report.status is usagestats.Stats.UNSET:
             self.ask_enable_usage_report()

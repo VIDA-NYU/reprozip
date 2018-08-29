@@ -11,7 +11,7 @@ generation logic for the config YAML file.
 
 from __future__ import division, print_function, unicode_literals
 
-import warnings
+import distro
 from collections import defaultdict
 from itertools import count
 import logging
@@ -21,6 +21,7 @@ import platform
 from rpaths import Path
 import sqlite3
 import sys
+import warnings
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
@@ -387,7 +388,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
 
     # Writes configuration file
     config = directory / 'config.yml'
-    distribution = platform.linux_distribution()[0:2]
+    distribution = [distro.id(), distro.version()]
     cur = conn.cursor()
     if overwrite or not config.exists():
         runs = []

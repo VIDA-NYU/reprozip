@@ -8,7 +8,6 @@ import itertools
 import logging
 import os
 import pickle
-import platform
 import subprocess
 import sys
 import time
@@ -343,8 +342,7 @@ def run_in_system_terminal(cmd, env={},
     environ = dict(os.environ)
     environ.update(env)
 
-    system = platform.system().lower()
-    if system == 'darwin':
+    if sys.platform == 'darwin':
         # Dodge py2app issues
         environ.pop('PYTHONPATH', None)
         environ.pop('PYTHONHOME', None)
@@ -392,17 +390,17 @@ end tell
         if wait:
             time.sleep(0.5)
         return None
-    elif system == 'windows':
+    elif sys.platform.startswith('win'):
         if not close_on_success:
-            cmd = cmd + ' & pause'
+            cmd = cmd + ' ^& pause'
         subprocess.check_call(
             'start%s cmd /c %s' % (
                 ' /wait' if wait else '',
-                win_escape(cmd),
+                cmd,
             ),
             shell=True)
         return None
-    elif system == 'linux':
+    elif sys.platform.startswith('linux'):
         if not close_on_success:
             cmd = '/bin/sh -c %s' % \
                 shell_escape(cmd + ' ; echo "Press enter..."; read r')

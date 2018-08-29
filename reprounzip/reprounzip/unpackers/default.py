@@ -772,7 +772,7 @@ def test_linux_same_arch(pack, config, **kwargs):
 
     orig_architecture = runs[0]['architecture']
     current_architecture = platform.machine().lower()
-    if platform.system().lower() != 'linux':
+    if not sys.platform.startswith('linux'):
         return COMPAT_NO, "This machine is not running Linux"
     elif (orig_architecture == current_architecture or
             (orig_architecture == 'i386' and current_architecture == 'amd64')):

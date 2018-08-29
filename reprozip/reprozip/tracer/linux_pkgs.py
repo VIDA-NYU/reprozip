@@ -14,8 +14,8 @@ Currently supported package managers:
 
 from __future__ import division, print_function, unicode_literals
 
+import distro
 import logging
-import platform
 from rpaths import Path
 import subprocess
 import time
@@ -235,7 +235,7 @@ class RpmManager(PkgManager):
 def identify_packages(files):
     """Organizes the files, using the distribution's package manager.
     """
-    distribution = platform.linux_distribution()[0].lower()
+    distribution = distro.id()
     if distribution in ('debian', 'ubuntu'):
         logger.info("Identifying Debian packages for %d files...", len(files))
         manager = DpkgManager()
