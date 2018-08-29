@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.16 (???)
+------------
+
+Bugfixes:
+* Fixed input/output file filter on Python 3 (to omit `.so`, `.pyc` etc files)
+
+Enhancements:
+* Use the [distro](https://distro.readthedocs.io/) module instead of the deprecated `platform.linux_distribution()` function to detect the distribution (the latter will be removed in Python 3.8).
+
 1.0.15 (2018-07-31)
 -------------------
 
