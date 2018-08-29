@@ -61,7 +61,6 @@ def select_image(runs):
     """Selects a base image for the experiment, with the correct distribution.
     """
     distribution, version = runs[0]['distribution']
-    distribution = distribution.lower()
     architecture = runs[0]['architecture']
 
     record_usage(docker_select_box='%s;%s;%s' % (distribution, version,

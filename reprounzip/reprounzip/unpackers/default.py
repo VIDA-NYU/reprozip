@@ -755,7 +755,7 @@ def test_same_pkgmngr(pack, config, **kwargs):
     """
     runs, packages, other_files = config
 
-    orig_distribution = runs[0]['distribution'][0].lower()
+    orig_distribution = runs[0]['distribution'][0]
     if not THIS_DISTRIBUTION:
         return COMPAT_NO, "This machine is not running Linux"
     elif THIS_DISTRIBUTION == orig_distribution:

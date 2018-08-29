@@ -434,6 +434,11 @@ def load_config(filename, canonical, File=File, Package=Package):
         if run.get('id') is None:
             run['id'] = "run%d" % i
 
+    # reprozip < 1.1 compatibility: lowercase distribution name
+    for run in runs:
+        if 'distribution' in run:
+            run['distribution'][0] = run['distribution'][0].lower()
+
     record_usage_package(runs, packages, other_files,
                          inputs_outputs,
                          pack_id=config.get('pack_id'))

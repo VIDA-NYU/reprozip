@@ -150,7 +150,7 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
                      check_distrib_compat=True):
     """Selects the right package installer for a Linux distribution.
     """
-    orig_distribution = runs[0]['distribution'][0].lower()
+    orig_distribution = runs[0]['distribution'][0]
 
     # Checks that the distributions match
     if not check_distrib_compat:
@@ -159,16 +159,14 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
             set(['ubuntu', 'debian'])):
         # Packages are more or less the same on Debian and Ubuntu
         logger.warning("Installing on %s but pack was generated on %s",
-                       target_distribution.capitalize(),
-                       orig_distribution.capitalize())
+                       target_distribution, orig_distribution)
     elif target_distribution is None:
         raise CantFindInstaller("Target distribution is unknown; try using "
                                 "--distribution")
     elif orig_distribution != target_distribution:
         raise CantFindInstaller(
             "Installing on %s but pack was generated on %s" % (
-                target_distribution.capitalize(),
-                orig_distribution.capitalize()))
+                target_distribution, orig_distribution))
 
     # Selects installation method
     if target_distribution == 'ubuntu':
@@ -182,6 +180,6 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
         installer = YumInstaller()
     else:
         raise CantFindInstaller("This distribution, \"%s\", is not supported" %
-                                target_distribution.capitalize())
+                                target_distribution)
 
     return installer

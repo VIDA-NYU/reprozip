@@ -45,7 +45,6 @@ def select_box(runs, gui=False):
     """Selects a box for the experiment, with the correct distribution.
     """
     distribution, version = runs[0]['distribution']
-    distribution = distribution.lower()
     architecture = runs[0]['architecture']
 
     record_usage(vagrant_select_box='%s;%s;%s;gui=%s' % (distribution, version,
