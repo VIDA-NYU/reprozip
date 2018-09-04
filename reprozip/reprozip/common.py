@@ -36,8 +36,7 @@ import usagestats
 import yaml
 
 from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
-    escape, CommonEqualityMixin, optional_return_type, isodatetime, hsize, \
-    join_root, copyfile
+    escape, optional_return_type, isodatetime, hsize, join_root, copyfile
 
 
 logger = logging.getLogger(__name__.split('.', 1)[0])
@@ -70,7 +69,7 @@ class File(object):
         return hash(self.path)
 
 
-class Package(CommonEqualityMixin):
+class Package(object):
     """A distribution package, containing a set of files.
     """
     def __init__(self, name, version, files=None, packfiles=True, size=None):
@@ -79,6 +78,14 @@ class Package(CommonEqualityMixin):
         self.files = list(files) if files is not None else []
         self.packfiles = packfiles
         self.size = size
+
+    def __eq__(self, other):
+        return (isinstance(other, Package) and
+                self.name == other.name and
+                self.version == other.version)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def add_file(self, file_):
         self.files.append(file_)
