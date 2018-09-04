@@ -50,7 +50,7 @@ FILE_STAT = 0x08
 FILE_LINK = 0x10
 
 
-class File(CommonEqualityMixin):
+class File(object):
     """A file, used at some point during the experiment.
     """
     comment = None
@@ -62,6 +62,9 @@ class File(CommonEqualityMixin):
     def __eq__(self, other):
         return (isinstance(other, File) and
                 self.path == other.path)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.path)
