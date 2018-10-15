@@ -274,6 +274,8 @@ def docker_setup_build(args):
 
     if args.image_name:
         image = args.image_name[0]
+        if not isinstance(image, bytes):
+            image = image.encode('ascii')
     else:
         image = make_unique_name(b'reprounzip_image_')
 
