@@ -37,8 +37,7 @@ import usagestats
 import yaml
 
 from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
-    escape, CommonEqualityMixin, optional_return_type, isodatetime, hsize, \
-    join_root, copyfile
+    escape, optional_return_type, isodatetime, hsize, join_root, copyfile
 
 
 logger = logging.getLogger(__name__.split('.', 1)[0])
@@ -51,7 +50,7 @@ FILE_STAT = 0x08
 FILE_LINK = 0x10
 
 
-class File(CommonEqualityMixin):
+class File(object):
     """A file, used at some point during the experiment.
     """
     comment = None
@@ -64,11 +63,14 @@ class File(CommonEqualityMixin):
         return (isinstance(other, File) and
                 self.path == other.path)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __hash__(self):
         return hash(self.path)
 
 
-class Package(CommonEqualityMixin):
+class Package(object):
     """A distribution package, containing a set of files.
     """
     def __init__(self, name, version, files=None, packfiles=True, size=None,
@@ -79,6 +81,14 @@ class Package(CommonEqualityMixin):
         self.packfiles = packfiles
         self.size = size
         self.meta = meta or {}
+
+    def __eq__(self, other):
+        return (isinstance(other, Package) and
+                self.name == other.name and
+                self.version == other.version)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def add_file(self, file_):
         self.files.append(file_)

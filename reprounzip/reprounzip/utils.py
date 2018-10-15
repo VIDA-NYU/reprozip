@@ -140,17 +140,6 @@ def escape(s):
     return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
-class CommonEqualityMixin(object):
-    """Common mixin providing comparison by comparing ``__dict__`` attributes.
-    """
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.__dict__ == other.__dict__)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
 def optional_return_type(req_args, other_args):
     """Sort of namedtuple but with name-only fields.
 

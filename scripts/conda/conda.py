@@ -5,7 +5,6 @@ import os
 from os.path import join
 import re
 import shutil
-import struct
 import subprocess
 import sys
 import tempfile
