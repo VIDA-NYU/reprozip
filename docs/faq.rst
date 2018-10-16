@@ -47,6 +47,8 @@ X support is **not** enabled by default; to enable it, use the flag ``--enable-x
 
     Please refrain from requiring direct rendering in applications that you intend to pack with ReproZip.
 
+If using Vagrant, you can also use the virtual machine's native display directly, by supplying the ``--use-gui`` option to ``reprounzip vagrant setup``.
+
 How can I access the generated system or virtual machine directly?
 ==================================================================
 
