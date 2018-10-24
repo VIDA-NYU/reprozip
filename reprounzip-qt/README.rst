@@ -13,7 +13,7 @@ Please refer to `reprozip <https://pypi.python.org/pypi/reprozip>`__ and `reprou
 Additional Information
 ----------------------
 
-For more detailed information, please refer to our `website <https://www.reprozip.org/>`_, as well as to our `documentation <https://reprozip.readthedocs.io/>`_.
+For more detailed information, please refer to our `website <https://www.reprozip.org/>`_, as well as to our `documentation <https://docs.reprozip.org/>`_.
 
 ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. The team includes:
 
