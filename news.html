@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -6,22 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="ReproZip is a tool that simplifies the process of creating reproducible experiments from command-line executions, a frequent task in computational science.">
     <meta name="author" content="ViDA at NYU">
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" href="imgs/favicon.ico">
 
-    <title>ReproZip - News</title>
+    <title>ReproZip News</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <!-- Docs extras -->
-    <link href="css/docs.min.css" rel="stylesheet">
+    <link href="css/all.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="css/custom.css" rel="stylesheet">
-
+    
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+      <script src="js/html5shiv.min.js"></script>
+      <script src="js/respond.min.js"></script>
     <![endif]-->
 
     <!-- Google Analytics -->
@@ -38,85 +37,79 @@
 
   <body>
 
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse">
+	    <nav class="navbar navbar-expand-md navbar-inverse bg-inverse">
       <div class="container">
-
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#"><img alt="ReproZip" src="img/navbar-logo.png"></a>
-        </div><!--end navbar-header-->
-
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
-          <ul class="nav navbar-nav">
-            <li class="dropdown">
-              <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">About <span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="index.html#how">How It Works</a></li>
-                <li><a href="index.html#why">Why ReproZip?</a></li>
-                <li><a href="index.html#examples">Examples</a></li>
-                <li><a href="index.html#citing">Citing ReproZip</a></li>
-                <li><a href="index.html#contact">Contact the Team</a></li>
+       <a class="navbar-brand" href="index.html"><img alt="ReproZip" src="imgs/navbar-logo.png"></a>
+  	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+		  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		  
+        <ul class="navbar-nav mr-auto">
+        
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+		    
+        <!--ABOUT DROP DOWN-->
+		    <li class="nav-item dropdown">
+		      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">About</a>
+		      <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="about.html">What is ReproZip?</a>
+            <a class="dropdown-item" href="https://docs.reprozip.org/">Docs <i class="fas fa-external-link-alt"></i></a>
+			      <a class="dropdown-item" href="https://examples.reprozip.org/">Examples <i class="fas fa-external-link-alt"></i></a>
+		      </div>
+		    </li><!--end about dropdown-->
+        
+        <li class="nav-item active"><a class="nav-link" href="#"><span class="sr-only">(current)</span>News & Scholarship</a></li>
+        
+        <!--JOBS DROP DOWN-->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Open Jobs</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="reprozip-dev-job.html" rel="noopener">ReproZip Developer</a>
+          </div>
+        </li><!--end jobs dropdown-->
+          
+        <!--INSTALLERS DROP DOWN-->
+         <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Installation</a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <li><a class="dropdown-item" href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer">Windows <i class="fas fa-download"></i></a></li>
+            <li><a class="dropdown-item" href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer">macOS <i class="fas fa-download"></i></a></li>
+            <li><a class="dropdown-item" href="https://anaconda.org/ViDA-NYU" rel="noopener">Anaconda  <i class="fas fa-external-link-alt"></i></a></li>
+            <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">PyPI Packages <i class="fas fa-external-link-alt"></i></a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprozip/" rel="noopener">reprozip</a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprounzip/" rel="noopener">reprounzip</a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprounzip-docker/" rel="noopener">reprounzip-docker</a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprounzip-vagrant/" rel="noopener">reprounzip-vagrant</a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprounzip-vistrails/" rel="noopener">reprounzip-vistrails</i></a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprounzip-qt/" rel="noopener">reprounzip-qt</a></li>
+                <li><a class="dropdown-item" href="https://pypi.org/project/reprozip-jupyter/" rel="noopener">reprozip-jupyter</a></li>
               </ul>
             </li>
+           </ul>
+         </li><!--end installers dropdown-->
+        
+		  </ul><!--end left navbar-->
+			<!-- right navbar -->
+			<ul class="nav navbar-nav ml-auto">
+			  <li class="nav-item"><a class="nav-link" href="https://github.com/ViDA-NYU/reprozip"><i class="fab fa-github-square"></i></a></li>
+        <li class="nav-item"><a class="nav-link" href="https://twitter.com/search?q=ReproZip"><i class="fab fa-twitter-square"></i></a></li>
+        <li class="nav-item"><a class="nav-link" href="mailto:users@reprozip.org"><i class="fas fa-envelope-square"></i></a></li>
+	  </ul><!--end right navbar-->
+	 </div>
+  </div><!--end container-->
+ </nav>
 
-            <li class="dropdown active">
-              <a href="news.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">News <span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="news.html#news">What's New</a></li>
-                <li><a href="news.html#publications">Publications</a></li>
-                <li><a href="news.html#presentations">Presentations</a></li>
-                <li><a href="news.html#posters">Posters</a></li>
-              </ul>
-            </li>
-            <li class="hidden-md hidden-sm"><a href="https://docs.reprozip.org/">Documentation</a></li>
-            <li class="hidden-md hidden-sm"><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-            <li class="hidden-md hidden-sm"><a href="https://examples.reprozip.org/">Examples</a></li>
-            <li class="dropdown visible-md visible-sm">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">See also<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="https://docs.reprozip.org/">Documentation</a></li>
-                <li><a href="https://github.com/ViDA-NYU/reprozip">GitHub Project</a></li>
-                <li><a href="https://examples.reprozip.org/">Examples</a></li>
-              </ul>
-            </li>
-          </ul>
-
-          <ul class="nav navbar-nav navbar-right">
-            <!--dropdown-->
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">PyPI Packages<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="https://pypi.org/project/reprozip/" rel="noopener">reprozip</a></li>
-                <li><a href="https://pypi.org/project/reprounzip/" rel="noopener">reprounzip</a></li>
-                <li><a href="https://pypi.org/project/reprounzip-docker/" rel="noopener">reprounzip-docker</a></li>
-                <li><a href="https://pypi.org/project/reprounzip-vagrant/" rel="noopener">reprounzip-vagrant</a></li>
-                <li><a href="https://pypi.org/project/reprounzip-vistrails/" rel="noopener">reprounzip-vistrails</a></li>
-              </ul>
-            </li><!--end dropdown-->
-
-            <!--dropdown-->
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Installers<span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/windows-installer">Windows</a></li>
-                <li><a href="http://reprozip-files.s3-website-us-east-1.amazonaws.com/mac-installer">Mac OS X</a></li>
-                <li><a href="https://anaconda.org/ViDA-NYU" rel="noopener">Anaconda</a></li>
-              </ul>
-            </li><!--end dropdown-->
-          </ul><!--end right nav bar-->
-
-        </div><!--end nav-collapse -->
-
-      </div> <!-- end container-fluid-->
-    </nav>
-
-    <div class="container" role="main">
+  <main role="main">
+  <div class="container">
+  
+  		<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item"><a href="#news">News</a></li>
+					<li class="breadcrumb-item"><a href="#presentations">Presentations</a></li>
+					<li class="breadcrumb-item"><a href="#presentations">Publications</a></li>
+					<li class="breadcrumb-item"><a href="#posters">Posters</a></li>
+				</ol>
+			</nav>
 
       <div class="page-header" id="news">
         <h2>What's New</h2>
@@ -281,7 +274,7 @@
       Presented by Vicky Steeves and R&eacute;mi Rampin<br/>
       University of Notre Dame, May 2017</p>
 
-      <p><i><a href="https://mfr.osf.io/render?url=https://osf.io/aef7j/?action=download%26mode=render" target="_blank" rel="noopener">ReproZip for Geospatial Research</a></i><br/>
+      <p><i><a href="https://mfr.osf.io/render?url=https://osf.io/hzj5g/?action=download%26mode=render" target="_blank" rel="noopener">ReproZip for Geospatial Research</a></i><br/>
       <a href="http://egu2017.eu/home.html" target="_blank">European Geosciences Union (EGU) General Assembly</a><br/>
       Presented by R&eacute;mi Rampin and Vicky Steeves<br/>
       Vienna, Austria, April 2017</p>
@@ -338,7 +331,7 @@
       <p><i><a href="https://osf.io/a85kx/" target="_blank" rel="noopener">Facilitating Reproducibility After the Fact</a></i><br/>
       Reproducibility Seminar, University of Washington<br/>
       Presented by Fernando Chirigati
-      [<a href="https://www.youtube.com/watch?v=HlnUWXQR-2Y" target="_blank" rel="noopener">part 1</a>, <a href="https://www.youtube.com/watch?v=B-EUgg3Bi9A" target="_blank" rel="noopener">part 2</a>]<br/>
+      [<a href="https://uw.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=2b52fcef-65ed-7649-ad8e-7b4d07dbc341" target="_blank" rel="noopener">video</a>]<br/>
       Seattle, WA, May 2015</p>
 
       <p><i><a href="https://cs.nyu.edu/cs/faculty/shasha/papers/shasha_digicosme.pptx" target="_blank" rel="noopener">Computational Reproducibility: Why Needed, First Tools, Open Problems</a></i><br/>
@@ -413,13 +406,14 @@
       <b><i>This is related to ReproZip's <a href="https://github.com/fchirigati/reprozip" target="_blank" rel="noopener">deprecated version</a>.</i></b></p>
        <a href="#"> Back to Top <span class="glyphicon glyphicon-arrow-up"></span></a>
 
-    </div> <!-- /container -->
+           <hr>
 
-    <footer class="footer">
-      <div class="container">
-        <p>ReproZip is under development at <a href="https://engineering.nyu.edu/">NYU</a> by the <abbr title="Visualization and Data Analytics">ViDA group</abbr>.</p>
-        <p>Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt">BSD</a>.</p>
-      </div>
+      </div> <!-- /container -->
+
+    </main>
+
+    <footer class="container">
+      <p>ReproZip is under development at <a href="https://engineering.nyu.edu/" rel="noopener">NYU</a> by the <a href="https://vida.engineering.nyu.edu/"><abbr title="Visualization and Data Analytics">ViDA group</abbr></a>. Code licensed under <a href="https://github.com/ViDA-NYU/reprozip/blob/master/LICENSE.txt" rel="noopener">BSD</a>. <span class="text-right"><a href="https://github.com/ViDA-NYU/reprozip"><i class="fab fa-github-square"></i></a> <a href="https://twitter.com/search?q=ReproZip"><i class="fab fa-twitter-square"></i></a> <a href="mailto:users@reprozip.org"><i class="fas fa-envelope-square"></i></a></span></p>
     </footer>
 
     <!-- Bootstrap core JavaScript
@@ -427,7 +421,22 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/respond.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="js/ie10-viewport-bug-workaround.js"></script>
+    <script>
+        $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
+          if (!$(this).next().hasClass('show')) {
+            $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
+          }
+          var $subMenu = $(this).next(".dropdown-menu");
+          $subMenu.toggleClass('show');
+          $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
+            $('.dropdown-submenu .show').removeClass("show");
+          });
+          return false;
+        });
+    </script>
   </body>
 </html>

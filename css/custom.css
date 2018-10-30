@@ -1,252 +1,98 @@
+@import url('../webfonts/Montserrat');
+
+/* change font for site */
 body {
-    padding-top: 0px;
+  font-family: 'Montserrat', sans-serif;
 }
 
+/* increase font size of paragraph content */
 body p {
   font-size:1.2em;
 }
 
-/*--------------------NAV LOGO--------------------------*/
-.navbar-brand{
-	min-height: 50px;
-    display: flex;
-    align-items: center;
+/* increase font-size of lists */
+main li {
+  font-size:1.2em;
 }
 
-/* --------------------NAV BAR--------------------------*/
+/* add space between navbar and content */
+main {
+  padding-top: 2rem;
+}
+
+/* make jumbotron slightly smaller */
+.jumbotron {
+    padding: 2rem;
+}
+
+/* change the navbar background color */
 .navbar-inverse {
   background-color: #57068c;
-  border-color: transparent;
-  font-size:1.3em;
 }
-.navbar-inverse .navbar-brand {
+
+/* change the link color and font in navbar*/
+.navbar-inverse .navbar-nav .nav-link {
   color: #ffffff;
+  font-size:1.4em;
+  font-family: 'Montserrat', sans-serif;
 }
-.navbar-inverse .navbar-brand:hover,
-.navbar-inverse .navbar-brand:focus {
-  color: #ffffff;
+
+/* change the color of active or hovered links in navbar */
+.navbar-inverse .nav-item.active .nav-link,
+.navbar-inverse .nav-item:focus .nav-link,
+.navbar-inverse .nav-item:hover .nav-link {
+    background-color: blue;
+}
+
+/* change background of active links in navbar */
+.nav-item.active {
+	background-color: blue;
+}
+
+.nav.navbar-nav.ml-auto > .nav-item > .nav-link {
+  font-size:2em;
+}
+
+/* change background of primary buttons*/
+.btn-primary {
+  background: #57068c !important;
+  font-size:1.2em;
+}
+
+/* change background of primary buttons only outlined */
+.btn-outline-primary {
+  color: #57068c;
   background-color: transparent;
-}
-.navbar-inverse .navbar-text {
-  color: #bbbbbb;
-}
-.navbar-inverse .navbar-nav > li > a {
-  color: #ffffff;
-}
-.navbar-inverse .navbar-nav > li > a:hover,
-.navbar-inverse .navbar-nav > li > a:focus {
-  color: #ffffff;
-  background-color: transparent;
-}
-.navbar-inverse .navbar-nav > .active > a,
-.navbar-inverse .navbar-nav > .active > a:hover,
-.navbar-inverse .navbar-nav > .active > a:focus {
-  color: #ffffff;
-  background-color: #0c84e4;
-}
-.navbar-inverse .navbar-nav > .disabled > a,
-.navbar-inverse .navbar-nav > .disabled > a:hover,
-.navbar-inverse .navbar-nav > .disabled > a:focus {
-  color: #ffffff;
-  background-color: transparent;
-}
-.navbar-inverse .navbar-toggle {
-  border-color: transparent;
-}
-.navbar-inverse .navbar-toggle:hover,
-.navbar-inverse .navbar-toggle:focus {
-  background-color: transparent;
-}
-.navbar-inverse .navbar-toggle .icon-bar {
-  background-color: white;
-}
-.navbar-inverse .navbar-collapse,
-.navbar-inverse .navbar-form {
-  border-color: #0c84e4;
-}
-.navbar-inverse .navbar-nav > .open > a,
-.navbar-inverse .navbar-nav > .open > a:hover,
-.navbar-inverse .navbar-nav > .open > a:focus {
-  background-color: #0c84e4;
-  color: #ffffff;
+  background-image: none;
+  border-color: #57068c;
 }
 
-/* --------------------DROP DOWN AT NAVBAR--------------------------*/
-.dropdown-menu>li>a{
-    display:block;
-    padding:3px 20px;
-    clear:both;
-    font-weight:normal;
-    line-height:1.846;
-    color:#23241e;
-    white-space:nowrap
-}
-.dropdown-menu>li>a:hover,.dropdown-menu>li>a:focus{
-    text-decoration:none;
-    color:#141414;
-    background-color:#eeeeee
-}
-.dropdown-menu>.active>a,.dropdown-menu>.active>a:hover,.dropdown-menu>.active>a:focus{
-    color:#ffffff;
-    text-decoration:none;
-    outline:0;
-    background-color:#2196f3
-}
-.dropdown-menu>.disabled>a,.dropdown-menu>.disabled>a:hover,.dropdown-menu>.disabled>a:focus{
-    color:#bbbbbb
+/* change background of secondary buttons only outlined when hover */
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #57068c;
+  border-color: #57068c;
 }
 
-/* --------------------BREAD CRUMBS--------------------------*/
-.breadcrumb{
-	padding:8px 15px;
-	margin-bottom:23px;
-	list-style:none;
-	background-color:#fff;
-	border-radius:3px;
-    font-size: 1.2em;
-    max-width: fit-content;
+.card-footer {
+  background-color:#fff;
 }
 
-.breadcrumb>li{
-	display:inline-block;
+/**********DROPDOWN SUBMENUS DO NOT TOUCH*************/
+.dropdown-submenu {
+  position: relative;
 }
 
-.breadcrumb>li+li:before{
-	content:"/\00a0";
-	padding:0 5px;
-	color:#563d7c;
+.dropdown-submenu a::after {
+  transform: rotate(-90deg);
+  position: absolute;
+  right: 6px;
+  top: .8em;
 }
 
-.breadcrumb>.active{
-	color:#bbbbbb;
-}
-
-/* --------------------SAMPLE CODE--------------------------*/
-/* Sample code areas */
-@media(min-width:768px) {
-    .codesample-left {
-        width: 75%;
-        margin: 2em auto 1em 0;
-    }
-    .codesample-right {
-        float: left;
-        width: 75%;
-        padding-left: 1em;
-    }
-    .codesample-arrow {
-        float: left;
-        width: 25%;
-        background-image: url(../arrow.png);
-        background-size: 100%;
-        background-repeat: no-repeat;
-        height: 320px;
-    }
-    .codesample-bottom:after {
-        visibility: hidden;
-        display: block;
-        content: " ";
-        clear: both;
-        height: 0;
-    }
-}
-/* Sample titles */
-.code-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #959595;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding-left: 2em;
-    line-height: 2em;
-
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-/* --------------------FOOTER--------------------------*/
-body > .container {
-    padding-bottom: 65px;
-}
-.footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 60px;
-    background-color: #f5f5f5;
-    padding: 10px 0;
-}
-.footer p {
-    margin: 0;
-    color: #777;
-    text-align: center;
-}
-
-/* --------------------TWITTER WIDGET--------------------------*/
-#twitter-wrapper {
-    display: none;
-}
-#twitter-wrapper.affix {
-    position: fixed;
-    top: 2px;
-}
-@media(min-width:768px) {
-    #twitter-wrapper {
-        display: block;
-        width: 187.5px;
-    }
-}
-@media(min-width:992px) {
-    #twitter-wrapper {
-        display: block;
-        width: 242.5px;
-    }
-}
-@media(min-width:1200px) {
-    #twitter-wrapper {
-        display: block;
-        width: 292.5px;
-    }
-}
-
-/* --------------------NEWS TABLE--------------------------*/
-.date {
-    width: 10px;
-    vertical-align: top;
-    padding-bottom: 10px;
-}
-
-.news {
-    width: 250px;
-    vertical-align: top;
-    padding-bottom: 10px;
-}
-
-/* --------------------MISCELLANEOUS--------------------------*/
-/* iframe */
-iframe {
-    margin: 0 auto;
-    display: block;
-}
-
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    padding-top: 30px;
-    height: 0;
-    overflow: hidden;
-}
-.video-container iframe, .video-container object, .video-container embed {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-tt {
-    background-color: #f3f3f3;
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-left: .1rem;
+  margin-right: .1rem;
 }
