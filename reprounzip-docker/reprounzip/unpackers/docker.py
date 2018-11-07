@@ -540,7 +540,7 @@ def docker_run(args):
     port_options = []
     for port_host, port_container, proto in parse_ports(args.expose_port):
         port_options.extend(['-p',
-                             '%s:%s%s' % (port_host, port_container, proto)])
+                             '%s:%s/%s' % (port_host, port_container, proto)])
 
     # X11 handler
     if args.x11:
