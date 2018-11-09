@@ -337,7 +337,7 @@ def docker_reset(args):
         write_dict(target, unpacked_info)
 
 
-_addr_re = re.compile(r'^(?:[a-z]+://)?([[0-9a-zA-Z_.-]+)(?::[0-9]+)?$')
+_addr_re = re.compile(r'^(?:[a-z]+://)?([0-9a-zA-Z_.-]+)(?::[0-9]+)?$')
 
 
 def get_local_addr():
