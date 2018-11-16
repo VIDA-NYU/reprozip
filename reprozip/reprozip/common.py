@@ -176,7 +176,11 @@ class RPZPack(object):
 
         It is up to the caller to remove that file once done.
         """
-        member = copy.copy(self.tar.getmember('METADATA/config.yml'))
+        self._extract_file(self.tar.getmember('METADATA/config.yml'),
+                           target)
+
+    def _extract_file(self, member, target):
+        member = copy.copy(member)
         member.name = str(target.components[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
@@ -208,12 +212,7 @@ class RPZPack(object):
                 member = self.tar.getmember('METADATA/trace.sqlite3')
         else:
             assert False
-        member = copy.copy(member)
-        member.name = str(target.components[-1])
-        self.tar.extract(member,
-                         path=str(Path.cwd() / target.parent))
-        target.chmod(0o644)
-        assert target.is_file()
+        self._extract_file(member, target)
 
     @contextlib.contextmanager
     def with_trace(self):
