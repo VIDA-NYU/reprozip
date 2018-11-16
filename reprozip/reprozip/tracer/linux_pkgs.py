@@ -15,6 +15,7 @@ Currently supported package managers:
 from __future__ import division, print_function, unicode_literals
 
 import distro
+import itertools
 import logging
 from rpaths import Path
 import subprocess
@@ -106,6 +107,10 @@ class PkgManager(object):
         raise NotImplementedError
 
 
+# Before Linux 2.6.23, maximum argv is 128kB
+MAX_ARGV = 800
+
+
 class DpkgManager(PkgManager):
     """Package identifier for deb-based systems (Debian, Ubuntu).
     """
@@ -114,30 +119,37 @@ class DpkgManager(PkgManager):
         requested = dict((f.path, f) for f in self.filter_files(files))
         found = {}  # {path: pkgname}
 
-        # Process /var/lib/dpkg/info/*.list
-        for listfile in Path('/var/lib/dpkg/info').listdir():
-            pkgname = listfile.unicodename[:-5]
-            # Removes :arch
-            pkgname = pkgname.split(':', 1)[0]
+        # Request a few files at a time so we don't hit the command-line size
+        # limit
+        iter_batch = iter(requested)
+        while True:
+            batch = list(itertools.islice(iter_batch, MAX_ARGV))
+            if not batch:
+                break
 
-            if not listfile.unicodename.endswith('.list'):
-                continue
-            with listfile.open('rb') as fp:
-                # Read paths from the file
-                line = fp.readline()
-                while line:
-                    if line[-1:] == b'\n':
-                        line = line[:-1]
-                    path = Path(line)
-                    # If it's one of the requested paths
-                    if path in requested:
+            proc = subprocess.Popen(['dpkg-query', '-S'] +
+                                    [path.path for path in batch],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            out, err = proc.communicate()
+            for l in out.splitlines():
+                pkgname, path = l.split(b': ', 1)
+                path = Path(path.strip())
+                # 8-bit safe encoding, because this might be a localized error
+                # message (that we don't care about)
+                pkgname = pkgname.decode('iso-8859-1')
+                if ', ' in pkgname:  # Multiple packages
+                    found[path] = None
+                    continue
+                pkgname = pkgname.split(':', 1)[0]  # Remove :arch
+                if path in requested:
+                    if ' ' not in pkgname:
                         # If we had assigned it to a package already, undo
                         if path in found:
                             found[path] = None
                         # Else assign to the package
                         else:
                             found[path] = pkgname
-                    line = fp.readline()
 
         # Remaining files are not from packages
         self.unknown_files.update(
@@ -163,9 +175,8 @@ class DpkgManager(PkgManager):
                     len(self.unknown_files))
 
     def _get_packages_for_file(self, filename):
-        # This method is no longer used for dpkg: instead of querying each file
-        # using `dpkg -S`, we read all the list files once ourselves since it
-        # is faster
+        # This method is not used for dpkg: instead, we query multiple files at
+        # once since it is faster
         assert False
 
     def _create_package(self, pkgname):

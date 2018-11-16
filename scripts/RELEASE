@@ -16,6 +16,8 @@ Create a release on GitHub, add the CHANGELOG to it, link to the attached files
     Attach tarballs and wheels
     Attach installers
 
+Set correct metadata on Zenodo, update badge in README
+
 Update conda-forge feedstocks
 
 Build Windows installer using native Python installer & InnoDB
