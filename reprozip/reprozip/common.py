@@ -26,6 +26,7 @@ import copy
 from datetime import datetime
 from distutils.version import LooseVersion
 import functools
+import gzip
 import json
 import logging
 import logging.handlers
@@ -183,12 +184,32 @@ class RPZPack(object):
 
         It is up to the caller to remove that file once done.
         """
-        member = copy.copy(self.tar.getmember('METADATA/config.yml'))
+        self._extract_file(self.tar.getmember('METADATA/config.yml'),
+                           target)
+
+    def _extract_file(self, member, target):
+        member = copy.copy(member)
         member.name = str(target.components[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
         target.chmod(0o644)
         assert target.is_file()
+
+    def _extract_file_gz(self, member, target):
+        f_in = self.tar.extractfile(member)
+        f_in_gz = gzip.open(f_in)
+        f_out = target.open('wb')
+        try:
+            chunk = f_in_gz.read(4096)
+            while len(chunk) == 4096:
+                f_out.write(chunk)
+                chunk = f_in_gz.read(4096)
+            if chunk:
+                f_out.write(chunk)
+        finally:
+            f_out.close()
+            f_in_gz.close()
+            f_in.close()
 
     @contextlib.contextmanager
     def with_config(self):
@@ -208,19 +229,19 @@ class RPZPack(object):
         target = Path(target)
         if self.version == 1:
             member = self.tar.getmember('METADATA/trace.sqlite3')
+            self._extract_file(member, target)
         elif self.version == 2:
             try:
                 member = self.tar.getmember('METADATA/trace.sqlite3.gz')
             except KeyError:
-                member = self.tar.getmember('METADATA/trace.sqlite3')
+                pass
+            else:
+                self._extract_file_gz(member, target)
+                return
+            member = self.tar.getmember('METADATA/trace.sqlite3')
+            self._extract_file(member, target)
         else:
             assert False
-        member = copy.copy(member)
-        member.name = str(target.components[-1])
-        self.tar.extract(member,
-                         path=str(Path.cwd() / target.parent))
-        target.chmod(0o644)
-        assert target.is_file()
 
     @contextlib.contextmanager
     def with_trace(self):
@@ -619,34 +640,34 @@ def setup_logging(tag, verbosity):
     handler.setFormatter(formatter)
 
     # Set up logger
-    logger = logging.root
-    logger.setLevel(min_level)
-    logger.addHandler(handler)
+    rootlogger = logging.root
+    rootlogger.setLevel(min_level)
+    rootlogger.addHandler(handler)
 
     # File logger
-    dotrpz = Path('~/.reprozip').expand_user()
-    try:
-        if not dotrpz.is_dir():
-            dotrpz.mkdir()
-        filehandler = logging.handlers.RotatingFileHandler(str(dotrpz / 'log'),
-                                                           mode='a',
-                                                           delay=False,
-                                                           maxBytes=400000,
-                                                           backupCount=5)
-    except (IOError, OSError):
-        logger.warning("Couldn't create log file %s", dotrpz / 'log')
-    else:
-        filehandler.setFormatter(formatter)
-        filehandler.setLevel(file_level)
-        logger.addHandler(filehandler)
+    if os.environ.get('REPROZIP_NO_LOGFILE', '').lower() in ('', 'false',
+                                                             '0', 'off'):
+        dotrpz = Path('~/.reprozip').expand_user()
+        try:
+            if not dotrpz.is_dir():
+                dotrpz.mkdir()
+            filehandler = logging.handlers.RotatingFileHandler(
+                str(dotrpz / 'log'), mode='a',
+                delay=False, maxBytes=400000, backupCount=5)
+        except (IOError, OSError):
+            logger.warning("Couldn't create log file %s", dotrpz / 'log')
+        else:
+            filehandler.setFormatter(formatter)
+            filehandler.setLevel(file_level)
+            rootlogger.addHandler(filehandler)
 
-        filehandler.emit(logging.root.makeRecord(
-            __name__.split('.', 1)[0],
-            logging.INFO,
-            "(log start)", 0,
-            "Log opened %s %s",
-            (datetime.now().strftime("%Y-%m-%d"), sys.argv),
-            None))
+            filehandler.emit(logging.root.makeRecord(
+                __name__.split('.', 1)[0],
+                logging.INFO,
+                "(log start)", 0,
+                "Log opened %s %s",
+                (datetime.now().strftime("%Y-%m-%d"), sys.argv),
+                None))
 
 
 _usage_report = None
