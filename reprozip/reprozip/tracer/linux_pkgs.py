@@ -138,6 +138,9 @@ class DpkgManager(PkgManager):
                 # 8-bit safe encoding, because this might be a localized error
                 # message (that we don't care about)
                 pkgname = pkgname.decode('iso-8859-1')
+                if ', ' in pkgname:  # Multiple packages
+                    found[path] = None
+                    continue
                 pkgname = pkgname.split(':', 1)[0]  # Remove :arch
                 if path in requested:
                     if ' ' not in pkgname:
