@@ -26,6 +26,7 @@ import copy
 from datetime import datetime
 from distutils.version import LooseVersion
 import functools
+import gzip
 import logging
 import logging.handlers
 import os
@@ -187,6 +188,22 @@ class RPZPack(object):
         target.chmod(0o644)
         assert target.is_file()
 
+    def _extract_file_gz(self, member, target):
+        f_in = self.tar.extractfile(member)
+        f_in_gz = gzip.open(f_in)
+        f_out = target.open('wb')
+        try:
+            chunk = f_in_gz.read(4096)
+            while len(chunk) == 4096:
+                f_out.write(chunk)
+                chunk = f_in_gz.read(4096)
+            if chunk:
+                f_out.write(chunk)
+        finally:
+            f_out.close()
+            f_in_gz.close()
+            f_in.close()
+
     @contextlib.contextmanager
     def with_config(self):
         """Context manager that extracts the config to  a temporary file.
@@ -205,14 +222,19 @@ class RPZPack(object):
         target = Path(target)
         if self.version == 1:
             member = self.tar.getmember('METADATA/trace.sqlite3')
+            self._extract_file(member, target)
         elif self.version == 2:
             try:
                 member = self.tar.getmember('METADATA/trace.sqlite3.gz')
             except KeyError:
-                member = self.tar.getmember('METADATA/trace.sqlite3')
+                pass
+            else:
+                self._extract_file_gz(member, target)
+                return
+            member = self.tar.getmember('METADATA/trace.sqlite3')
+            self._extract_file(member, target)
         else:
             assert False
-        self._extract_file(member, target)
 
     @contextlib.contextmanager
     def with_trace(self):
