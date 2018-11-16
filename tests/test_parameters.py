@@ -7,8 +7,8 @@ from __future__ import print_function, unicode_literals
 import unittest
 
 from reprounzip import parameters
-from reprounzip.unpackers.docker import select_image
-from reprounzip.unpackers.vagrant import select_box
+from reprounzip_docker import select_image
+from reprounzip_vagrant import select_box
 
 
 class TestSelection(unittest.TestCase):

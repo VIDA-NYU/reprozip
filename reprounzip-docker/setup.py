@@ -11,12 +11,11 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-docker',
-      version='1.0.13',
-      packages=['reprounzip', 'reprounzip.unpackers'],
+      version='1.1.0',
+      py_modules=['reprounzip_docker'],
       entry_points={
           'reprounzip.unpackers': [
-              'docker = reprounzip.unpackers.docker:setup']},
-      namespace_packages=['reprounzip', 'reprounzip.unpackers'],
+              'docker = reprounzip_docker:setup']},
       install_requires=[
           'reprounzip>=1.0.10',
           'rpaths>=0.8'],
