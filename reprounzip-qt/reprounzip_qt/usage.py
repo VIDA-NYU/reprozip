@@ -17,7 +17,7 @@ _usage_report = usagestats.Stats(
     '~/.reprozip/usage_stats',
     usagestats.Prompt(''),
     os.environ.get('REPROZIP_USAGE_URL', 'https://stats.reprozip.org/'),
-    version=('reprounzip-qt', version),
+    version='%s %s' % ('reprounzip-qt', version),
     unique_user_id=True,
     env_var='REPROZIP_USAGE_STATS',
     ssl_verify=_certificate_file.path
