@@ -297,12 +297,18 @@ _bundled_parameters = {
                         "distribution": "fedora",
                         "image": "fedora:28",
                         "name": "Fedora 28"
+                    },
+                    {
+                        "version": "^29$",
+                        "distribution": "fedora",
+                        "image": "fedora:29",
+                        "name": "Fedora 29"
                     }
                 ],
                 "default": {
                     "distribution": "fedora",
-                    "image": "fedora:28",
-                    "name": "Fedora 28"
+                    "image": "fedora:29",
+                    "name": "Fedora 29"
                 }
             }
         }
