@@ -3,7 +3,7 @@
 set -eux
 
 export REPROZIP_USAGE_STATS=off
-export REPROZIP_PARAMETERS=https://reprozip-stats.poly.edu/parameters/travis/
+export REPROZIP_PARAMETERS=https://stats.reprozip.org/parameters/travis/
 
 case "$TEST_MODE"
 in
