@@ -297,12 +297,18 @@ _bundled_parameters = {
                         "distribution": "fedora",
                         "image": "fedora:28",
                         "name": "Fedora 28"
+                    },
+                    {
+                        "version": "^29$",
+                        "distribution": "fedora",
+                        "image": "fedora:29",
+                        "name": "Fedora 29"
                     }
                 ],
                 "default": {
                     "distribution": "fedora",
-                    "image": "fedora:28",
-                    "name": "Fedora 28"
+                    "image": "fedora:29",
+                    "name": "Fedora 29"
                 }
             }
         }
@@ -546,6 +552,38 @@ _bundled_parameters = {
                             "x86_64": "remram/fedora-24-amd64"
                         },
                         "name": "Fedora 24"
+                    },
+                    {
+                        "version": "^25$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-25"
+                        },
+                        "name": "Fedora 25"
+                    },
+                    {
+                        "version": "^26$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-26"
+                        },
+                        "name": "Fedora 26"
+                    },
+                    {
+                        "version": "^27$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-27"
+                        },
+                        "name": "Fedora 27"
+                    },
+                    {
+                        "version": "^28$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-28"
+                        },
+                        "name": "Fedora 28"
                     }
                 ],
                 "default": {
