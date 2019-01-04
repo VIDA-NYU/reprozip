@@ -57,7 +57,7 @@
 		      </div>
 		    </li><!--end about dropdown-->
         
-        <li class="nav-item"><a class="nav-link" href="news.html">News & Scholarship</a></li>
+        <li class="nav-item"><a class="nav-link" href="schol.html">Scholarship</a></li>
         
         <!--JOBS DROP DOWN-->
         <li class="nav-item dropdown">
@@ -106,41 +106,65 @@
     <nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="#what-is-rz">What is ReproZip?</a></li>
-					<li class="breadcrumb-item"><a href="#cite">Citing ReproZip</a></li>
+          <li class="breadcrumb-item"><a href="#motive">Motivation</a></li>
 					<li class="breadcrumb-item"><a href="#team">The Team</a></li>
-					<li class="breadcrumb-item"><a href="#contact">Contact & Contribute</a></li>
+          <li class="breadcrumb-item"><a href="#cite">Citing ReproZip</a></li>
+					<li class="breadcrumb-item"><a href="#contact">Contact Us</a></li>
+          <li class="breadcrumb-item"><a href="#contribute">Contribute</a></li>
+          <li class="breadcrumb-item"><a href="#ack">Acknowledgements</a></li>
 				</ol>
 			</nav>
 			
 		<div id="what-is-rz"><h2>What is ReproZip?</h2></div>
-		
-		<p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. You can review and edit this list and the metadata before creating the final package file. Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins.</p>
-		
-		<p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
+      
+    <img src="imgs/">
+      
+    <p>ReproZip is an open source tool that helps users make their work completely reproducible. ReproZip can be used to reproduce a plethora of applications, including data analysis tools, scripts and software written in any programming language, graphical tools, interactive tools, client-server applications (including databases), Jupyter notebooks, and more!</p>
+      
+		<p>ReproZip works by tracing the systems calls used by the experiment to automatically identify which files should be included. Users can review and edit this list and the metadata before creating the final package file. Packages can be reproduced in different ways, including chroot environments, <a href="https://www.vagrantup.com/">Vagrant</a>-built virtual machines, and <a href="https://www.docker.com/">Docker</a> containers; more can be added through plugins. We are in the process of merging in a new unpacker for <a href="https://www.sylabs.io/docs/">Singularity</a> right now!</p>
+      
+    <img src="imgs/">
+      
+    <p>You can also view a few playlists we've compiled that demo how to pack and unpack different applications with ReproZip:</p>
+      
+      <div class="card-deck">
+      <div class="card">
+        <img class="card-img-top" src="imgs/stacked-up.png" alt="stacked up example" height="180" width="255">
+        <div class="card-body">
+          <h5 class="card-title"><a href="https://www.youtube.com/watch?v=SoE2nEJWylw&list=PLjgZ3v4gFxpXdPRBaFTh42w3HRMmX2WfD">Stacked Up</a></h5>
+          <p class="card-text">Dynamic website called Stacked Up, which was created as a data journalism project to assess whether kids in Philly schools have the books they need.</p>
+        </div>
+      </div>
+      <div class="card">
+        <img class="card-img-top" src="imgs/brain-segmentation.png" alt="brain segmentation example" height="180" width="255">
+        <div class="card-body">
+          <h5 class="card-title"><a href="https://www.youtube.com/watch?v=gs4s2JH8Yw4&list=PLjgZ3v4gFxpW_lesrw1ZE2Ql1yXDsgzki">Brain Segmentation</a></h5>
+          <p class="card-text">Neuroscience experiment, which uses a python script that extracts brain information and mask from an input image.</p>
+        </div>
+      </div>
+      <div class="card">
+        <img class="card-img-top" src="imgs/jupyter.png" alt="jupyter notebook with reprozip" height="180" width="255">
+        <div class="card-body">
+          <h5 class="card-title"><a href="https://www.youtube.com/watch?v=Y8YmGVYHhS8&list=PLjgZ3v4gFxpWb277AEyjsVerB6nViGTVL">Jupyter Notebook</a></h5>
+          <p class="card-text">An example of how to use the reprozip-jupyter plugin to easily capture notebooks with ReproZip.</p>
+        </div>
+      </div>
+    </div>
+    <br/>
+      
+    <p>All the videos showing ReproZip's functionality are on the <a href="https://www.youtube.com/channel/UCG_yo1KKvhWSygxCBQqd_vQ">ViDA-NYU YouTube channel</a>. Various examples of ReproZip packages, including instructions on how to reproduce them, are available in the ReproZip examples website: <a href="https://examples.reprozip.org" rel="noopener">https://examples.reprozip.org</a>.</p>
+    
+    <br/>
+    <div id="motive"><h2>Motivation</h2></div>
+   
+    <p>Reproducibility is a core component of the scientific process: it helps researchers all around the world to verify the results and also to build on them, alowing science to move forward. In natural science, long tradition requires experiments to be described in enough detail so that they can be reproduced by researchers around the world. The same standard, however, has not been widely applied to computational science, where researchers often have to rely on plots, tables, and figures included in papers, which loosely describe the obtained results.</p>
 
      <p>The truth is computational reproducibility can be very painful to achieve for a number of reasons. Take the author-reviewer scenario of a scientific paper as an example. Authors must generate a compendium that encapsulates all the inputs needed to correctly reproduce their experiments: the data, a complete specification of the experiment and its steps, and information about the originating computational environment (OS, hardware architecture, and library dependencies). Keeping track of this information manually is rarely feasible: it is both time-consuming and error-prone. First, computational environments are complex, consisting of many layers of hardware and software, and the configuration of the OS is often hidden. Second, tracking library dependencies is challenging, especially for large experiments. If authors did not plan for it since the beginning of the project, reproducibility is drastically hampered.</p>
 
       <p>For reviewers, even with a compendium in their hands, it may be hard to reproduce the results. There may be no instructions about how to execute the code and explore it further; the experiment may not run on his operating system; there may be missing libraries; library versions may be different; and several issues may arise while trying to install all the required dependencies, a problem colloquially known as <a href="https://en.wikipedia.org/wiki/Dependency_hell" rel="noopener">dependency hell</a>.</p>
 
-      <p>ReproZip helps alleviate these problems by allowing the user to easily capture all the necessary components in a single, distributable package. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs.</p>
-
-    	<p>Various examples of ReproZip packages, including instructions on how to reproduce them, are available in the <a href="https://examples.reprozip.org/" rel="noopener">reprozip-examples</a> GitHub repository.</p>
-
-      <p>The following video shows how to use ReproZip to make your experiment reproducible. The example used in the video is based on <a href="http://hanzratech.in/2015/02/24/handwritten-digit-recognition-using-opencv-sklearn-and-python.html" rel="noopener">this blog post from B. Hanzra</a> on digit recognition using OpenCV and scikit-learn, and is available for <a href="https://github.com/ViDA-NYU/reprozip-examples/tree/master/digits-sklearn-opencv" rel="noopener">download here</a>.</p>
-
-     	<iframe class="embed-responsive-item"  width="560" height="315" src="https://www.youtube.com/embed/-zLPuwCHXo0" frameborder="0" allowfullscreen></iframe>
-		
-    <br/><br/>
-		<div id="cite"><h2>Citing ReproZip</h2></div>
-		
-	    <p>If you wish to cite ReproZip in a paper, please use the following:</p>
-
-      <div class="highlight">
-	      <p id="sigmod-demo-2016"><i><b>ReproZip: Computational Reproducibility With Ease</b></i>, F. Chirigati, R. Rampin, D. Shasha, and J. Freire. In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016</p>
-      </div>
-
-      <p>A preprint version is available <a href="https://osf.io/vc72z/">here</a>. For a complete list of publications, posters, and presentations, please visit the <a href="news.html" rel="noopener">News & Scholarly Output</a> page. To reference our website, please use <a href="https://www.reprozip.org/" rel="noopener">https://www.reprozip.org</a>.</p>
-    
+      <p>We made ReproZip to try to help alleviate these problems by allowing the user to easily and autoamtically capture all the necessary components in a single, distributable bundle. Also, the tool makes it easier to reproduce an experiment by providing different unpacking methods and interfaces that avoids the need to install all the required dependencies and that makes it possible to run the experiment under different inputs. This provides an easy way to verify and review others' work, bringing reproducibility into the norm of scholarship.</p>
+      
     <br/>
     <div id="team"><h2>The ReproZip Team</h2></div>
     
@@ -157,21 +181,42 @@
            </tr>
            <tr>
             <td><a href="https://vickysteeves.com"><img src="imgs/vicky.jpg" alt="Vicky Steeves"/><p>Vicky Steeves</p></a></td>
-            <td><a href="https://www.linkedin.com/in/binalmodi/"><img src="imgs/binal.jpg" alt="Binal Modi"/><p>Binal Modi<br/>(summer & fall 2018)</p></a></td>
-            <td><a href="https://www.linkedin.com/in/khushnaseeb-ali-96119a45/"><img src="imgs/khushnaseeb.png" alt="Khushnaseeb Ali"/><p>Khushnaseeb Ali<br/>(summer 2018)</p></a></td>
-            <td><a href="https://www.linkedin.com/in/heng2j"><img src="imgs/heng.jpg" alt="Heng Li"/><p>Zhonheng Li<br/>(summer 2017)</p></a></td>
+            <td><a href="https://www.linkedin.com/in/binalmodi/"><img src="imgs/binal.jpg" alt="Binal Modi"/><p>Binal Modi</a><br/>(summer & fall 2018)</p></td>
+            <td><a href="https://www.linkedin.com/in/khushnaseeb-ali-96119a45/"><img src="imgs/khushnaseeb.png" alt="Khushnaseeb Ali"/><p>Khushnaseeb Ali</a><br/>(summer 2018)</p></td>
+            <td><a href="https://www.linkedin.com/in/heng2j"><img src="imgs/heng.jpg" alt="Heng Li"/><p>Zhonheng Li</a><br/>(summer 2017)</p></td>
            </tr>
 				</tbody>
 			</table>
 		</div>
+		
+		<div id="cite"><h2>Citing ReproZip</h2></div>
+		
+	    <p>If you wish to cite ReproZip in a paper, please use the following:</p>
+
+	    <p id="sigmod-demo-2016" style="text-indent: 2em;"><i><b>ReproZip: Computational Reproducibility With Ease</b></i>, F. Chirigati, R. Rampin, D. Shasha, and J. Freire. In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016</p>
+      
+      <p>The bibtex for this citation can be found here: <a href="https://github.com/ViDA-NYU/reprozip/blob/master/CITATION.txt">https://github.com/ViDA-NYU/reprozip/blob/master/CITATION.txt</a>.</p>
+
+      <p>A preprint version of this paper is available <a href="https://osf.io/vc72z/">here</a>. For a complete list of publications, posters, and presentations, please visit the <a href="schol.html" rel="noopener">Scholarship</a> page. To reference our website, please use <a href="https://www.reprozip.org/" rel="noopener">https://www.reprozip.org</a>.</p>
     
     <br/>
-    <div id="contact"><h2>Contact Us or Contribute to ReproZip!</h2></div>
+    <div id="contact"><h2>Contact Us</h2></div>
     
-    <p>If you'd like to give us feedback, ask questions, or report concerns and issues about ReproZip, you can either open an issue on GitHub or email us at <a href="https://vgc.poly.edu/mailman/listinfo/reprozip-users">users@reprozip.org</a>. If you'd like to contribute your use of ReproZip to our <a href="">examples website</a>, you can also use the mailing list or the <a href="https://github.com/ViDA-NYU/reprozip-examples">reprozip-examples</a> repository.</p>
-      
+    <p>If you'd like to give us feedback, ask questions, or report concerns and issues about ReproZip, you can either open an issue on <a href="https://github.com/ViDA-NYU/reprozip">GitHub</a> or email us at <a href="https://vgc.poly.edu/mailman/listinfo/reprozip-users">users@reprozip.org</a>. If you'd like to contribute your use of ReproZip to our <a href="">examples website</a>, you can also use the <a href="https://vgc.poly.edu/mailman/listinfo/reprozip-users">mailing list</a> or the <a href="https://github.com/ViDA-NYU/reprozip-examples">reprozip-examples</a> repository.</p>
+
+    <br/>
+    <div id="contribute"><h2>Contribute to ReproZip!</h2></div>
+
     <p>If you'd like to contribute to the development of ReproZip, please read our <a href="https://github.com/ViDA-NYU/reprozip/blob/1.0.x/CONTRIBUTING.md">CONTRIBUTING.md</a> file in the ReproZip GitHub repository. Please note we also have a <a href="https://github.com/ViDA-NYU/reprozip/blob/1.0.x/CODE_OF_CONDUCT.md">CODE_OF_CONDUCT.md</a> which we ask contributors and maintainers abide by.</p>
+
+    <p>We have a number of GitHub issues tagged as <a href="https://github.com/ViDA-NYU/reprozip/issues?q=is%3Aopen+is%3Aissue+label%3A%22A-help+wanted%22">help-wanted</a>, <a href="https://github.com/ViDA-NYU/reprozip/issues?q=is%3Aopen+is%3Aissue+label%3AA-question">a-question</a>, and <a href="https://github.com/ViDA-NYU/reprozip/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22">good-first-issue</a>. We are hoping that organizing the issues this way will encourage folks of all levels to participate to the development of ReproZip, from those who contribute through discussion around questions, newcomers looking for a good first issue to work on, and developers comfortable looking through a project to write code back.</p>
+
+    <p></p>
     
+    <br/>
+    <div id="ack"><h2>Acknowledgements</h2></div>  
+      <p> The development of ReproZip has been supported by <a href="https://msdse.org">the Moore and Sloan Foundations</a>, under the <a href="https://cds.nyu.edu/mooresloan">NYU Moore-Sloan Data Science Environment</a>.</p>
+      
     <hr>
 
     </div> <!-- /container -->
