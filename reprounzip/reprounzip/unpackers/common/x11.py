@@ -230,7 +230,7 @@ class X11Handler(BaseX11Handler):
             raise RuntimeError("Couldn't determine how to connect to local X "
                                "server, DISPLAY is %s" % (
                                    repr(os.environ['DISPLAY'])
-                                   if 'DISPLAY' is os.environ
+                                   if 'DISPLAY' in os.environ
                                    else 'not set'))
 
     @classmethod
