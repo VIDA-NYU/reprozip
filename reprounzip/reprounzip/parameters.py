@@ -54,10 +54,10 @@ def update_parameters():
             '%s%s' % (url, version),
             None,
             cachename='parameters.json',
-            ssl_verify=get_reprozip_ca_certificate().path)
+            ssl_verify=str(get_reprozip_ca_certificate()))
     except Exception:
-        logger.info("Can't download parameters.json, using bundled "
-                    "parameters")
+        logger.warning("Can't download parameters.json, using bundled "
+                       "parameters")
     else:
         try:
             with filename.open() as fp:
