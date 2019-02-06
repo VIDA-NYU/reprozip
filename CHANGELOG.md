@@ -6,9 +6,12 @@ Changelog
 
 Bugfixes:
 * Fixed input/output file filter on Python 3 (to omit `.so`, `.pyc` etc files)
+* Fixed fetching updated parameters on Python 3 (to get the correct Docker and Vagrant base images, a small JSON file is downloaded from reprozip.org)
+* Fixed `--port` option of reprounzip-docker
 
 Enhancements:
 * Use the [distro](https://distro.readthedocs.io/) module instead of the deprecated `platform.linux_distribution()` function to detect the distribution (the latter will be removed in Python 3.8).
+* Use dpkg-query to identify Linux packages instead of reading `dpkg/info/*.list`
 
 1.0.15 (2018-07-31)
 -------------------
