@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.0.16 (???)
-------------
+1.0.16 (2019-02-06)
+-------------------
+
+(reprozip-jupyter and reprounzip-vagrant didn't change)
 
 Bugfixes:
 * Fixed input/output file filter on Python 3 (to omit `.so`, `.pyc` etc files)
