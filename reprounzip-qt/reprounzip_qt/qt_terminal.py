@@ -7,7 +7,7 @@ from __future__ import division, print_function, unicode_literals
 import cgi
 import locale
 import logging
-from reprounzip_qt.gui.qt import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 import sys
 
 
@@ -15,7 +15,7 @@ logger = logging.getLogger('reprounzip_qt')
 
 
 class Terminal(QtWidgets.QWidget):
-    finished = QtCore.pyqtSignal(int)
+    finished = QtCore.Signal(int)
 
     def __init__(self, cmdline, env, input_enabled=False,
                  success_msg=None, fail_msg=None,

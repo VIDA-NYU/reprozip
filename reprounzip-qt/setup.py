@@ -17,7 +17,7 @@ setup(name='reprounzip-qt',
       entry_points={
           'gui_scripts': [
               'reprounzip-qt = reprounzip_qt.main:main']},
-      install_requires=['PyYAML', 'reprounzip>=1.0'],
+      install_requires=['PyYAML', 'qtpy', 'reprounzip>=1.0'],
       description="Graphical user interface for reprounzip, using Qt",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',

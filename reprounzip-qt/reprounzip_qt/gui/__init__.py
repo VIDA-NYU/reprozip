@@ -7,7 +7,7 @@ from __future__ import division, print_function, unicode_literals
 import logging
 import os
 import platform
-from reprounzip_qt.gui.qt import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 import shutil
 import subprocess
 import sys

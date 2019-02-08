@@ -5,7 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
-from reprounzip_qt.gui.qt import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 import subprocess
 
 import reprounzip_qt.reprounzip_interface as reprounzip
@@ -230,7 +230,7 @@ class UnpackTab(QtWidgets.QWidget):
         ('vagrant', VagrantOptions),
     ]
 
-    unpacked = QtCore.pyqtSignal(str, object)
+    unpacked = QtCore.Signal(str, object)
 
     def __init__(self, package='', **kwargs):
         super(UnpackTab, self).__init__(**kwargs)

@@ -4,7 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
-from reprounzip_qt.gui.qt import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 import yaml
 
 import reprounzip_qt.reprounzip_interface as reprounzip
