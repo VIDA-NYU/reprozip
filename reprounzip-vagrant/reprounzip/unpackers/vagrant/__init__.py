@@ -171,13 +171,13 @@ def machine_setup(target):
         chan = ssh.get_transport().open_session()
         chan.exec_command(
             '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                'if ! grep -q "/experimentroot " /proc/mounts; then '
+                'if ! grep -q "/experimentroot " /etc/mtab; then '
                 'mount -o bind /.experimentdata /experimentroot; '
                 'fi; '
-                'if ! grep -q "/experimentroot/dev " /proc/mounts; then '
+                'if ! grep -q "/experimentroot/dev " /etc/mtab; then '
                 'mount -o rbind /dev /experimentroot/dev; '
                 'fi; '
-                'if ! grep -q "/experimentroot/proc " /proc/mounts; then '
+                'if ! grep -q "/experimentroot/proc " /etc/mtab; then '
                 'mount -t proc none /experimentroot/proc; '
                 'fi'))
         if chan.recv_exit_status() != 0:
