@@ -164,6 +164,7 @@ def machine_setup(target):
 
     if use_chroot:
         # Mount directories
+        logger.debug("Mounting directories")
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnoreMissingKey())
         ssh.connect(**info)
@@ -184,6 +185,7 @@ def machine_setup(target):
             sys.exit(1)
         if gui:
             # Mount X11 socket
+            logger.debug("Mounting X11 socket")
             chan = ssh.get_transport().open_session()
             chan.exec_command(
                 '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
@@ -197,6 +199,8 @@ def machine_setup(target):
                 logger.critical("Couldn't mount X11 sockets in chroot")
                 sys.exit(1)
         ssh.close()
+    else:
+        logger.debug("NOT mounting directories")
 
     return info
 
