@@ -297,7 +297,7 @@ class UnpackTab(QtWidgets.QWidget):
         return not self.package_widget.text()
 
     def _browse_pkg(self):
-        picked = QtWidgets.QFileDialog.getOpenFileName(
+        picked, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Pick package file",
             QtCore.QDir.currentPath(), "ReproZip Packages (*.rpz)")
         if picked:
@@ -312,7 +312,7 @@ class UnpackTab(QtWidgets.QWidget):
             self._directory_changed()
 
     def _browse_dir(self):
-        picked = QtWidgets.QFileDialog.getSaveFileName(
+        picked, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:

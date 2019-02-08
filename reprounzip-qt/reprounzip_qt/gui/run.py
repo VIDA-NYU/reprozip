@@ -218,7 +218,7 @@ class FilesManager(QtWidgets.QDialog):
     def _upload(self):
         selected = self.files_widget.selectedIndexes()[0].row()
         file_status = self.files_status[selected]
-        picked = QtWidgets.QFileDialog.getOpenFileName(
+        picked, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Pick file to upload",
             QtCore.QDir.currentPath())
         if picked:
@@ -231,7 +231,7 @@ class FilesManager(QtWidgets.QDialog):
     def _download(self):
         selected = self.files_widget.selectedIndexes()[0].row()
         file_status = self.files_status[selected]
-        picked = QtWidgets.QFileDialog.getSaveFileName(
+        picked, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Pick destination",
             QtCore.QDir.currentPath() + '/' + file_status.name)
         if picked:
