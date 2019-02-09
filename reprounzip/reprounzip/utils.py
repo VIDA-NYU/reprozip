@@ -68,8 +68,9 @@ if PY3:
     itervalues = lambda d: d.values()
     listvalues = lambda d: list(d.values())
 
-    stdout_bytes, stderr_bytes = sys.stdout.buffer, sys.stderr.buffer
-    stdin_bytes = sys.stdin.buffer
+    stdout_bytes = sys.stdout.buffer if sys.stdout is not None else None
+    stderr_bytes = sys.stderr.buffer if sys.stderr is not None else None
+    stdin_bytes = sys.stdin.buffer if sys.stdin is not None else None
     stdout, stderr = sys.stdout, sys.stderr
 else:
     izip = itertools.izip
