@@ -77,7 +77,7 @@ def ruby_gems(files, input_files, **kwargs):
                              'rdoc',
                              'doc']))
 
-    gemy_path = re.compile('.*\/ruby-[^/]*\/gems')
+    gemy_path = re.compile(r'.*\/ruby-[^/]*\/gems')
     seen_paths = []
     add = []
 
@@ -93,9 +93,9 @@ def ruby_gems(files, input_files, **kwargs):
 
     for path, fi in iteritems(files):
         m = gemy_path.match(str(path))
-        if m and m[0] not in seen_paths:
-            consume_gem(m[0])
-            seen_paths.append(m[0])
+        if m and m.group(0) not in seen_paths:
+            consume_gem(m.group(0))
+            seen_paths.append(m.group(0))
 
     for fi in add:
         files[fi.path] = fi

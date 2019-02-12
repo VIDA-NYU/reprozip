@@ -4,13 +4,14 @@
 
 from __future__ import print_function, unicode_literals
 
-import sys, os
+import os
 import unittest
 import tempfile
 from rpaths import Path
 # from reprozip.tracer.trace import TracedFile
 from reprozip.common import File
 from reprozip.filters import ruby_gems
+
 
 class MockTracedFile(File):
 
@@ -22,7 +23,8 @@ class RailsFilterTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.gemdir = Path(tempfile.TemporaryDirectory(None, 'reprozip-tests').name) / 'gems/ruby-2.2.3/gems/kaminari-0.16.3'
+        cls.gemdir = Path(tempfile.mkdtemp('reprozip-tests')) / \
+                     'gems/ruby-2.2.3/gems/kaminari-0.16.3'
         cls.gemfiles = [
             'app/views/kaminari/_first_page.html.erb',
             'app/views/kaminari/_first_page.html.haml',
