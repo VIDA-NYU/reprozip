@@ -24,7 +24,7 @@ class RailsFilterTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.gemdir = Path(tempfile.mkdtemp('reprozip-tests')) / \
-                     'gems/ruby-2.2.3/gems/kaminari-0.16.3'
+            'gems/ruby-2.2.3/gems/kaminari-0.16.3'
         cls.gemfiles = [
             'app/views/kaminari/_first_page.html.erb',
             'app/views/kaminari/_first_page.html.haml',
