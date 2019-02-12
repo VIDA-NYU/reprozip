@@ -212,7 +212,10 @@ class FilesManager(QtWidgets.QDialog):
             elif file_status.assigned is True:
                 self.f_status.setText("(generated)")
             else:
-                self.f_status.setText(file_status.assigned)
+                caption = file_status.assigned
+                if isinstance(caption, bytes):
+                    caption = caption.decode('utf-8', 'replace')
+                self.f_status.setText(caption)
                 self.f_status.setEnabled(True)
 
     def _upload(self):

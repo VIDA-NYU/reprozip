@@ -249,6 +249,7 @@ class UnpackTab(QtWidgets.QWidget):
         self.unpackers = QtWidgets.QButtonGroup()
         for i, name in enumerate(n for n, c in self.UNPACKERS):
             radio = QtWidgets.QRadioButton(name)
+            radio.unpacker = name
             self.unpackers.addButton(radio, i)
             ulayout.addWidget(radio)
         layout.addLayout(ulayout, 1, 1, 1, 2)
@@ -337,7 +338,7 @@ class UnpackTab(QtWidgets.QWidget):
                 return
             if handle_error(self, reprounzip.unpack(
                     self.package_widget.text(),
-                    unpacker.text(),
+                    unpacker.unpacker,
                     directory,
                     options)):
                 self.unpacked.emit(os.path.abspath(directory),
