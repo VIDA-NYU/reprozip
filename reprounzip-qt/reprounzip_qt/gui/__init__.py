@@ -175,6 +175,8 @@ class ReprounzipUi(QtWidgets.QMainWindow):
     def __init__(self, unpack={}, run={}, tab=None, **kwargs):
         super(ReprounzipUi, self).__init__(**kwargs)
 
+        self.setWindowTitle("ReproUnzip")
+
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.addTab(UnpackTab(**unpack), "Open package")
         self.tabs.addTab(RunTab(**run), "Run unpacked experiment")
