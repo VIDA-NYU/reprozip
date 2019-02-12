@@ -4,7 +4,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 import yaml
 
 import reprounzip_qt.reprounzip_interface as reprounzip
@@ -13,27 +13,27 @@ from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
 from reprounzip_qt.usage import record_usage
 
 
-class RunOptions(QtGui.QWidget):
+class RunOptions(QtWidgets.QWidget):
     x11 = None
 
     def __init__(self):
         super(RunOptions, self).__init__()
-        self.setLayout(QtGui.QGridLayout())
+        self.setLayout(QtWidgets.QGridLayout())
 
     def add_row(self, label, widget):
         layout = self.layout()
         row = layout.rowCount()
-        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addWidget(QtWidgets.QLabel(label), row, 0)
         layout.addWidget(widget, row, 1)
 
     def add_row_layout(self, label, rowlayout):
         layout = self.layout()
         row = layout.rowCount()
-        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addWidget(QtWidgets.QLabel(label), row, 0)
         layout.addLayout(rowlayout, row, 1)
 
     def add_x11(self):
-        self.x11 = QtGui.QCheckBox("enabled", checked=False)
+        self.x11 = QtWidgets.QCheckBox("enabled", checked=False)
         self.add_row("X11 display:", self.x11)
 
     def options(self):
@@ -61,23 +61,23 @@ class DockerOptions(RunOptions):
     def __init__(self):
         super(DockerOptions, self).__init__()
 
-        self.x11 = QtGui.QCheckBox("enabled", checked=False)
-        self.tunneled_x11 = QtGui.QCheckBox("use tunnel", checked=False)
-        row = QtGui.QHBoxLayout()
+        self.x11 = QtWidgets.QCheckBox("enabled", checked=False)
+        self.tunneled_x11 = QtWidgets.QCheckBox("use tunnel", checked=False)
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.x11)
         row.addWidget(self.tunneled_x11)
         row.addStretch(1)
         self.add_row_layout("X11 display:", row)
 
-        self.detach = QtGui.QCheckBox("start background container and leave "
-                                      "it running",
-                                      checked=False)
+        self.detach = QtWidgets.QCheckBox("start background container and "
+                                          "leave it running",
+                                          checked=False)
         self.add_row("Detach:", self.detach)
 
-        self.raw_options = QtGui.QLineEdit('')
+        self.raw_options = QtWidgets.QLineEdit('')
         self.add_row("Raw Docker options:", self.raw_options)
 
-        self.ports = QtGui.QLineEdit(
+        self.ports = QtWidgets.QLineEdit(
             '',
             toolTip="Space-separated host:guest port mappings")
         self.add_row("Expose ports:", self.ports)
@@ -119,7 +119,7 @@ class VagrantOptions(RunOptions):
         super(VagrantOptions, self).__init__()
         self.add_x11()
 
-        self.ports = QtGui.QLineEdit(
+        self.ports = QtWidgets.QLineEdit(
             '',
             toolTip="Space-separated host:guest port mappings")
         self.add_row("Expose ports:", self.ports)
@@ -138,38 +138,39 @@ class VagrantOptions(RunOptions):
         return options
 
 
-class FilesManager(QtGui.QDialog):
+class FilesManager(QtWidgets.QDialog):
     def __init__(self, directory, unpacker=None, root=None, **kwargs):
         super(FilesManager, self).__init__(**kwargs)
         self.directory = directory
         self.unpacker = unpacker
         self.root = root
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
 
-        self.files_widget = QtGui.QListWidget(
-            selectionMode=QtGui.QListWidget.SingleSelection)
+        self.files_widget = QtWidgets.QListWidget(
+            selectionMode=QtWidgets.QListWidget.SingleSelection)
         self.files_widget.itemSelectionChanged.connect(self._file_changed)
         layout.addWidget(self.files_widget)
 
-        right_layout = QtGui.QGridLayout()
-        right_layout.addWidget(QtGui.QLabel("name:"), 0, 0)
-        self.f_name = QtGui.QLineEdit('', readOnly=True)
+        right_layout = QtWidgets.QGridLayout()
+        right_layout.addWidget(QtWidgets.QLabel("name:"), 0, 0)
+        self.f_name = QtWidgets.QLineEdit('', readOnly=True)
         right_layout.addWidget(self.f_name, 0, 1)
-        right_layout.addWidget(QtGui.QLabel("Path:"), 1, 0)
-        self.f_path = QtGui.QLineEdit('', readOnly=True)
+        right_layout.addWidget(QtWidgets.QLabel("Path:"), 1, 0)
+        self.f_path = QtWidgets.QLineEdit('', readOnly=True)
         right_layout.addWidget(self.f_path, 1, 1)
-        right_layout.addWidget(QtGui.QLabel("Current:"), 2, 0)
-        self.f_status = QtGui.QLineEdit('', readOnly=True)
+        right_layout.addWidget(QtWidgets.QLabel("Current:"), 2, 0)
+        self.f_status = QtWidgets.QLineEdit('', readOnly=True)
         right_layout.addWidget(self.f_status, 2, 1)
-        self.b_upload = QtGui.QPushButton("Upload a replacement",
-                                          enabled=False)
+        self.b_upload = QtWidgets.QPushButton("Upload a replacement",
+                                              enabled=False)
         self.b_upload.clicked.connect(self._upload)
         right_layout.addWidget(self.b_upload, 3, 0, 1, 2)
-        self.b_download = QtGui.QPushButton("Download to disk", enabled=False)
+        self.b_download = QtWidgets.QPushButton("Download to disk",
+                                                enabled=False)
         self.b_download.clicked.connect(self._download)
         right_layout.addWidget(self.b_download, 4, 0, 1, 2)
-        self.b_reset = QtGui.QPushButton("Reset file", enabled=False)
+        self.b_reset = QtWidgets.QPushButton("Reset file", enabled=False)
         self.b_reset.clicked.connect(self._reset)
         right_layout.addWidget(self.b_reset, 5, 0, 1, 2)
         right_layout.setRowStretch(6, 1)
@@ -211,13 +212,16 @@ class FilesManager(QtGui.QDialog):
             elif file_status.assigned is True:
                 self.f_status.setText("(generated)")
             else:
-                self.f_status.setText(file_status.assigned)
+                caption = file_status.assigned
+                if isinstance(caption, bytes):
+                    caption = caption.decode('utf-8', 'replace')
+                self.f_status.setText(caption)
                 self.f_status.setEnabled(True)
 
     def _upload(self):
         selected = self.files_widget.selectedIndexes()[0].row()
         file_status = self.files_status[selected]
-        picked = QtGui.QFileDialog.getOpenFileName(
+        picked, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Pick file to upload",
             QtCore.QDir.currentPath())
         if picked:
@@ -230,7 +234,7 @@ class FilesManager(QtGui.QDialog):
     def _download(self):
         selected = self.files_widget.selectedIndexes()[0].row()
         file_status = self.files_status[selected]
-        picked = QtGui.QFileDialog.getSaveFileName(
+        picked, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Pick destination",
             QtCore.QDir.currentPath() + '/' + file_status.name)
         if picked:
@@ -250,7 +254,7 @@ class FilesManager(QtGui.QDialog):
         self._file_changed()
 
 
-class RunTab(QtGui.QWidget):
+class RunTab(QtWidgets.QWidget):
     """The main window, that allows you to run/change an unpacked experiment.
     """
     UNPACKERS = [
@@ -266,54 +270,55 @@ class RunTab(QtGui.QWidget):
     def __init__(self, unpacked_directory='', **kwargs):
         super(RunTab, self).__init__(**kwargs)
 
-        layout = QtGui.QGridLayout()
-        layout.addWidget(QtGui.QLabel("Experiment directory:"), 0, 0)
-        self.directory_widget = QtGui.QLineEdit(unpacked_directory)
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(QtWidgets.QLabel("Experiment directory:"), 0, 0)
+        self.directory_widget = QtWidgets.QLineEdit(unpacked_directory)
         self.directory_widget.editingFinished.connect(self._directory_changed)
         layout.addWidget(self.directory_widget, 0, 1)
-        browse = QtGui.QPushButton("Browse")
+        browse = QtWidgets.QPushButton("Browse")
         browse.clicked.connect(self._browse)
         layout.addWidget(browse, 0, 2)
 
-        layout.addWidget(QtGui.QLabel("Unpacker:"), 1, 0,
+        layout.addWidget(QtWidgets.QLabel("Unpacker:"), 1, 0,
                          QtCore.Qt.AlignTop)
-        self.unpacker_widget = QtGui.QLabel("-")
+        self.unpacker_widget = QtWidgets.QLabel("-")
         layout.addWidget(self.unpacker_widget, 1, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Input/output files:"), 2, 0,
+        layout.addWidget(QtWidgets.QLabel("Input/output files:"), 2, 0,
                          QtCore.Qt.AlignTop)
-        self.files_button = QtGui.QPushButton("Manage files", enabled=False)
+        self.files_button = QtWidgets.QPushButton("Manage files",
+                                                  enabled=False)
         self.files_button.clicked.connect(self._open_files_manager)
         layout.addWidget(self.files_button, 2, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Runs:"), 3, 0,
+        layout.addWidget(QtWidgets.QLabel("Runs:"), 3, 0,
                          QtCore.Qt.AlignTop)
-        self.runs_widget = QtGui.QListWidget(
-            selectionMode=QtGui.QListWidget.MultiSelection)
+        self.runs_widget = QtWidgets.QListWidget(
+            selectionMode=QtWidgets.QListWidget.MultiSelection)
         layout.addWidget(self.runs_widget, 3, 1, 3, 1)
-        select_all = QtGui.QPushButton("Select All")
+        select_all = QtWidgets.QPushButton("Select All")
         select_all.clicked.connect(self.runs_widget.selectAll)
         layout.addWidget(select_all, 3, 2)
-        deselect_all = QtGui.QPushButton("Deselect All")
+        deselect_all = QtWidgets.QPushButton("Deselect All")
         deselect_all.clicked.connect(self.runs_widget.clearSelection)
         layout.addWidget(deselect_all, 4, 2)
 
-        layout.addWidget(QtGui.QLabel("Elevate privileges:"), 6, 0)
-        self.root = QtGui.QComboBox(editable=False)
+        layout.addWidget(QtWidgets.QLabel("Elevate privileges:"), 6, 0)
+        self.root = QtWidgets.QComboBox(editable=False)
         self.root.addItems(ROOT.TEXT)
         layout.addWidget(self.root, 6, 1, 1, 2)
 
-        layout.addWidget(QtGui.QLabel("Jupyter integration:"),
+        layout.addWidget(QtWidgets.QLabel("Jupyter integration:"),
                          7, 0)
-        self.run_jupyter_notebook = QtGui.QCheckBox("Run notebook server",
-                                                    checked=False,
-                                                    enabled=False)
+        self.run_jupyter_notebook = QtWidgets.QCheckBox("Run notebook server",
+                                                        checked=False,
+                                                        enabled=False)
         layout.addWidget(self.run_jupyter_notebook, 7, 1, 1, 2)
 
-        group = QtGui.QGroupBox(title="Unpacker options")
-        group_layout = QtGui.QVBoxLayout()
+        group = QtWidgets.QGroupBox(title="Unpacker options")
+        group_layout = QtWidgets.QVBoxLayout()
         self.unpacker_options = ResizableStack()
-        scroll = QtGui.QScrollArea(widgetResizable=True)
+        scroll = QtWidgets.QScrollArea(widgetResizable=True)
         scroll.setWidget(self.unpacker_options)
         group_layout.addWidget(scroll)
         group.setLayout(group_layout)
@@ -324,16 +329,17 @@ class RunTab(QtGui.QWidget):
             widget = WidgetClass()
             self.unpacker_options.addWidget(widget)
 
-        self.unpacker_options.addWidget(QtGui.QLabel("Select a directory to "
-                                                     "display options..."))
+        self.unpacker_options.addWidget(
+            QtWidgets.QLabel("Select a directory to display options..."))
         self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
-        buttons = QtGui.QHBoxLayout()
+        buttons = QtWidgets.QHBoxLayout()
         buttons.addStretch(1)
-        self.run_widget = QtGui.QPushButton("Run experiment")
+        self.run_widget = QtWidgets.QPushButton("Run experiment")
         self.run_widget.clicked.connect(self._run)
         buttons.addWidget(self.run_widget)
-        self.destroy_widget = QtGui.QPushButton("Destroy unpacked experiment")
+        self.destroy_widget = QtWidgets.QPushButton("Destroy unpacked "
+                                                    "experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
         layout.addLayout(buttons, 9, 0, 1, 3)
@@ -343,7 +349,7 @@ class RunTab(QtGui.QWidget):
         self._directory_changed()
 
     def _browse(self):
-        picked = QtGui.QFileDialog.getExistingDirectory(
+        picked = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:
@@ -428,12 +434,12 @@ class RunTab(QtGui.QWidget):
 
     def should_exit(self):
         if self.unpacker:
-            r = QtGui.QMessageBox.question(
+            r = QtWidgets.QMessageBox.question(
                 self, "Close Confirmation",
                 "The experiment is still unpacked with '%s'. Are you sure you "
                 "want to exit without removing it?" % self.unpacker,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            if r == QtGui.QMessageBox.Yes:
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            if r == QtWidgets.QMessageBox.Yes:
                 record_usage(leave_unpacked=True)
                 return True
             else:
