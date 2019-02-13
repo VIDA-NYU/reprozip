@@ -203,16 +203,22 @@ def directory_run(args):
 
     # Gets library paths
     lib_dirs = []
+    logger.debug("Running: %s", "/sbin/ldconfig -v -N")
     p = subprocess.Popen(['/sbin/ldconfig', '-v', '-N'],
-                         stdout=subprocess.PIPE)
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    stdout, _ = p.communicate()
     try:
-        for l in p.stdout:
-            if len(l) < 3 or l[0] in (b' ', b'\t'):
+        for l in stdout.splitlines():
+            if len(l) < 2 or l[0] in (b' ', b'\t'):
                 continue
-            if l.endswith(b':\n'):
-                lib_dirs.append(Path(l[:-2]))
+            if l.endswith(b':'):
+                lib_dirs.append(Path(l[:-1]))
     finally:
-        p.wait()
+        if p.returncode != 0:
+            raise subprocess.CalledProcessError(p.returncode,
+                                                ['/sbin/ldconfig', '-v', '-N'])
     lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
                 shell_escape(unicode_(join_root(root, d)))
                 for d in lib_dirs))
@@ -275,6 +281,7 @@ def directory_run(args):
     cmds = ' && '.join(cmds)
 
     signals.pre_run(target=target)
+    logger.debug("Running: %s", cmds)
     retcode = interruptible_call(cmds, shell=True)
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
