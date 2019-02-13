@@ -1,8 +1,6 @@
-@import url('../webfonts/Montserrat/Montserrat-Regular.ttf');
-
 /* change font for site */
 body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: sans-serif;
 }
 
 /* increase font size of paragraph content */
@@ -34,7 +32,7 @@ main {
 .navbar-inverse .navbar-nav .nav-link {
   color: #ffffff;
   font-size:1.4em;
-  font-family: 'Montserrat', sans-serif;
+  font-family: sans-serif;
 }
 
 /* change the color of active or hovered links in navbar */
