@@ -7,10 +7,11 @@ from __future__ import print_function, unicode_literals
 import os
 import unittest
 import tempfile
+import shutil
 from rpaths import Path
 # from reprozip.tracer.trace import TracedFile
 from reprozip.common import File
-from reprozip.filters import ruby_gems
+from reprozip.filters import ruby_gems_and_apps
 
 
 class MockTracedFile(File):
@@ -23,9 +24,24 @@ class RailsFilterTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.gemdir = Path(tempfile.mkdtemp('reprozip-tests')) / \
+        cls.tmp = Path(tempfile.mkdtemp('reprozip-tests'))
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(str(cls.tmp))
+
+    @classmethod
+    def touch(cls, test_files):
+        for fi in test_files:
+            if not fi.parent.is_dir():
+                fi.parent.mkdir(parents=True)
+            with open(str(fi), 'a'):
+                os.utime(str(fi), None)
+
+    def test_consuming_entire_gem(self):
+        gemdir = self.__class__.tmp / \
             'gems/ruby-2.2.3/gems/kaminari-0.16.3'
-        cls.gemfiles = [
+        gemfiles = [
             'app/views/kaminari/_first_page.html.erb',
             'app/views/kaminari/_first_page.html.haml',
             'app/views/kaminari/_first_page.html.slim',
@@ -37,26 +53,72 @@ class RailsFilterTest(unittest.TestCase):
             'app/views/kaminari/_last_page.html.slim',
         ]
 
-        for gf in cls.gemfiles:
-            gfp = cls.gemdir / gf
-            if not gfp.parent.is_dir():
-                gfp.parent.mkdir(parents=True)
-            # gfp.touch()
-            with open(str(gfp), 'a'):
-                os.utime(str(gfp), None)
+        self.__class__.touch(
+            map(lambda f: gemdir / f, gemfiles))
 
-    def test_consuming_entire_gem(self):
         input_files = {}
         files = {}
 
-        for path in self.__class__.gemdir.recursedir():
+        for path in gemdir.recursedir():
             if not path.name.find(b'_first'):
                 f = MockTracedFile(path)
                 files[f.path] = f
 
-        ruby_gems(files, input_files)
+        ruby_gems_and_apps(files, input_files)
 
-        for gf in self.__class__.gemfiles:
-            gfp = self.__class__.gemdir / gf
+        for gf in gemfiles:
+            gfp = gemdir / gf
             self.assertIn(gfp, files.keys())
             self.assertEqual(gfp, files[gfp].path)
+
+    def test_consuming_rails_files(self):
+        railsdir = self.__class__.tmp / 'rails-app'
+        railsfiles = [
+            'config/application.rb',
+            'app/views/application.html.erb',
+            'app/views/discussion-sidebar.html.erb',
+            'app/views/payments_listing.html.erb',
+            'app/views/print-friendly.html.erb',
+            'app/views/w-sidebar.html.erb',
+            'app/views/widget.html.erb']
+
+        self.__class__.touch(
+            map(lambda f: railsdir / f, railsfiles))
+
+        input_files = {}
+        files = {}
+
+        viewsdir = MockTracedFile(railsdir / 'app/views')
+        files[viewsdir.path] = viewsdir
+
+        ruby_gems_and_apps(files, input_files)
+
+        for fi in railsfiles[1:]:
+            fp = railsdir / fi
+            self.assertIn(fp, files.keys())
+            self.assertEqual(fp, files[fp].path)
+
+        norailsdir = self.__class__.tmp / 'no-rails-app'
+        norailsfiles = [
+            # 'config/application.rb',
+            'app/views/application.html.erb',
+            'app/views/discussion-sidebar.html.erb',
+            'app/views/payments_listing.html.erb',
+            'app/views/print-friendly.html.erb',
+            'app/views/w-sidebar.html.erb',
+            'app/views/widget.html.erb']
+
+        self.__class__.touch(
+            map(lambda f: norailsdir / f, norailsfiles))
+
+        input_files = {}
+        files = {}
+
+        viewsdir = MockTracedFile(norailsdir / 'app/views')
+        files[viewsdir.path] = viewsdir
+
+        ruby_gems_and_apps(files, input_files)
+
+        for fi in norailsfiles:
+            fp = norailsdir / fi
+            self.assertNotIn(fp, files.keys())
