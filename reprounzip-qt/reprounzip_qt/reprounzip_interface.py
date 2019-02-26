@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import yaml
+from pkg_resources import iter_entry_points
 
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
@@ -147,7 +148,7 @@ def find_command(cmd):
 
 
 def run(directory, unpacker=None, runs=None,
-        root=None, jupyter=False, args=[]):
+        root=None, jupyter=False, data_journalism=False, args=[]):
     if unpacker is None:
         unpacker = check_directory(directory)
 
@@ -181,6 +182,13 @@ def run(directory, unpacker=None, runs=None,
         else:
             raise ValueError("Unrecognized docker host type %r" %
                              docker_host['type'])
+
+    if data_journalism:
+        run_in_system_terminal(
+            [reprounzip, 'dj'] + args,
+            env=env,
+            root=root)
+        return True
 
     run_in_system_terminal(
         [reprounzip, unpacker, 'run'] +
@@ -385,7 +393,7 @@ end tell
                                    wait_script,
                                    close_script)
 
-        proc.communicate(run_script)
+        proc.communicate(run_script.encode('utf-8'))
         proc.wait()
         if wait:
             time.sleep(0.5)
@@ -424,3 +432,14 @@ end tell
 
                 return None
     return "Couldn't start a terminal", 'critical'
+
+
+def dj_unpacker_installed():
+    for ep in iter_entry_points('reprounzip.unpackers',
+                                'dj'):
+        return True
+    return False
+
+
+def dj_is_playable(directory):
+    return os.path.isdir(directory + "/WARC_DATA")
