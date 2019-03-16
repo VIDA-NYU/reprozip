@@ -315,6 +315,17 @@ def download(directory, name, path, unpacker=None, root=None):
         return code == 0
 
 
+def show_vis(package):
+    reprounzip = find_command('reprounzip')
+    if reprounzip is None:
+        return ("Couldn't find reprounzip command -- is reprounzip installed?",
+                'critical')
+
+    run_in_builtin_terminal([reprounzip, 'vis', package], {},
+                            text="Running provenance visualization")
+    return True
+
+
 def run_in_builtin_terminal_maybe(cmd, root, env={}, **kwargs):
     if root is None:
         code = run_in_builtin_terminal(cmd, env, **kwargs)
