@@ -20,7 +20,7 @@ main {
 
 /* make jumbotron slightly smaller */
 .jumbotron {
-    padding: 2rem;
+  padding: 2rem;
 }
 
 /* change the navbar background color */
@@ -39,12 +39,20 @@ main {
 .navbar-inverse .nav-item.active .nav-link,
 .navbar-inverse .nav-item:focus .nav-link,
 .navbar-inverse .nav-item:hover .nav-link {
-    background-color: blue;
+  background-color: blue;
 }
 
 /* change background of active links in navbar */
 .nav-item.active {
-	background-color: blue;
+  background-color: blue;
+}
+
+.navbar-inverse .navbar-toggler {
+  border: 1px solid white;
+}
+
+.navbar-inverse .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 .nav.navbar-nav.ml-auto > .nav-item > .nav-link {
@@ -94,3 +102,28 @@ main {
   margin-left: .1rem;
   margin-right: .1rem;
 }
+
+/* --------------------RESPONSIVE DISPLAY HEADINGS--------------------------*/
+@media (max-width: 575.98px) {
+  .display-1 {
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1.0;
+  }
+  .display-2 {
+    font-size: 2.75rem;
+    font-weight: 300;
+    line-height: 1.0;
+  }
+  .display-3 {
+    font-size: 2.25rem;
+    font-weight: 300;
+    line-height: 1.0;
+  }
+  .display-4 {
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1.0;
+  }
+}
+
