@@ -5,12 +5,12 @@ body {
 
 /* increase font size of paragraph content */
 body p {
-  font-size:1.2em;
+  font-size: 1.2em;
 }
 
 /* increase font-size of lists */
 main li {
-  font-size:1.2em;
+  font-size: 1.2em;
 }
 
 /* add space between navbar and content */
@@ -31,7 +31,7 @@ main {
 /* change the link color and font in navbar*/
 .navbar-inverse .navbar-nav .nav-link {
   color: #ffffff;
-  font-size:1.4em;
+  font-size: 1.4em;
   font-family: sans-serif;
 }
 
@@ -56,13 +56,13 @@ main {
 }
 
 .nav.navbar-nav.ml-auto > .nav-item > .nav-link {
-  font-size:2em;
+  font-size: 2em;
 }
 
 /* change background of primary buttons*/
 .btn-primary {
   background: #57068c !important;
-  font-size:1.2em;
+  font-size: 1.2em;
 }
 
 /* change background of primary buttons only outlined */
@@ -81,7 +81,7 @@ main {
 }
 
 .card-footer {
-  background-color:#fff;
+  background-color: #fff;
 }
 
 /**********DROPDOWN SUBMENUS DO NOT TOUCH*************/
@@ -106,9 +106,9 @@ main {
 /* --------------------RESPONSIVE DISPLAY HEADINGS--------------------------*/
 @media (max-width: 575.98px) {
   .display-1 {
-  font-size: 3rem;
-  font-weight: 300;
-  line-height: 1.0;
+    font-size: 3rem;
+    font-weight: 300;
+    line-height: 1.0;
   }
   .display-2 {
     font-size: 2.75rem;
