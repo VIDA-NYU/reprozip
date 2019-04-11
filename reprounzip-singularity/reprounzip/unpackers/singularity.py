@@ -1,3 +1,15 @@
+# Copyright (C) 2018 New York University
+# This file is part of ReproZip which is released under the Revised BSD License
+# See file LICENSE for full license details.
+
+"""Singularity plugin for reprounzip.
+
+This files contains the 'singularity' unpacker, which builds a Singularity
+image from a reprozip pack. You can then run it using the singularity command.
+
+See https://www.sylabs.io/singularity/
+"""
+
 import copy
 import tarfile
 import os
