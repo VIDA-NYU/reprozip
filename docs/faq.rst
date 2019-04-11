@@ -37,7 +37,7 @@ Can ReproZip pack graphical tools?
 
 Yes!
 On Linux, graphical display is handled by the X server. Applications can connect to it as clients to display their windows and components, and to get user input.
-Most unpackers now support forwarding the X connection from the experiment to the X server running on the unpacking machine. You will need a running X server to make this work, such as `Xming <http://sourceforge.net/projects/xming/>`__ for Windows or `XQuartz <http://xquartz.macosforge.org/>`__ for Mac OS X. If you are running Linux, chances are that an X server is already configured and running.
+Most unpackers now support forwarding the X connection from the experiment to the X server running on the unpacking machine. You will need a running X server to make this work, such as `Xming <https://sourceforge.net/projects/xming/>`__ for Windows or `XQuartz <https://www.xquartz.org/>`__ for Mac OS X. If you are running Linux, chances are that an X server is already configured and running.
 
 X support is **not** enabled by default; to enable it, use the flag ``--enable-x11`` in the ``run`` command of your preferred unpacker.
 
@@ -46,6 +46,8 @@ X support is **not** enabled by default; to enable it, use the flag ``--enable-x
     While displaying a UI through the X protocol works fine, applications using direct rendering (DRI) to access dedicated graphic hardware might not be reproducible: the libGL library packed with the experiment is often specific to the driver of the original machine, and therefore the machine where the experiment is being reproduced would need to use the exact same hardware and driver.
 
     Please refrain from requiring direct rendering in applications that you intend to pack with ReproZip.
+
+If using Vagrant, you can also use the virtual machine's native display directly, by supplying the ``--use-gui`` option to ``reprounzip vagrant setup``.
 
 How can I access the generated system or virtual machine directly?
 ==================================================================

@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/ViDA-NYU/reprozip.svg?branch=1.0.x)](https://travis-ci.org/ViDA-NYU/reprozip)
-[![Coverage Status](https://codecov.io/github/ViDA-NYU/reprozip/coverage.svg?branch=1.0.x)](https://codecov.io/github/ViDA-NYU/reprozip?branch=1.0.x)
+[![Build Status](https://travis-ci.org/VIDA-NYU/reprozip.svg?branch=1.0.x)](https://travis-ci.org/VIDA-NYU/reprozip)
+[![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=1.0.x)](https://codecov.io/github/VIDA-NYU/reprozip?branch=1.0.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)](https://docs.reprozip.org/en/1.0.x/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/remram44)
 [![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.1247557-green.svg)](https://doi.org/10.5281/zenodo.1247557)
+[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.2558333-green.svg)](https://doi.org/10.5281/zenodo.2558333
 
 ReproZip
 ========
@@ -16,7 +16,7 @@ It tracks operating system calls and creates a package that contains all the bin
 Quickstart
 ----------
 
-We have an [example repository](https://github.com/ViDA-NYU/reprozip-examples) with a variety of different software. Don't hesitate to check it out, and contribute your own example if use ReproZip for something new!
+We have an [example repository](https://github.com/VIDA-NYU/reprozip-examples) with a variety of different software. Don't hesitate to check it out, and contribute your own example if use ReproZip for something new!
 
 ### Packing
 
@@ -90,7 +90,7 @@ Remember that you can open the help message and learn more about other available
 Citing ReproZip
 ---------------
 
-Please use the following when citing ReproZip:
+Please use the following when citing ReproZip ([BibTeX](CITATION.txt)):
 
     ReproZip: Computational Reproducibility With Ease
     F. Chirigati, R. Rampin, D. Shasha, and J. Freire.
@@ -103,9 +103,9 @@ Please subscribe to and contact the [reprozip-users](https://vgc.poly.edu/mailma
 
 Use the [reprozip-dev](https://vgc.poly.edu/mailman/listinfo/reprozip-dev) mailing list for any questions about reprozip source code.
 
-Bugs and feature plannings are tracked in the [GitHub issues](https://github.com/ViDA-NYU/reprozip/issues). Feel free to add an issue!
+Bugs and feature plannings are tracked in the [GitHub issues](https://github.com/VIDA-NYU/reprozip/issues). Feel free to add an issue!
 
-To suggest changes to this source code, feel free to raise a [GitHub pull request](https://github.com/ViDA-NYU/reprozip/pulls).  Any contributions received are assumed to be covered by the [BSD 3-Clause license](LICENSE.txt). We might ask you to sign a _Contributor License Agreement_ before accepting a larger contribution.
+To suggest changes to this source code, feel free to raise a [GitHub pull request](https://github.com/VIDA-NYU/reprozip/pulls).  Any contributions received are assumed to be covered by the [BSD 3-Clause license](LICENSE.txt). We might ask you to sign a _Contributor License Agreement_ before accepting a larger contribution.
 
 License
 -------

@@ -274,6 +274,8 @@ def docker_setup_build(args):
 
     if args.image_name:
         image = args.image_name[0]
+        if not isinstance(image, bytes):
+            image = image.encode('ascii')
     else:
         image = make_unique_name(b'reprounzip_image_')
 
@@ -335,7 +337,7 @@ def docker_reset(args):
         write_dict(target, unpacked_info)
 
 
-_addr_re = re.compile(r'^(?:[a-z]+://)?([[0-9a-zA-Z_.-]+)(?::[0-9]+)?$')
+_addr_re = re.compile(r'^(?:[a-z]+://)?([0-9a-zA-Z_.-]+)(?::[0-9]+)?$')
 
 
 def get_local_addr():
@@ -433,7 +435,7 @@ def docker_run(args):
     port_options = []
     for port_host, port_container, proto in parse_ports(args.expose_port):
         port_options.extend(['-p',
-                             '%s:%s%s' % (port_host, port_container, proto)])
+                             '%s:%s/%s' % (port_host, port_container, proto)])
 
     # X11 handler
     if args.x11:

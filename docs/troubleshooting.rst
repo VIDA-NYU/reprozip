@@ -44,7 +44,7 @@ Please feel free to contact us at users@reprozip.org if you encounter issues whi
 :Diagnosis: ``ptrace`` is the mechanism that ReproZip uses to attach to another process and follow its system calls. Because it is so powerful, some security policies, environments or isolation mechanism may disable it.
 :Solution:
 
- * If you are using Docker, you can use the Docker option ``--security-opt seccomp:unconfined`` (or write your own seccomp profile that allows ptrace); see `the Docker documentation on seccomp <https://docs.docker.com/engine/security/seccomp/>`__.
+ * If you are using Docker, you can use the Docker option ``--cap-add=SYS_PTRACE`` (or provide your own seccomp profile that allows ptrace, by adding ``"ptrace"`` to the `default profile <https://github.com/moby/moby/blob/master/profiles/seccomp/default.json>`__; see `the Docker documentation on seccomp <https://docs.docker.com/engine/security/seccomp/>`__).
 
 ------------
 
@@ -60,7 +60,7 @@ Please feel free to contact us at users@reprozip.org if you encounter issues whi
 
 :Issue: **"** `reprounzip-vagrant` **installation fails with error** ``Unable to find vcvarsall.bat`` **on Windows."**
 :Diagnosis: Python is trying to build `PyCrypto <https://www.dlitz.net/software/pycrypto/>`__, one of the dependencies of `reprounzip-vagrant`, but there is no C compiler available.
-:Solution: You can either build PyCrypto from source, or follow the instructions on `this website <http://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__ to get the non-official binaries.
+:Solution: You can either build PyCrypto from source, or follow the instructions on `this website <https://stackoverflow.com/questions/11405549/how-do-i-install-pycrypto-on-windows>`__ to get the non-official binaries.
 
 ------------
 

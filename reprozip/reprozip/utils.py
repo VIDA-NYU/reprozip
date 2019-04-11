@@ -68,8 +68,9 @@ if PY3:
     itervalues = lambda d: d.values()
     listvalues = lambda d: list(d.values())
 
-    stdout_bytes, stderr_bytes = sys.stdout.buffer, sys.stderr.buffer
-    stdin_bytes = sys.stdin.buffer
+    stdout_bytes = sys.stdout.buffer if sys.stdout is not None else None
+    stderr_bytes = sys.stderr.buffer if sys.stderr is not None else None
+    stdin_bytes = sys.stdin.buffer if sys.stdin is not None else None
     stdout, stderr = sys.stdout, sys.stderr
 else:
     izip = itertools.izip
@@ -138,17 +139,6 @@ def escape(s):
     This does NOT add quotes around the string.
     """
     return s.replace('\\', '\\\\').replace('"', '\\"')
-
-
-class CommonEqualityMixin(object):
-    """Common mixin providing comparison by comparing ``__dict__`` attributes.
-    """
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.__dict__ == other.__dict__)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
 
 def optional_return_type(req_args, other_args):

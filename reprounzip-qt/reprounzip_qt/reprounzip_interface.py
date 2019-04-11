@@ -8,7 +8,6 @@ import itertools
 import logging
 import os
 import pickle
-import platform
 import subprocess
 import sys
 import time
@@ -343,8 +342,7 @@ def run_in_system_terminal(cmd, env={},
     environ = dict(os.environ)
     environ.update(env)
 
-    system = platform.system().lower()
-    if system == 'darwin':
+    if sys.platform == 'darwin':
         # Dodge py2app issues
         environ.pop('PYTHONPATH', None)
         environ.pop('PYTHONHOME', None)
@@ -392,20 +390,37 @@ end tell
         if wait:
             time.sleep(0.5)
         return None
-    elif system == 'windows':
-        subprocess.check_call('start /wait cmd /c %s' %
-                              win_escape(cmd + ' & pause'),
-                              shell=True)
+    elif sys.platform.startswith('win'):
+        if not close_on_success:
+            cmd = cmd + ' ^& pause'
+        subprocess.check_call(
+            'start%s cmd /c %s' % (
+                ' /wait' if wait else '',
+                cmd,
+            ),
+            shell=True)
         return None
-    elif system == 'linux':
+    elif sys.platform.startswith('linux'):
+        if not close_on_success:
+            cmd = '/bin/sh -c %s' % \
+                shell_escape(cmd + ' ; echo "Press enter..."; read r')
         for term, arg_factory in [('konsole', lambda a: ['--nofork', '-e', a]),
+                                  ('gnome-terminal', lambda a: [
+                                      '--disable-factory-', '--',
+                                      '/bin/sh', '-c', a]),
                                   ('lxterminal', lambda a: ['--command=' + a]),
                                   ('rxvt', lambda a: ['-e', a]),
-                                  ('xterm', lambda a: ['-e', a]),
-                                  # gnome-terminal needs some kind of --nofork
-                                  ('gnome-terminal', lambda a: ['-x', 'a'])]:
+                                  ('xterm', lambda a: ['-e', a])]:
             if find_command(term) is not None:
                 args = arg_factory(cmd)
-                subprocess.check_call([term] + args, stdin=subprocess.PIPE)
+                proc = subprocess.Popen([term] + args,
+                                        stdin=subprocess.PIPE)
+                proc.stdin.close()
+                if wait:
+                    retcode = proc.wait()
+                    if retcode != 0:
+                        raise subprocess.CalledProcessError(retcode,
+                                                            [term] + args)
+
                 return None
     return "Couldn't start a terminal", 'critical'

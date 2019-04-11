@@ -33,7 +33,7 @@ from reprounzip.unpackers.common import shell_escape
 from reprounzip.utils import iteritems
 
 
-__version__ = '1.0.13'
+__version__ = '1.0.16'
 
 
 logger = logging.getLogger('reprounzip.vistrails')
@@ -359,3 +359,5 @@ def run_from_vistrails():
         output_name, filename = output_file.split(':', 1)
         cmd(['download', '.',
              '%s:%s' % (output_name, filename)])
+
+    sys.exit(0)

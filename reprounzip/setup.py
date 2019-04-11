@@ -14,9 +14,10 @@ req = [
     'PyYAML',
     'rpaths>=0.8',
     'usagestats>=0.3',
-    'requests']
+    'requests',
+    'distro']
 setup(name='reprounzip',
-      version='1.0.13',
+      version='1.0.16',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
       entry_points={
@@ -59,8 +60,5 @@ setup(name='reprounzip',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.3',
-          'Programming Language :: Python :: 3.4',
-          'Programming Language :: Python :: 3.5',
           'Topic :: Scientific/Engineering',
           'Topic :: System :: Archiving'])

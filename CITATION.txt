@@ -1,0 +1,20 @@
+To reference ReproZip in publications, please cite the following:
+
+ReproZip: Computational Reproducibility With Ease, F. Chirigati, R. Rampin, D. Shasha, and J. Freire. In Proceedings of the 2016 ACM SIGMOD International Conference on Management of Data (SIGMOD), pp. 2085-2088, 2016
+
+BibTeX:
+
+@inproceedings{ChirigatiRSF16,
+  title = {ReproZip: Computational Reproducibility With Ease},
+  author = {Chirigati, Fernando and Rampin, R{\'e}mi and Shasha, Dennis and Freire, Juliana},
+  year = {2016},
+  isbn = {978-1-4503-3531-7},
+  location = {San Francisco, California, USA},
+  doi = {10.1145/2882903.2899401},
+  booktitle = {Proceedings of the 2016 International Conference on Management of Data},
+  series = {SIGMOD '16},
+  pages = {2085--2088},
+  numpages = {4},
+  publisher = {ACM},
+  keywords = {computational reproducibility, provenance, reprozip},
+}

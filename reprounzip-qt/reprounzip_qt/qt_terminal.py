@@ -7,15 +7,15 @@ from __future__ import division, print_function, unicode_literals
 import cgi
 import locale
 import logging
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 import sys
 
 
 logger = logging.getLogger('reprounzip_qt')
 
 
-class Terminal(QtGui.QWidget):
-    finished = QtCore.pyqtSignal(int)
+class Terminal(QtWidgets.QWidget):
+    finished = QtCore.Signal(int)
 
     def __init__(self, cmdline, env, input_enabled=False,
                  success_msg=None, fail_msg=None,
@@ -25,11 +25,11 @@ class Terminal(QtGui.QWidget):
         self.success_msg = success_msg or "Command finished"
         self.fail_msg = fail_msg or "Command failed"
 
-        layout = QtGui.QVBoxLayout()
-        self.text = QtGui.QTextEdit(readOnly=True)
+        layout = QtWidgets.QVBoxLayout()
+        self.text = QtWidgets.QTextEdit(readOnly=True)
         layout.addWidget(self.text)
         if input_enabled:
-            self.input = QtGui.QLineEdit()
+            self.input = QtWidgets.QLineEdit()
             self.input.returnPressed.connect(self._enter)
             layout.addWidget(self.input)
         else:
@@ -124,17 +124,17 @@ def run_in_builtin_terminal(cmd, env,
     def store_result(code):
         result[:] = [code]
 
-    dialog = QtGui.QDialog()
-    layout = QtGui.QVBoxLayout()
+    dialog = QtWidgets.QDialog()
+    layout = QtWidgets.QVBoxLayout()
     if text is not None:
-        layout.addWidget(QtGui.QLabel(text))
+        layout.addWidget(QtWidgets.QLabel(text))
     terminal = Terminal(cmd, env, input_enabled=False,
                         success_msg=success_msg, fail_msg=fail_msg)
     terminal.finished.connect(store_result)
     layout.addWidget(terminal)
-    buttons = QtGui.QHBoxLayout()
+    buttons = QtWidgets.QHBoxLayout()
     buttons.addStretch(1)
-    accept = QtGui.QPushButton("Close", enabled=False)
+    accept = QtWidgets.QPushButton("Close", enabled=False)
     accept.clicked.connect(dialog.accept)
     terminal.finished.connect(lambda _: accept.setEnabled(True))
     buttons.addWidget(accept)

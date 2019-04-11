@@ -4,7 +4,7 @@ export CFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sd
 export LDFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk"
 export MACOS_DEPLOYMENT_TARGET=10.8
 Build Python with --prefix=/opt/reprounzip/python27
-Copy reprounzip and reprounzip-qt to /opt/reprounzip
+Copy reprounzip, reprounzip-qt, and reprozip-jupyter to /opt/reprounzip
 Install pip with get-pip.py
 Install reprounzip, reprounzip-docker, reprounzip-vagrant, reprounzip-vistrails
 Install sip and PyQt4

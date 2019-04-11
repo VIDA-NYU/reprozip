@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprozip-jupyter',
-      version='0.4',
+      version='1.0.14',
       packages=['reprozip_jupyter'],
       package_data={'reprozip_jupyter': ['notebook-extension.js']},
       entry_points={
@@ -43,5 +43,6 @@ setup(name='reprozip-jupyter',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
           'Topic :: Scientific/Engineering',
           'Topic :: System :: Archiving'])

@@ -17,7 +17,7 @@ Writing Unpackers
 
 ReproZip is divided into two steps. The first is packing, which gives a generic package containing the trace SQLite database, the YAML configuration file (which lists the paths, packages, and metadata such as command line, environment variables, and input/output files), and actual files. In the second step, a package can be run using *reprounzip*. This decoupling allows the reproducer to select the unpacker of his/her desire, and also means that when a new unpacker is released, users will be able to use it on their old packages.
 
-Currently, different unpackers are maintained: the defaults ones (``directory`` and ``chroot``), ``vagrant`` (distributed as `reprounzip-vagrant <https://pypi.python.org/pypi/reprounzip-vagrant>`__) and ``docker`` (distributed as `reprounzip-docker <https://pypi.python.org/pypi/reprounzip-docker>`__). However, the interface is such that new unpackers can be easily added. While taking a look at the "official" unpackers' source is probably a good idea, this page gives some useful information about how they work.
+Currently, different unpackers are maintained: the defaults ones (``directory`` and ``chroot``), ``vagrant`` (distributed as `reprounzip-vagrant <https://pypi.org/project/reprounzip-vagrant/>`__) and ``docker`` (distributed as `reprounzip-docker <https://pypi.org/project/reprounzip-docker/>`__). However, the interface is such that new unpackers can be easily added. While taking a look at the "official" unpackers' source is probably a good idea, this page gives some useful information about how they work.
 
 ReproZip Pack Format (``.rpz``)
 '''''''''''''''''''''''''''''''

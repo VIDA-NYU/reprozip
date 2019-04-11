@@ -10,7 +10,7 @@ The database contains three tables: ``processes``, ``opened_files``, and ``execu
 
 This table contains information about all the processes. A process is identified by Linux as a *pid* (process id), and is either a thread or a full-fledged process.
 
-Note that processes are different from programs, and there is no one-to-one relationship with executions. A process is created by `clone(2) <http://linux.die.net/man/2/clone>`__ or `fork(2) <http://linux.die.net/man/2/fork>`__ and not necessarily followed by `execve(2) <http://linux.die.net/man/2/execve>`__. By contrast, a program can change its image by calling execve(2) without creating new processes (i.e., without changing *pid*).
+Note that processes are different from programs, and there is no one-to-one relationship with executions. A process is created by `clone(2) <https://linux.die.net/man/2/clone>`__ or `fork(2) <https://linux.die.net/man/2/fork>`__ and not necessarily followed by `execve(2) <https://linux.die.net/man/2/execve>`__. By contrast, a program can change its image by calling execve(2) without creating new processes (i.e., without changing *pid*).
 
 Each entry in the ``processes`` table has the id of its parent, i.e. the process that created it by calling clone(2) or fork(2), except the original process that *reprozip* created, for which parent is NULL. There is thus exactly one process with a NULL parent per run stored in the pack.
 
@@ -52,7 +52,7 @@ The *mode* attribute is a binary OR of the following values (accessible from ``r
 ``executed_files``
 ''''''''''''''''''
 
-This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however, *workingdir*, *argv* (command-line arguments) and *envp* (environment variables) are added. *argv* is a list of arguments separated by null bytes (``0x00``) [#nullbytes]_, and *envp* is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes [#nullbytes]_. Note that, again, failed executions (execve returns) are not logged.
+This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <https://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however, *workingdir*, *argv* (command-line arguments) and *envp* (environment variables) are added. *argv* is a list of arguments separated by null bytes (``0x00``) [#nullbytes]_, and *envp* is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes [#nullbytes]_. Note that, again, failed executions (execve returns) are not logged.
 
 ::
 
@@ -66,4 +66,4 @@ This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http
         workingdir TEXT NOT NULL
         );
 
-..  [#nullbytes] Note that Python's sqlite3 lib is affected by `bug 13676 <http://bugs.python.org/issue13676>`__ up to Python 2.7.3, which prevents it from reading text or blob fields with embedded null bytes.
+..  [#nullbytes] Note that Python's sqlite3 lib is affected by `bug 13676 <https://bugs.python.org/issue13676>`__ up to Python 2.7.3, which prevents it from reading text or blob fields with embedded null bytes.

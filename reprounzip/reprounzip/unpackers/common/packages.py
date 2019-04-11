@@ -7,8 +7,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import distro
 import logging
-import platform
 import subprocess
 
 from reprounzip.unpackers.common.misc import UsageError
@@ -18,7 +18,7 @@ from reprounzip.utils import itervalues
 logger = logging.getLogger('reprounzip')
 
 
-THIS_DISTRIBUTION = platform.linux_distribution()[0].lower()
+THIS_DISTRIBUTION = distro.id()
 
 
 PKG_NOT_INSTALLED = "(not installed)"

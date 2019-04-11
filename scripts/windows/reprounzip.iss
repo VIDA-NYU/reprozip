@@ -9,7 +9,7 @@
 
 [Setup]
 AppName=ReproUnzip
-AppVerName=ReproUnzip 1.0.13
+AppVerName=ReproUnzip 1.0.16
 OutputBaseFilename=reprounzip-setup
 DefaultGroupName=ReproUnzip
 DefaultDirName={pf}\ReproUnzip
@@ -23,6 +23,7 @@ Source: input\ssh\*; DestDir: {app}\ssh
 ; Other files
 Source: input\reprounzip.bat; DestDir: {app}
 Source: input\reprounzip-qt.bat; DestDir: {app}
+Source: input\reprozip-jupyter.bat; DestDir: {app}
 Source: input\reprozip.ico; DestDir: {app}
 
 [UninstallDelete]
