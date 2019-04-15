@@ -12,6 +12,7 @@ See https://www.sylabs.io/singularity/
 
 from __future__ import division, print_function, unicode_literals
 
+import argparse
 import copy
 import tarfile
 import os
@@ -22,6 +23,8 @@ import io
 import string
 import requests
 
+from reprounzip.unpackers.common.misc import add_environment_options, \
+    COMPAT_OK, COMPAT_MAYBE
 
 SINGULARITY_DIR = "../.singularity.d"
 APP_DIR = "../sample_app"
@@ -208,7 +211,7 @@ def create_overlay_image(OVERLAY_IMAGE):
         output, error = process.communicate()
 
 
-def setup_(filename):
+def sin_setup(filename):
     # Open outer tar, the RPZ file
     rpz = tarfile.open(filename, 'r:*')
     # Open the inner tar in the original, without extracting it to disk
@@ -243,7 +246,7 @@ def setup_(filename):
     new.close()
 
 
-def run(IMAGE_TAR_FILE, app):
+def sin_run(IMAGE_TAR_FILE, app):
     home = os.environ['HOME']
     if app:
         print("running app:{}!".format(app))
@@ -260,7 +263,7 @@ def run(IMAGE_TAR_FILE, app):
             print("Error running image '{0}'".format(IMAGE_TAR_FILE))
 
 
-def download(IMAGE_DIR, src, dest):
+def sin_download(IMAGE_DIR, src, dest):
     home = os.environ['HOME']
     dest_dir = os.path.dirname(dest) or os.getcwd()
     if os.path.isdir(dest):
@@ -275,7 +278,7 @@ def download(IMAGE_DIR, src, dest):
         print("Error downloading '{0}'".format(filename))
 
 
-def upload(IMAGE_DIR, src, dest):
+def sin_upload(IMAGE_DIR, src, dest):
     src_dir = os.path.dirname(src)
     home = os.environ['HOME']
     if os.path.isdir(src):
@@ -289,7 +292,7 @@ def upload(IMAGE_DIR, src, dest):
         print("Error uploading '{0}' to '{1}".format(filename, IMAGE_DIR))
 
 
-def destroy(IMAGE_DIR):
+def sin_destroy(IMAGE_DIR):
     bashCommand = "rm -rf {}".format(IMAGE_DIR)
     try:
         subprocess.check_call([bashCommand], shell=True)
@@ -297,7 +300,104 @@ def destroy(IMAGE_DIR):
         print("Error destroying '{0}'".format(IMAGE_DIR))
 
 
-def setup():
+def test_has_singularity(pack, **kwargs):
+    """Compatibility test: has singularity (ok) or not (maybe).
+    """
+    pathlist = os.environ['PATH'].split(os.pathsep) + ['.']
+    pathexts = os.environ.get('PATHEXT', '').split(os.pathsep)
+    for path in pathlist:
+        for ext in pathexts:
+            fullpath = os.path.join(path, 'singularity') + ext
+            if os.path.isfile(fullpath):
+                return COMPAT_OK
+    return COMPAT_MAYBE, "singularity not found in PATH"
+
+
+def setup(parser, **kwargs):
+    """Runs the experiment using Singularity
+
+    You need Singularity to be installed on your machine if you want to run the
+    experiment. However you can always create an image using the "setup"
+    subcommand.
+
+    setup           creates a Singularity image (needs the pack filename)
+    upload          replaces input files in the container
+                    (without arguments, lists input files)
+    run             runs the experiment using Singularity
+    download        gets output files from the container
+                    (without arguments, lists output files)
+    destroy         destroys the container (deletes the files)
+
+    For example:
+
+        $ reprounzip singularity setup mypack.rpz experiment/
+        $ reprounzip singularity run experiment/
+        $ reprounzip singularity download experiment/ result:/home/user/result
+        $ reprounzip singularity detroy experiment/
+
+    Upload specifications are either:
+      :input_id             restores the original input file from the pack
+      filename:input_id     replaces the input file with the specified local
+                            file
+
+    Download specifications are either:
+      output_id:            print the output file to stdout
+      output_id:filename    extracts the output file to the corresponding local
+                            path
+    """
+    parser.add_argument('--singularity-cmd', action='store',
+                        default='singularity',
+                        help="Change the Singularity command; split on spaces")
+
+    subparsers = parser.add_subparsers(title="actions",
+                                       metavar='', help=argparse.SUPPRESS)
+
+    def add_opt_general(opts):
+        opts.add_argument('target', nargs=1, help="Experiment directory")
+
+    # setup
+    parser_setup = subparsers.add_parser('setup')
+    parser_setup.add_argument('pack', nargs=1, help="Pack to extract")
+    # TODO: base iamge?
+    add_opt_general(parser_setup)
+    parser_setup.set_defaults(func=sin_setup)
+
+    # upload
+    parser_upload = subparsers.add_parser('upload')
+    add_opt_general(parser_upload)
+    parser_upload.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                               help="<path>:<input_file_name>")
+    parser_upload.set_defaults(func=sin_upload)
+
+    # run
+    parser_run = subparsers.add_parser('run')
+    add_opt_general(parser_run)
+    parser_run.add_argument('run', default=None, nargs=argparse.OPTIONAL)
+    parser_run.add_argument('--cmdline', nargs=argparse.REMAINDER,
+                            help="Command line to run")
+    # TODO: X11?
+    parser_run.add_argument('--singularity-option', action='append',
+                            default=[],
+                            help="Argument passed to Singularity directly; "
+                                 "may be specified multiple times")
+    add_environment_options(parser_run)
+    parser_run.set_defaults(func=sin_run)
+
+    # download
+    parser_download = subparsers.add_parser('download')
+    add_opt_general(parser_download)
+    parser_download.add_argument('file', nargs=argparse.ZERO_OR_MORE,
+                                 help="<output_file_name>[:<path>]")
+    parser_download.add_argument('--all', action='store_true',
+                                 help="Download all output files to the "
+                                      "current directory")
+    parser_download.set_defaults(func=sin_download)
+
+    # destroy
+    parser_destroy = subparsers.add_parser('destroy')
+    add_opt_general(parser_destroy)
+    parser_destroy.set_defaults(func=sin_destroy)
+
     args = sys.argv[1:]
     cmd = args[0]
 
@@ -311,19 +411,21 @@ def setup():
             os.makedirs(IMAGE_DIR)
         os.chdir(IMAGE_DIR)
         rpz_file = "../" + rpz_file
-        setup_(rpz_file)
+        sin_setup(rpz_file)
     elif cmd == "run":
         app = None
         IMAGE_DIR = args[1]
         if len(args) == 3:
             app = args[2]
         os.chdir(IMAGE_DIR)
-        run(IMAGE_TAR_FILE, app)
+        sin_run(IMAGE_TAR_FILE, app)
     elif cmd in ["upload", "download"]:
         IMAGE_DIR, src, dest = args[1:]
         if not dest:
             print("file missing!")
-        globals()[cmd](IMAGE_DIR, src, dest)
+        globals()['sin_' + cmd](IMAGE_DIR, src, dest)
     elif cmd == "destroy":
         IMAGE_DIR = args[1]
-        destroy(IMAGE_DIR)
+        sin_destroy(IMAGE_DIR)
+
+    return {'test_compatibility': test_has_singularity}

@@ -832,10 +832,10 @@ def setup(parser, **kwargs):
 
     For example:
 
-        $ reprounzip vagrant setup mypack.rpz experiment; cd experiment
-        $ reprounzip vagrant run .
-        $ reprounzip vagrant download . results:/home/user/theresults.txt
-        $ cd ..; reprounzip vagrant destroy experiment
+        $ reprounzip vagrant setup mypack.rpz experiment/
+        $ reprounzip vagrant run experiment/
+        $ reprounzip vagrant download experiment/ result:/home/user/result.txt
+        $ reprounzip vagrant destroy experiment/
 
     Upload specifications are either:
       :input_id             restores the original input file from the pack

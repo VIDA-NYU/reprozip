@@ -795,10 +795,10 @@ def setup(parser, **kwargs):
 
     For example:
 
-        $ reprounzip docker setup mypack.rpz experiment; cd experiment
-        $ reprounzip docker run .
-        $ reprounzip docker download . results:/home/user/theresults.txt
-        $ cd ..; reprounzip docker destroy experiment
+        $ reprounzip docker setup mypack.rpz experiment/
+        $ reprounzip docker run experiment/
+        $ reprounzip docker download experiment/ result:/home/user/result.txt
+        $ reprounzip docker destroy experiment/
 
     Upload specifications are either:
       :input_id             restores the original input file from the pack
