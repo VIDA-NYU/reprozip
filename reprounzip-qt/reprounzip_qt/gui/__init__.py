@@ -6,7 +6,7 @@ from __future__ import division, print_function, unicode_literals
 
 import logging
 import os
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 import shutil
 import subprocess
 import sys
@@ -24,9 +24,9 @@ from reprounzip_qt.usage import record_usage, _usage_report as usage_report
 logger = logging.getLogger('reprounzip_qt')
 
 
-class Application(QtGui.QApplication):
+class Application(QtWidgets.QApplication):
     def __init__(self, argv):
-        QtGui.QApplication.__init__(self, argv)
+        QtWidgets.QApplication.__init__(self, argv)
         self.first_window = None
         self.windows = set()
 
@@ -48,14 +48,14 @@ class Application(QtGui.QApplication):
             logger.info("xdg-mime call failed, not registering application")
         else:
             if not registered:
-                r = QtGui.QMessageBox.question(
+                r = QtWidgets.QMessageBox.question(
                     window, "Default application",
                     "Do you want to set ReproUnzip as the default to open "
                     ".rpz files?",
-                    QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-                if r == QtGui.QMessageBox.Yes:
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if r == QtWidgets.QMessageBox.Yes:
                     self.linux_register_default(window)
-                elif r == QtGui.QMessageBox.No:
+                elif r == QtWidgets.QMessageBox.No:
                     record_usage(appregister='no')
                     if not os.path.exists(rcpath):
                         os.mkdir(rcpath)
@@ -127,22 +127,22 @@ Icon={1}
             shutil.rmtree(dirname)
 
     def ask_enable_usage_report(self):
-        dialog = QtGui.QDialog()
+        dialog = QtWidgets.QDialog()
         dialog.setWindowTitle("Anonymous usage statistics")
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel("Send anonymous usage reports to the "
-                                      "developers?"))
-        dont_ask = QtGui.QCheckBox("Don't ask again")
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(QtWidgets.QLabel("Send anonymous usage reports to "
+                                          "the developers?"))
+        dont_ask = QtWidgets.QCheckBox("Don't ask again")
         layout.addWidget(dont_ask)
-        buttons = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Yes | QtWidgets.QDialogButtonBox.No)
         layout.addWidget(buttons)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         dialog.setLayout(layout)
 
         res = dialog.exec_()
-        if res == QtGui.QDialog.Accepted:
+        if res == QtWidgets.QDialog.Accepted:
             usage_report.enable_reporting()
         elif dont_ask.isChecked():
             usage_report.disable_reporting()
@@ -160,7 +160,7 @@ Icon={1}
                 self.first_window.deleteLater()
                 self.first_window = None
             return True
-        return QtGui.QApplication.event(self, event)
+        return QtWidgets.QApplication.event(self, event)
 
     def set_first_window(self, window):
         self.first_window = window
@@ -171,11 +171,13 @@ Icon={1}
             self.ask_enable_usage_report()
 
 
-class ReprounzipUi(QtGui.QMainWindow):
+class ReprounzipUi(QtWidgets.QMainWindow):
     def __init__(self, unpack={}, run={}, tab=None, **kwargs):
         super(ReprounzipUi, self).__init__(**kwargs)
 
-        self.tabs = QtGui.QTabWidget()
+        self.setWindowTitle("ReproUnzip")
+
+        self.tabs = QtWidgets.QTabWidget()
         self.tabs.addTab(UnpackTab(**unpack), "Open package")
         self.tabs.addTab(RunTab(**run), "Run unpacked experiment")
         self.tabs.widget(0).unpacked.connect(self._unpacked)

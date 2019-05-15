@@ -5,7 +5,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import os
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 import subprocess
 
 import reprounzip_qt.reprounzip_interface as reprounzip
@@ -14,15 +14,15 @@ from reprounzip_qt.gui.common import ROOT, ResizableStack, \
 from reprounzip_qt.usage import record_usage
 
 
-class UnpackerOptions(QtGui.QWidget):
+class UnpackerOptions(QtWidgets.QWidget):
     def __init__(self):
         super(UnpackerOptions, self).__init__()
-        self.setLayout(QtGui.QGridLayout())
+        self.setLayout(QtWidgets.QGridLayout())
 
     def add_row(self, label, widget):
         layout = self.layout()
         row = layout.rowCount()
-        layout.addWidget(QtGui.QLabel(label), row, 0)
+        layout.addWidget(QtWidgets.QLabel(label), row, 0)
         layout.addWidget(widget, row, 1)
 
     def options(self):
@@ -33,7 +33,7 @@ class DirectoryOptions(UnpackerOptions):
     def __init__(self):
         super(DirectoryOptions, self).__init__()
         self.layout().addWidget(
-            QtGui.QLabel("(directory unpacker has no option)"),
+            QtWidgets.QLabel("(directory unpacker has no option)"),
             0, 0, 1, 2)
 
 
@@ -41,15 +41,15 @@ class ChrootOptions(UnpackerOptions):
     def __init__(self):
         super(ChrootOptions, self).__init__()
 
-        self.root = QtGui.QComboBox(editable=False)
+        self.root = QtWidgets.QComboBox(editable=False)
         self.root.addItems(ROOT.TEXT)
         self.add_row("Elevate privileges:", self.root)
 
-        self.preserve_owner = QtGui.QCheckBox("enabled", tristate=True)
+        self.preserve_owner = QtWidgets.QCheckBox("enabled", tristate=True)
         self.preserve_owner.setCheckState(QtCore.Qt.PartiallyChecked)
         self.add_row("Preserve file ownership:", self.preserve_owner)
 
-        self.magic_dirs = QtGui.QCheckBox(
+        self.magic_dirs = QtWidgets.QCheckBox(
             "mount /dev and /proc inside the chroot", tristate=True)
         self.magic_dirs.setCheckState(QtCore.Qt.PartiallyChecked)
         self.add_row("Mount magic dirs:", self.magic_dirs)
@@ -80,7 +80,7 @@ class DockerOptions(UnpackerOptions):
     def __init__(self):
         super(DockerOptions, self).__init__()
 
-        self.root = QtGui.QComboBox(editable=False)
+        self.root = QtWidgets.QComboBox(editable=False)
         self.root.addItems(ROOT.TEXT)
         self.add_row("Elevate privileges:", self.root)
 
@@ -90,7 +90,7 @@ class DockerOptions(UnpackerOptions):
             out, _ = query.communicate()
             if query.returncode != 0:
                 raise subprocess.CalledProcessError(query.returncode, cmd)
-            self.machine = QtGui.QComboBox(editable=False)
+            self.machine = QtWidgets.QComboBox(editable=False)
             if 'DOCKER_HOST' in os.environ:
                 self.machine.addItem("Custom config from environment", None)
             else:
@@ -104,19 +104,19 @@ class DockerOptions(UnpackerOptions):
                     nb_machines += 1
             record_usage(docker_machines=nb_machines)
         except (OSError, subprocess.CalledProcessError):
-            self.machine = QtGui.QComboBox(editable=False, enabled=False)
+            self.machine = QtWidgets.QComboBox(editable=False, enabled=False)
             self.machine.addItem("docker-machine unavailable", None)
             record_usage(docker_machines=False)
         self.add_row("docker-machine:", self.machine)
 
-        self.image = QtGui.QLineEdit(placeholderText='detect')
+        self.image = QtWidgets.QLineEdit(placeholderText='detect')
         self.add_row("Base image:", self.image)
 
-        self.distribution = QtGui.QLineEdit(placeholderText='detect')
+        self.distribution = QtWidgets.QLineEdit(placeholderText='detect')
         self.add_row("Distribution:", self.distribution)
 
-        self.install_pkgs = QtGui.QCheckBox("install packages rather than "
-                                            "extracting them from RPZ")
+        self.install_pkgs = QtWidgets.QCheckBox("install packages rather than "
+                                                "extracting them from RPZ")
         self.add_row("Install packages:", self.install_pkgs)
 
     def options(self):
@@ -152,31 +152,33 @@ class VagrantOptions(UnpackerOptions):
     def __init__(self):
         super(VagrantOptions, self).__init__()
 
-        self.image = QtGui.QLineEdit(placeholderText='detect')
+        self.image = QtWidgets.QLineEdit(placeholderText='detect')
         self.add_row("Base box:", self.image)
 
-        self.distribution = QtGui.QLineEdit(placeholderText='detect')
+        self.distribution = QtWidgets.QLineEdit(placeholderText='detect')
         self.add_row("Distribution:", self.distribution)
 
-        self.memory = QtGui.QSpinBox(suffix="MB", minimum=99, maximum=64000,
-                                     specialValueText="(default)", value=99)
+        self.memory = QtWidgets.QSpinBox(suffix="MB",
+                                         minimum=99, maximum=64000, value=99,
+                                         specialValueText="(default)")
         self.add_row("Memory:", self.memory)
 
-        self.gui = QtGui.QCheckBox("Enable local GUI")
+        self.gui = QtWidgets.QCheckBox("Enable local GUI")
         self.add_row("GUI:", self.gui)
 
-        self.ports = QtGui.QLineEdit(
+        self.ports = QtWidgets.QLineEdit(
             '',
             toolTip="Space-separated host:guest port mappings")
         self.add_row("Expose ports:", self.ports)
 
-        self.use_chroot = QtGui.QCheckBox("use chroot and prefer packed files "
-                                          "over the virtual machines' files",
-                                          checked=True)
+        self.use_chroot = QtWidgets.QCheckBox(
+            "use chroot and prefer packed files over the virtual machines' "
+            "files",
+            checked=True)
         self.add_row("Chroot:", self.use_chroot)
 
-        self.magic_dirs = QtGui.QCheckBox("mount /dev and /proc inside the "
-                                          "chroot", checked=True)
+        self.magic_dirs = QtWidgets.QCheckBox("mount /dev and /proc inside "
+                                              "the chroot", checked=True)
         self.add_row("Mount magic dirs:", self.magic_dirs)
 
     def options(self):
@@ -218,7 +220,7 @@ class VagrantOptions(UnpackerOptions):
         return options
 
 
-class UnpackTab(QtGui.QWidget):
+class UnpackTab(QtWidgets.QWidget):
     """The unpack window, that sets up a .RPZ file in a directory.
     """
     UNPACKERS = [
@@ -228,35 +230,36 @@ class UnpackTab(QtGui.QWidget):
         ('vagrant', VagrantOptions),
     ]
 
-    unpacked = QtCore.pyqtSignal(str, object)
+    unpacked = QtCore.Signal(str, object)
 
     def __init__(self, package='', **kwargs):
         super(UnpackTab, self).__init__(**kwargs)
 
-        layout = QtGui.QGridLayout()
-        layout.addWidget(QtGui.QLabel("RPZ package:"), 0, 0)
-        self.package_widget = QtGui.QLineEdit(package, enabled=False)
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(QtWidgets.QLabel("RPZ package:"), 0, 0)
+        self.package_widget = QtWidgets.QLineEdit(package, enabled=False)
         layout.addWidget(self.package_widget, 0, 1)
-        browse_pkg = QtGui.QPushButton("Browse")
+        browse_pkg = QtWidgets.QPushButton("Browse")
         browse_pkg.clicked.connect(self._browse_pkg)
         layout.addWidget(browse_pkg, 0, 2)
 
-        layout.addWidget(QtGui.QLabel("Unpacker:"), 1, 0,
+        layout.addWidget(QtWidgets.QLabel("Unpacker:"), 1, 0,
                          QtCore.Qt.AlignTop)
-        ulayout = QtGui.QVBoxLayout()
-        self.unpackers = QtGui.QButtonGroup()
+        ulayout = QtWidgets.QVBoxLayout()
+        self.unpackers = QtWidgets.QButtonGroup()
         for i, name in enumerate(n for n, c in self.UNPACKERS):
-            radio = QtGui.QRadioButton(name)
+            radio = QtWidgets.QRadioButton(name)
+            radio.unpacker = name
             self.unpackers.addButton(radio, i)
             ulayout.addWidget(radio)
         layout.addLayout(ulayout, 1, 1, 1, 2)
 
-        group = QtGui.QGroupBox(title="Unpacker options")
-        group_layout = QtGui.QVBoxLayout()
+        group = QtWidgets.QGroupBox(title="Unpacker options")
+        group_layout = QtWidgets.QVBoxLayout()
         self.unpacker_options = ResizableStack()
         self.unpackers.buttonClicked[int].connect(
             self.unpacker_options.setCurrentIndex)
-        scroll = QtGui.QScrollArea(widgetResizable=True)
+        scroll = QtWidgets.QScrollArea(widgetResizable=True)
         scroll.setWidget(self.unpacker_options)
         group_layout.addWidget(scroll)
         group.setLayout(group_layout)
@@ -267,22 +270,22 @@ class UnpackTab(QtGui.QWidget):
             widget = WidgetClass()
             self.unpacker_options.addWidget(widget)
 
-        self.unpacker_options.addWidget(QtGui.QLabel("Select an unpacker to "
-                                                     "display options..."))
+        self.unpacker_options.addWidget(
+            QtWidgets.QLabel("Select an unpacker to display options..."))
         self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
-        layout.addWidget(QtGui.QLabel("Destination directory:"), 3, 0)
-        self.directory_widget = QtGui.QLineEdit()
+        layout.addWidget(QtWidgets.QLabel("Destination directory:"), 3, 0)
+        self.directory_widget = QtWidgets.QLineEdit()
         self.directory_widget.editingFinished.connect(self._directory_changed)
         layout.addWidget(self.directory_widget, 3, 1)
-        browse_dir = QtGui.QPushButton("Browse")
+        browse_dir = QtWidgets.QPushButton("Browse")
         browse_dir.clicked.connect(self._browse_dir)
         layout.addWidget(browse_dir, 3, 2)
 
-        buttons = QtGui.QHBoxLayout()
+        buttons = QtWidgets.QHBoxLayout()
         buttons.addStretch(1)
-        self.unpack_widget = QtGui.QPushButton("Unpack experiment",
-                                               enabled=False)
+        self.unpack_widget = QtWidgets.QPushButton("Unpack experiment",
+                                                   enabled=False)
         self.unpack_widget.clicked.connect(self._unpack)
         buttons.addWidget(self.unpack_widget)
         layout.addLayout(buttons, 4, 0, 1, 3)
@@ -295,7 +298,7 @@ class UnpackTab(QtGui.QWidget):
         return not self.package_widget.text()
 
     def _browse_pkg(self):
-        picked = QtGui.QFileDialog.getOpenFileName(
+        picked, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Pick package file",
             QtCore.QDir.currentPath(), "ReproZip Packages (*.rpz)")
         if picked:
@@ -310,7 +313,7 @@ class UnpackTab(QtGui.QWidget):
             self._directory_changed()
 
     def _browse_dir(self):
-        picked = QtGui.QFileDialog.getSaveFileName(
+        picked, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Pick directory",
             QtCore.QDir.currentPath())
         if picked:
@@ -335,7 +338,7 @@ class UnpackTab(QtGui.QWidget):
                 return
             if handle_error(self, reprounzip.unpack(
                     self.package_widget.text(),
-                    unpacker.text(),
+                    unpacker.unpacker,
                     directory,
                     options)):
                 self.unpacked.emit(os.path.abspath(directory),

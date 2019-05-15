@@ -11,13 +11,13 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-qt',
-      version='1.0.15',
+      version='1.0.16',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       package_data={'reprounzip_qt': ['icon.png']},
       entry_points={
           'gui_scripts': [
               'reprounzip-qt = reprounzip_qt.main:main']},
-      install_requires=['PyYAML', 'reprounzip>=1.0'],
+      install_requires=['PyYAML', 'qtpy', 'reprounzip>=1.0'],
       description="Graphical user interface for reprounzip, using Qt",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='reprozip-users@vgc.poly.edu',

@@ -31,6 +31,7 @@ requirements:
   run:
     - python
     - setuptools  # for pkg_resources
+    - distro
     - pyyaml
     - requests
     - rpaths >=0.8

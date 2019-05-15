@@ -17,15 +17,6 @@ from reprounzip_qt.usage import record_usage, submit_usage_report
 logger = logging.getLogger('reprounzip_qt')
 
 
-def qt_init():
-    import sip
-
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-
-    from PyQt4 import QtGui  # noqa
-
-
 def main():
     """Entry point when called on the command-line.
     """
@@ -52,8 +43,6 @@ def main():
     args = parser.parse_args(argv)
 
     setup_logging('REPROUNZIP-QT', args.verbosity)
-
-    qt_init()
 
     from reprounzip_qt.gui import Application, ReprounzipUi
 
