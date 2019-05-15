@@ -180,8 +180,8 @@ _bundled_parameters = {
                 ],
                 "default": {
                     "distribution": "ubuntu",
-                    "image": "ubuntu:18.04",
-                    "name": "Ubuntu 18.04 'Bionic'"
+                    "image": "ubuntu:19.04",
+                    "name": "Ubuntu 19.04 'Disco'"
                 }
             },
             "debian": {
@@ -418,6 +418,14 @@ _bundled_parameters = {
                             "x86_64": "bento/ubuntu-18.10"
                         },
                         "name": "Ubuntu 18.10 'Cosmic'"
+                    },
+                    {
+                        "version": "^19\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "x86_64": "ubuntu/disco64"
+                        },
+                        "name": "Ubuntu 19.04 'Disco'"
                     }
                 ],
                 "default": {
@@ -618,7 +626,7 @@ _bundled_parameters = {
                     "distribution": "fedora",
                     "architectures": {
                         "i686": "remram/fedora-24-i386",
-                        "x86_64": "remram/fedora-29-amd64"
+                        "x86_64": "bento/fedora-29"
                     },
                     "name": "Fedora"
                 }

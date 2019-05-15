@@ -35,7 +35,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Ubuntu', '14.10'),
                          ('ubuntu', 'ubuntu:14.10'))
         self.assertEqual(get('x86_64', 'Ubuntu', '1.1'),
-                         ('ubuntu', 'ubuntu:18.04'))
+                         ('ubuntu', 'ubuntu:19.04'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
         self.assertEqual(get('x86_64', 'Arch', '2015.06.01'),
                          ('debian', 'debian:stretch'))
