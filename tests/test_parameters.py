@@ -62,7 +62,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('x86_64', 'Debian', '1'),
                          ('debian', 'remram/debian-8-amd64'))
         self.assertEqual(get('x86_64', 'CentOS', '1'),
-                         ('centos', 'bento/centos-7.6'))
+                         ('centos', 'centos/7'))
         self.assertEqual(get('x86_64', 'Fedora', '22'),
                          ('fedora', 'remram/fedora-22-amd64'))
         self.assertEqual(get('x86_64', 'Fedora', '22', gui=True),

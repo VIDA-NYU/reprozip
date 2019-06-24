@@ -506,24 +506,24 @@ _bundled_parameters = {
                         "distribution": "centos",
                         "architectures": {
                             "i686": "bento/centos-6.10-i386",
-                            "x86_64": "bento/centos-6.10"
+                            "x86_64": "centos/6"
                         },
-                        "name": "CentOS 6.10"
+                        "name": "CentOS 6"
                     },
                     {
                         "version": "^7\\.",
                         "distribution": "centos",
                         "architectures": {
-                            "x86_64": "bento/centos-7.6"
+                            "x86_64": "centos/7"
                         },
-                        "name": "CentOS 7.6"
+                        "name": "CentOS 7"
                     }
                 ],
                 "default": {
                     "distribution": "centos",
                     "architectures": {
                         "i686": "bento/centos-6.10-i386",
-                        "x86_64": "bento/centos-7.6"
+                        "x86_64": "centos/7"
                     },
                     "name": "CentOS"
                 }
@@ -544,24 +544,24 @@ _bundled_parameters = {
                         "distribution": "centos",
                         "architectures": {
                             "i686": "bento/centos-6.10-i386",
-                            "x86_64": "bento/centos-6.10"
+                            "x86_64": "centos/6"
                         },
-                        "name": "CentOS 6.10"
+                        "name": "CentOS 6"
                     },
                     {
                         "version": "^7\\.",
                         "distribution": "centos",
                         "architectures": {
-                            "x86_64": "bento/centos-7.6"
+                            "x86_64": "centos/7"
                         },
-                        "name": "CentOS 7.6"
+                        "name": "CentOS 7"
                     }
                 ],
                 "default": {
                     "distribution": "centos",
                     "architectures": {
                         "i686": "bento/centos-6.10-i386",
-                        "x86_64": "bento/centos-7.6"
+                        "x86_64": "centos/7"
                     },
                     "name": "CentOS"
                 }
