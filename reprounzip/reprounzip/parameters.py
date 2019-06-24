@@ -334,8 +334,8 @@ _bundled_parameters = {
                         "version": "^12\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "hashicorp/precise32",
-                            "x86_64": "hashicorp/precise64"
+                            "i686": "ubuntu/precise32",
+                            "x86_64": "ubuntu/precise64"
                         },
                         "name": "Ubuntu 12.04 'Precise'"
                     },
@@ -370,8 +370,8 @@ _bundled_parameters = {
                         "version": "^16\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "bento/ubuntu-16.04-i386",
-                            "x86_64": "bento/ubuntu-16.04"
+                            "i686": "ubuntu/xenial32",
+                            "x86_64": "ubuntu/xenial64"
                         },
                         "name": "Ubuntu 16.04 'Xenial'"
                     },
@@ -379,8 +379,8 @@ _bundled_parameters = {
                         "version": "^16\\.10$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "bento/ubuntu-16.10-i386",
-                            "x86_64": "bento/ubuntu-16.10"
+                            "i686": "ubuntu/yakkety32",
+                            "x86_64": "ubuntu/yakkety64"
                         },
                         "name": "Ubuntu 16.10 'Yakkety'"
                     },
@@ -388,8 +388,8 @@ _bundled_parameters = {
                         "version": "^17\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "bento/ubuntu-17.04-i386",
-                            "x86_64": "bento/ubuntu-17.04"
+                            "i686": "ubuntu/zesty32",
+                            "x86_64": "ubuntu/zesty64"
                         },
                         "name": "Ubuntu 17.04 'Zesty'"
                     },
@@ -397,8 +397,8 @@ _bundled_parameters = {
                         "version": "^17\\.10$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "bento/ubuntu-17.10-i386",
-                            "x86_64": "bento/ubuntu-17.10"
+                            "i686": "ubuntu/artful32",
+                            "x86_64": "ubuntu/artful64"
                         },
                         "name": "Ubuntu 17.10 'Artful'"
                     },
@@ -407,7 +407,7 @@ _bundled_parameters = {
                         "distribution": "ubuntu",
                         "architectures": {
                             "i686": "bento/ubuntu-18.04-i386",
-                            "x86_64": "bento/ubuntu-18.04"
+                            "x86_64": "ubuntu/bionic64"
                         },
                         "name": "Ubuntu 18.04 'Bionic'"
                     },
@@ -415,7 +415,7 @@ _bundled_parameters = {
                         "version": "^18\\.10$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "x86_64": "bento/ubuntu-18.10"
+                            "x86_64": "ubuntu/cosmic64"
                         },
                         "name": "Ubuntu 18.10 'Cosmic'"
                     },
@@ -432,7 +432,7 @@ _bundled_parameters = {
                     "distribution": "ubuntu",
                     "architectures": {
                         "i686": "bento/ubuntu-18.04-i386",
-                        "x86_64": "bento/ubuntu-18.04"
+                        "x86_64": "ubuntu/bionic64"
                     },
                     "name": "Ubuntu 18.04 'Bionic'"
                 }

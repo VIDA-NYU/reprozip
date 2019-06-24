@@ -53,7 +53,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(get('i686', 'Ubuntu', '14.04'),
                          ('ubuntu', 'ubuntu/trusty32'))
         self.assertEqual(get('x86_64', 'Ubuntu', '12.04'),
-                         ('ubuntu', 'hashicorp/precise64'))
+                         ('ubuntu', 'ubuntu/precise64'))
         self.assertEqual(get('i686', 'Ubuntu', '1.1'),
                          ('ubuntu', 'bento/ubuntu-18.04-i386'))
         self.assertRaises(SystemExit, get, 'armv7', 'Debian', '8.2')
