@@ -599,7 +599,7 @@ _bundled_parameters = {
                         "version": "^25$",
                         "distribution": "fedora",
                         "architectures": {
-                            "x86_64": "bento/fedora-25"
+                            "x86_64": "fedora/25-cloud-base"
                         },
                         "name": "Fedora 25"
                     },
@@ -607,7 +607,7 @@ _bundled_parameters = {
                         "version": "^26$",
                         "distribution": "fedora",
                         "architectures": {
-                            "x86_64": "bento/fedora-26"
+                            "x86_64": "fedora/26-cloud-base"
                         },
                         "name": "Fedora 26"
                     },
@@ -615,7 +615,7 @@ _bundled_parameters = {
                         "version": "^27$",
                         "distribution": "fedora",
                         "architectures": {
-                            "x86_64": "bento/fedora-27"
+                            "x86_64": "fedora/27-cloud-base"
                         },
                         "name": "Fedora 27"
                     },
@@ -623,7 +623,7 @@ _bundled_parameters = {
                         "version": "^28$",
                         "distribution": "fedora",
                         "architectures": {
-                            "x86_64": "bento/fedora-28"
+                            "x86_64": "fedora/28-cloud-base"
                         },
                         "name": "Fedora 28"
                     },
@@ -631,7 +631,7 @@ _bundled_parameters = {
                         "version": "^29$",
                         "distribution": "fedora",
                         "architectures": {
-                            "x86_64": "bento/fedora-29"
+                            "x86_64": "fedora/29-cloud-base"
                         },
                         "name": "Fedora 29"
                     }
@@ -640,7 +640,7 @@ _bundled_parameters = {
                     "distribution": "fedora",
                     "architectures": {
                         "i686": "remram/fedora-24-i386",
-                        "x86_64": "bento/fedora-29"
+                        "x86_64": "fedora/29-cloud-base"
                     },
                     "name": "Fedora"
                 }
