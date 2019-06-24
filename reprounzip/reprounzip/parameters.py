@@ -176,6 +176,12 @@ _bundled_parameters = {
                         "distribution": "ubuntu",
                         "image": "ubuntu:19.04",
                         "name": "Ubuntu 19.04 'Disco'"
+                    },
+                    {
+                        "version": "^19\\.10$",
+                        "distribution": "ubuntu",
+                        "image": "ubuntu:19.10",
+                        "name": "Ubuntu 19.10 'Eoan'"
                     }
                 ],
                 "default": {
@@ -426,6 +432,14 @@ _bundled_parameters = {
                             "x86_64": "ubuntu/disco64"
                         },
                         "name": "Ubuntu 19.04 'Disco'"
+                    },
+                    {
+                        "version": "^19\\.10$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "x86_64": "ubuntu/eoan64"
+                        },
+                        "name": "Ubuntu 19.10 'Eoan'"
                     }
                 ],
                 "default": {
