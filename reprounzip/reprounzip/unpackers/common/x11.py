@@ -71,7 +71,7 @@ class Xauth(object):
         address_length = _read_short(fp)
         address = fp.read(address_length)
         number_length = _read_short(fp)
-        number = int(fp.read(number_length))
+        number = int(fp.read(number_length)) if number_length else None
         name_length = _read_short(fp)
         name = fp.read(name_length)
         data_length = _read_short(fp)
@@ -161,7 +161,7 @@ class X11Handler(BaseX11Handler):
                                            entry.address)] = entry
         # FIXME: this completely ignores addresses
 
-        logger.debug("Possible X endpoints: %s", (possible,))
+        logger.debug("Possible X endpoints: %s", possible)
 
         # Select socket and authentication cookie
         self.xauth_record = None
