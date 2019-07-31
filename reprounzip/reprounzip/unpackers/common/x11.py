@@ -71,7 +71,7 @@ class Xauth(object):
         address_length = _read_short(fp)
         address = fp.read(address_length)
         number_length = _read_short(fp)
-        number = int(fp.read(number_length))
+        number = int(fp.read(number_length)) if number_length else None
         name_length = _read_short(fp)
         name = fp.read(name_length)
         data_length = _read_short(fp)
@@ -168,14 +168,18 @@ class X11Handler(BaseX11Handler):
                     if (entry.name == 'MIT-MAGIC-COOKIE-1' and
                             entry.number == local_display):
                         if entry.family == Xauth.FAMILY_LOCAL:
+                            logger.debug("Found cookie for local connection")
                             xauth_entries[(entry.family, None)] = entry
                         elif (entry.family == Xauth.FAMILY_INTERNET or
                                 entry.family == Xauth.FAMILY_INTERNET6):
+                            logger.debug("Found cookie for %r",
+                                         (entry.family, entry.address))
                             xauth_entries[(entry.family,
                                            entry.address)] = entry
-        # FIXME: this completely ignores addresses
+        else:
+            logger.debug("No Xauthority file")
 
-        logger.debug("Possible X endpoints: %s", (possible,))
+        logger.debug("Possible X endpoints: %s", possible)
 
         # Select socket and authentication cookie
         self.xauth_record = None
@@ -209,6 +213,7 @@ class X11Handler(BaseX11Handler):
         # Didn't find an Xauthority record -- assume no authentication is
         # needed, but still set self.connection_info
         if self.connection_info is None:
+            logger.debug("Didn't find any matching Xauthority entry")
             for family, address in possible:
                 # Only try UNIX sockets, we'll use 127.0.0.1 otherwise
                 if family == Xauth.FAMILY_LOCAL:

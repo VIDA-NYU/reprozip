@@ -15,12 +15,12 @@ after_success: .travis/finish.sh
 matrix:
   include:
     - dist: trusty
-      python: "2.7"
+      python: "3.6"
       env: TEST_MODE=checks
     - dist: trusty
-      python: "2.7"
+      python: "3.6"
       env: TEST_MODE=coverage
   exclude:
     # This is already tested by coverage
-    - python: "2.7"
+    - python: "3.6"
       env: TEST_MODE=run_program
