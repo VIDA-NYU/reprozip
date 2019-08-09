@@ -634,13 +634,21 @@ _bundled_parameters = {
                             "x86_64": "fedora/29-cloud-base"
                         },
                         "name": "Fedora 29"
+                    },
+                    {
+                        "version": "^30$",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "fedora/30-cloud-base"
+                        },
+                        "name": "Fedora 30"
                     }
                 ],
                 "default": {
                     "distribution": "fedora",
                     "architectures": {
                         "i686": "remram/fedora-24-i386",
-                        "x86_64": "fedora/29-cloud-base"
+                        "x86_64": "fedora/30-cloud-base"
                     },
                     "name": "Fedora"
                 }
