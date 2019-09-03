@@ -224,7 +224,7 @@ def docker_setup_create(args):
             data_files = rpz_pack.data_filenames()
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
-                if f.path.name == 'resolv.conf' and (
+                if f.path.unicodename in ('resolv.conf', 'hosts') and (
                         f.path.lies_under('/etc') or
                         f.path.lies_under('/run') or
                         f.path.lies_under('/var')):
@@ -236,7 +236,8 @@ def docker_setup_create(args):
                         continue
                     paths.add(path)
                     if path in data_files:
-                        pathlist.append(path)
+                        if path != '/etc':
+                            pathlist.append(path)
                     else:
                         logger.info("Missing file %s", path)
             rpz_pack.close()
