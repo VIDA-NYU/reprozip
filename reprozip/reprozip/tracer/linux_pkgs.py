@@ -29,7 +29,7 @@ logger = logging.getLogger('reprozip')
 
 
 magic_dirs = ('/dev', '/proc', '/sys')
-system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var')
+system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var', '/run')
 
 
 class PkgManager(object):
