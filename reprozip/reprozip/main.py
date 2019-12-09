@@ -62,6 +62,7 @@ def shell_escape(s):
 def print_db(database):
     """Prints out database content.
     """
+    assert database.is_file()
     if PY3:
         # On PY3, connect() only accepts unicode
         conn = sqlite3.connect(str(database))

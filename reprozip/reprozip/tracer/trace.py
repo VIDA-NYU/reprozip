@@ -370,6 +370,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
     """
     database = directory / 'trace.sqlite3'
 
+    assert database.is_file()
     if PY3:
         # On PY3, connect() only accepts unicode
         conn = sqlite3.connect(str(database))

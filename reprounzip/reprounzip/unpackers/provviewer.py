@@ -49,6 +49,7 @@ def generate(target, configfile, database):
 
     has_thread_flag = config.format_version >= LooseVersion('0.7')
 
+    assert database.is_file()
     if PY3:
         # On PY3, connect() only accepts unicode
         conn = sqlite3.connect(str(database))
