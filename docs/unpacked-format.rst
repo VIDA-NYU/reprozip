@@ -7,7 +7,7 @@ While *reprounzip* is designed to allow users to reproduce an experiment without
 
 This page describes in more details how the unpackers operate.
 
-..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*. Packages will always be compatible though.
+..  note:: Future versions of unpackers might work in a different way. No attempt is made to make unpacked experiments compatible across different versions of *reprounzip*. Bundles will always be compatible though.
 
 ..  _unpacked-common:
 
@@ -32,7 +32,7 @@ The experiment directory contains:
 * The original configuration file ``config.yml``.
 * The pickle file ``.reprounzip``.
 * The tarball ``inputs.tar.gz``, which contains the original files that were identifies as input files. This tarball is used for file restoration using ``upload :<input-id>`` (see :ref:`unpacker-input-output`).
-* A directory called ``root``, which contains all the packaged files in their original path, with symbolic links to absolute paths rewritten to prepend the path to ``root``.
+* A directory called ``root``, which contains all the bundled files in their original path, with symbolic links to absolute paths rewritten to prepend the path to ``root``.
 
 ::
 
@@ -55,7 +55,7 @@ The experiment directory contains:
 * The original configuration file ``config.yml``.
 * The pickle file ``.reprounzip``, which stores whether magic directories are mounted, as explained below.
 * The tarball ``inputs.tar.gz``, which contains the original files that were identifies as input files. This tarball is used for file restoration using ``upload :<input-id>`` (see :ref:`unpacker-input-output`).
-* A directory called ``root``, which contains all the packaged files in their original path, with no symbolic links rewritten and file ownership restored.
+* A directory called ``root``, which contains all the bundled files in their original path, with no symbolic links rewritten and file ownership restored.
 
 ::
 

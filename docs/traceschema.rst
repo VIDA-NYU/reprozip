@@ -12,7 +12,7 @@ This table contains information about all the processes. A process is identified
 
 Note that processes are different from programs, and there is no one-to-one relationship with executions. A process is created by `clone(2) <https://linux.die.net/man/2/clone>`__ or `fork(2) <https://linux.die.net/man/2/fork>`__ and not necessarily followed by `execve(2) <https://linux.die.net/man/2/execve>`__. By contrast, a program can change its image by calling execve(2) without creating new processes (i.e., without changing *pid*).
 
-Each entry in the ``processes`` table has the id of its parent, i.e. the process that created it by calling clone(2) or fork(2), except the original process that *reprozip* created, for which parent is NULL. There is thus exactly one process with a NULL parent per run stored in the pack.
+Each entry in the ``processes`` table has the id of its parent, i.e. the process that created it by calling clone(2) or fork(2), except the original process that *reprozip* created, for which parent is NULL. There is thus exactly one process with a NULL parent per run stored in the bundle.
 
 ::
 
