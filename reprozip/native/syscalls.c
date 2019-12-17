@@ -433,7 +433,8 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                  "Linux will not give the process any "
                                  "privileges from set-uid while it is being "
                                  "traced. This will probably break whatever "
-                                 "you are tracing.");
+                                 "you are tracing. Executable: %s",
+                                 exec_target);
                     }
                     else
                     {
@@ -481,7 +482,8 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                  "Linux will not give the process any "
                                  "privileges from set-gid while it is being "
                                  "traced. This will probably break whatever "
-                                 "you are tracing.");
+                                 "you are tracing. Executable: %s",
+                                 exec_target);
                     }
                     else
                     {

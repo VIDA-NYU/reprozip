@@ -299,6 +299,7 @@ def read_events(database, all_forks, has_thread_flag, has_exit_timestamp):
     # doesn't do anything worth showing on the graph, it will be erased, unless
     # all_forks is True (--all-forks).
 
+    assert database.is_file()
     if PY3:
         # On PY3, connect() only accepts unicode
         conn = sqlite3.connect(str(database))

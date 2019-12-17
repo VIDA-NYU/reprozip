@@ -12,6 +12,19 @@ Continuous testing is provided by `Travis CI <https://travis-ci.org/ViDA-NYU/rep
 
 If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `dev@reprozip.org <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__.
 
+Introduction to ReproZip
+------------------------
+
+ReproZip works in two steps: tracing and packing. Under the hood, tracing is two separate steps, leading to the following workflow:
+
+* Running the experiment under trace. During this part, the experiment is running, and the ``_pytracer`` C extension watches it through the `ptrace` mechanism, recording information in the trace SQLite3 database (``.reprozip-trace/trace.sqlite3``). This database contains raw information as it is recorded and does little else, leaving that to the next step. This part is referred to as the "C tracer".
+* After the experiment is done, some additional information is computed by the Python code to generate the configuration file, by looking at the trace database and the filesystem. For example, all accesses to a file are aggregated to decide if it is read or written by the overall experiment, if it is an input or output file, resolve symlinks, etc. Additional information is written such as OS information and which distribution package each file comes from.
+* Packing reads the configuration file to create the ``.rpz`` bundle, which includes a configuration file (re-written into a "canonical" version), the trace database (though it is not read at this step), and the files listed in the configuration which was possibly altered by the user.
+
+Therefore it is important to note that the configuration file and the trace database contain distinct information, and although the configuration is inferred from the database, it contains some additional details that was obtained from the original machine afterwards.
+
+Only the configuration file should be necessary to run unpackers. The trace database is included for information, and to support additional commands like ``reprounzip graph`` (:ref:`graph`).
+
 Writing Unpackers
 -----------------
 

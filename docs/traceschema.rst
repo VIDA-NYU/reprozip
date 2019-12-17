@@ -18,8 +18,10 @@ Each entry in the ``processes`` table has the id of its parent, i.e. the process
 
     CREATE TABLE processes(
         id INTEGER NOT NULL PRIMARY KEY,
+        run_id INTEGER NOT NULL,
         parent INTEGER,
         timestamp INTEGER NOT NULL,
+        is_thread BOOLEAN NOT NULL,
         exitcode INTEGER
         );
 
@@ -34,6 +36,7 @@ Each file has a numerical id, the canonical path name, the process that accessed
 
     CREATE TABLE opened_files(
         id INTEGER NOT NULL PRIMARY KEY,
+        run_id INTEGER NOT NULL,
         name TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
         mode INTEGER NOT NULL,
@@ -59,6 +62,7 @@ This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http
     CREATE TABLE executed_files(
         id INTEGER NOT NULL PRIMARY KEY,
         name TEXT NOT NULL,
+        run_id INTEGER NOT NULL,
         timestamp INTEGER NOT NULL,
         process INTEGER NOT NULL,
         argv TEXT NOT NULL,
