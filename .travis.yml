@@ -7,7 +7,7 @@ env:
   - TEST_MODE=run_program
 python:
   - "2.7"
-  - "3.4"
+  - "3.5"
   - "3.6"
 install: .travis/install.sh
 script: .travis/test.sh
