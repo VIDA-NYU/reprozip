@@ -536,7 +536,7 @@ def docker_run(args):
         logger.critical("docker run failed with code %d", retcode)
         subprocess.call(['docker', 'rm', '-f', container])
         sys.exit(1)
-    outjson = json.loads(out.decode('ascii'))
+    outjson = json.loads(out.decode('utf-8'))
     if (outjson[0]["State"]["Running"] is not False or
             outjson[0]["State"]["Paused"] is not False):
         logger.error("Invalid container state after execution:\n%s",
