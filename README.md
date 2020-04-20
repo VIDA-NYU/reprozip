@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/VIDA-NYU/reprozip.svg?branch=1.0.x)](https://travis-ci.org/VIDA-NYU/reprozip)
+[![Build Status](https://github.com/VIDA-NYU/reprozip/workflows/Test/badge.svg)](https://github.com/VIDA-NYU/reprozip/actions)
 [![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=1.0.x)](https://codecov.io/github/VIDA-NYU/reprozip?branch=1.0.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)](https://docs.reprozip.org/en/1.0.x/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
