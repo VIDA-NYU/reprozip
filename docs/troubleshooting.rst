@@ -25,16 +25,12 @@ Please feel free to contact us at users@reprozip.org if you encounter issues whi
 
                $ reprozip trace service mysql start
 
-           you can trace either the `init` script::
-
-               $ reprozip trace /etc/init.d/mysql start
-
-           or the binary::
+           you can trace the binary::
 
                $ reprozip trace /usr/bin/mysqld
 
            Note that, if you choose to trace the binary, you need to figure out the right command line options to use.
-           Also, make sure that systemd is not called, since ReproZip and systemd currently do not get along well.
+           Also, note that running the init script in ``/etc/init.d/...`` is not enough, since those scripts get subverted to call `systemctl` when systemd is installed.
 
 ------------
 

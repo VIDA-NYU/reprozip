@@ -181,18 +181,27 @@ When reproducing an experiment that communicates with a server, the experiment w
 
 and use *reprozip* to trace the script execution, rather than the experiment itself. In this way, ReproZip is able to capture the local server as well, which ensures that the server will be alive at the time of the reproduction.
 
-For example, if you have an web app that uses PostgreSQL and that runs until ``Ctrl+C`` is received, you can use the following script::
+For example, if you have an web app that uses MySQL and that runs until ``Ctrl+C`` is received, you can use the following script::
 
     #!/bin/sh
 
-    /etc/init.d/postgresql start        # Start PostgreSQL
+    if [ "$(id -u)" != 0 ]; then echo "This script needs to run as root so that it can execute MySQL" >&2; exit 1; fi
 
-    trap ' ' INT                        # Don't exit the whole script on Ctrl+C
+    # Start MySQL
+    sudo -u mysql /usr/sbin/mysqld --pid-file=/run/mysqld/mysqld.pid &
+    sleep 5
+
+    # Don't exit the whole script on Ctrl+C
+    trap ' ' INT
+
+    # Execute actual experiment that uses the database
     ./manage.py runserver 0.0.0.0:8000
+
     trap - INT
 
-    /etc/init.d/postgresql stop         # Stop PostgreSQL
-    
+    # Graceful shutdown
+    /usr/bin/mysqladmin shutdown
+
 Note the use of ``trap`` to avoid exiting the entire script when pressing ``Ctrl+C``, to make sure that the database gets shutdown via the next command.
 
 Excluding Sensitive and Third-Party Information
