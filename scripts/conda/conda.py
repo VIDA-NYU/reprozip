@@ -67,8 +67,8 @@ def build_pkg(python_ver, package_name):
         with open(join(temp_dir, package_name, 'meta.yaml')) as fp:
             lines = fp.readlines()
         # Changes version in recipe
-        lines = [l.replace('_REPLACE_version_REPLACE_', version)
-                 for l in lines]
+        lines = [line.replace('_REPLACE_version_REPLACE_', version)
+                 for line in lines]
         with open(join(temp_dir, package_name, 'meta.yaml'), 'w') as fp:
             for line in lines:
                 # Changes version

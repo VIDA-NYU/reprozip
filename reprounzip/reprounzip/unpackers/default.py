@@ -210,11 +210,11 @@ def directory_run(args):
                          stderr=subprocess.PIPE)
     stdout, _ = p.communicate()
     try:
-        for l in stdout.splitlines():
-            if len(l) < 2 or l[0] in (b' ', b'\t'):
+        for line in stdout.splitlines():
+            if len(line) < 2 or line[0] in (b' ', b'\t'):
                 continue
-            if l.endswith(b':'):
-                lib_dirs.append(Path(l[:-1]))
+            if line.endswith(b':'):
+                lib_dirs.append(Path(line[:-1]))
     finally:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode,
