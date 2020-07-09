@@ -158,13 +158,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     #
 
     output = check_output(rpz + ['testrun', '/bin/echo', 'outputhere'])
-    assert any(b' 1 | /bin/echo outputhere ' in l
-               for l in output.splitlines())
+    assert any(b' 1 | /bin/echo outputhere ' in line
+               for line in output.splitlines())
 
     output = check_output(rpz + ['testrun', '-a', '/fake/path/echo',
                                  '/bin/echo', 'outputhere'])
-    assert any(b' 1 | (/bin/echo) /fake/path/echo outputhere ' in l
-               for l in output.splitlines())
+    assert any(b' 1 | (/bin/echo) /fake/path/echo outputhere ' in line
+               for line in output.splitlines())
 
     # ########################################
     # testrun multiple commands
@@ -494,8 +494,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     build('threads', ['threads.c'], ['-lpthread'])
     # Trace
     output = check_output(rpz + ['testrun', './threads'], 'err')
-    assert any(b'successfully exec\'d /bin/./echo' in l
-               for l in output.splitlines())
+    assert any(b'successfully exec\'d /bin/./echo' in line
+               for line in output.splitlines())
 
     # ########################################
     # 'threads2' program: testrun
@@ -505,8 +505,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     build('threads2', ['threads2.c'], ['-lpthread'])
     # Trace
     output = check_output(rpz + ['testrun', './threads2'], 'err')
-    assert any(b'successfully exec\'d /bin/echo' in l
-               for l in output.splitlines())
+    assert any(b'successfully exec\'d /bin/echo' in line
+               for line in output.splitlines())
 
     # ########################################
     # 'segv' program: testrun
@@ -579,9 +579,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Trace
     err = check_output(rpz + ['testrun', './connect'], 'err')
     err = err.split(b'\n')
-    assert not any(b'program exited with non-zero code' in l for l in err)
-    assert any(re.search(br'process connected to [0-9.]+:80', l)
-               for l in err)
+    assert not any(b'program exited with non-zero code' in line
+                   for line in err)
+    assert any(re.search(br'process connected to [0-9.]+:80', line)
+               for line in err)
 
     # ########################################
     # 'vfork' program: testrun
@@ -592,7 +593,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Trace
     err = check_output(rpz + ['testrun', './vfork'], 'err')
     err = err.split(b'\n')
-    assert not any(b'program exited with non-zero code' in l for l in err)
+    assert not any(b'program exited with non-zero code' in line
+                   for line in err)
 
     # ########################################
     # 'rename' program: trace
@@ -758,7 +760,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                 '94627ebfafbf81cd77a17d4ed646a80c94bf4202'],
                          'err')
     err = err.split(b'\n')
-    assert any(b'executing set-uid binary!' in l for l in err)
+    assert any(b'executing set-uid binary!' in line for line in err)
 
     # ########################################
     # Test set-gid warning
@@ -773,7 +775,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Pass a wrong username to su to make it exit without reading a password
     _, err = call_output(rpz + ['testrun', executable, '-l'], 'err')
     err = err.split(b'\n')
-    assert any(b'executing set-gid binary!' in l for l in err)
+    assert any(b'executing set-gid binary!' in line for line in err)
 
     # ########################################
     # Test old packages

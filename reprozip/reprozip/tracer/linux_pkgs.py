@@ -132,8 +132,8 @@ class DpkgManager(PkgManager):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             out, err = proc.communicate()
-            for l in out.splitlines():
-                pkgname, path = l.split(b': ', 1)
+            for line in out.splitlines():
+                pkgname, path = line.split(b': ', 1)
                 path = Path(path.strip())
                 # 8-bit safe encoding, because this might be a localized error
                 # message (that we don't care about)

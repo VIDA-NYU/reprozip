@@ -69,8 +69,8 @@ class AptInstaller(object):
         pkgs_dict = dict((pkg.name, (pkg, PKG_NOT_INSTALLED))
                          for pkg in packages)
         try:
-            for l in p.stdout:
-                fields = l.split()
+            for line in p.stdout:
+                fields = line.split()
                 if len(fields) == 2:
                     name = fields[0].decode('ascii')
                     status = fields[1].decode('ascii')
@@ -124,9 +124,9 @@ class YumInstaller(object):
         pkgs_dict = dict((pkg.name, (pkg, PKG_NOT_INSTALLED))
                          for pkg in packages)
         try:
-            for l in p.stdout:
-                if l[0] == b'+':
-                    fields = l[1:].split()
+            for line in p.stdout:
+                if line[0] == b'+':
+                    fields = line[1:].split()
                     if len(fields) == 2:
                         name = fields[0].decode('ascii')
                         status = fields[1].decode('ascii')

@@ -215,9 +215,9 @@ class TestFiles(unittest.TestCase):
                                   set(fi.path for fi in files))
             self.assertEqualPaths([set(["/some/r", "/some/rw"]),
                                    set(["/some/cli", "/some/r"])],
-                                  [set(l) for l in inputs])
+                                  [set(run) for run in inputs])
             self.assertEqualPaths([set(["/some/cli"]), set(["/some/rw"])],
-                                  [set(l) for l in outputs])
+                                  [set(run) for run in outputs])
         finally:
             Path.is_file, Path.stat = old
 

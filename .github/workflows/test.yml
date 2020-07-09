@@ -76,7 +76,6 @@ jobs:
                 ;;
             checks)
                 flake8 --ignore=E731,W504
-                find scripts -name '*.py' -exec flake8 {} +
                 diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
                 diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
                 find reprozip reprounzip reprozip-* reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
