@@ -7,8 +7,9 @@ from notebook.utils import url_path_join as ujoin
 from rpaths import Path
 import subprocess
 import sys
+from tornado.concurrent import Future
 from tornado.process import Subprocess
-from tornado.web import RequestHandler, asynchronous
+from tornado.web import RequestHandler
 
 
 try:
@@ -21,8 +22,8 @@ class TraceHandler(RequestHandler):
     def initialize(self, nbapp=None):
         self.nbapp = nbapp
         self._tempdir = None
+        self._future = None
 
-    @asynchronous
     def post(self):
         self._notebook_file = Path(self.get_body_argument('file'))
         name = self._notebook_file.unicodename
@@ -35,6 +36,7 @@ class TraceHandler(RequestHandler):
         self._tempdir = Path.tempdir()
         self.nbapp.log.info("reprozip: created temp directory %r",
                             self._tempdir)
+        self._future = Future()
         proc = Subprocess(
             [sys.executable, '-c',
              'from reprozip_jupyter.main import main; main()',
@@ -46,6 +48,7 @@ class TraceHandler(RequestHandler):
         proc.stdin.close()
         proc.set_exit_callback(self._trace_done)
         self.nbapp.log.info("reprozip: started tracing...")
+        return self._future
 
     def _trace_done(self, returncode):
         self.nbapp.log.info("reprozip: tracing done, returned %d", returncode)
@@ -71,6 +74,7 @@ class TraceHandler(RequestHandler):
                               "bottom without error before packing."})
             else:
                 self.send_error(500)
+            self._future.set_result(None)
 
     def _packing_done(self, returncode):
         self.nbapp.log.info("reprozip: packing done, returned %d", returncode)
@@ -82,6 +86,7 @@ class TraceHandler(RequestHandler):
         else:
             self.send_error(500)
         self._tempdir.rmtree()
+        self._future.set_result(None)
 
 
 def load_jupyter_server_extension(nbapp):
