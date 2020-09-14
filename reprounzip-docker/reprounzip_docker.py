@@ -21,6 +21,7 @@ from rpaths import Path, PosixPath
 import socket
 import subprocess
 import sys
+import tarfile
 
 from reprounzip.common import load_config, record_usage, RPZPack
 from reprounzip import signals
@@ -678,6 +679,16 @@ class ContainerUploader(FileUploader):
                  docker_cmd='docker'):
         self.unpacked_info = unpacked_info
         self.docker_cmd = docker_cmd
+        config = load_config(target / 'config.yml', True)
+        if config.runs:
+            first_run = config.runs[0]
+            self.default_ownership = (
+                first_run.get('uid'),
+                first_run.get('gid'),
+            )
+        else:
+            self.default_ownership = None, None
+
         FileUploader.__init__(self, target, input_files, files)
 
     def prepare_upload(self, files):
@@ -719,13 +730,32 @@ class ContainerUploader(FileUploader):
                         shell_escape(unicode_(src)),
                         shell_escape(unicode_(target))))
 
-            if self.docker_copy:
-                dockerfile.write('RUN /busybox chown 1000:1000 \\\n'
-                                 '    %s\n' % ' \\\n    '.join(
-                                     shell_escape(unicode_(target))
-                                     for src, target in self.docker_copy))
+            for src, target in self.docker_copy:
+                uid = gid = None
 
-            # TODO : restore permissions?
+                # Keep permissions if the file is already in there
+                tar = tarfile.open(str(self.target / 'data.tgz'), 'r:*')
+                try:
+                    info = tar.getmember(str(
+                        join_root(PosixPath(b'DATA'), target)
+                    ))
+                    uid, gid = info.uid, info.gid
+                except KeyError:
+                    pass
+
+                # Otherwise default on the first run's UID/GID
+                if uid is None:
+                    uid, gid = self.default_ownership
+
+                # Lastly, use 1000
+                if uid is None:
+                    uid = gid = 1000
+
+                dockerfile.write(
+                    'RUN /busybox chown %d:%d %s\n' % (
+                        uid, gid, shell_escape(unicode_(target))
+                    )
+                )
 
         image = make_unique_name(b'reprounzip_image_')
         retcode = subprocess.call(self.docker_cmd +
