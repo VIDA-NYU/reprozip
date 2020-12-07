@@ -482,19 +482,18 @@ def get_local_addr():
         pass
     else:
         for address in addresses:
-            sock = None
             try:
                 af, socktype, proto, canonname, sa = address
                 sock = socket.socket(af, socktype, proto)
                 sock.settimeout(1)
                 sock.connect(sa)
-                sock.close()
             except socket.error:
                 pass
-            if sock is not None:
+            else:
                 addr = sock.getsockname()[0]
                 if isinstance(addr, bytes):
                     addr = addr.decode('ascii')
+                sock.close()
                 return addr
 
     return '127.0.0.1'
