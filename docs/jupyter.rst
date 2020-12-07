@@ -13,7 +13,7 @@ You can install *reprozip-jupyter* with pip::
 
 Or Anaconda::
 
-		$ conda install reprozip-jupyter
+		$ conda install --channel conda-forge reprozip-jupyter
 
 Once successfully installed, you should then enable the plugin for both the client and server side of Jupyter Notebooks::
 

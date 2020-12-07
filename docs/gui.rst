@@ -12,7 +12,7 @@ Installation
 
 If you are using Anaconda, you can install *reprounzip-qt* from anaconda.org::
 
-    $ conda install --channel vida-nyu reprounzip-qt
+    $ conda install --channel conda-forge reprounzip-qt
 
 Otherwise, you will need to `install PyQt5 <https://www.riverbankcomputing.com/software/pyqt/download>`__ (or PyQt4 ) before you can install *reprounzip-qt* from pip (on Debian or Ubuntu, you can use ``apt-get install pyqt5-dev``).
 
