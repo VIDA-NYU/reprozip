@@ -32,8 +32,8 @@ ReproZip is divided into two steps. The first is packing, which gives a generic 
 
 Currently, different unpackers are maintained: the defaults ones (``directory`` and ``chroot``), ``vagrant`` (distributed as `reprounzip-vagrant <https://pypi.org/project/reprounzip-vagrant/>`__) and ``docker`` (distributed as `reprounzip-docker <https://pypi.org/project/reprounzip-docker/>`__). However, the interface is such that new unpackers can be easily added. While taking a look at the "official" unpackers' source is probably a good idea, this page gives some useful information about how they work.
 
-ReproZip Pack Format (``.rpz``)
-'''''''''''''''''''''''''''''''
+ReproZip Bundle Format (``.rpz``)
+'''''''''''''''''''''''''''''''''
 
 An ``.rpz`` file is a ``tar.gz`` archive that contains two directories: ``METADATA``, which contains meta-information from *reprozip*, and ``DATA``, which contains the actual files that were packed and that will be unpacked to the target directory for reproducing the experiment.
 

@@ -34,11 +34,11 @@ The notebook will execute from top-to-bottom and *reprozip-jupyter* traces that 
 
 ..  image:: figures/rzj-running.png
 
-*reprozip-jupyter* will name the resulting ReproZip package (*.rpz*) as ``notebookname_datetime.rpz`` and save it to the same working directory the notebook is in:
+*reprozip-jupyter* will name the resulting ReproZip bundle (*.rpz*) as ``notebookname_datetime.rpz`` and save it to the same working directory the notebook is in:
 
 ..  image:: figures/rzj-pkg.png
 
-Note that the notebook file itself (``.ipynb``) is not included in the package, so you should share or archive both of those files. The reason is that a lot of services can render notebooks (GitHub, OSF...), and they wouldn't be able to if it was in the RPZ file.
+Note that the notebook file itself (``.ipynb``) is not included in the bundle, so you should share or archive both of those files. The reason is that a lot of services can render notebooks (GitHub, OSF...), and they wouldn't be able to if it was in the RPZ file.
 
 Unpacking
 =========
@@ -61,7 +61,7 @@ On the command line, you would:
 
 1. Set up the experiment using *reprounzip-docker*::
 
-		$ reprounzip docker setup <package.rpz> <directory>
+		$ reprounzip docker setup <bundle.rpz> <directory>
 
 2. Rerun the notebook using *reprozip-jupyter*::
 
