@@ -8,7 +8,7 @@ General Development Information
 
 Development happens on `GitHub <https://github.com/ViDA-NYU/reprozip>`__; bug reports and feature requests are welcome. If you are interested in giving us a hand, please do not hesitate to submit a pull request there.
 
-Continuous testing is provided by `Travis CI <https://travis-ci.org/ViDA-NYU/reprozip>`__. Note that ReproZip supports both Python 2 and 3. Test coverage is not very high because there are a lot of operations that are difficult to cover on Travis (for instance, Vagrant VMs cannot be used over there).
+Continuous testing is provided by `GitHub Actions <https://github.com/VIDA-NYU/reprozip/actions>`__. Note that ReproZip still tries to support Python 2 as well as Python 3. Test coverage is not very high because there are a lot of operations that are difficult to cover on CI (for instance, Vagrant VMs cannot be used over there).
 
 If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `dev@reprozip.org <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__.
 
@@ -32,8 +32,8 @@ ReproZip is divided into two steps. The first is packing, which gives a generic 
 
 Currently, different unpackers are maintained: the defaults ones (``directory`` and ``chroot``), ``vagrant`` (distributed as `reprounzip-vagrant <https://pypi.org/project/reprounzip-vagrant/>`__) and ``docker`` (distributed as `reprounzip-docker <https://pypi.org/project/reprounzip-docker/>`__). However, the interface is such that new unpackers can be easily added. While taking a look at the "official" unpackers' source is probably a good idea, this page gives some useful information about how they work.
 
-ReproZip Pack Format (``.rpz``)
-'''''''''''''''''''''''''''''''
+ReproZip Bundle Format (``.rpz``)
+'''''''''''''''''''''''''''''''''
 
 An ``.rpz`` file is a ``tar.gz`` archive that contains two directories: ``METADATA``, which contains meta-information from *reprozip*, and ``DATA``, which contains the actual files that were packed and that will be unpacked to the target directory for reproducing the experiment.
 

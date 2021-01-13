@@ -143,8 +143,8 @@ Please feel free to contact us at users@reprozip.org if you encounter issues whi
             2. If, while packing, the user chose not to include some packages, `reprounzip` will try to install the ones from the package manager, which may not be compatible.
             3. If you are using ``reprounzip vagrant`` or ``reprounzip docker``, ReproZip may be failing to detect the closest base system for unpacking the experiment.
 :Solution:
-            1. Use the files inside the experiment package to ensure compatibility.
-            2. Contact the author of the ReproZip package to ask for a new package with all software packages included.
+            1. Use the files inside the experiment bundle to ensure compatibility.
+            2. Contact the author of the ReproZip bundle to ask for a new package with all software packages included.
             3. Try a different base system that you think it is closer to the original one by using the option ``--base-image`` when running these unpackers.
 
 ------------

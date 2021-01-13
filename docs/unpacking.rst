@@ -7,19 +7,19 @@ While *reprozip* is responsible for tracing and packing an experiment, *reprounz
 
 ..  _unpack-info:
 
-Inspecting a Package
-====================
+Inspecting a Bundle
+===================
 
-Showing Package Information
-+++++++++++++++++++++++++++
+Showing Bundle Information
+++++++++++++++++++++++++++
 
-Before unpacking an experiment, it is often useful to have further information with respect to its package. The ``reprounzip info`` command allows users to do so::
+Before unpacking an experiment, it is often useful to have further information with respect to its bundle. The ``reprounzip info`` command allows users to do so::
 
-    $ reprounzip info <package>
+    $ reprounzip info <bundle>
 
-where `<package>` corresponds to the experiment package (i.e., the ``.rpz`` file).
+where `<bundle>` corresponds to the experiment bundle (i.e., the ``.rpz`` file).
 
-The output of this command has three sections. The first section, `Pack information`, contains general information about the experiment package, including size and total number of files::
+The output of this command has three sections. The first section, `Pack information`, contains general information about the experiment bundle, including size and total number of files::
 
     ----- Pack information -----
     Compressed size: <compressed-size>
@@ -42,7 +42,7 @@ Note that, for `Architecture` and `Distribution`, the command shows information 
 
 If the verbose mode is used, more detailed information on the runs is provided::
 
-    $ reprounzip -v info <package>
+    $ reprounzip -v info <bundle>
     ...
     ----- Metadata -----
     ...
@@ -74,7 +74,7 @@ Showing Input and Output Files
 
 The ``reprounzip showfiles`` command can be used to list the input and output files defined for the experiment. These files are identified by an id, which is either chosen by ReproZip or set in the configuration file before creating the ``.rpz`` file::
 
-    $ reprounzip showfiles package.rpz
+    $ reprounzip showfiles bundle.rpz
     Input files:
         program_config
         ipython_config
@@ -85,7 +85,7 @@ The ``reprounzip showfiles`` command can be used to list the input and output fi
 
 Using the flag ``-v`` shows the complete path of each of these files in the experiment environment::
 
-    $ reprounzip -v showfiles package.rpz
+    $ reprounzip -v showfiles bundle.rpz
     Input files:
         program_config (/home/user/.progrc)
         ipython_config (/home/user/.ipython/profile_default/ipython_config.py)
@@ -94,9 +94,9 @@ Using the flag ``-v`` shows the complete path of each of these files in the expe
         rendered_image (/home/user/experiment/output.png)
         logfile (/home/user/experiment/log.txt)
 
-You can use the ``--input`` or ``--output`` flags to show only files that are inputs or outputs. If the package contains multiple runs, you can also filter files for a specific run::
+You can use the ``--input`` or ``--output`` flags to show only files that are inputs or outputs. If the bundle contains multiple runs, you can also filter files for a specific run::
 
-    $ reprounzip -v showfiles package.rpz preprocessing-step
+    $ reprounzip -v showfiles bundle.rpz preprocessing-step
     Input files:
         input_data (/home/user/experiment/input.bin)
     Output files:
@@ -114,7 +114,7 @@ The ``reprounzip showfiles`` command is particularly useful if you want to repla
 Creating a Provenance Graph
 +++++++++++++++++++++++++++
 
-ReproZip also allows users to generate a *provenance graph* related to the experiment execution by reading the metadata available in the ``.rpz`` package. This graph shows the experiment runs as well as the files and other dependencies they access during execution; this is particularly useful to visualize and understand the dataflow of the experiment.
+ReproZip also allows users to generate a *provenance graph* related to the experiment execution by reading the metadata available in the ``.rpz`` bundle. This graph shows the experiment runs as well as the files and other dependencies they access during execution; this is particularly useful to visualize and understand the dataflow of the experiment.
 
 See :ref:`graph` for details.
 
@@ -123,7 +123,7 @@ See :ref:`graph` for details.
 Unpackers
 =========
 
-From the same ``.rpz`` package, `reprounzip` allows users to set up the experiment for reproduction in several ways by the use of different `unpackers`. Unpackers are plugins that have general interface and commands, but can also provide their own command-line syntax and options. Thanks to the decoupling between packing and unpacking steps, ``.rpz`` files from older versions of ReproZip can be used with new unpackers.
+From the same ``.rpz`` bundle, `reprounzip` allows users to set up the experiment for reproduction in several ways by the use of different `unpackers`. Unpackers are plugins that have general interface and commands, but can also provide their own command-line syntax and options. Thanks to the decoupling between packing and unpacking steps, ``.rpz`` files from older versions of ReproZip can be used with new unpackers.
 
 The `reprounzip` tool comes with three unpackers that are only compatible with Linux (``reprounzip directory``, ``reprounzip chroot``, and ``reprounzip installpkgs``). Additional unpackers, such as ``reprounzip vagrant`` and ``reprounzip docker``, can be installed separately. Next, each unpacker is described in more details; for more information on how to use an unpacker, please refer to :ref:`unpacker-commands`.
 
@@ -147,7 +147,7 @@ Please note that, although this unpacker is easy to use and does not require any
 The `chroot` Unpacker: Providing Isolation with the *chroot* Mechanism
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment package; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of hardcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
+In the *chroot* unpacker (``reprounzip chroot``), similar to ``reprounzip directory``, a directory is created from the experiment bundle; however, a full system environment is also built, which can then be run with ``chroot(2)``, a Linux mechanism that changes the root directory ``/`` for the experiment to the experiment directory. Therefore, this unpacker addresses the limitation of the *directory* unpacker and does not fail in the presence of hardcoded absolute paths. Note as well that it **does not interfere with the current environment** since the experiment is isolated in that single directory.
 
 ..  warning:: Do **not** try to delete the experiment directory manually; **always** use ``reprounzip chroot destroy``. If ``/dev`` is mounted inside, you will also delete your system's device pseudo-files (these can be restored by rebooting or running the ``MAKEDEV`` script).
 
@@ -166,7 +166,7 @@ Users may also let ReproZip try and install all the dependencies of the experime
 
 To install the required dependencies, the following command should be used::
 
-    $ reprounzip installpkgs <package>
+    $ reprounzip installpkgs <bundle>
 
 Users may use flag *y* or *assume-yes* to automatically confirm all the questions from the package manager; flag *missing* to install only the software packages that were not originally included in the experiment package (i.e.: software packages excluded in the configuration file); and flag *summary* to simply provide a summary of which software packages are installed or not in the current environment **without installing any dependency**.
 
@@ -220,7 +220,7 @@ Thanks to Docker's image layers feature, you can easily go back to the initial i
 Using an Unpacker
 =================
 
-Once you have chosen (and installed) an unpacker for your machine, you can use it to setup and run a packaged experiment. An unpacker creates an **experiment directory** in which the working files are placed; these can be either the full filesystem (for *directory* or *chroot* unpackers) or other content (e.g.: a handle on a virtual machine for the *vagrant* unpacker); for the *chroot* unpacker, it might have mount points. To make sure that you free all resources and that you do not damage your environment, you should **always use the destroy command** to delete the experiment directory, not just merely delete it manually. See more information about this command below.
+Once you have chosen (and installed) an unpacker for your machine, you can use it to setup and run a packed experiment. An unpacker creates an **experiment directory** in which the working files are placed; these can be either the full filesystem (for *directory* or *chroot* unpackers) or other content (e.g.: a handle on a virtual machine for the *vagrant* unpacker); for the *chroot* unpacker, it might have mount points. To make sure that you free all resources and that you do not damage your environment, you should **always use the destroy command** to delete the experiment directory, not just merely delete it manually. See more information about this command below.
 
 All the following commands need to state which unpacker is being used (i.e., ``reprounzip directory`` for the `directory` unpacker, ``reprounzip chroot`` for the `chroot` unpacker, ``reprounzip vagrant`` for the `vagrant` unpacker, and ``reprounzip docker`` for the `docker` unpacker). For the purpose of this documentation, we will use the `vagrant` unpacker; to use a different one, just replace ``vagrant`` in the following with the unpacker of your interest.
 
@@ -233,13 +233,13 @@ Setting Up an Experiment Directory
 
 To create the directory where the execution will take place, the ``setup`` command should be used::
 
-    $ reprounzip vagrant setup <package> <path>
+    $ reprounzip vagrant setup <bundle> <path>
 
 where `<path>` is the directory where the experiment will be unpacked, i.e., the experiment directory.
 
 Note that, once this is done, you should only remove `<path>` with the `destroy` command described below: deleting this directory manually might leave files behind, or even damage your system through bound filesystems.
 
-The other unpacker commands take the `<path>` argument; they do not need the original package for the reproduction.
+The other unpacker commands take the `<path>` argument; they do not need the original bundle for the reproduction.
 
 Reproducing the Experiment
 ++++++++++++++++++++++++++
@@ -254,7 +254,7 @@ which will execute the experiment inside the experiment directory. Users may als
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
-If the package contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run or runs to be used::
+If the bundle contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run or runs to be used::
 
     $ reprounzip vagrant run <path> <run-id>
     $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
