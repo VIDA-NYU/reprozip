@@ -374,6 +374,16 @@ def load_iofiles(config, runs):
         path = PosixPath(f['path'])
         readers = sorted(f.get('read_by_runs', []))
         writers = sorted(f.get('written_by_runs', []))
+        if (
+            not isinstance(readers, (tuple, list))
+            or not all(isinstance(e, int) for e in readers)
+        ):
+            raise InvalidConfig("read_by_runs should be a list of integers")
+        if (
+            not isinstance(writers, (tuple, list))
+            or not all(isinstance(e, int) for e in writers)
+        ):
+            raise InvalidConfig("written_by_runs should be a list of integers")
         if name in files:
             if files[name].path != path:
                 old_name, name = name, uniquenames(name)
