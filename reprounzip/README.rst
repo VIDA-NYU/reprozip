@@ -21,6 +21,6 @@ ReproZip is currently being developed at `NYU <http://engineering.nyu.edu/>`_. T
 
 * `Fernando Chirigati <http://fchirigati.com/>`_
 * `Juliana Freire <https://vgc.poly.edu/~juliana/>`_
-* `Remi Rampin <https://remirampin.com/>`_
+* `Remi Rampin <https://remi.rampin.org/>`_
 * `Dennis Shasha <http://cs.nyu.edu/shasha/>`_
-* `Vicky Steeves <https://vickysteeves.com/>`_
+* `Vicky Rampin <https://vicky.rampin.org/>`_
