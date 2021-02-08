@@ -25,7 +25,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Graphical user interface for reprounzip",
-        epilog="Please report issues to reprozip-users@vgc.poly.edu")
+        epilog="Please report issues to users@reprozip.org")
     parser.add_argument('--version', action='version',
                         version="reprounzip-qt version %s" % __version__)
     parser.add_argument('-v', '--verbose', action='count', default=1,
