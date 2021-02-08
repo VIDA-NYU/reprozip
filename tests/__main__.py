@@ -22,10 +22,12 @@ if top_level not in sys.path:
 sys.path.append(start_dir)
 
 
-from reprounzip.common import setup_logging     # noqa
-from reprounzip.signals import SignalWarning    # noqa
+from reprounzip.common import setup_logging  # noqa
+from reprounzip.signals import SignalWarning  # noqa
 
-from tests.functional import functional_tests   # noqa
+from tests.functional import functional_tests  # noqa
+
+from tests.check_images import check_vagrant, check_docker  # noqa
 
 
 logger = logging.getLogger('reprozip-tests')
@@ -62,6 +64,10 @@ if __name__ == '__main__':
                         dest='functests', default=None)
     parser.add_argument('--no-functests', action='store_false',
                         dest='functests', default=None)
+    parser.add_argument('--check-vagrant-images', action='store_true',
+                        default=False)
+    parser.add_argument('--check-docker-images', action='store_true',
+                        default=False)
     parser.add_argument('--interactive', action='store_true')
     parser.add_argument('--run-vagrant', action='store_true')
     parser.add_argument('--run-docker', action='store_true')
@@ -73,12 +79,14 @@ if __name__ == '__main__':
     if args.raise_warnings:
         warnings.simplefilter('error', SignalWarning)
 
-    default_map = {
-        (None, None): (True, True),
-        (None, True): (False, True),
-        (True, None): (True, False)}
-    unittests, functests = default_map.get((args.unittests, args.functests),
-                                           (args.unittests, args.functests))
+    if not any((
+        args.unittests, args.functests,
+        args.check_vagrant_images, args.check_docker_images,
+    )):
+        unittests = functests = True
+    else:
+        unittests = args.unittests
+        functests = args.functests
 
     successful = True
     if unittests:
@@ -89,6 +97,10 @@ if __name__ == '__main__':
         logger.info("Running functional tests")
         functional_tests(args.raise_warnings,
                          args.interactive, args.run_vagrant, args.run_docker)
+    if args.check_vagrant_images:
+        check_vagrant()
+    if args.check_docker_images:
+        check_docker()
 
     if not successful:
         sys.exit(1)
