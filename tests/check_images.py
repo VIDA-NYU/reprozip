@@ -3,7 +3,7 @@ import requests
 import time
 
 from reprounzip.parameters import _bundled_parameters
-from reprounzip.utils import itervalues
+from reprounzip.utils import itervalues, iteritems
 
 
 logger = logging.getLogger(__name__)
@@ -105,4 +105,67 @@ def check_vagrant():
 
 
 def check_docker():
-    pass
+    error = False
+
+    # Get all Docker images from bundled parameters
+    images = set()
+    for distribution in itervalues(
+        _bundled_parameters['docker_images']['images'],
+    ):
+        for version in distribution['versions']:
+            images.add(version['image'])
+
+    # Rewrite images in canonical format, organize by repository
+    repositories = {}
+    for image in images:
+        image = image.split('/')
+        if ':' in image[-1]:
+            image[-1], tag = image[-1].split(':', 1)
+        else:
+            tag = 'latest'
+        if len(image) == 1:
+            image = ['docker.io', 'library'] + image
+        elif len(image) == 2:
+            image = ['docker.io'] + image
+        repositories.setdefault(tuple(image[:3]), set()).add(tag)
+
+    # Check that each repository has the required tags
+    for repository, tags in iteritems(repositories):
+        registry = repository[0]
+        if registry == 'docker.io':
+            registry = 'hub.docker.com'
+        else:
+            raise AssertionError("Registry unsupported: %s" % registry)
+        url = (
+            'https://' + registry
+            + '/v1/repositories/' + repository[1]
+            + '/' + repository[2]
+            + '/tags'
+        )
+        res = requests.get(url)
+        if res.status_code != 200:
+            logger.error(
+                "Docker repository not found: %d %s",
+                res.status_code,
+                url,
+            )
+            error = True
+            continue
+        actual_tags = res.json()
+        actual_tags = set(entry['name'] for entry in actual_tags)
+        for tag in tags:
+            if tag not in actual_tags:
+                logger.error(
+                    "Docker repository %s missing tag %s",
+                    '/'.join(repository),
+                    tag,
+                )
+            else:
+                logger.info(
+                    "Docker image ok: %s:%s",
+                    '/'.join(repository),
+                    tag,
+                )
+
+    if error:
+        raise AssertionError("Missing Docker boxes")
