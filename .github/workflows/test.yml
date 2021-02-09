@@ -21,6 +21,9 @@ jobs:
         - os: ubuntu-18.04
           mode: checks
           python: "3.8"
+        - os: ubuntu-latest
+          mode: check-images
+          python: "3.8"
     runs-on: ${{ matrix.os }}
     env:
       TEST_MODE: ${{ matrix.mode }}
@@ -41,7 +44,7 @@ jobs:
 
         case "$TEST_MODE"
         in
-            tests|coverage)
+            tests|coverage|check-images)
                 if [ "$TEST_MODE" = "coverage" ]; then
                     export CFLAGS="-fprofile-arcs -ftest-coverage"
                 fi
@@ -73,6 +76,9 @@ jobs:
                     export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-docker/reprounzip,$PWD/reprounzip-vagrant/reprounzip,$PWD/reprounzip-vistrails/reprounzip --branch"
                 fi
                 python tests --run-docker
+                ;;
+            check-images)
+                python tests --check-vagrant-images --check-docker-images
                 ;;
             checks)
                 flake8 --ignore=E731,W503,W504
