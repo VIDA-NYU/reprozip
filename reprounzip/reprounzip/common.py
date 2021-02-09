@@ -666,6 +666,8 @@ def setup_logging(tag, verbosity):
                 (datetime.now().strftime("%Y-%m-%d"), sys.argv),
                 None))
 
+    logging.getLogger('urllib3').setLevel(logging.INFO)
+
 
 _usage_report = None
 
