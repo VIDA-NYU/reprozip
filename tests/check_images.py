@@ -1,11 +1,30 @@
 import logging
 import requests
+import time
 
 from reprounzip.parameters import _bundled_parameters
 from reprounzip.utils import itervalues
 
 
 logger = logging.getLogger(__name__)
+
+
+def _vagrant_req(method, url, json):
+    headers = {'User-Agent': 'reprozip testsuite'}
+    if json:
+        headers['Accept'] = 'application/json'
+    for _ in range(5):
+        res = requests.request(
+            method,
+            url,
+            headers=headers,
+            allow_redirects=True,
+        )
+        if res.status_code == 429:
+            logger.info("(got 429, sleeping)")
+            time.sleep(60)
+        else:
+            return res
 
 
 def check_vagrant():
@@ -24,12 +43,10 @@ def check_vagrant():
     for box in boxes:
         # Get metadata
         url = 'https://vagrantcloud.com/' + box
-        metadata = requests.get(
+        metadata = _vagrant_req(
+            'GET',
             url,
-            headers={
-                'Accept': 'application/json',
-                'User-Agent': 'reprozip testsuite',
-            },
+            True,
         )
         if metadata.status_code != 200:
             logger.error(
@@ -54,12 +71,10 @@ def check_vagrant():
         # Go over each provider
         for provider in max_version['providers']:
             url = provider['url']
-            res = requests.head(
+            res = _vagrant_req(
+                'HEAD',
                 url,
-                headers={
-                    'Accept': 'application/json',
-                    'User-Agent': 'reprozip testsuite',
-                },
+                False,
             )
             # Status should be 200
             if res.status_code != 200:
