@@ -311,10 +311,10 @@ _bundled_parameters = {
         "default": {
             "distribution": "debian",
             "architectures": {
-                "i686": "remram/debian-8-i386",
-                "x86_64": "remram/debian-8-amd64"
+                "i686": "remram/debian-10-i386",
+                "x86_64": "bento/debian-10"
             },
-            "name": "Debian 8 'Jessie'"
+            "name": "Debian 10 'Buster'"
         },
         "boxes": [
             {
@@ -342,8 +342,8 @@ _bundled_parameters = {
                         "version": "^15\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "ubuntu/vivid32",
-                            "x86_64": "ubuntu/vivid64"
+                            "i686": "bento/ubuntu-15.04-i386",
+                            "x86_64": "bento/ubuntu-15.04"
                         },
                         "name": "Ubuntu 15.04 'Vivid'"
                     },
@@ -351,8 +351,8 @@ _bundled_parameters = {
                         "version": "^15\\.10$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "ubuntu/wily32",
-                            "x86_64": "ubuntu/wily64"
+                            "i686": "bento/ubuntu-15.10-i386",
+                            "x86_64": "bento/ubuntu-15.10"
                         },
                         "name": "Ubuntu 15.10 'Wily'"
                     },
@@ -396,7 +396,6 @@ _bundled_parameters = {
                         "version": "^18\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "i686": "bento/ubuntu-18.04-i386",
                             "x86_64": "bento/ubuntu-18.04"
                         },
                         "name": "Ubuntu 18.04 'Bionic'"
@@ -413,18 +412,42 @@ _bundled_parameters = {
                         "version": "^19\\.04$",
                         "distribution": "ubuntu",
                         "architectures": {
-                            "x86_64": "ubuntu/disco64"
+                            "x86_64": "bento/ubuntu-19.04"
                         },
                         "name": "Ubuntu 19.04 'Disco'"
+                    },
+                    {
+                        "version": "^19\\.10",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "x86_64": "bento/ubuntu-19.10"
+                        },
+                        "name": "Ubuntu 19.10 'Eoan'"
+                    },
+                    {
+                        "version": "^20\\.04$",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "x86_64": "bento/ubuntu-20.04"
+                        },
+                        "name": "Ubuntu 20.04 'Focal'"
+                    },
+                    {
+                        "version": "^20\\.10",
+                        "distribution": "ubuntu",
+                        "architectures": {
+                            "x86_64": "bento/ubuntu-20.10"
+                        },
+                        "name": "Ubuntu 20.10 'Groovy'"
                     }
                 ],
                 "default": {
                     "distribution": "ubuntu",
                     "architectures": {
-                        "i686": "bento/ubuntu-18.04-i386",
-                        "x86_64": "bento/ubuntu-18.04"
+                        "i686": "bento/ubuntu-17.04-i386",
+                        "x86_64": "bento/ubuntu-20.04"
                     },
-                    "name": "Ubuntu 18.04 'Bionic'"
+                    "name": "Ubuntu"
                 }
             },
             {
@@ -434,8 +457,8 @@ _bundled_parameters = {
                         "version": "^(7(\\.|$))|(wheezy)",
                         "distribution": "debian",
                         "architectures": {
-                            "i686": "remram/debian-7-i386",
-                            "x86_64": "remram/debian-7-amd64"
+                            "i686": "bento/debian-7.11-i386",
+                            "x86_64": "bento/debian-7"
                         },
                         "name": "Debian 7 'Wheezy'"
                     },
@@ -456,15 +479,24 @@ _bundled_parameters = {
                             "x86_64": "remram/debian-9-amd64"
                         },
                         "name": "Debian 9 'Stretch'"
+                    },
+                    {
+                        "version": "^(10(\\.|$))|(buster)",
+                        "distribution": "debian",
+                        "architectures": {
+                            "i686": "remram/debian-10-i386",
+                            "x86_64": "bento/debian-10"
+                        },
+                        "name": "Debian 10 'Buster'"
                     }
                 ],
                 "default": {
                     "distribution": "debian",
                     "architectures": {
-                        "i686": "remram/debian-8-i386",
-                        "x86_64": "remram/debian-8-amd64"
+                        "i686": "remram/debian-10-i386",
+                        "x86_64": "bento/debian-10"
                     },
-                    "name": "Debian 8 'Jessie'"
+                    "name": "Debian 10 'Buster'"
                 }
             },
             {
@@ -492,16 +524,25 @@ _bundled_parameters = {
                         "version": "^7\\.",
                         "distribution": "centos",
                         "architectures": {
+                            "i686": "remram/centos-7-i386",
                             "x86_64": "bento/centos-7.6"
                         },
                         "name": "CentOS 7.6"
+                    },
+                    {
+                        "version": "^8\\.",
+                        "distribution": "centos",
+                        "architectures": {
+                            "x86_64": "bento/centos-8"
+                        },
+                        "name": "CentOS 8"
                     }
                 ],
                 "default": {
                     "distribution": "centos",
                     "architectures": {
-                        "i686": "bento/centos-6.10-i386",
-                        "x86_64": "bento/centos-7.6"
+                        "i686": "remram/centos-7-i386",
+                        "x86_64": "bento/centos-8"
                     },
                     "name": "CentOS"
                 }
@@ -575,13 +616,45 @@ _bundled_parameters = {
                             "x86_64": "bento/fedora-29"
                         },
                         "name": "Fedora 29"
+                    },
+                    {
+                        "version": "^30",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-30"
+                        },
+                        "name": "Fedora 30"
+                    },
+                    {
+                        "version": "^31",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-31"
+                        },
+                        "name": "Fedora 31"
+                    },
+                    {
+                        "version": "^32",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-32"
+                        },
+                        "name": "Fedora 32"
+                    },
+                    {
+                        "version": "^33",
+                        "distribution": "fedora",
+                        "architectures": {
+                            "x86_64": "bento/fedora-33"
+                        },
+                        "name": "Fedora 33"
                     }
                 ],
                 "default": {
                     "distribution": "fedora",
                     "architectures": {
                         "i686": "remram/fedora-24-i386",
-                        "x86_64": "bento/fedora-29"
+                        "x86_64": "bento/fedora-33"
                     },
                     "name": "Fedora"
                 }

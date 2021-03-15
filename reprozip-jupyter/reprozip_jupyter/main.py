@@ -20,7 +20,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Jupyter Notebook tracing/reproduction for ReproZip",
-        epilog="Please report issues to reprozip-users@vgc.poly.edu")
+        epilog="Please report issues to users@reprozip.org")
     add_options(parser)
     subparser = parser.add_subparsers(title="subcommands", metavar='',
                                       dest='cmd')

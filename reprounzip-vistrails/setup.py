@@ -26,9 +26,9 @@ setup(name='reprounzip-vistrails',
       description="Integrates the ReproZip unpacker with the VisTrails "
                   "workflow management system",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
-      author_email='reprozip-users@vgc.poly.edu',
+      author_email='dev@reprozip.org',
       maintainer="Remi Rampin",
-      maintainer_email='remirampin@gmail.com',
+      maintainer_email='remi@rampin.org',
       url='https://www.reprozip.org/',
       project_urls={
           'Homepage': 'https://github.com/ViDA-NYU/reprozip',

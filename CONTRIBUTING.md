@@ -89,6 +89,6 @@ This CONTRIBUTING.md was adapted from [ProjectPorcupine's](https://github.com/Te
 
 # Contact info
 
-You are welcome to [subscribe to](https://vgc.poly.edu/mailman/listinfo/reprozip-users) or contact our user mailing list [reprozip-users](mailto:reprozip-users@vgc.poly.edu) for questions, suggestions and discussions about using ReproZip.
+You are welcome to [subscribe to](https://vgc.poly.edu/mailman/listinfo/reprozip-users) or contact our user mailing list [users@reprozip.org](mailto:users@reprozip.org) for questions, suggestions and discussions about using ReproZip.
 
-You can contact the maintainers on the [reprozip-dev](mailto:reprozip-dev@vgc.poly.edu) mailing list.
+You can contact the maintainers on the [dev@reprozip.org](mailto:dev@reprozip.org) mailing list.

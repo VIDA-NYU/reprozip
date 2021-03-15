@@ -9,17 +9,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-18.04]
         mode: [tests]
         python:
         - "2.7"
         - "3.5"
         include:
-        - os: ubuntu-latest
+        - os: ubuntu-18.04
           mode: coverage
           python: "3.8"
-        - os: ubuntu-latest
+        - os: ubuntu-18.04
           mode: checks
+          python: "3.8"
+        - os: ubuntu-latest
+          mode: check-images
           python: "3.8"
     runs-on: ${{ matrix.os }}
     env:
@@ -41,7 +44,7 @@ jobs:
 
         case "$TEST_MODE"
         in
-            tests|coverage)
+            tests|coverage|check-images)
                 if [ "$TEST_MODE" = "coverage" ]; then
                     export CFLAGS="-fprofile-arcs -ftest-coverage"
                 fi
@@ -74,8 +77,11 @@ jobs:
                 fi
                 python tests --run-docker
                 ;;
+            check-images)
+                python tests --check-vagrant-images --check-docker-images
+                ;;
             checks)
-                flake8 --ignore=E731,W504
+                flake8 --ignore=E731,W503,W504
                 diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
                 diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
                 find reprozip reprounzip reprozip-* reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do

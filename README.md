@@ -99,9 +99,9 @@ Please use the following when citing ReproZip ([BibTeX](CITATION.txt)):
 Contribute
 ----------
 
-Please subscribe to and contact the [reprozip-users](https://vgc.poly.edu/mailman/listinfo/reprozip-users) mailing list for questions, suggestions and discussions about using reprozip.
+Please subscribe to and contact the [users@reprozip.org](https://vgc.poly.edu/mailman/listinfo/reprozip-users) mailing list for questions, suggestions and discussions about using reprozip.
 
-Use the [reprozip-dev](https://vgc.poly.edu/mailman/listinfo/reprozip-dev) mailing list for any questions about reprozip source code.
+Use the [dev@reprozip.org](https://vgc.poly.edu/mailman/listinfo/reprozip-dev) mailing list for any questions about reprozip source code.
 
 Bugs and feature plannings are tracked in the [GitHub issues](https://github.com/VIDA-NYU/reprozip/issues). Feel free to add an issue!
 
@@ -125,7 +125,7 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 * [Juliana Freire][jf]
 * [Rémi Rampin][rr]
 * [Dennis Shasha][ds]
-* [Vicky Steeves][vs]
+* [Vicky Rampin][vr]
 
 [vagrant]: https://www.vagrantup.com/
 [docker]: https://www.docker.com/
@@ -137,7 +137,7 @@ ReproZip is currently being developed at [NYU][nyu]. The team includes:
 [puzv]: https://pypi.python.org/pypi/reprounzip-vagrant
 [fc]: http://fchirigati.com/
 [jf]: https://vgc.poly.edu/~juliana/
-[rr]: https://remirampin.com/
+[rr]: https://remi.rampin.org/
 [ds]: http://cs.nyu.edu/shasha/
-[vs]: https://vickysteeves.com/
+[vr]: https://vicky.rampin.org/
 [nyu]: http://engineering.nyu.edu/

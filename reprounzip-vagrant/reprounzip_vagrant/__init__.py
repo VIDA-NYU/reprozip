@@ -40,6 +40,38 @@ from reprounzip.utils import unicode_, iteritems, stderr, download_file
 logger = logging.getLogger('reprounzip.vagrant')
 
 
+def _find_version(distrib, version, architecture):
+    if version is not None:
+        for box in distrib['versions']:
+            if re.match(box['version'], version) is not None:
+                result = box['architectures'].get(architecture)
+                if result is not None:
+                    return box['distribution'], result
+    box = distrib['default']
+    if version is not None:
+        logger.warning("Using %s instead of '%s'",
+                       box['name'], version)
+    result = box['architectures'].get(architecture)
+    if result is not None:
+        return box['distribution'], result
+
+
+def _find_distribution(parameter, distribution, version, architecture):
+    boxes = parameter['boxes']
+
+    for distrib in boxes:
+        if re.match(distrib['name'], distribution) is not None:
+            result = _find_version(distrib, version, architecture)
+            if result is not None:
+                return result
+    default = parameter['default']
+    logger.warning("Unsupported distribution '%s', using %s",
+                   distribution, default['name'])
+    result = default['architectures'].get(architecture)
+    if result:
+        return default['distribution'], result
+
+
 def select_box(runs, gui=False):
     """Selects a box for the experiment, with the correct distribution.
     """
@@ -54,39 +86,10 @@ def select_box(runs, gui=False):
         logger.critical("Error: unsupported architecture %s", architecture)
         sys.exit(1)
 
-    def find_distribution(parameter, distribution, version, architecture):
-        boxes = parameter['boxes']
-
-        for distrib in boxes:
-            if re.match(distrib['name'], distribution) is not None:
-                result = find_version(distrib, version, architecture)
-                if result is not None:
-                    return result
-        default = parameter['default']
-        logger.warning("Unsupported distribution '%s', using %s",
-                       distribution, default['name'])
-        result = default['architectures'].get(architecture)
-        if result:
-            return default['distribution'], result
-
-    def find_version(distrib, version, architecture):
-        if version is not None:
-            for box in distrib['versions']:
-                if re.match(box['version'], version) is not None:
-                    result = box['architectures'].get(architecture)
-                    if result is not None:
-                        return box['distribution'], result
-        box = distrib['default']
-        if version is not None:
-            logger.warning("Using %s instead of '%s'",
-                           box['name'], version)
-        result = box['architectures'].get(architecture)
-        if result is not None:
-            return box['distribution'], result
-
-    result = find_distribution(
+    result = _find_distribution(
         get_parameter('vagrant_boxes_x' if gui else 'vagrant_boxes'),
-        distribution, version, architecture)
+        distribution, version, architecture,
+    )
     if result is None:
         logger.critical("Error: couldn't find a base box for required "
                         "architecture")

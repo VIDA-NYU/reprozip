@@ -385,6 +385,16 @@ def load_iofiles(config, runs):
         path = PosixPath(f['path'])
         readers = sorted(f.get('read_by_runs', []))
         writers = sorted(f.get('written_by_runs', []))
+        if (
+            not isinstance(readers, (tuple, list))
+            or not all(isinstance(e, int) for e in readers)
+        ):
+            raise InvalidConfig("read_by_runs should be a list of integers")
+        if (
+            not isinstance(writers, (tuple, list))
+            or not all(isinstance(e, int) for e in writers)
+        ):
+            raise InvalidConfig("written_by_runs should be a list of integers")
         if name in files:
             if files[name].path != path:
                 old_name, name = name, uniquenames(name)
@@ -668,6 +678,8 @@ def setup_logging(tag, verbosity):
                 "Log opened %s %s",
                 (datetime.now().strftime("%Y-%m-%d"), sys.argv),
                 None))
+
+    logging.getLogger('urllib3').setLevel(logging.INFO)
 
 
 _usage_report = None
