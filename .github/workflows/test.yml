@@ -9,16 +9,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-latest]
         mode: [tests]
         python:
         - "2.7"
         - "3.5"
         include:
-        - os: ubuntu-18.04
+        - os: ubuntu-latest
           mode: coverage
           python: "3.8"
-        - os: ubuntu-18.04
+        - os: ubuntu-latest
           mode: checks
           python: "3.8"
         - os: ubuntu-latest
