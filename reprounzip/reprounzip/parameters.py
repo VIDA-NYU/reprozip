@@ -706,9 +706,10 @@ _bundled_parameters = {
                 "default": {
                     "distribution": "fedora",
                     "architectures": {
+                        "i686": "remram/fedora-24-i386",
                         "x86_64": "bento/fedora-33"
                     },
-                    "name": "Fedora 33"
+                    "name": "Fedora"
                 }
             }
         }
