@@ -28,7 +28,7 @@ jobs:
     env:
       TEST_MODE: ${{ matrix.mode }}
       REPROZIP_USAGE_STATS: "off"
-      REPROZIP_PARAMETERS: https://stats.reprozip.org/parameters/travis/
+      REPROZIP_PARAMETERS: false
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
