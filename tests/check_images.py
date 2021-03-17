@@ -32,12 +32,14 @@ def check_vagrant():
 
     # Get all Vagrant boxes from bundled parameters
     boxes = set()
-    for distribution in itervalues(
-        _bundled_parameters['vagrant_boxes']['boxes'],
-    ):
+    for distribution in _bundled_parameters['vagrant_boxes']['boxes']:
         for version in distribution['versions']:
             for image in itervalues(version['architectures']):
                 boxes.add(image)
+        for arch in itervalues(distribution['default']):
+            boxes.add(arch['box'])
+    for arch in itervalues(_bundled_parameters['vagrant_boxes']['default']):
+        boxes.add(arch['box'])
 
     # Check that they exist
     for box in boxes:
