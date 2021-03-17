@@ -47,13 +47,12 @@ def _find_version(distrib, version, architecture):
                 result = box['architectures'].get(architecture)
                 if result is not None:
                     return box['distribution'], result
-    box = distrib['default']
-    if version is not None:
-        logger.warning("Using %s instead of '%s'",
-                       box['name'], version)
-    result = box['architectures'].get(architecture)
-    if result is not None:
-        return box['distribution'], result
+    box = distrib['default'].get(architecture)
+    if box:
+        if version is not None:
+            logger.warning("Using %s instead of '%s'",
+                           box['name'], version)
+        return box['distribution'], box['box']
 
 
 def _find_distribution(parameter, distribution, version, architecture):
@@ -65,11 +64,11 @@ def _find_distribution(parameter, distribution, version, architecture):
             if result is not None:
                 return result
     default = parameter['default']
-    logger.warning("Unsupported distribution '%s', using %s",
-                   distribution, default['name'])
-    result = default['architectures'].get(architecture)
+    result = default.get(architecture)
     if result:
-        return default['distribution'], result
+        logger.warning("Unsupported distribution '%s', using %s",
+                       distribution, result['name'])
+        return result['distribution'], result['box']
 
 
 def select_box(runs, gui=False):

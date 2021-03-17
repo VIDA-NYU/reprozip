@@ -309,12 +309,16 @@ _bundled_parameters = {
     },
     "vagrant_boxes": {
         "default": {
-            "distribution": "debian",
-            "architectures": {
-                "i686": "remram/debian-10-i386",
-                "x86_64": "bento/debian-10"
+            "i686": {
+                "distribution": "debian",
+                "box": "remram/debian-10-i386",
+                "name": "Debian 10 'Buster'"
             },
-            "name": "Debian 10 'Buster'"
+            "x86_64": {
+                "distribution": "debian",
+                "box": "bento/debian-10",
+                "name": "Debian 10 'Buster'"
+            }
         },
         "boxes": [
             {
@@ -442,12 +446,16 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "ubuntu",
-                    "architectures": {
-                        "i686": "bento/ubuntu-17.04-i386",
-                        "x86_64": "bento/ubuntu-20.04"
+                    "i686": {
+                        "distribution": "ubuntu",
+                        "box": "bento/ubuntu-17.04-i386",
+                        "name": "Ubuntu 17.04 'Zesty'"
                     },
-                    "name": "Ubuntu"
+                    "x86_64": {
+                        "distribution": "ubuntu",
+                        "box": "bento/ubuntu-20.04",
+                        "name": "Ubuntu 20.04 'Focal'"
+                    }
                 }
             },
             {
@@ -491,12 +499,16 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "debian",
-                    "architectures": {
-                        "i686": "remram/debian-10-i386",
-                        "x86_64": "bento/debian-10"
+                    "i686": {
+                        "distribution": "debian",
+                        "box": "remram/debian-10-i386",
+                        "name": "Debian 10 'Buster'"
                     },
-                    "name": "Debian 10 'Buster'"
+                    "x86_64": {
+                        "distribution": "debian",
+                        "box": "bento/debian-10",
+                        "name": "Debian 10 'Buster'"
+                    }
                 }
             },
             {
@@ -539,12 +551,16 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "centos",
-                    "architectures": {
-                        "i686": "remram/centos-7-i386",
-                        "x86_64": "bento/centos-8"
+                    "i686": {
+                        "distribution": "centos",
+                        "box": "remram/centos-7-i386",
+                        "name": "CentOS 7"
                     },
-                    "name": "CentOS"
+                    "x86_64": {
+                        "distribution": "centos",
+                        "box": "bento/centos-8",
+                        "name": "CentOS 8"
+                    }
                 }
             },
             {
@@ -651,24 +667,32 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "fedora",
-                    "architectures": {
-                        "i686": "remram/fedora-24-i386",
-                        "x86_64": "bento/fedora-33"
+                    "i686": {
+                        "distribution": "fedora",
+                        "box": "remram/fedora-24-i386",
+                        "name": "Fedora 24"
                     },
-                    "name": "Fedora"
+                    "x86_64": {
+                        "distribution": "fedora",
+                        "box": "bento/fedora-33",
+                        "name": "Fedora 33"
+                    }
                 }
             }
         ]
     },
     "vagrant_boxes_x": {
         "default": {
-            "distribution": "debian",
-            "architectures": {
-                "i686": "remram/debian-8-amd64-x",
-                "x86_64": "remram/debian-8-amd64-x"
+            "i686": {
+                "distribution": "debian",
+                "box": "remram/debian-8-amd64-x",
+                "name": "Debian 8 'Jessie'"
             },
-            "name": "Debian 8 'Jessie'"
+            "x86_64": {
+                "distribution": "debian",
+                "box": "remram/debian-8-amd64-x",
+                "name": "Debian 8 'Jessie'"
+            }
         },
         "boxes": [
             {
@@ -685,12 +709,16 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "ubuntu",
-                    "architectures": {
-                        "i686": "remram/ubuntu-1604-amd64-x",
-                        "x86_64": "remram/ubuntu-1604-amd64-x"
+                    "i686": {
+                        "distribution": "ubuntu",
+                        "box": "remram/ubuntu-1604-amd64-x",
+                        "name": "Ubuntu 16.04 'Xenial'"
                     },
-                    "name": "Ubuntu 16.04 'Xenial'"
+                    "x86_64": {
+                        "distribution": "ubuntu",
+                        "box": "remram/ubuntu-1604-amd64-x",
+                        "name": "Ubuntu 16.04 'Xenial'"
+                    }
                 }
             },
             {
@@ -707,12 +735,16 @@ _bundled_parameters = {
                     }
                 ],
                 "default": {
-                    "distribution": "debian",
-                    "architectures": {
-                        "i686": "remram/debian-8-amd64-x",
-                        "x86_64": "remram/debian-8-amd64-x"
+                    "i686": {
+                        "distribution": "debian",
+                        "box": "remram/debian-8-amd64-x",
+                        "name": "Debian 8 'Jessie'"
                     },
-                    "name": "Debian 8 'Jessie'"
+                    "x86_64": {
+                        "distribution": "debian",
+                        "box": "remram/debian-8-amd64-x",
+                        "name": "Debian 8 'Jessie'"
+                    }
                 }
             }
         ]
