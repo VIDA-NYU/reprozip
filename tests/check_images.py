@@ -111,11 +111,11 @@ def check_docker():
 
     # Get all Docker images from bundled parameters
     images = set()
-    for distribution in itervalues(
-        _bundled_parameters['docker_images']['images'],
-    ):
+    for distribution in _bundled_parameters['docker_images']['images']:
         for version in distribution['versions']:
             images.add(version['image'])
+        images.add(distribution['default']['image'])
+    images.add(_bundled_parameters['docker_images']['default']['image'])
 
     # Rewrite images in canonical format, organize by repository
     repositories = {}
