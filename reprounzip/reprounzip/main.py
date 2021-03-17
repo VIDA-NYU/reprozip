@@ -31,7 +31,7 @@ from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
 
 
-__version__ = '1.1.0'
+__version__ = '2.0.0'
 
 
 logger = logging.getLogger('reprounzip')
