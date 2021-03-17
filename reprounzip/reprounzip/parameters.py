@@ -71,7 +71,7 @@ def update_parameters():
                 pass
         else:
             ver = LooseVersion(parameters.get('version', '1.0'))
-            if LooseVersion('1.1') <= ver < LooseVersion('1.2'):
+            if LooseVersion('1.1') <= ver < LooseVersion('3.0'):
                 return
             else:
                 logger.info("parameters.json has incompatible version %s, "
@@ -90,7 +90,7 @@ def get_parameter(section):
 
 
 _bundled_parameters = {
-    "version": "1.1.0",
+    "version": "2.0.0",
     "busybox_url": {
         "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",
         "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"
