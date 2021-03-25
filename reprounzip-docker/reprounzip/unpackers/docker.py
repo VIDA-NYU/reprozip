@@ -651,8 +651,8 @@ class ContainerUploader(FileUploader):
                     uid = gid = 1000
 
                 dockerfile.write(
-                    'RUN /busybox chown %d:%d %s\n' % (
-                        uid, gid, shell_escape(unicode_(target))
+                    'RUN ["/busybox", "chown", "%d:%d", %s]\n' % (
+                        uid, gid, json.dumps(unicode_(target)),
                     )
                 )
 
