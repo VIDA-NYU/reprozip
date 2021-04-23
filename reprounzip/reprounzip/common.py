@@ -15,7 +15,6 @@ in a separate module which is duplicated between the packages.
 
 As long as these are small in number, they are not worth putting in a separate
 package that reprozip and reprounzip would both depend on.
-
 """
 
 import atexit

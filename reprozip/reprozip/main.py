@@ -7,7 +7,7 @@
 This contains :func:`~reprozip.main.main`, which is the entry point declared to
 setuptools. It is also callable directly.
 
-It dispatchs to other routines, or handles the testrun command.
+It dispatches to other routines, or handles the testrun command.
 """
 
 if __name__ == '__main__':  # noqa

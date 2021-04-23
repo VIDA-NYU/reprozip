@@ -10,7 +10,6 @@
 
 These functions are shared between reprozip and reprounzip but are not specific
 to this software (more utilities).
-
 """
 
 import codecs
