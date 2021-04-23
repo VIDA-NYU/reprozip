@@ -171,12 +171,12 @@ class TestFiles(unittest.TestCase):
             ('exec', 0, "/some/thing/created/file", "/some/thing/created",
              "created\0"),
         ])
-        expected = set([
+        expected = {
             '/some/dir',
             '/some/dir/ls',
             '/some/otherdir/in',
             '/some/thing',
-        ])
+        }
         self.assertEqualPaths(expected,
                               set(fi.path for fi in files))
 
@@ -202,19 +202,19 @@ class TestFiles(unittest.TestCase):
                 ('open', 2, "/some/r", False, FILE_READ),
                 ('open', 1, "/some/rw", False, FILE_WRITE),
             ])
-            expected = set([
+            expected = {
                 '/some',
                 '/some/dir',
                 '/some/dir/ls',
                 '/some/r',
                 '/some/rw',
-            ])
+            }
             self.assertEqualPaths(expected,
                                   set(fi.path for fi in files))
-            self.assertEqualPaths([set(["/some/r", "/some/rw"]),
-                                   set(["/some/cli", "/some/r"])],
+            self.assertEqualPaths([{"/some/r", "/some/rw"},
+                                   {"/some/cli", "/some/r"}],
                                   [set(run) for run in inputs])
-            self.assertEqualPaths([set(["/some/cli"]), set(["/some/rw"])],
+            self.assertEqualPaths([{"/some/cli"}, {"/some/rw"}],
                                   [set(run) for run in outputs])
         finally:
             Path.is_file, Path.stat = old

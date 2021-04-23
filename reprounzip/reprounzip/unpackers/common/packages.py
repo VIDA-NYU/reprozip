@@ -154,8 +154,7 @@ def select_installer(pack, runs, target_distribution=THIS_DISTRIBUTION,
     # Checks that the distributions match
     if not check_distrib_compat:
         pass
-    elif (set([orig_distribution, target_distribution]) ==
-            set(['ubuntu', 'debian'])):
+    elif {orig_distribution, target_distribution} == {'ubuntu', 'debian'}:
         # Packages are more or less the same on Debian and Ubuntu
         logger.warning("Installing on %s but pack was generated on %s",
                        target_distribution.capitalize(),

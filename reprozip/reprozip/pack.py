@@ -47,7 +47,7 @@ def expand_patterns(patterns):
                 files.add(path)
 
     # Don't include directories whose files are included
-    non_empty_dirs = set([Path('/')])
+    non_empty_dirs = {Path('/')}
     for p in files | dirs:
         path = Path('/')
         for c in p.components[1:]:

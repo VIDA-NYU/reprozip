@@ -369,8 +369,8 @@ def load_iofiles(config, runs):
 
     files = {}  # name:str: InputOutputFile
     paths = {}  # path:PosixPath: name:str
-    required_keys = set(['name', 'path'])
-    optional_keys = set(['read_by_runs', 'written_by_runs'])
+    required_keys = {'name', 'path'}
+    optional_keys = {'read_by_runs', 'written_by_runs'}
     uniquenames = UniqueNames()
     for i, f in enumerate(files_list):
         keys = set(f)
@@ -445,12 +445,12 @@ def load_config(filename, canonical, File=File, Package=Package):
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "
                             "%s" % (ver, pkgname))
-    unknown_keys = keys_ - set(['pack_id', 'version', 'runs',
-                                'inputs_outputs',
-                                'packages', 'other_files',
-                                'additional_patterns',
-                                # Deprecated
-                                'input_files', 'output_files'])
+    unknown_keys = keys_ - {'pack_id', 'version', 'runs',
+                            'inputs_outputs',
+                            'packages', 'other_files',
+                            'additional_patterns',
+                            # Deprecated
+                            'input_files', 'output_files'}
     if unknown_keys:
         logger.warning("Unrecognized sections in configuration: %s",
                        ', '.join(unknown_keys))
