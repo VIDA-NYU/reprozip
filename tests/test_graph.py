@@ -6,7 +6,6 @@ from __future__ import print_function, unicode_literals
 
 import json
 from rpaths import Path
-import sys
 import unittest
 
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, FILE_STAT
@@ -22,9 +21,6 @@ class TestGraph(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if sys.version_info < (2, 7, 3):
-            raise unittest.SkipTest("Python version not supported by reprozip")
-
         cls._trace = Path.tempdir(prefix='rpz_testdb_')
         conn = make_database([
             ('proc', 0, None, False),

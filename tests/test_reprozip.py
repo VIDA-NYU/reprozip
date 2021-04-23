@@ -14,7 +14,7 @@ import unittest
 from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
 from reprozip import traceutils
-from reprozip.utils import PY3, unicode_, UniqueNames, make_dir_writable
+from reprozip.utils import unicode_, UniqueNames, make_dir_writable
 
 from tests.common import make_database
 
@@ -67,8 +67,6 @@ class TestReprozip(unittest.TestCase):
             (tmp / 'some' / 'complete' / 'path').chmod(0o755)
             tmp.rmtree()
 
-    @unittest.skipIf(sys.version_info < (2, 7, 3),
-                     "Python version not supported by reprozip")
     def test_argparse(self):
         """Tests argument parsing"""
         calls = []
@@ -267,10 +265,7 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
 
         for i, dat in enumerate(sql_data):
             trace = self.tmpdir / ('trace%d.sqlite3' % i)
-            if PY3:
-                conn = sqlite3.connect(str(trace))
-            else:
-                conn = sqlite3.connect(trace.path)
+            conn = sqlite3.connect(str(trace))  # connect() only accepts str
             conn.row_factory = sqlite3.Row
             traceutils.create_schema(conn)
             conn.executescript('PRAGMA foreign_keys=OFF; BEGIN TRANSACTION;' +
@@ -285,10 +280,7 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
         traceutils.combine_traces(traces, target)
         target = target / 'trace.sqlite3'
 
-        if PY3:
-            conn = sqlite3.connect(str(target))
-        else:
-            conn = sqlite3.connect(target.path)
+        conn = sqlite3.connect(str(target))  # connect() only accepts str
         conn.row_factory = None
         processes = list(conn.execute(
             '''

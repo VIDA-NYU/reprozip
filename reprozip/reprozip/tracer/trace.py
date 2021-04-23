@@ -29,8 +29,8 @@ from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import PY3, izip, iteritems, itervalues, \
-    unicode_, flatten, UniqueNames, hsize, normalize_path, find_all_links
+from reprozip.utils import izip, iteritems, itervalues, unicode_, flatten, \
+    UniqueNames, hsize, normalize_path, find_all_links
 
 
 logger = logging.getLogger('reprozip')
@@ -371,11 +371,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
     database = directory / 'trace.sqlite3'
 
     assert database.is_file()
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
 
     # Reads info from database

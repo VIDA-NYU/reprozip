@@ -29,9 +29,9 @@ import sys
 from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO
-from reprounzip.utils import PY3, izip, iteritems, itervalues, stderr, \
-    unicode_, escape, normalize_path
+from reprounzip.unpackers.common import COMPAT_OK
+from reprounzip.utils import izip, iteritems, itervalues, unicode_, escape, \
+    normalize_path
 
 
 logger = logging.getLogger('reprounzip.graph')
@@ -300,11 +300,7 @@ def read_events(database, all_forks, has_thread_flag, has_exit_timestamp):
     # all_forks is True (--all-forks).
 
     assert database.is_file()
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
 
     # This is a bit weird. We need to iterate on all types of events at the
@@ -721,10 +717,7 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
 
     json_other_files.sort()
 
-    if PY3:
-        fp = target.open('w', encoding='utf-8', newline='\n')
-    else:
-        fp = target.open('wb')
+    fp = target.open('w', encoding='utf-8', newline='\n')
     try:
         json.dump({'packages': sorted(json_packages,
                                       key=lambda p: p['name']),
@@ -766,26 +759,9 @@ def graph(args):
                       Path(args.dir) / 'trace.sqlite3')
 
 
-def disabled_bug13676(args):
-    stderr.write("Error: your version of Python, %s, is not supported\n"
-                 "Versions before 2.7.3 are affected by bug 13676 and will "
-                 "not be able to read\nthe trace "
-                 "database\n" % sys.version.split(' ', 1)[0])
-    sys.exit(1)
-
-
 def setup(parser, **kwargs):
     """Generates a provenance graph from the trace data
     """
-
-    # http://bugs.python.org/issue13676
-    # This prevents repro(un)zip from reading argv and envp arrays from trace
-    if sys.version_info < (2, 7, 3):
-        parser.add_argument('rest_of_cmdline', nargs=argparse.REMAINDER,
-                            help=argparse.SUPPRESS)
-        parser.set_defaults(func=disabled_bug13676)
-        return {'test_compatibility': (COMPAT_NO, "Python >2.7.3 required")}
-
     parser.add_argument('target', nargs=1, help="Destination DOT file")
     parser.add_argument('-F', '--all-forks', action='store_true',
                         help="Show forked processes before they exec")

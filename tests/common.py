@@ -7,17 +7,11 @@ from __future__ import print_function, unicode_literals
 from rpaths import Path
 import sqlite3
 
-from reprounzip.utils import PY3
-
 
 def make_database(insert, path=None):
     if path is not None:
         path = Path(path)
-        if PY3:
-            # On PY3, connect() only accepts unicode
-            conn = sqlite3.connect(str(path))
-        else:
-            conn = sqlite3.connect(path.path)
+        conn = sqlite3.connect(str(path))  # connect() only accepts str
     else:
         conn = sqlite3.connect('')
     conn.row_factory = sqlite3.Row

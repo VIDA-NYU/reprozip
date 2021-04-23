@@ -1,21 +1,16 @@
 import io
 import os
 from setuptools import setup
-import sys
 
 
-# pip workaround
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-# Need to specify encoding for PY3, which has the worst unicode handling ever
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
     'reprounzip>=1.0.0',
     'rpaths>=0.8']
-if sys.version_info < (2, 7):
-    req.append('argparse')
 setup(name='reprounzip-vistrails',
       version='2.0.0',
       py_modules=['reprounzip_vistrails'],

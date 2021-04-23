@@ -16,7 +16,7 @@ from rpaths import Path
 import sqlite3
 
 from reprozip.tracer.trace import TracedFile
-from reprozip.utils import PY3, listvalues
+from reprozip.utils import listvalues
 
 
 logger = logging.getLogger('reprozip')
@@ -129,11 +129,7 @@ def combine_traces(traces, target):
     # We are probably overwriting one of the traces we're reading, so write to
     # a temporary file first then move it
     fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(output))
-    else:
-        conn = sqlite3.connect(output.path)
+    conn = sqlite3.connect(str(output))  # connect() only accepts str
     os.close(fd)
     conn.row_factory = sqlite3.Row
 

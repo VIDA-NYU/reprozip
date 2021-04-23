@@ -26,8 +26,8 @@ import tarfile
 import reprounzip.common
 from reprounzip.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprounzip.utils import PY3, irange, iteritems, itervalues, \
-    stdout_bytes, unicode_, join_root, copyfile
+from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
+    unicode_, join_root, copyfile
 
 
 logger = logging.getLogger('reprounzip')
@@ -452,41 +452,10 @@ def fixup_environment(environ, args):
     return environ
 
 
-if PY3:
-    def pty_spawn(*args, **kwargs):
-        import pty
+def pty_spawn(*args, **kwargs):
+    import pty
 
-        return pty.spawn(*args, **kwargs)
-else:
-    def pty_spawn(argv):
-        """Version of pty.spawn() for PY2, that returns the exit code.
-
-        This works around https://bugs.python.org/issue2489.
-        """
-        logger.info("Using builtin pty.spawn()")
-
-        import pty
-        import tty
-
-        if isinstance(argv, bytes):
-            argv = (argv,)
-        pid, master_fd = pty.fork()
-        if pid == pty.CHILD:
-            os.execlp(argv[0], *argv)
-        try:
-            mode = tty.tcgetattr(pty.STDIN_FILENO)
-            tty.setraw(pty.STDIN_FILENO)
-            restore = 1
-        except tty.error:    # This is the same as termios.error
-            restore = 0
-        try:
-            pty._copy(master_fd, pty._read, pty._read)
-        except (IOError, OSError):
-            if restore:
-                tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
-
-        os.close(master_fd)
-        return os.waitpid(pid, 0)[1]
+    return pty.spawn(*args, **kwargs)
 
 
 def interruptible_call(cmd, **kwargs):
