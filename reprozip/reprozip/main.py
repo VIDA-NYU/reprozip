@@ -10,10 +10,6 @@ setuptools. It is also callable directly.
 It dispatches to other routines, or handles the testrun command.
 """
 
-if __name__ == '__main__':  # noqa
-    from reprozip.main import main
-    main()
-
 import argparse
 import locale
 import logging

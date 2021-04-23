@@ -157,8 +157,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         rpz_python.extend(['-m'] + os.environ['COVER'].split(' '))
         rpuz_python.extend(['-m'] + os.environ['COVER'].split(' '))
 
-    reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
-    reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
+    reprozip_main = tests.parent / 'reprozip/reprozip/__main__.py'
+    reprounzip_main = tests.parent / 'reprounzip/reprounzip/__main__.py'
 
     verbose = ['-v'] * 3
     rpz = rpz_python + [reprozip_main.absolute().path] + verbose

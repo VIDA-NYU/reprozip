@@ -14,6 +14,7 @@ See http://www.vistrails.org/
 if __name__ == '__main__':  # noqa
     from reprounzip_vistrails import run_from_vistrails
     run_from_vistrails()
+    assert False
 
 import argparse
 from datetime import datetime

@@ -11,10 +11,6 @@ It dispatchs to plugins registered through pkg_resources as entry point
 ``reprounzip.unpackers``.
 """
 
-if __name__ == '__main__':  # noqa
-    from reprounzip.main import main
-    main()
-
 import argparse
 import locale
 import logging
