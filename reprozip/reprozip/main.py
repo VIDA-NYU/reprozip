@@ -33,7 +33,6 @@ from reprozip.common import setup_logging, \
 import reprozip.pack
 import reprozip.tracer.trace
 import reprozip.traceutils
-from reprozip.utils import unicode_
 
 
 logger = logging.getLogger('reprozip')
@@ -65,7 +64,7 @@ def print_db(database):
     assert database.is_file()
     conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
-    conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
+    conn.text_factory = lambda x: str(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
     rows = cur.execute(

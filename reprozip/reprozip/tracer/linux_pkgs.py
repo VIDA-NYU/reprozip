@@ -22,7 +22,6 @@ import subprocess
 import time
 
 from reprozip.common import Package
-from reprozip.utils import iteritems, listvalues
 
 
 logger = logging.getLogger('reprozip')
@@ -79,7 +78,7 @@ class PkgManager(object):
 
         # Filter out packages with no files
         self.packages = {pkgname: pkg
-                         for pkgname, pkg in iteritems(self.packages)
+                         for pkgname, pkg in self.packages.items()
                          if pkg.files}
 
         logger.info("%d packages with %d files, and %d other files",
@@ -158,7 +157,7 @@ class DpkgManager(PkgManager):
 
         nb_pkg_files = 0
 
-        for path, pkgname in iteritems(found):
+        for path, pkgname in found.items():
             if pkgname is None:
                 continue
             if pkgname in self.packages:
@@ -264,4 +263,4 @@ def identify_packages(files):
     logger.debug("Assigning files to packages took %f seconds",
                  (time.time() - begin))
 
-    return manager.unknown_files, listvalues(manager.packages)
+    return manager.unknown_files, list(manager.packages.values())

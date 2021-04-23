@@ -37,8 +37,8 @@ import tarfile
 import usagestats
 import yaml
 
-from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
-    escape, optional_return_type, isodatetime, hsize, join_root, copyfile
+from .utils import UniqueNames, escape, optional_return_type, isodatetime, \
+    hsize, join_root, copyfile
 
 
 logger = logging.getLogger(__name__.split('.', 1)[0])
@@ -362,7 +362,7 @@ def load_iofiles(config, runs):
         for i, run in enumerate(runs):
             for rkey, wkey in (('input_files', 'read_by_runs'),
                                ('output_files', 'written_by_runs')):
-                for k, p in iteritems(run.pop(rkey, {})):
+                for k, p in run.pop(rkey, {}).items():
                     files_list.append({'name': k,
                                        'path': p,
                                        wkey: [i]})
@@ -464,10 +464,10 @@ def load_config(filename, canonical, File=File, Package=Package):
     # reprozip < 0.7 compatibility: set inputs/outputs on runs (for plugins)
     for i, run in enumerate(runs):
         run['input_files'] = dict((n, f.path)
-                                  for n, f in iteritems(inputs_outputs)
+                                  for n, f in inputs_outputs.items()
                                   if i in f.read_runs)
         run['output_files'] = dict((n, f.path)
-                                   for n, f in iteritems(inputs_outputs)
+                                   for n, f in inputs_outputs.items()
                                    if i in f.write_runs)
 
     # reprozip < 0.8 compatibility: assign IDs to runs
@@ -496,7 +496,7 @@ def load_config(filename, canonical, File=File, Package=Package):
 def write_file(fp, fi, indent=0):
     fp.write("%s  - \"%s\"%s\n" % (
              "    " * indent,
-             escape(unicode_(fi.path)),
+             escape(str(fi.path)),
              ' # %s' % fi.comment if fi.comment is not None else ''))
 
 
@@ -555,7 +555,7 @@ version: "{format!s}"
         fp.write("runs:\n")
         for i, run in enumerate(runs):
             # Remove reprozip < 0.7 compatibility fields
-            run = dict((k, v) for k, v in iteritems(run)
+            run = dict((k, v) for k, v in run.items()
                        if k not in ('input_files', 'output_files'))
             fp.write("# Run %d\n" % i)
             fp.write(dump([run]).decode('utf-8'))
@@ -570,13 +570,13 @@ version: "{format!s}"
 # files from the experiment on demand, for the user to examine.
 # The name field is the identifier the user will use to access these files.
 inputs_outputs:""")
-        for n, f in iteritems(inputs_outputs):
+        for n, f in inputs_outputs.items():
             fp.write("""\
 
 - name: {name}
   path: {path}
   written_by_runs: {writers}
-  read_by_runs: {readers}""".format(name=n, path=unicode_(f.path),
+  read_by_runs: {readers}""".format(name=n, path=str(f.path),
                                     readers=repr(f.read_runs),
                                     writers=repr(f.write_runs)))
 
@@ -715,11 +715,12 @@ def enable_usage_report(enable):
     """
     if enable:
         _usage_report.enable_reporting()
-        stderr.write("Thank you, usage reports will be sent automatically "
-                     "from now on.\n")
+        print("Thank you, usage reports will be sent automatically "
+              "from now on.\n", file=sys.stderr)
     else:
         _usage_report.disable_reporting()
-        stderr.write("Usage reports will not be collected nor sent.\n")
+        print("Usage reports will not be collected nor sent.\n",
+              file=sys.stderr)
 
 
 def record_usage(**kwargs):
@@ -746,9 +747,9 @@ def record_usage_package(runs, packages, other_files,
                                      if pkg.packfiles),
                  nb_other_files=len(other_files),
                  nb_input_outputs_files=len(inputs_outputs),
-                 nb_input_files=sum(1 for f in itervalues(inputs_outputs)
+                 nb_input_files=sum(1 for f in inputs_outputs.values()
                                     if f.read_runs),
-                 nb_output_files=sum(1 for f in itervalues(inputs_outputs)
+                 nb_output_files=sum(1 for f in inputs_outputs.values()
                                      if f.write_runs))
 
 

@@ -12,7 +12,6 @@ import logging
 import subprocess
 
 from reprounzip.unpackers.common.misc import UsageError
-from reprounzip.utils import itervalues
 
 
 logger = logging.getLogger('reprounzip')
@@ -46,7 +45,7 @@ class AptInstaller(object):
 
         # Checks on packages
         pkgs_status = self.get_packages_info(packages)
-        for pkg, status in itervalues(pkgs_status):
+        for pkg, status in pkgs_status.values():
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:
@@ -102,7 +101,7 @@ class YumInstaller(object):
 
         # Checks on packages
         pkgs_status = cls.get_packages_info(packages)
-        for pkg, status in itervalues(pkgs_status):
+        for pkg, status in pkgs_status.values():
             if status is not None:
                 required_pkgs.discard(pkg.name)
         if required_pkgs:

@@ -30,8 +30,7 @@ from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK
-from reprounzip.utils import izip, iteritems, itervalues, unicode_, escape, \
-    normalize_path
+from reprounzip.utils import escape, normalize_path
 
 
 logger = logging.getLogger('reprounzip.graph')
@@ -137,7 +136,7 @@ class Process(object):
     def dot(self, fp, level_processes, indent=1):
         thread_style = ',fillcolor="#666666"' if self.thread else ''
         fp.write('    ' * indent + 'prog%d [label="%s (%d)"%s];\n' % (
-                 self.id, escape(unicode_(self.binary) or "-"),
+                 self.id, escape(str(self.binary) or "-"),
                  self.pid, thread_style))
         if self.parent is not None:
             reason = ''
@@ -216,7 +215,7 @@ class Package(object):
                          escape(self.name), escape(self.version)))
             else:
                 fp.write('"%s";\n' % escape(self.name))
-            for f in sorted(unicode_(f) for f in self.files):
+            for f in sorted(str(f) for f in self.files):
                 fp.write('        "%s";\n' % escape(f))
             fp.write('    }\n')
 
@@ -224,20 +223,20 @@ class Package(object):
         if level_pkgs == LVL_PKG_PACKAGE:
             return '"pkg %s"' % escape(self.name)
         else:
-            return '"%s"' % escape(unicode_(f))
+            return '"%s"' % escape(str(f))
 
     def json_endpoint(self, f, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
             return self.name
         else:
-            return unicode_(f)
+            return str(f)
 
     def json(self, level_pkgs):
         if level_pkgs == LVL_PKG_PACKAGE:
             logger.critical("JSON output doesn't support --packages package")
             sys.exit(1)
         elif level_pkgs == LVL_PKG_FILE:
-            files = sorted(unicode_(f) for f in self.files)
+            files = sorted(str(f) for f in self.files)
         else:
             assert False
         return {'name': self.name, 'version': self.version or None,
@@ -481,7 +480,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     config = load_config(configfile, canonical=False)
     inputs_outputs = config.inputs_outputs
     inputs_outputs_map = dict((f.path, n)
-                              for n, f in iteritems(config.inputs_outputs))
+                              for n, f in config.inputs_outputs.items())
     has_thread_flag = config.format_version >= LooseVersion('0.7')
     has_exit_timestamp = config.format_version >= LooseVersion('1.1')
 
@@ -494,7 +493,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
         logger.warning("Configuration file doesn't list the same number of "
                        "runs we found in the database!")
     else:
-        for config_run, run in izip(config.runs, runs):
+        for config_run, run in zip(config.runs, runs):
             run.name = config_run['id']
 
     # Apply regexes
@@ -506,7 +505,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                for p, repl in regex_replaces or []]
 
     def filefilter(path):
-        pathuni = unicode_(path)
+        pathuni = str(path)
         if include and not any(f(pathuni) for f in include):
             logger.debug("IGN(include) %s", pathuni)
             return None
@@ -564,7 +563,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                 package_map[fi] = package
             else:
                 other_files.append(fi)
-        packages = sorted(itervalues(packages), key=lambda pkg: pkg.name)
+        packages = sorted(packages.values(), key=lambda pkg: pkg.name)
         for i, pkg in enumerate(packages):
             pkg.id = i
 
@@ -636,10 +635,10 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
             if fi in inputs_outputs_map:
                 fp.write('    "%(path)s" [fillcolor="#A3B4E0", '
                          'label="%(name)s\\n%(path)s"];\n' %
-                         {'path': escape(unicode_(fi)),
+                         {'path': escape(str(fi)),
                           'name': inputs_outputs_map[fi]})
             else:
-                fp.write('    "%s";\n' % escape(unicode_(fi)))
+                fp.write('    "%s";\n' % escape(str(fi)))
 
         fp.write('\n')
 
@@ -658,7 +657,7 @@ def graph_dot(target, runs, packages, other_files, package_map, edges,
                 else:
                     done_edges.add(e)
             else:
-                endp_file = '"%s"' % escape(unicode_(fi))
+                endp_file = '"%s"' % escape(str(fi))
 
             if mode is None:
                 fp.write('    %s -> %s [style=bold, label="%s"];\n' % (
@@ -687,7 +686,7 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
         json_packages = [pkg.json(level_pkgs) for pkg in packages]
 
     # Other files
-    json_other_files = [unicode_(fi) for fi in sorted(other_files)]
+    json_other_files = [str(fi) for fi in sorted(other_files)]
 
     # Programs
     prog_map = {}
@@ -707,7 +706,7 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
             else:
                 done_edges.add(e)
         else:
-            endp_file = unicode_(fi)
+            endp_file = str(fi)
         if mode is None:
             endp_prog['reads'].append(endp_file)
         elif mode & FILE_WRITE:
@@ -724,10 +723,10 @@ def graph_json(target, runs, packages, other_files, package_map, edges,
                    'other_files': json_other_files,
                    'runs': json_runs,
                    'inputs_outputs': [
-                       {'name': k, 'path': unicode_(v.path),
+                       {'name': k, 'path': str(v.path),
                         'read_by_runs': v.read_runs,
                         'written_by_runs': v.write_runs}
-                       for k, v in sorted(iteritems(inputs_outputs))]},
+                       for k, v in sorted(inputs_outputs.items())]},
                   fp,
                   ensure_ascii=False,
                   indent=2,

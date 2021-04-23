@@ -16,7 +16,6 @@ from rpaths import Path
 import sqlite3
 
 from reprozip.tracer.trace import TracedFile
-from reprozip.utils import listvalues
 
 
 logger = logging.getLogger('reprozip')
@@ -109,7 +108,7 @@ def combine_files(newfiles, newpackages, oldfiles, oldpackages):
         else:
             oldpkg.files = [TracedFile(fi.path) for fi in oldpkg.files]
             packages[oldpkg.name] = oldpkg
-    packages = listvalues(packages)
+    packages = packages.values()
 
     return files, packages
 

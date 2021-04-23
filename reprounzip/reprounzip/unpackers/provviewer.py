@@ -21,7 +21,6 @@ import sys
 
 from reprounzip.common import FILE_WRITE, RPZPack, load_config
 from reprounzip.unpackers.common import COMPAT_OK, shell_escape
-from reprounzip.utils import iteritems
 
 
 logger = logging.getLogger('reprounzip.provviewer')
@@ -138,7 +137,7 @@ def generate(target, configfile, database):
                         for f in pkg.files)
     inputs_outputs = dict((f.path.path, (bool(f.write_runs),
                                          bool(f.read_runs)))
-                          for n, f in iteritems(config.inputs_outputs))
+                          for n, f in config.inputs_outputs.items())
 
     # Read opened files
     cur = conn.cursor()
@@ -253,10 +252,10 @@ def generate(target, configfile, database):
             out.write('    <vertex>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
-                                      for k, v in iteritems(tags)))
+                                      for k, v in tags.items()))
             if vertex:
                 out.write('\n      <attributes>\n')
-                for k, v in iteritems(vertex):
+                for k, v in vertex.items():
                     out.write('        <attribute>\n'
                               '          <name>{k}</name>\n'
                               '          <value>{v}</value>\n'
@@ -277,7 +276,7 @@ def generate(target, configfile, database):
             out.write('    <edge>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
-                                      for k, v in iteritems(edge)) +
+                                      for k, v in edge.items()) +
                       '\n    </edge>\n')
         out.write('  </edges>\n'
                   '</provenancedata>\n')

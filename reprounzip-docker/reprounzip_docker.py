@@ -34,8 +34,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     parse_environment_args, interruptible_call, metadata_read, \
     metadata_write, metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, irange, iteritems, stderr, join_root, \
-    download_file
+from reprounzip.utils import join_root, download_file
 
 
 logger = logging.getLogger('reprounzip.docker')
@@ -275,7 +274,7 @@ def docker_setup_create(args):
                 '\n'
                 'if [ $# = 0 ]; then\n'
                 '    exec /busybox sh /rpz_entrypoint.sh')
-            for nb in irange(len(runs)):
+            for nb in range(len(runs)):
                 fp.write(' run %d' % nb)
             fp.write(
                 '\n'
@@ -333,7 +332,7 @@ def docker_setup_create(args):
                         wd=shell_escape(run['workingdir']),
                         env=shell_escape(' '.join(
                             '%s=%s' % (shell_escape(k), shell_escape(v))
-                            for k, v in iteritems(run['environ']))),
+                            for k, v in run['environ'].items())),
                         uid=run.get('uid', 1000),
                         gid=run.get('gid', 1000)))
             fp.write(
@@ -411,7 +410,7 @@ def docker_setup_build(args):
         unpacked_info['docker_host'] = {
             'type': 'custom',
             'env': dict((k, v)
-                        for k, v in iteritems(os.environ)
+                        for k, v in os.environ.items()
                         if k.startswith('DOCKER_'))}
 
     write_dict(target, unpacked_info)
@@ -454,7 +453,7 @@ def get_local_addr():
     This finds the address used to connect to the Docker host by establishing a
     network connection to it and reading the local address of the socket.
 
-    Returns an IP address as a unicode object, in digits-and-dots format.
+    Returns an IP address as a str, in digits-and-dots format.
 
     >>> get_local_addr()
     '172.17.42.1'
@@ -588,7 +587,7 @@ def docker_run(args):
             for k in env_unset:
                 env.append('-u')
                 env.append(shell_escape(k))
-            for k, v in iteritems(env_set):
+            for k, v in env_set.items():
                 env.append('%s=%s' % (shell_escape(k), shell_escape(v)))
             cmd.append(' '.join(env))
         # FIXME : Use exec -a or something if binary != argv[0]
@@ -693,8 +692,8 @@ class ContainerUploader(FileUploader):
 
     def prepare_upload(self, files):
         if 'current_image' not in self.unpacked_info:
-            stderr.write("Image doesn't exist yet, have you run "
-                         "setup/build?\n")
+            print("Image doesn't exist yet, have you run setup/build?\n",
+                  file=sys.stderr)
             sys.exit(1)
 
         self.build_directory = Path.tempdir(prefix='reprozip_build_')
@@ -727,8 +726,8 @@ class ContainerUploader(FileUploader):
                 # FIXME : spaces in filenames will probably break Docker
                 dockerfile.write(
                     'COPY \\\n    %s \\\n    %s\n' % (
-                        shell_escape(unicode_(src)),
-                        shell_escape(unicode_(target))))
+                        shell_escape(str(src)),
+                        shell_escape(str(target))))
 
             for src, target in self.docker_copy:
                 uid = gid = None
@@ -753,7 +752,7 @@ class ContainerUploader(FileUploader):
 
                 dockerfile.write(
                     'RUN ["/busybox", "chown", "%d:%d", %s]\n' % (
-                        uid, gid, json.dumps(unicode_(target)),
+                        uid, gid, json.dumps(str(target)),
                     )
                 )
 

@@ -20,7 +20,6 @@ from reprounzip.common import record_usage
 from reprounzip.unpackers.common import interruptible_call
 from reprounzip.unpackers.common.x11 import BaseForwarder, LocalForwarder
 from reprounzip_vagrant.interaction import interactive_shell
-from reprounzip.utils import irange, stdout_bytes
 
 
 logger = logging.getLogger('reprounzip.vagrant')
@@ -44,7 +43,7 @@ def find_ssh_executable(name='ssh'):
     # or ReproUnzip\Python27\python or ReproUnzip\Python27\Scripts\something
     loc = par(sys.executable)
     local_dirs = []
-    for i in irange(3):
+    for i in range(3):
         local_dirs.extend([loc, join(loc, 'ssh')])
         loc = par(loc)
     for pathdir in local_dirs + dirs:
@@ -167,8 +166,8 @@ def run_interactive(ssh_info, interactive, cmd, request_pty, forwarded_ports):
                 data = chan.recv(1024)
                 if len(data) == 0:
                     break
-                stdout_bytes.write(data)
-                stdout_bytes.flush()
+                sys.stdout.buffer.write(data)
+                sys.stdout.buffer.flush()
         retcode = chan.recv_exit_status()
         ssh.close()
         return retcode

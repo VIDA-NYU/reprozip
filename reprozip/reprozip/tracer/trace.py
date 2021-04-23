@@ -29,8 +29,8 @@ from reprozip.common import File, InputOutputFile, load_config, save_config, \
     FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import izip, iteritems, itervalues, unicode_, flatten, \
-    UniqueNames, hsize, normalize_path, find_all_links
+from reprozip.utils import flatten, UniqueNames, hsize, normalize_path, \
+    find_all_links
 
 
 logger = logging.getLogger('reprozip')
@@ -227,7 +227,7 @@ def get_files(conn):
     # Displays a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
         fi
-        for fi in itervalues(files)
+        for fi in files.values()
         if fi.what == TracedFile.READ_THEN_WRITTEN and
         not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
@@ -236,12 +236,12 @@ def get_files(conn):
             "final version of the file; reproducible experiments shouldn't "
             "change their input files")
         logger.info("Paths:\n%s",
-                    ", ".join(unicode_(fi.path)
+                    ", ".join(str(fi.path)
                               for fi in read_then_written_files))
 
     files = set(
         fi
-        for fi in itervalues(files)
+        for fi in files.values()
         if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
                                                      for m in magic_dirs))
     return files, inputs, outputs
@@ -443,7 +443,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
 
         run = {'id': "run%d" % len(runs),
                      'binary': r_name, 'argv': argv,
-                     'workingdir': unicode_(Path(r_workingdir)),
+                     'workingdir': str(Path(r_workingdir)),
                      'architecture': platform.machine().lower(),
                      'distribution': distribution,
                      'hostname': platform.node(),
@@ -489,8 +489,8 @@ def compile_inputs_outputs(runs, inputs, outputs):
     readers = {}
     writers = {}
 
-    for run_nb, run, in_files, out_files in izip(count(), runs,
-                                                 inputs, outputs):
+    for run_nb, run, in_files, out_files in zip(count(), runs,
+                                                inputs, outputs):
         # List which runs read or write each file
         for p in in_files:
             readers.setdefault(p, []).append(run_nb)
@@ -537,4 +537,4 @@ def compile_inputs_outputs(runs, inputs, outputs):
             file_names[fi] = make_unique(fi.unicodename)
 
     return dict((n, InputOutputFile(p, readers.get(p, []), writers.get(p, [])))
-                for p, n in iteritems(file_names))
+                for p, n in file_names.items())

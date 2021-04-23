@@ -11,7 +11,7 @@ import logging
 import os
 import re
 import requests
-from rpaths import Path, unicode
+from rpaths import Path
 import sqlite3
 import subprocess
 import sys
@@ -19,7 +19,7 @@ import yaml
 
 from reprounzip.common import FILE_READ, FILE_WRITE
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import stderr_bytes, stderr
+
 
 tests = Path(__file__).parent.absolute()
 
@@ -71,7 +71,7 @@ def print_arg_list(f):
     @functools.wraps(f)
     def wrapper(arglist, *args, **kwargs):
         print("\nreprozip-tests$ " +
-              " ".join(a if isinstance(a, unicode)
+              " ".join(a if isinstance(a, str)
                        else a.decode('utf-8', 'replace')
                        for a in arglist))
         return f(arglist, *args, **kwargs)
@@ -108,7 +108,7 @@ def call_output(args, stream='out'):
         line = fp.readline()
         if not line:
             break
-        stderr_bytes.write(line)
+        sys.stderr.buffer.write(line)
         output.append(line)
     retcode = p.wait()
     return retcode, b''.join(output)
@@ -208,7 +208,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         try:
             first = output.index(b"Read 6 bytes")
         except ValueError:
-            stderr.write("output = %r\n" % output)
+            sys.stderr.buffer.write("output = %r\n" % output)
             raise
         if infile == 1:
             assert output[first + 1] == b"a = 29, b = 13"

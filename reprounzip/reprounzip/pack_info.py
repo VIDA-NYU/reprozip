@@ -25,7 +25,7 @@ from reprounzip.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, UsageError, shell_escape, metadata_read
-from reprounzip.utils import iteritems, itervalues, unicode_, hsize
+from reprounzip.utils import hsize
 
 
 logger = logging.getLogger('reprounzip')
@@ -121,11 +121,11 @@ def get_package_info(pack, read_data=False):
         name: {'path': str(iofile.path),
                'read_runs': iofile.read_runs,
                'write_runs': iofile.write_runs}
-        for name, iofile in iteritems(inputs_outputs)}
+        for name, iofile in inputs_outputs.items()}
 
     # Unpacker compatibility
     unpacker_status = {}
-    for name, upk in iteritems(unpackers):
+    for name, upk in unpackers.items():
         if 'test_compatibility' in upk:
             compat = upk['test_compatibility']
             if callable(compat):
@@ -209,7 +209,7 @@ def _print_package_info(pack, info, verbosity=1):
                   len(inputs_outputs), ", ".join(sorted(inputs_outputs))))
         else:
             print("Inputs/outputs files (%d):" % len(inputs_outputs))
-            for name, f in sorted(iteritems(inputs_outputs)):
+            for name, f in sorted(inputs_outputs.items()):
                 t = []
                 if f['read_runs']:
                     t.append("in")
@@ -303,7 +303,7 @@ def showfiles(args):
 
         if show_inputs:
             shown = False
-            for input_name, f in sorted(iteritems(config.inputs_outputs)):
+            for input_name, f in sorted(config.inputs_outputs.items()):
                 if f.read_runs and file_filter(f):
                     if not shown:
                         print("Input files:")
@@ -321,14 +321,14 @@ def showfiles(args):
                     elif assigned is True:
                         assigned = "(generated)"
                     else:
-                        assert isinstance(assigned, (bytes, unicode_))
+                        assert isinstance(assigned, (bytes, str))
                     print("      %s" % assigned)
             if not shown:
                 print("Input files: none")
 
         if show_outputs:
             shown = False
-            for output_name, f in sorted(iteritems(config.inputs_outputs)):
+            for output_name, f in sorted(config.inputs_outputs.items()):
                 if f.write_runs and file_filter(f):
                     if not shown:
                         print("Output files:")
@@ -348,9 +348,9 @@ def showfiles(args):
         if args.run is not None:
             file_filter.run = parse_run(config.runs, args.run)
 
-        if any(f.read_runs for f in itervalues(config.inputs_outputs)):
+        if any(f.read_runs for f in config.inputs_outputs.values()):
             print("Input files:")
-            for input_name, f in sorted(iteritems(config.inputs_outputs)):
+            for input_name, f in sorted(config.inputs_outputs.items()):
                 if f.read_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (input_name, f.path))
@@ -359,9 +359,9 @@ def showfiles(args):
         else:
             print("Input files: none")
 
-        if any(f.write_runs for f in itervalues(config.inputs_outputs)):
+        if any(f.write_runs for f in config.inputs_outputs.values()):
             print("Output files:")
-            for output_name, f in sorted(iteritems(config.inputs_outputs)):
+            for output_name, f in sorted(config.inputs_outputs.items()):
                 if f.write_runs and file_filter(f):
                     if args.verbosity >= 2:
                         print("    %s (%s)" % (output_name, f.path))

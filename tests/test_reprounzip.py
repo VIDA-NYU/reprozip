@@ -39,7 +39,7 @@ class TestSignals(unittest.TestCase):
         with self.assertRaises(TypeError):
             sig.subscribe(2)
         sig.unsubscribe(4)
-        self.assertEqual(sig._listeners, set([foo]))
+        self.assertEqual(sig._listeners, {foo})
         sig.unsubscribe(foo)
         self.assertFalse(sig._listeners)
 

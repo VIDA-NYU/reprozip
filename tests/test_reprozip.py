@@ -14,7 +14,7 @@ import unittest
 from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
 from reprozip import traceutils
-from reprozip.utils import unicode_, UniqueNames, make_dir_writable
+from reprozip.utils import UniqueNames, make_dir_writable
 
 from tests.common import make_database
 
@@ -149,7 +149,7 @@ class TestFiles(unittest.TestCase):
             return [cls.make_paths(e) for e in obj]
         elif isinstance(obj, AbstractPath):
             return obj
-        elif isinstance(obj, (bytes, unicode_)):
+        elif isinstance(obj, (bytes, str)):
             return Path(obj)
         else:
             assert False

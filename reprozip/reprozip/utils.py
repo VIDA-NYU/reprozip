@@ -28,7 +28,6 @@ import requests
 from rpaths import Path, PosixPath
 import stat
 import subprocess
-import sys
 import time
 
 
@@ -58,41 +57,6 @@ class StreamWriter(object):
         return getattr(self._writer, name)
 
 
-PY3 = sys.version_info[0] == 3
-
-
-if PY3:
-    izip = zip
-    irange = range
-    iteritems = lambda d: d.items()
-    itervalues = lambda d: d.values()
-    listvalues = lambda d: list(d.values())
-
-    stdout_bytes = sys.stdout.buffer if sys.stdout is not None else None
-    stderr_bytes = sys.stderr.buffer if sys.stderr is not None else None
-    stdin_bytes = sys.stdin.buffer if sys.stdin is not None else None
-    stdout, stderr = sys.stdout, sys.stderr
-else:
-    izip = itertools.izip
-    irange = xrange  # noqa: F821
-    iteritems = lambda d: d.iteritems()
-    itervalues = lambda d: d.itervalues()
-    listvalues = lambda d: d.values()
-
-    _writer = codecs.getwriter(locale.getpreferredencoding())
-    stdout_bytes, stderr_bytes = sys.stdout, sys.stderr
-    stdin_bytes = sys.stdin
-    stdout, stderr = StreamWriter(sys.stdout), StreamWriter(sys.stderr)
-
-
-if PY3:
-    int_types = int,
-    unicode_ = str
-else:
-    int_types = int, long  # noqa: F821
-    unicode_ = unicode  # noqa: F821
-
-
 def flatten(n, iterable):
     """Flattens an iterable by repeatedly calling chain.from_iterable() on it.
 
@@ -108,7 +72,7 @@ def flatten(n, iterable):
     >>> list(flatten(2, l))
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     """
-    for _ in irange(n):
+    for _ in range(n):
         iterable = itertools.chain.from_iterable(iterable)
     return iterable
 
@@ -172,9 +136,9 @@ def optional_return_type(req_args, other_args):
 
         args1, args2 = args[:len(req_args)], args[len(req_args):]
         req = dict((i, v) for i, v in enumerate(args1))
-        other = dict(izip(other_args, args2))
+        other = dict(zip(other_args, args2))
 
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             if k in req_args_pos:
                 pos = req_args_pos[k]
                 if pos in req:

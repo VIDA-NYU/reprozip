@@ -16,8 +16,6 @@ import socket
 import struct
 import threading
 
-from reprounzip.utils import irange, iteritems
-
 
 logger = logging.getLogger('reprounzip')
 
@@ -128,7 +126,7 @@ class X11Handler(BaseX11Handler):
 
     SOCK2X = {socket.AF_INET: Xauth.FAMILY_INTERNET,
               socket.AF_INET6: Xauth.FAMILY_INTERNET6}
-    X2SOCK = dict((v, k) for k, v in iteritems(SOCK2X))
+    X2SOCK = dict((v, k) for k, v in SOCK2X.items())
 
     def __init__(self, enabled, target, display=None):
         self.enabled = enabled
@@ -349,7 +347,7 @@ class X11Handler(BaseX11Handler):
             raise RuntimeError("Invalid target display type")
         buf = xauth_record.as_bytes()
         xauth = ''.join(('\\x%02x' % ord(buf[i:i + 1]))
-                        for i in irange(len(buf)))
+                        for i in range(len(buf)))
         return ['echo -ne "%s" > %s' % (xauth, self.xauth)]
 
 

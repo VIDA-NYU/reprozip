@@ -26,8 +26,7 @@ import tarfile
 import reprounzip.common
 from reprounzip.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprounzip.utils import irange, iteritems, itervalues, stdout_bytes, \
-    unicode_, join_root, copyfile
+from reprounzip.utils import join_root, copyfile
 
 
 logger = logging.getLogger('reprounzip')
@@ -74,10 +73,10 @@ def unique_names():
     """
     characters = (b"abcdefghijklmnopqrstuvwxyz"
                   b"0123456789")
-    characters = [characters[i:i + 1] for i in irange(len(characters))]
+    characters = [characters[i:i + 1] for i in range(len(characters))]
     rng = random.Random()
     while True:
-        letters = [rng.choice(characters) for i in irange(10)]
+        letters = [rng.choice(characters) for i in range(10)]
         yield b''.join(letters)
 
 
@@ -152,7 +151,7 @@ class FileUploader(object):
         # No argument: list all the input files and exit
         if not files:
             print("Input files:")
-            for input_name in sorted(n for n, f in iteritems(inputs_outputs)
+            for input_name in sorted(n for n, f in inputs_outputs.items()
                                      if f.read_runs):
                 assigned = self.input_files.get(input_name)
                 if assigned is None:
@@ -162,7 +161,7 @@ class FileUploader(object):
                 elif assigned is True:
                     assigned = "(generated)"
                 else:
-                    assert isinstance(assigned, (bytes, unicode_))
+                    assert isinstance(assigned, (bytes, str))
                 print("    %s: %s" % (input_name, assigned))
             return
 
@@ -262,14 +261,14 @@ class FileDownloader(object):
         # No argument: list all the output files and exit
         if not (all_ or files):
             print("Output files:")
-            for output_name in sorted(n for n, f in iteritems(inputs_outputs)
+            for output_name in sorted(n for n, f in inputs_outputs.items()
                                       if f.write_runs):
                 print("    %s" % output_name)
             return
 
         # Parse the name[:path] syntax
         resolved_files = []
-        all_files = set(n for n, f in iteritems(inputs_outputs)
+        all_files = set(n for n, f in inputs_outputs.items()
                         if f.write_runs)
         for filespec in files:
             filespec_split = filespec.split(':', 1)
@@ -339,7 +338,7 @@ class FileDownloader(object):
             return False
         # Output to stdout
         with temp.open('rb') as fp:
-            copyfile(fp, stdout_bytes)
+            copyfile(fp, sys.stdout.buffer)
         temp.remove()
         return True
 
@@ -372,7 +371,7 @@ def get_runs(runs, selected_runs, cmdline):
         return r
 
     if selected_runs is None:
-        run_list = list(irange(len(runs)))
+        run_list = list(range(len(runs)))
     else:
         for run_item in selected_runs.split(','):
             run_item = run_item.strip()
@@ -396,7 +395,7 @@ def get_runs(runs, selected_runs, cmdline):
                     logger.critical("Error: Last run number should be "
                                     "greater than the first")
                     sys.exit(1)
-                run_list.extend(irange(first, last + 1))
+                run_list.extend(range(first, last + 1))
 
     # --cmdline without arguments: display the original command-line
     if cmdline == []:
@@ -482,7 +481,7 @@ def interruptible_call(cmd, **kwargs):
                     logger.info("We need a tty and we are not attached to "
                                 "one. Opening pty...")
                     if kwargs.pop('shell', False):
-                        if not isinstance(cmd, (str, unicode_)):
+                        if not isinstance(cmd, (str, str)):
                             raise TypeError("shell=True but cmd is not a "
                                             "string")
                         cmd = ['/bin/sh', '-c', cmd]
@@ -563,7 +562,7 @@ def metadata_initial_iofiles(config, dct=None):
         dct = {}
 
     path2iofile = {f.path: n
-                   for n, f in iteritems(config.inputs_outputs)}
+                   for n, f in config.inputs_outputs.items()}
 
     def packed_files():
         yield config.other_files
@@ -575,7 +574,7 @@ def metadata_initial_iofiles(config, dct=None):
         f = f.path
         path2iofile.pop(f, None)
 
-    dct['input_files'] = dict((n, False) for n in itervalues(path2iofile))
+    dct['input_files'] = dict((n, False) for n in path2iofile.values())
 
     return dct
 
@@ -598,7 +597,7 @@ def metadata_update_run(config, dct, runs):
     runs = set(runs)
     input_files = dct.setdefault('input_files', {})
 
-    for name, fi in iteritems(config.inputs_outputs):
+    for name, fi in config.inputs_outputs.items():
         if any(r in runs for r in fi.write_runs):
             input_files[name] = True
 

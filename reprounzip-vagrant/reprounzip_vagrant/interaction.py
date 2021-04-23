@@ -24,8 +24,8 @@
 from __future__ import division, print_function, unicode_literals
 
 import socket
+import sys
 
-from reprounzip.utils import stdout, stdout_bytes, stderr_bytes, stdin_bytes
 
 # windows does not have termios...
 try:
@@ -47,39 +47,39 @@ def posix_shell(chan, raw):
     # set signal somehow
     import select
 
-    oldtty = termios.tcgetattr(stdin_bytes)
+    oldtty = termios.tcgetattr(sys.stdin)
     try:
         if raw:
-            tty.setraw(stdin_bytes.fileno())
-            tty.setcbreak(stdin_bytes.fileno())
+            tty.setraw(sys.stdin)
+            tty.setcbreak(sys.stdin)
         chan.settimeout(0.0)
 
         while True:
-            r, w, e = select.select([chan, stdin_bytes], [], [])
+            r, w, e = select.select([chan, sys.stdin.fileno()], [], [])
             if chan in r:
                 try:
                     if chan.recv_stderr_ready():
                         x = chan.recv_stderr(1024)
                         if len(x) > 0:
-                            stderr_bytes.write(x)
-                            stderr_bytes.flush()
+                            sys.stderr.buffer.write(x)
+                            sys.stderr.buffer.flush()
                     else:
                         x = chan.recv(1024)
                         if len(x) == 0:
                             break
-                        stdout_bytes.write(x)
-                        stdout_bytes.flush()
+                        sys.stdout.buffer.write(x)
+                        sys.stdout.buffer.flush()
                 except socket.timeout:
                     pass
-            if stdin_bytes in r:
-                x = stdin_bytes.read(1)
+            if sys.stdin.fileno() in r:
+                x = sys.stdin.buffer.read(1)
                 if len(x) == 0:
                     break
                 chan.send(x)
 
     finally:
         if raw:
-            termios.tcsetattr(stdin_bytes, termios.TCSADRAIN, oldtty)
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, oldtty)
 
 
 # thanks to Mike Looijmans for this code
@@ -87,9 +87,8 @@ def windows_shell(chan):
     # set signal somehow
     import threading
 
-    stdout.write("*** Emulating terminal on Windows; press F6 or Ctrl+Z then "
-                 "enter to send EOF,\r\nor at the end of the execution.\r\n")
-    stdout.flush()
+    print("*** Emulating terminal on Windows; press F6 or Ctrl+Z then "
+          "enter to send EOF,\nor at the end of the execution.", flush=True)
 
     out_lock = threading.RLock()
 
@@ -99,12 +98,11 @@ def windows_shell(chan):
             if not data:
                 if std:
                     with out_lock:
-                        stdout.write(
-                            "\r\n*** EOF reached; (press F6 or ^Z then enter "
-                            "to end)\r\n")
-                        stdout.flush()
+                        print(
+                            "\n*** EOF reached; (press F6 or ^Z then enter "
+                            "to end)", flush=True)
                 break
-            stream = [stderr_bytes, stdout_bytes][std]
+            stream = [sys.stderr.buffer, sys.stdout.buffer][std]
             with out_lock:
                 stream.write(data)
                 stream.flush()
@@ -114,7 +112,7 @@ def windows_shell(chan):
 
     try:
         while True:
-            d = stdin_bytes.read(1)
+            d = sys.stdin.buffer.read(1)
             if not d:
                 chan.shutdown_write()
                 break

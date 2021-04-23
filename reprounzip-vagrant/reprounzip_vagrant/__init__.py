@@ -34,7 +34,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip_vagrant.run_command import IgnoreMissingKey, run_interactive
-from reprounzip.utils import unicode_, iteritems, stderr, download_file
+from reprounzip.utils import download_file
 
 
 logger = logging.getLogger('reprounzip.vagrant')
@@ -308,10 +308,10 @@ def vagrant_setup_create(args):
                         f = f.path
                         dest = join_root(PosixPath('/experimentroot'), f)
                         fp.write('mkdir -p %s\n' %
-                                 shell_escape(unicode_(f.parent)))
+                                 shell_escape(str(f.parent)))
                         fp.write('cp -L %s %s\n' % (
-                                 shell_escape(unicode_(f)),
-                                 shell_escape(unicode_(dest))))
+                                 shell_escape(str(f)),
+                                 shell_escape(str(dest))))
                 fp.write(
                     '\n'
                     'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
@@ -488,7 +488,7 @@ def vagrant_run(args):
             all_ports[host] = guest, proto
         unpacked_info['ports'] = sorted(
             (host, guest, proto)
-            for host, (guest, proto) in iteritems(all_ports))
+            for host, (guest, proto) in all_ports.items())
 
         write_vagrantfile(target, unpacked_info)
         logger.info("Some requested ports are not yet forwarded, running "
@@ -518,7 +518,7 @@ def vagrant_run(args):
         environ = x11.fix_env(run['environ'])
         environ = fixup_environment(environ, args)
         cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
-                        for k, v in iteritems(environ))
+                        for k, v in environ.items())
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -563,7 +563,8 @@ def vagrant_run(args):
                               cmds,
                               not args.no_pty,
                               x11.port_forward)
-    stderr.write("\r\n*** Command finished, status: %d\r\n" % retcode)
+    print("\r\n*** Command finished, status: %d\r\n" % retcode,
+          file=sys.stderr)
 
     # Update input file status
     metadata_update_run(config, unpacked_info, selected_runs)
