@@ -14,6 +14,7 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 from itertools import chain
+import json
 import logging
 import os
 import re
@@ -751,8 +752,8 @@ class ContainerUploader(FileUploader):
                     uid = gid = 1000
 
                 dockerfile.write(
-                    'RUN /busybox chown %d:%d %s\n' % (
-                        uid, gid, shell_escape(unicode_(target))
+                    'RUN ["/busybox", "chown", "%d:%d", %s]\n' % (
+                        uid, gid, json.dumps(unicode_(target)),
                     )
                 )
 
