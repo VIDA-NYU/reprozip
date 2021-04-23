@@ -20,9 +20,6 @@
 # along with Paramiko; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
-
-from __future__ import division, print_function, unicode_literals
-
 import socket
 import sys
 

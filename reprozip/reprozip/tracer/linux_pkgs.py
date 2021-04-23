@@ -12,8 +12,6 @@ Currently supported package managers:
 - dpkg (Debian, Ubuntu)
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import distro
 import itertools
 import logging

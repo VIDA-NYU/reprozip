@@ -8,8 +8,6 @@ These are operations on traces that are not directly related to the tracing
 process itself.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import logging
 import os
 from rpaths import Path

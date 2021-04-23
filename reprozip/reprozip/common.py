@@ -18,8 +18,6 @@ package that reprozip and reprounzip would both depend on.
 
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import atexit
 import contextlib
 import copy

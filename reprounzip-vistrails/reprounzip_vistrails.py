@@ -11,8 +11,6 @@ the .vt file, you will need it if you want to run it.
 See http://www.vistrails.org/
 """
 
-from __future__ import division, print_function, unicode_literals
-
 if __name__ == '__main__':  # noqa
     from reprounzip_vistrails import run_from_vistrails
     run_from_vistrails()

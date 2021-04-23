@@ -8,8 +8,6 @@ Emitting and subscribing to these signals is the framework for the plugin
 infrastructure.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import traceback
 import warnings
 

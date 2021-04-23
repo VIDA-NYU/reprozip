@@ -10,8 +10,6 @@ reprozip pack. You can then build a container and run it with Docker.
 See http://www.docker.io/
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 from itertools import chain
 import json

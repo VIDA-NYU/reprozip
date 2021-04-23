@@ -11,8 +11,6 @@ It dispatchs to plugins registered through pkg_resources as entry point
 ``reprounzip.unpackers``.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 import distro
 import json
