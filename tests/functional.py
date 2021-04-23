@@ -11,7 +11,7 @@ import logging
 import os
 import re
 import requests
-from rpaths import Path, unicode
+from rpaths import Path
 import sqlite3
 import subprocess
 import sys
@@ -19,7 +19,7 @@ import yaml
 
 from reprounzip.common import FILE_READ, FILE_WRITE
 from reprounzip.unpackers.common import join_root
-from reprounzip.utils import PY3, stderr_bytes, stderr
+
 
 tests = Path(__file__).parent.absolute()
 
@@ -71,7 +71,7 @@ def print_arg_list(f):
     @functools.wraps(f)
     def wrapper(arglist, *args, **kwargs):
         print("\nreprozip-tests$ " +
-              " ".join(a if isinstance(a, unicode)
+              " ".join(a if isinstance(a, str)
                        else a.decode('utf-8', 'replace')
                        for a in arglist))
         return f(arglist, *args, **kwargs)
@@ -108,7 +108,7 @@ def call_output(args, stream='out'):
         line = fp.readline()
         if not line:
             break
-        stderr_bytes.write(line)
+        sys.stderr.buffer.write(line)
         output.append(line)
     retcode = p.wait()
     return retcode, b''.join(output)
@@ -208,7 +208,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         try:
             first = output.index(b"Read 6 bytes")
         except ValueError:
-            stderr.write("output = %r\n" % output)
+            sys.stderr.buffer.write("output = %r\n" % output)
             raise
         if infile == 1:
             assert output[first + 1] == b"a = 29, b = 13"
@@ -668,11 +668,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         config = yaml.safe_load(fp)
     # Check that written files were logged
     database = Path.cwd() / 'rename-trace/trace.sqlite3'
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
         '''
@@ -704,11 +700,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                       './readwrite', 'readwrite_test/existing'])
     # Check that file was logged as read and written
     database = Path.cwd() / 'readwrite-E-trace/trace.sqlite3'
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
     rows = list(conn.execute(
         '''
@@ -725,11 +717,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                       './readwrite', 'readwrite_test/nonexisting'])
     # Check that file was logged as written only
     database = Path.cwd() / 'readwrite-N-trace/trace.sqlite3'
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
     rows = list(conn.execute(
         '''
@@ -776,11 +764,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     # Check database
     database = Path.cwd() / 'shebang-trace/trace.sqlite3'
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
         '''

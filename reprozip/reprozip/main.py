@@ -33,7 +33,6 @@ from reprozip.common import setup_logging, \
 import reprozip.pack
 import reprozip.tracer.trace
 import reprozip.traceutils
-from reprozip.utils import PY3, unicode_, stderr
 
 
 logger = logging.getLogger('reprozip')
@@ -63,13 +62,9 @@ def print_db(database):
     """Prints out database content.
     """
     assert database.is_file()
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
-    conn.text_factory = lambda x: unicode_(x, 'utf-8', 'replace')
+    conn.text_factory = lambda x: str(x, 'utf-8', 'replace')
 
     cur = conn.cursor()
     rows = cur.execute(
@@ -311,15 +306,6 @@ def main():
     """
     # Locale
     locale.setlocale(locale.LC_ALL, '')
-
-    # http://bugs.python.org/issue13676
-    # This prevents reprozip from reading argv and envp arrays from trace
-    if sys.version_info < (2, 7, 3):
-        stderr.write("Error: your version of Python, %s, is not supported\n"
-                     "Versions before 2.7.3 are affected by bug 13676 and "
-                     "will not work with ReproZip\n" %
-                     sys.version.split(' ', 1)[0])
-        sys.exit(125)
 
     # Parses command-line
 

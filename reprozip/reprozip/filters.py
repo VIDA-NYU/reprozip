@@ -8,7 +8,6 @@ import logging
 import re
 
 from reprozip.tracer.trace import TracedFile
-from reprozip.utils import irange, iteritems
 
 
 logger = logging.getLogger('reprozip')
@@ -20,7 +19,7 @@ _so_file = re.compile(br'\.so(\.[0-9]+)*$')
 def builtin(input_files, **kwargs):
     """Default heuristics for input files.
     """
-    for i in irange(len(input_files)):
+    for i in range(len(input_files)):
         lst = []
         for path in input_files[i]:
             if (
@@ -37,7 +36,7 @@ def builtin(input_files, **kwargs):
 
 def python(files, input_files, **kwargs):
     add = []
-    for path, fi in iteritems(files):
+    for path, fi in files.items():
         if path.ext == b'.pyc':
             pyfile = path.parent / path.stem + '.py'
             if pyfile.is_file():
@@ -48,7 +47,7 @@ def python(files, input_files, **kwargs):
     for fi in add:
         files[fi.path] = fi
 
-    for i in irange(len(input_files)):
+    for i in range(len(input_files)):
         lst = []
         for path in input_files[i]:
             if path.ext in (b'.py', b'.pyc'):

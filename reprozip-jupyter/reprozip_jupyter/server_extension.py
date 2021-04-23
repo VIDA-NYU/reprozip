@@ -12,12 +12,6 @@ from tornado.process import Subprocess
 from tornado.web import RequestHandler
 
 
-try:
-    unicode_ = unicode
-except NameError:
-    unicode_ = str
-
-
 class TraceHandler(RequestHandler):
     def initialize(self, nbapp=None):
         self.nbapp = nbapp
@@ -81,7 +75,7 @@ class TraceHandler(RequestHandler):
         if returncode == 0:
             # Send the response
             self.set_header('Content-Type', 'application/json')
-            self.finish({'bundle': unicode_(self._pack_file)})
+            self.finish({'bundle': str(self._pack_file)})
             self.nbapp.log.info("reprozip: response sent!")
         else:
             self.send_error(500)

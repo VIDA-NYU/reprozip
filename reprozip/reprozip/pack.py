@@ -25,7 +25,6 @@ from reprozip.common import File, load_config, save_config, \
     record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.traceutils import combine_files
-from reprozip.utils import iteritems
 
 
 logger = logging.getLogger('reprozip')
@@ -48,7 +47,7 @@ def expand_patterns(patterns):
                 files.add(path)
 
     # Don't include directories whose files are included
-    non_empty_dirs = set([Path('/')])
+    non_empty_dirs = {Path('/')}
     for p in files | dirs:
         path = Path('/')
         for c in p.components[1:]:
@@ -212,7 +211,7 @@ def pack(target, directory, sort_packages):
     tar.add(str(trace), 'METADATA/trace.sqlite3')
 
     # Checks that input files are packed
-    for name, f in iteritems(inputs_outputs):
+    for name, f in inputs_outputs.items():
         if f.read_runs and not Path(f.path).exists():
             logger.warning("File is designated as input (name %s) but is not "
                            "to be packed: %s", name, f.path)

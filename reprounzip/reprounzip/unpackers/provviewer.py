@@ -20,8 +20,7 @@ import sqlite3
 import sys
 
 from reprounzip.common import FILE_WRITE, RPZPack, load_config
-from reprounzip.unpackers.common import COMPAT_OK, COMPAT_NO, shell_escape
-from reprounzip.utils import PY3, iteritems, stderr
+from reprounzip.unpackers.common import COMPAT_OK, shell_escape
 
 
 logger = logging.getLogger('reprounzip.provviewer')
@@ -50,11 +49,7 @@ def generate(target, configfile, database):
     has_thread_flag = config.format_version >= LooseVersion('0.7')
 
     assert database.is_file()
-    if PY3:
-        # On PY3, connect() only accepts unicode
-        conn = sqlite3.connect(str(database))
-    else:
-        conn = sqlite3.connect(database.path)
+    conn = sqlite3.connect(str(database))  # connect() only accepts str
     conn.row_factory = sqlite3.Row
 
     vertices = []
@@ -142,7 +137,7 @@ def generate(target, configfile, database):
                         for f in pkg.files)
     inputs_outputs = dict((f.path.path, (bool(f.write_runs),
                                          bool(f.read_runs)))
-                          for n, f in iteritems(config.inputs_outputs))
+                          for n, f in config.inputs_outputs.items())
 
     # Read opened files
     cur = conn.cursor()
@@ -257,10 +252,10 @@ def generate(target, configfile, database):
             out.write('    <vertex>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
-                                      for k, v in iteritems(tags)))
+                                      for k, v in tags.items()))
             if vertex:
                 out.write('\n      <attributes>\n')
-                for k, v in iteritems(vertex):
+                for k, v in vertex.items():
                     out.write('        <attribute>\n'
                               '          <name>{k}</name>\n'
                               '          <value>{v}</value>\n'
@@ -281,7 +276,7 @@ def generate(target, configfile, database):
             out.write('    <edge>\n      ' +
                       '\n      '.join('<{k}>{v}</{k}>'.format(k=k,
                                                               v=xml_escape(v))
-                                      for k, v in iteritems(edge)) +
+                                      for k, v in edge.items()) +
                       '\n    </edge>\n')
         out.write('  </edges>\n'
                   '</provenancedata>\n')
@@ -308,26 +303,9 @@ def provgraph(args):
                       Path(args.dir) / 'trace.sqlite3')
 
 
-def disabled_bug13676(args):
-    stderr.write("Error: your version of Python, %s, is not supported\n"
-                 "Versions before 2.7.3 are affected by bug 13676 and will "
-                 "not be able to read\nthe trace "
-                 "database\n" % sys.version.split(' ', 1)[0])
-    sys.exit(1)
-
-
 def setup(parser, **kwargs):
     """Generates a Prov Viewer graph from the trace data
     """
-
-    # http://bugs.python.org/issue13676
-    # This prevents repro(un)zip from reading argv and envp arrays from trace
-    if sys.version_info < (2, 7, 3):
-        parser.add_argument('rest_of_cmdline', nargs=argparse.REMAINDER,
-                            help=argparse.SUPPRESS)
-        parser.set_defaults(func=disabled_bug13676)
-        return {'test_compatibility': (COMPAT_NO, "Python >2.7.3 required")}
-
     parser.add_argument('target', nargs=1, help="Destination DOT file")
     parser.add_argument(
         '-d', '--dir', default='.reprozip-trace',

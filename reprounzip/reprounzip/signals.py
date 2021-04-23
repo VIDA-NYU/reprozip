@@ -13,8 +13,6 @@ from __future__ import division, print_function, unicode_literals
 import traceback
 import warnings
 
-from reprounzip.utils import irange, iteritems
-
 
 class SignalWarning(UserWarning):
     """Warning from the Signal class.
@@ -42,7 +40,7 @@ class Signal(object):
     Listeners can subscribe to a signal, and may be any callable hashable
     object.
     """
-    REQUIRED, OPTIONAL, DEPRECATED = irange(3)
+    REQUIRED, OPTIONAL, DEPRECATED = range(3)
 
     def __init__(self, expected_args=[], new_args=[], old_args=[]):
         self._args = {}
@@ -56,7 +54,7 @@ class Signal(object):
 
     def __call__(self, **kwargs):
         info = {}
-        for arg, argtype in iteritems(self._args):
+        for arg, argtype in self._args.items():
             if argtype == Signal.REQUIRED:
                 try:
                     info[arg] = kwargs.pop(arg)

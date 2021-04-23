@@ -37,8 +37,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     interruptible_call, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
-    stdout_bytes, stderr, make_dir_writable, rmtree_fixed, copyfile, \
+from reprounzip.utils import make_dir_writable, rmtree_fixed, copyfile, \
     download_file
 
 
@@ -165,7 +164,7 @@ def directory_create(args):
         rpz_pack.close()
 
         # Original input files, so upload can restore them
-        input_files = [f.path for f in itervalues(config.inputs_outputs)
+        input_files = [f.path for f in config.inputs_outputs.values()
                        if f.read_runs]
         if input_files:
             logger.info("Packing up original input files...")
@@ -220,15 +219,14 @@ def directory_run(args):
             raise subprocess.CalledProcessError(p.returncode,
                                                 ['/sbin/ldconfig', '-v', '-N'])
     lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
-                shell_escape(unicode_(join_root(root, d)))
+                shell_escape(str(join_root(root, d)))
                 for d in lib_dirs))
 
     cmds = [lib_dirs]
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(
-            unicode_(join_root(root,
-                               Path(run['workingdir']))))
+            str(join_root(root, Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
         environ = run['environ']
         environ = fixup_environment(environ, args)
@@ -238,7 +236,7 @@ def directory_run(args):
             if 'XAUTHORITY' in os.environ:
                 environ['XAUTHORITY'] = os.environ['XAUTHORITY']
         cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
-                        for k, v in iteritems(environ)
+                        for k, v in environ.items()
                         if k != 'PATH')
         cmd += ' '
 
@@ -251,7 +249,7 @@ def directory_run(args):
                     for d in path
                     if d.root == '/']
         # Rebuild string
-        path = ':'.join(unicode_(d) for d in dir_path + path)
+        path = ':'.join(str(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
 
         # FIXME : Use exec -a or something if binary != argv[0]
@@ -260,7 +258,7 @@ def directory_run(args):
 
             # Rewrites command-line arguments that are absolute filenames
             rewritten = False
-            for i in irange(len(argv)):
+            for i in range(len(argv)):
                 try:
                     p = Path(argv[i])
                 except UnicodeEncodeError:
@@ -283,7 +281,7 @@ def directory_run(args):
     signals.pre_run(target=target)
     logger.debug("Running: %s", cmds)
     retcode = interruptible_call(cmds, shell=True)
-    stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    print("\n*** Command finished, status: %d\n" % retcode, file=sys.stderr)
     signals.post_run(target=target, retcode=retcode)
 
     # Update input file status
@@ -481,7 +479,7 @@ def chroot_create(args):
                     env_path.symlink('/bin/busybox')
 
         # Original input files, so upload can restore them
-        input_files = [f.path for f in itervalues(config.inputs_outputs)
+        input_files = [f.path for f in config.inputs_outputs.values()
                        if f.read_runs]
         if input_files:
             logger.info("Packing up original input files...")
@@ -556,7 +554,7 @@ def chroot_run(args):
         environ = x11.fix_env(run['environ'])
         environ = fixup_environment(environ, args)
         cmd += ' '.join('%s=%s' % (shell_escape(k), shell_escape(v))
-                        for k, v in iteritems(environ))
+                        for k, v in environ.items())
         cmd += ' '
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -568,10 +566,10 @@ def chroot_run(args):
                               run.get('gid', 1000))
         cmd = 'chroot --userspec=%s %s /bin/sh -c %s' % (
             userspec,
-            shell_escape(unicode_(root)),
+            shell_escape(str(root)),
             shell_escape(cmd))
         cmds.append(cmd)
-    cmds = ['chroot %s /bin/sh -c %s' % (shell_escape(unicode_(root)),
+    cmds = ['chroot %s /bin/sh -c %s' % (shell_escape(str(root)),
                                          shell_escape(c))
             for c in x11.init_cmds] + cmds
     cmds = ' && '.join(cmds)
@@ -584,7 +582,7 @@ def chroot_run(args):
 
     signals.pre_run(target=target)
     retcode = interruptible_call(cmds, shell=True)
-    stderr.write("\n*** Command finished, status: %d\n" % retcode)
+    print("\n*** Command finished, status: %d\n" % retcode, file=sys.stderr)
     signals.post_run(target=target, retcode=retcode)
 
     # Update input file status
@@ -730,7 +728,7 @@ class LocalDownloader(FileDownloader):
                             remote_path)
             return False
         with remote_path.open('rb') as fp:
-            copyfile(fp, stdout_bytes)
+            copyfile(fp, sys.stdout.buffer)
         return True
 
     def download(self, remote_path, local_path):

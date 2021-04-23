@@ -3,7 +3,6 @@ import requests
 import time
 
 from reprounzip.parameters import _bundled_parameters
-from reprounzip.utils import itervalues, iteritems
 
 
 logger = logging.getLogger(__name__)
@@ -34,11 +33,11 @@ def check_vagrant():
     boxes = set()
     for distribution in _bundled_parameters['vagrant_boxes']['boxes']:
         for version in distribution['versions']:
-            for image in itervalues(version['architectures']):
+            for image in version['architectures'].values():
                 boxes.add(image)
-        for arch in itervalues(distribution['default']):
+        for arch in distribution['default'].values():
             boxes.add(arch['box'])
-    for arch in itervalues(_bundled_parameters['vagrant_boxes']['default']):
+    for arch in _bundled_parameters['vagrant_boxes']['default'].values():
         boxes.add(arch['box'])
 
     # Check that they exist
@@ -132,7 +131,7 @@ def check_docker():
         repositories.setdefault(tuple(image[:3]), set()).add(tag)
 
     # Check that each repository has the required tags
-    for repository, tags in iteritems(repositories):
+    for repository, tags in repositories.items():
         registry = repository[0]
         if registry == 'docker.io':
             registry = 'hub.docker.com'

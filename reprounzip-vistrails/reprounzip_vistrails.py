@@ -30,7 +30,6 @@ import zipfile
 from reprounzip.common import load_config, setup_logging, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import shell_escape
-from reprounzip.utils import iteritems
 
 
 __version__ = '1.0.16'
@@ -239,9 +238,9 @@ def do_vistrails(target, pack=None, **kwargs):
             connect_from = d
 
             for i, run in enumerate(config.runs):
-                inputs = sorted(n for n, f in iteritems(config.inputs_outputs)
+                inputs = sorted(n for n, f in config.inputs_outputs.items()
                                 if i in f.read_runs)
-                outputs = sorted(n for n, f in iteritems(config.inputs_outputs)
+                outputs = sorted(n for n, f in config.inputs_outputs.items()
                                  if i in f.write_runs)
                 ports = itertools.chain((('input', p) for p in inputs),
                                         (('output', p) for p in outputs))
@@ -341,7 +340,7 @@ def run_from_vistrails():
         seen_input_names.add(input_name)
 
     # Resets the input files that are used by this run and were not given
-    for name, f in iteritems(config.inputs_outputs):
+    for name, f in config.inputs_outputs.items():
         if name not in seen_input_names and int(args.run) in f.read_runs:
             upload_command.append(':%s' % name)
 

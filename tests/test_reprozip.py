@@ -14,7 +14,7 @@ import unittest
 from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
 from reprozip import traceutils
-from reprozip.utils import PY3, unicode_, UniqueNames, make_dir_writable
+from reprozip.utils import UniqueNames, make_dir_writable
 
 from tests.common import make_database
 
@@ -67,8 +67,6 @@ class TestReprozip(unittest.TestCase):
             (tmp / 'some' / 'complete' / 'path').chmod(0o755)
             tmp.rmtree()
 
-    @unittest.skipIf(sys.version_info < (2, 7, 3),
-                     "Python version not supported by reprozip")
     def test_argparse(self):
         """Tests argument parsing"""
         calls = []
@@ -151,7 +149,7 @@ class TestFiles(unittest.TestCase):
             return [cls.make_paths(e) for e in obj]
         elif isinstance(obj, AbstractPath):
             return obj
-        elif isinstance(obj, (bytes, unicode_)):
+        elif isinstance(obj, (bytes, str)):
             return Path(obj)
         else:
             assert False
@@ -173,12 +171,12 @@ class TestFiles(unittest.TestCase):
             ('exec', 0, "/some/thing/created/file", "/some/thing/created",
              "created\0"),
         ])
-        expected = set([
+        expected = {
             '/some/dir',
             '/some/dir/ls',
             '/some/otherdir/in',
             '/some/thing',
-        ])
+        }
         self.assertEqualPaths(expected,
                               set(fi.path for fi in files))
 
@@ -204,19 +202,19 @@ class TestFiles(unittest.TestCase):
                 ('open', 2, "/some/r", False, FILE_READ),
                 ('open', 1, "/some/rw", False, FILE_WRITE),
             ])
-            expected = set([
+            expected = {
                 '/some',
                 '/some/dir',
                 '/some/dir/ls',
                 '/some/r',
                 '/some/rw',
-            ])
+            }
             self.assertEqualPaths(expected,
                                   set(fi.path for fi in files))
-            self.assertEqualPaths([set(["/some/r", "/some/rw"]),
-                                   set(["/some/cli", "/some/r"])],
+            self.assertEqualPaths([{"/some/r", "/some/rw"},
+                                   {"/some/cli", "/some/r"}],
                                   [set(run) for run in inputs])
-            self.assertEqualPaths([set(["/some/cli"]), set(["/some/rw"])],
+            self.assertEqualPaths([{"/some/cli"}, {"/some/rw"}],
                                   [set(run) for run in outputs])
         finally:
             Path.is_file, Path.stat = old
@@ -267,10 +265,7 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
 
         for i, dat in enumerate(sql_data):
             trace = self.tmpdir / ('trace%d.sqlite3' % i)
-            if PY3:
-                conn = sqlite3.connect(str(trace))
-            else:
-                conn = sqlite3.connect(trace.path)
+            conn = sqlite3.connect(str(trace))  # connect() only accepts str
             conn.row_factory = sqlite3.Row
             traceutils.create_schema(conn)
             conn.executescript('PRAGMA foreign_keys=OFF; BEGIN TRANSACTION;' +
@@ -285,10 +280,7 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
         traceutils.combine_traces(traces, target)
         target = target / 'trace.sqlite3'
 
-        if PY3:
-            conn = sqlite3.connect(str(target))
-        else:
-            conn = sqlite3.connect(target.path)
+        conn = sqlite3.connect(str(target))  # connect() only accepts str
         conn.row_factory = None
         processes = list(conn.execute(
             '''
