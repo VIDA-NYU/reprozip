@@ -12,8 +12,8 @@ jobs:
         os: [ubuntu-18.04]
         mode: [tests]
         python:
-        - "2.7"
         - "3.5"
+        - "3.8"
         include:
         - os: ubuntu-18.04
           mode: coverage
