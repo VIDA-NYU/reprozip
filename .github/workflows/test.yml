@@ -17,13 +17,13 @@ jobs:
         include:
         - os: ubuntu-18.04
           mode: coverage
-          python: "3.8"
+          python: "3.9"
         - os: ubuntu-18.04
           mode: checks
-          python: "3.8"
+          python: "3.9"
         - os: ubuntu-latest
           mode: check-images
-          python: "3.8"
+          python: "3.9"
     runs-on: ${{ matrix.os }}
     env:
       TEST_MODE: ${{ matrix.mode }}
