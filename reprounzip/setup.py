@@ -29,7 +29,6 @@ setup(name='reprounzip',
               'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
               'directory = reprounzip.unpackers.default:setup_directory',
               'chroot = reprounzip.unpackers.default:setup_chroot']},
-      namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=req,
       extras_require={
           'all': ['reprounzip-vagrant>=1.0', 'reprounzip-docker>=1.0',
