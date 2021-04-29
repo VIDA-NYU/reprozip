@@ -84,7 +84,7 @@ jobs:
                 flake8 --ignore=E731,W503,W504
                 diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
                 diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
-                find reprozip reprounzip reprozip-* reprounzip-* .travis -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
+                find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
                     T=$(file -b --mime "$i")
                     if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
                         echo "$i is not ASCII"
