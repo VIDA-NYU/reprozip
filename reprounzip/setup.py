@@ -18,6 +18,9 @@ setup(name='reprounzip',
       version='2.0.0',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
+      package_data={
+          'reprounzip': ['reprozip-ca.crt'],
+      },
       entry_points={
           'console_scripts': [
               'reprounzip = reprounzip.main:main'],
