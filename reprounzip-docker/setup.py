@@ -15,7 +15,7 @@ setup(name='reprounzip-docker',
           'reprounzip.unpackers': [
               'docker = reprounzip_docker:setup']},
       install_requires=[
-          'reprounzip>=1.0.10',
+          'reprounzip>=2.0.0,<3.0.0',
           'rpaths>=0.8'],
       description="Allows the ReproZip unpacker to create Docker containers",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",

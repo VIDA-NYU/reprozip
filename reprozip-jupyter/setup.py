@@ -9,7 +9,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprozip-jupyter',
-      version='1.0.14',
+      version='2.0.0',
       packages=['reprozip_jupyter'],
       package_data={'reprozip_jupyter': ['notebook-extension.js']},
       entry_points={
@@ -17,7 +17,7 @@ setup(name='reprozip-jupyter',
               'reprozip-jupyter = reprozip_jupyter.main:main']},
       install_requires=['rpaths',
                         'notebook', 'jupyter_client', 'nbformat', 'nbconvert',
-                        'reprounzip>=1.0'],
+                        'reprounzip>=2.0.0,<3.0.0'],
       description="Jupyter Notebook tracing/reproduction using ReproZip",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='dev@reprozip.org',
