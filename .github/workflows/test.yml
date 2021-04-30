@@ -73,7 +73,7 @@ jobs:
             tests|coverage)
                 export PYTHONUNBUFFERED=1
                 if [ "$TEST_MODE" = "coverage" ]; then
-                    export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-docker/reprounzip,$PWD/reprounzip-vagrant/reprounzip,$PWD/reprounzip-vistrails/reprounzip --branch"
+                    export COVER="coverage run --append --source=$PWD --branch"
                 fi
                 python tests --run-docker
                 ;;
