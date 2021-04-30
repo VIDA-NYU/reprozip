@@ -15,7 +15,7 @@ import subprocess
 import sys
 import yaml
 
-from reprounzip.common import FILE_READ, FILE_WRITE
+from reprozip_core.common import FILE_READ, FILE_WRITE
 from reprounzip.unpackers.common import join_root
 
 

@@ -54,9 +54,9 @@ jobs:
                 sudo apt-get install -qq $PKGS
                 if [ $TEST_MODE = "coverage" ]; then
                     pip install 'coverage>=5,<6'
-                    pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
+                    pip install -e ./reprozip-core -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
                 else
-                    pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
+                    pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
                 fi
                 ;;
             checks)
@@ -84,8 +84,6 @@ jobs:
                 ;;
             checks)
                 flake8 --ignore=E731,W503,W504
-                diff -q reprozip/reprozip/common.py reprounzip/reprounzip/common.py
-                diff -q reprozip/reprozip/utils.py reprounzip/reprounzip/utils.py
                 find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
                     T=$(file -b --mime "$i")
                     if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then

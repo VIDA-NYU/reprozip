@@ -21,12 +21,12 @@ import traceback
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import setup_logging, \
-    setup_usage_report, enable_usage_report, \
-    submit_usage_report, record_usage
 import reprozip.pack
 import reprozip.tracer.trace
 import reprozip.traceutils
+from reprozip_core.common import setup_logging, \
+    setup_usage_report, enable_usage_report, \
+    submit_usage_report, record_usage
 
 
 logger = logging.getLogger('reprozip')

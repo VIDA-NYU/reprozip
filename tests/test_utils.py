@@ -4,7 +4,7 @@
 
 import unittest
 
-from reprounzip.utils import optional_return_type
+from reprozip_core.utils import optional_return_type
 
 
 class TestOptionalReturnType(unittest.TestCase):

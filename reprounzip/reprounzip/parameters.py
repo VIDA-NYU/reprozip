@@ -18,8 +18,8 @@ import json
 import logging
 import os
 
-from reprounzip.common import get_reprozip_ca_certificate
-from reprounzip.utils import download_file
+from reprozip_core.common import get_reprozip_ca_certificate
+from reprozip_core.utils import download_file
 
 
 logger = logging.getLogger('reprounzip')

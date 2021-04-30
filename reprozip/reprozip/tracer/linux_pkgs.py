@@ -19,7 +19,7 @@ from rpaths import Path
 import subprocess
 import time
 
-from reprozip.common import Package
+from reprozip_core.common import Package
 
 
 logger = logging.getLogger('reprozip')

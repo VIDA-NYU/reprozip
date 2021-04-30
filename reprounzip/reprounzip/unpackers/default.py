@@ -28,7 +28,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import RPZPack, load_config as load_config_file, \
+from reprozip_core.common import RPZPack, load_config as load_config_file, \
     record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
@@ -38,7 +38,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     interruptible_call, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import make_dir_writable, rmtree_fixed, copyfile, \
+from reprozip_core.utils import make_dir_writable, rmtree_fixed, copyfile, \
     download_file
 
 

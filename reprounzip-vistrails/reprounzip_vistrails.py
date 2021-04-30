@@ -26,7 +26,7 @@ import subprocess
 import sys
 import zipfile
 
-from reprounzip.common import load_config, setup_logging, record_usage
+from reprozip_core.common import load_config, setup_logging, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import shell_escape
 

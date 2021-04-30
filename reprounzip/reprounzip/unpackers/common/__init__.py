@@ -8,7 +8,7 @@ This contains functions related to shell scripts, package managers, and the
 pack files.
 """
 
-from reprounzip.utils import join_root
+from reprozip_core.utils import join_root
 from reprounzip.unpackers.common.misc import UsageError, \
     COMPAT_OK, COMPAT_NO, COMPAT_MAYBE, \
     composite_action, target_must_exist, unique_names, \

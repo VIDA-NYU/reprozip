@@ -23,7 +23,7 @@ import subprocess
 import sys
 import tarfile
 
-from reprounzip.common import load_config, record_usage, RPZPack
+from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
@@ -34,7 +34,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     metadata_read, metadata_write, metadata_initial_iofiles, \
     metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprounzip.utils import join_root, download_file
+from reprozip_core.utils import join_root, download_file
 
 
 logger = logging.getLogger('reprounzip.docker')

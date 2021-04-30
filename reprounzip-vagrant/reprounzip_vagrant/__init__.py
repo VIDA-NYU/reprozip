@@ -21,7 +21,7 @@ from rpaths import PosixPath, Path
 import subprocess
 import sys
 
-from reprounzip.common import load_config, record_usage, RPZPack
+from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
@@ -33,7 +33,7 @@ from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import BaseX11Handler, X11Handler
 from reprounzip_vagrant.run_command import IgnoreMissingKey, run_interactive
-from reprounzip.utils import download_file
+from reprozip_core.utils import download_file
 
 
 logger = logging.getLogger('reprounzip.vagrant')

@@ -2,10 +2,6 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-# This file is shared:
-#   reprozip/reprozip/common.py
-#   reprounzip/reprounzip/common.py
-
 """Common functions between reprozip and reprounzip.
 
 This module contains functions that are specific to the reprozip software and

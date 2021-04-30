@@ -23,11 +23,11 @@ import warnings
 
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
-from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_LINK
+from reprozip_core.common import File, InputOutputFile, \
+    load_config, save_config, FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip.utils import flatten, UniqueNames, hsize, normalize_path, \
+from reprozip_core.utils import flatten, UniqueNames, hsize, normalize_path, \
     find_all_links
 
 
@@ -35,7 +35,7 @@ logger = logging.getLogger('reprozip')
 
 
 class TracedFile(File):
-    """Override of `~reprozip.common.File` that reads stats from filesystem.
+    """Subclass of `~reprozip_core.common.File` reading stats from filesystem.
 
     It also memorizes how files are used, to select files that are only read,
     and accurately guess input and output files.

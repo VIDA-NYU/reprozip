@@ -17,7 +17,7 @@ from rpaths import Path
 import sqlite3
 import sys
 
-from reprounzip.common import FILE_WRITE, RPZPack, load_config
+from reprozip_core.common import FILE_WRITE, RPZPack, load_config
 from reprounzip.unpackers.common import COMPAT_OK, shell_escape
 
 

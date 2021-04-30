@@ -5,7 +5,7 @@ set -u
 
 cd "$(dirname $0)"
 
-PROGRAMS="reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails reprounzip-qt reprozip-jupyter"
+PROGRAMS="reprozip-core reprounzip reprounzip-docker reprounzip-vagrant reprounzip-vistrails reprounzip-qt reprozip-jupyter"
 if [ "$(uname -s)" = Linux ]; then
     PROGRAMS="reprozip $PROGRAMS"
 fi

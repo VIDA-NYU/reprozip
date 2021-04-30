@@ -6,7 +6,7 @@ import json
 from rpaths import Path
 import unittest
 
-from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, FILE_STAT
+from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, FILE_STAT
 from reprounzip.unpackers import graph
 from reprounzip.unpackers.common import UsageError
 

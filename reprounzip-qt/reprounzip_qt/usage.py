@@ -3,7 +3,7 @@
 # See file LICENSE for full license details.
 
 import os
-from reprounzip.common import get_reprozip_ca_certificate
+from reprozip_core.common import get_reprozip_ca_certificate
 import usagestats
 
 from reprounzip_qt import __version__ as version

@@ -18,7 +18,7 @@ from pkg_resources import iter_entry_points
 import sys
 import traceback
 
-from reprounzip.common import setup_logging, \
+from reprozip_core.common import setup_logging, \
     setup_usage_report, enable_usage_report, \
     submit_usage_report, record_usage
 from reprounzip import signals

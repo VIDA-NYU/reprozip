@@ -7,7 +7,7 @@ import locale
 import logging
 import sys
 
-from reprounzip.common import setup_logging
+from reprozip_core.common import setup_logging
 from reprounzip_qt import __version__
 from reprounzip_qt.usage import record_usage, submit_usage_report
 

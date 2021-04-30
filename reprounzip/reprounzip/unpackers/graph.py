@@ -24,11 +24,11 @@ from rpaths import PosixPath, Path
 import sqlite3
 import sys
 
-from reprounzip.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
+from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, RPZPack, \
     load_config
 from reprounzip.orderedset import OrderedSet
 from reprounzip.unpackers.common import COMPAT_OK
-from reprounzip.utils import escape, normalize_path
+from reprozip_core.utils import escape, normalize_path
 
 
 logger = logging.getLogger('reprounzip.graph')

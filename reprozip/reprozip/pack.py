@@ -19,7 +19,7 @@ import tarfile
 import uuid
 
 from reprozip import __version__ as reprozip_version
-from reprozip.common import File, load_config, save_config, \
+from reprozip_core.common import File, load_config, save_config, \
     record_usage_package
 from reprozip.tracer.linux_pkgs import identify_packages
 from reprozip.traceutils import combine_files

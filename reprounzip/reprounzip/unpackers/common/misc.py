@@ -21,10 +21,10 @@ import sys
 import tarfile
 import warnings
 
-import reprounzip.common
-from reprounzip.common import RPZPack
+import reprozip_core.common
+from reprozip_core.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprounzip.utils import join_root, copyfile
+from reprozip_core.utils import join_root, copyfile
 
 
 logger = logging.getLogger('reprounzip')
@@ -117,7 +117,7 @@ def load_config(pack):
     """
     rpz_pack = RPZPack(pack)
     with rpz_pack.with_config() as configfile:
-        return reprounzip.common.load_config(configfile, canonical=True)
+        return reprozip_core.common.load_config(configfile, canonical=True)
 
 
 def busybox_url(arch):
@@ -152,7 +152,7 @@ class FileUploader(object):
         self.run(files)
 
     def run(self, files):
-        reprounzip.common.record_usage(upload_files=len(files))
+        reprozip_core.common.record_usage(upload_files=len(files))
         inputs_outputs = self.get_config().inputs_outputs
 
         # No argument: list all the input files and exit
@@ -228,8 +228,8 @@ class FileUploader(object):
             self.finalize()
 
     def get_config(self):
-        return reprounzip.common.load_config(self.target / 'config.yml',
-                                             canonical=True)
+        return reprozip_core.common.load_config(self.target / 'config.yml',
+                                                canonical=True)
 
     def prepare_upload(self, files):
         pass
@@ -262,7 +262,7 @@ class FileDownloader(object):
         self.run(files, all_)
 
     def run(self, files, all_):
-        reprounzip.common.record_usage(download_files=len(files))
+        reprozip_core.common.record_usage(download_files=len(files))
         inputs_outputs = self.get_config().inputs_outputs
 
         # No argument: list all the output files and exit
@@ -330,8 +330,8 @@ class FileDownloader(object):
             self.finalize()
 
     def get_config(self):
-        return reprounzip.common.load_config(self.target / 'config.yml',
-                                             canonical=True)
+        return reprozip_core.common.load_config(self.target / 'config.yml',
+                                                canonical=True)
 
     def prepare_download(self, files):
         pass

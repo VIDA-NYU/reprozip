@@ -17,7 +17,7 @@ from rpaths import Path
 import subprocess
 import sys
 
-from reprounzip.common import setup_logging
+from reprozip_core.common import setup_logging
 
 
 logger = logging.getLogger('reprozip_jupyter')

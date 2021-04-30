@@ -19,11 +19,11 @@ import platform
 from rpaths import Path
 import sys
 
-from reprounzip.common import RPZPack, load_config as load_config_file
+from reprozip_core.common import RPZPack, load_config as load_config_file
 from reprounzip.main import unpackers
 from reprounzip.unpackers.common import load_config, COMPAT_OK, COMPAT_MAYBE, \
     COMPAT_NO, UsageError, shell_escape, metadata_read
-from reprounzip.utils import hsize
+from reprozip_core.utils import hsize
 
 
 logger = logging.getLogger('reprounzip')

@@ -1,35 +1,10 @@
 import io
 import os
-from setuptools import setup, Extension
-import sys
+from setuptools import setup
 
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-
-# This won't build on non-Linux -- don't even try
-if not sys.platform.startswith('linux'):
-    sys.stderr.write("reprozip uses ptrace and thus only works on Linux\n"
-                     "You can however install reprounzip and plugins on other "
-                     "platforms\n")
-    sys.exit(1)
-
-
-# List the source files
-sources = ['pytracer.c', 'tracer.c', 'syscalls.c', 'database.c',
-           'ptrace_utils.c', 'utils.c', 'pylog.c']
-# They can be found under native/
-sources = [os.path.join('native', n) for n in sources]
-
-
-# Setup the libraries
-libraries = ['sqlite3', 'rt']
-
-
-# Build the C module
-pytracer = Extension('reprozip._pytracer',
-                     sources=sources,
-                     libraries=libraries)
 
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
@@ -37,21 +12,15 @@ req = [
     'PyYAML',
     'rpaths>=0.8',
     'usagestats>=0.3',
-    'requests',
-    'distro',
-    'reprozip-core>=2.0.0,<3.0.0']
-setup(name='reprozip',
+    'requests']
+setup(name='reprozip-core',
       version='2.0.0',
-      ext_modules=[pytracer],
-      packages=['reprozip', 'reprozip.tracer'],
-      entry_points={
-          'console_scripts': [
-              'reprozip = reprozip.main:main'],
-          'reprozip.filters': [
-              'python = reprozip.filters:python',
-              'builtin = reprozip.filters:builtin']},
+      packages=['reprozip_core'],
+      package_data={
+          'reprozip_core': ['reprozip-ca.crt'],
+      },
       install_requires=req,
-      description="Linux tool enabling reproducible experiments (packer)",
+      description="Linux tool enabling reproducible experiments (core lib)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
       author_email='dev@reprozip.org',
       maintainer="Remi Rampin",
@@ -74,7 +43,5 @@ setup(name='reprozip',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: C',
           'Topic :: Scientific/Engineering',
           'Topic :: System :: Archiving'])

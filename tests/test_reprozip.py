@@ -9,10 +9,11 @@ from rpaths import AbstractPath, Path
 import sys
 import unittest
 
-from reprozip.common import FILE_READ, FILE_WRITE, FILE_WDIR, InputOutputFile
+from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, \
+    InputOutputFile
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
 from reprozip import traceutils
-from reprozip.utils import UniqueNames, make_dir_writable
+from reprozip_core.utils import UniqueNames, make_dir_writable
 
 from tests.common import make_database
 
