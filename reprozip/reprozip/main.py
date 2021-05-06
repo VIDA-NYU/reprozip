@@ -118,7 +118,7 @@ def print_db(database):
         if not argv[-1]:
             argv = argv[:-1]
         cmdline = ' '.join(shell_escape(a) for a in argv)
-        if argv[0] not in (r_name, os.path.basename(r_name)):
+        if argv[0] != r_name:
             cmdline = "(%s) %s" % (shell_escape(r_name), cmdline)
         f_cmdline = " {0: <37s} ".format(cmdline)
         print('|'.join(('', f_id, f_timestamp, f_proc, f_cmdline, '')))
