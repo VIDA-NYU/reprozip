@@ -290,6 +290,19 @@ class RPZPack(object):
                 copyfile(data, fp)
                 data.close()
 
+    def extensions(self):
+        """Get a list of extensions present in this pack.
+        """
+        extensions = set()
+        for m in self.tar.getmembers():
+            if m.name.startswith('EXTENSIONS/'):
+                name = m.name[11:]
+                if '/' in name:
+                    name = name[:name.index('/')]
+                if name:
+                    extensions.add(name)
+        return extensions
+
     def close(self):
         if self.data is not self.tar:
             self.data.close()
