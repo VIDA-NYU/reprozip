@@ -71,7 +71,7 @@ def print_arg_list(f):
         print("\nreprozip-tests$ " +
               " ".join(a if isinstance(a, str)
                        else a.decode('utf-8', 'replace')
-                       for a in arglist))
+                       for a in arglist), file=sys.stderr)
         return f(arglist, *args, **kwargs)
     return wrapper
 
@@ -79,7 +79,7 @@ def print_arg_list(f):
 @print_arg_list
 def call(args):
     r = subprocess.call(args)
-    print("---> %d" % r)
+    print("---> %d" % r, file=sys.stderr)
     return r
 
 
@@ -164,7 +164,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     rpz = rpz_python + [reprozip_main.absolute().path] + verbose
     rpuz = rpuz_python + [reprounzip_main.absolute().path] + verbose
 
-    print("Command lines are:\n%r\n%r" % (rpz, rpuz))
+    print("Command lines are:\n%r\n%r" % (rpz, rpuz), file=sys.stderr)
 
     # ########################################
     # testrun /bin/echo
@@ -364,7 +364,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     check_call(rpuz + ['vagrant', 'setup/create', '--memory', '512',
                        '--use-chroot', 'simple.rpz',
                        (tests / 'vagrant/simplevagrantchroot').path])
-    print("\nVagrant project set up in simplevagrantchroot")
+    print("\nVagrant project set up in simplevagrantchroot", file=sys.stderr)
     try:
         if run_vagrant:
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
@@ -424,7 +424,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrantchroot').path])
         elif interactive:
-            print("Test and press enter")
+            print("Test and press enter", file=sys.stderr)
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrantchroot').exists():
@@ -433,7 +433,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
                        (tests / 'vagrant/simplevagrant').path])
-    print("\nVagrant project set up in simplevagrant")
+    print("\nVagrant project set up in simplevagrant", file=sys.stderr)
     try:
         if run_vagrant:
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
@@ -484,7 +484,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             check_call(rpuz + ['vagrant', 'destroy',
                                (tests / 'vagrant/simplevagrant').path])
         elif interactive:
-            print("Test and press enter")
+            print("Test and press enter", file=sys.stderr)
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrant').exists():
@@ -492,7 +492,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     # Unpack Docker
     check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
-    print("\nDocker project set up in simpledocker")
+    print("\nDocker project set up in simpledocker", file=sys.stderr)
     try:
         if run_docker:
             check_call(rpuz + ['docker', 'setup/build', 'simpledocker'])
@@ -537,7 +537,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Destroy
             check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
         elif interactive:
-            print("Test and press enter")
+            print("Test and press enter", file=sys.stderr)
             sys.stdin.readline()
     finally:
         if Path('simpledocker').exists():
@@ -618,7 +618,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Trace
         check_call(rpz + ['testrun', './exec_echo32', '42'])
     else:
-        print("Can't try exec_echo transitions: not running on 64bits")
+        print("Can't try exec_echo transitions: not running on 64bits",
+              file=sys.stderr)
 
     # ########################################
     # Tracing non-existing program
@@ -777,9 +778,9 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     executed = [(Path(r[0]), r[1]) for r in rows
                 if Path(r[0]).lies_under(Path.cwd())]
 
-    print("other_files: %r" % sorted(other_files))
-    print("opened: %r" % opened)
-    print("executed: %r" % executed)
+    print("other_files: %r" % sorted(other_files), file=sys.stderr)
+    print("opened: %r" % opened, file=sys.stderr)
+    print("executed: %r" % executed, file=sys.stderr)
 
     assert other_files == set(Path.cwd() / p
                               for p in ('a', 'b', 'c', 'd', 'e'))
@@ -834,7 +835,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
          'QVpWOGs'),
     ]
     for name, url in old_packages:
-        print("Testing old package %s" % name)
+        print("Testing old package %s" % name, file=sys.stderr)
         f = Path(name)
         if not f.exists():
             download_file_retry(url, f)
