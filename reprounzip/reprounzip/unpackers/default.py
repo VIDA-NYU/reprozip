@@ -219,17 +219,18 @@ def directory_run(args):
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode,
                                                 ['/sbin/ldconfig', '-v', '-N'])
-    lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
-                shell_escape(unicode_(join_root(root, d)))
-                for d in lib_dirs))
 
-    cmds = [lib_dirs]
+    cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(
             unicode_(join_root(root,
                                Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
+        cmd += 'LD_LIBRARY_PATH=%s' % ':'.join(
+            shell_escape(unicode_(join_root(root, d)))
+            for d in lib_dirs
+        )
         environ = run['environ']
         environ = fixup_environment(environ, args)
         if args.x11:
