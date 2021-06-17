@@ -233,6 +233,7 @@ def directory_run(args):
         environ = run['environ']
         environ = fixup_environment(environ, args)
         if args.x11:
+            environ = dict(environ)
             if 'DISPLAY' in os.environ:
                 environ['DISPLAY'] = os.environ['DISPLAY']
             if 'XAUTHORITY' in os.environ:
