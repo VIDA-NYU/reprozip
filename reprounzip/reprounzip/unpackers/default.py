@@ -585,6 +585,7 @@ def chroot_run(args):
         forwarders.append(fwd)
 
     signals.pre_run(target=target)
+    logger.debug("Running: %s", cmds)
     retcode = interruptible_call(cmds, shell=True)
     stderr.write("\n*** Command finished, status: %d\n" % retcode)
     signals.post_run(target=target, retcode=retcode)
