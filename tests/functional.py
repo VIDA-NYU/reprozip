@@ -813,8 +813,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         output_in_chroot = Path('simplechroot/root/tmp')
         output_in_chroot = output_in_chroot.listdir('reprozip_*')[0]
         output_in_chroot = output_in_chroot / 'simple_output.txt'
-        with output_in_chroot.open(encoding='utf-8') as fp:
-            assert fp.read().strip() == '42'
+        out = subprocess.check_output(sudo + ['cat', str(output_in_chroot)])
+        assert out.decode('utf-8').strip() == '42'
         # Delete with wrong command (should fail)
         p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
                              stderr=subprocess.PIPE)
