@@ -70,8 +70,10 @@ static PyObject *pytracer_execute(PyObject *self, PyObject *args)
 
     if(log_setup() != 0)
     {
+        /* LCOV_EXCL_START : Can't fail unless Python is in a broken state */
         PyErr_SetString(Err_Base, "Error occurred");
         return NULL;
+        /* LCOV_EXCL_STOP */
     }
 
     /* Reads arguments */

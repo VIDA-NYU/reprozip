@@ -146,8 +146,8 @@ int path_is_dir(const char *pathname)
         /* LCOV_EXCL_START : shouldn't happen because a tracer process just
          * accessed it */
         log_error(0, "error stat()ing %s: %s", pathname, strerror(errno));
-        /* LCOV_EXCL_STOP */
         return 0;
+        /* LCOV_EXCL_STOP */
     }
     return S_ISDIR(buf.st_mode)?1:0;
 }

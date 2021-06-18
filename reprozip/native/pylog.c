@@ -39,9 +39,11 @@ int log_setup()
         py_logger_log = PyObject_GetAttrString(py_logger, "log");
         if(py_logger_log == NULL)
         {
+            /* LCOV_EXCL_START : Logger objects always have a 'log' method */
             Py_DECREF(py_logger);
             py_logger = NULL;
             return -1;
+            /* LCOV_EXCL_STOP */
         }
     }
 
@@ -56,8 +58,10 @@ int log_setup()
         logging_level = PyLong_AsLong(level);
         if(PyErr_Occurred())
         {
+            /* LCOV_EXCL_START : Logger objects are reliable */
             Py_DECREF(level);
             return -1;
+            /* LCOV_EXCL_STOP */
         }
         Py_DECREF(level);
     }

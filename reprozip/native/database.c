@@ -82,7 +82,7 @@ int db_init(const char *filename)
         }
         sqlite3_finalize(stmt_get_tables);
         if(ret != SQLITE_DONE)
-            goto sqlerror;
+            goto sqlerror; /* LCOV_EXCL_LINE */
     }
 
     if(!tables_exist)
@@ -131,14 +131,18 @@ int db_init(const char *filename)
         check(sqlite3_prepare_v2(db, sql, -1, &stmt_get_run_id, NULL));
         if(sqlite3_step(stmt_get_run_id) != SQLITE_ROW)
         {
+            /* LCOV_EXCL_START */
             sqlite3_finalize(stmt_get_run_id);
             goto sqlerror;
+            /* LCOV_EXCL_STOP */
         }
         run_id = sqlite3_column_int(stmt_get_run_id, 0);
         if(sqlite3_step(stmt_get_run_id) != SQLITE_DONE)
         {
+            /* LCOV_EXCL_START */
             sqlite3_finalize(stmt_get_run_id);
             goto sqlerror;
+            /* LCOV_EXCL_STOP */
         }
         sqlite3_finalize(stmt_get_run_id);
     }
@@ -182,9 +186,11 @@ int db_init(const char *filename)
 
     return 0;
 
+    /* LCOV_EXCL_START */
 sqlerror:
     log_critical(0, "sqlite3 error creating database: %s", sqlite3_errmsg(db));
     return -1;
+    /* LCOV_EXCL_STOP */
 }
 
 int db_close(int rollback)
@@ -207,9 +213,11 @@ int db_close(int rollback)
     run_id = -1;
     return 0;
 
+    /* LCOV_EXCL_START */
 sqlerror:
     log_critical(0, "sqlite3 error on exit: %s", sqlite3_errmsg(db));
     return -1;
+    /* LCOV_EXCL_STOP */
 }
 
 #define DB_NO_PARENT ((unsigned int)-2)
@@ -231,21 +239,21 @@ int db_add_process(unsigned int *id, unsigned int parent_id,
     check(sqlite3_bind_int(stmt_insert_process, 4, is_thread?1:0));
 
     if(sqlite3_step(stmt_insert_process) != SQLITE_DONE)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     sqlite3_reset(stmt_insert_process);
 
     /* Get id */
     if(sqlite3_step(stmt_last_rowid) != SQLITE_ROW)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     *id = sqlite3_column_int(stmt_last_rowid, 0);
     if(sqlite3_step(stmt_last_rowid) != SQLITE_DONE)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     sqlite3_reset(stmt_last_rowid);
 
     return db_add_file_open(*id, working_dir, FILE_WDIR, 1);
 
-sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
+sqlerror:
     log_critical(0, "sqlite3 error inserting process: %s", sqlite3_errmsg(db));
     return -1;
     /* LCOV_EXCL_STOP */
@@ -262,13 +270,13 @@ int db_add_exit(unsigned int id, int exitcode)
     check(sqlite3_bind_int(stmt_set_exitcode, 2, id));
 
     if(sqlite3_step(stmt_set_exitcode) != SQLITE_DONE)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     sqlite3_reset(stmt_set_exitcode);
 
     return 0;
 
-sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
+sqlerror:
     log_critical(0, "sqlite3 error setting exitcode: %s", sqlite3_errmsg(db));
     return -1;
     /* LCOV_EXCL_STOP */
@@ -286,12 +294,12 @@ int db_add_file_open(unsigned int process, const char *name,
     check(sqlite3_bind_int(stmt_insert_file, 6, process));
 
     if(sqlite3_step(stmt_insert_file) != SQLITE_DONE)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     sqlite3_reset(stmt_insert_file);
     return 0;
 
-sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
+sqlerror:
     log_critical(0, "sqlite3 error inserting file: %s", sqlite3_errmsg(db));
     return -1;
     /* LCOV_EXCL_STOP */
@@ -354,12 +362,12 @@ int db_add_exec(unsigned int process, const char *binary,
                             -1, SQLITE_TRANSIENT));
 
     if(sqlite3_step(stmt_insert_exec) != SQLITE_DONE)
-        goto sqlerror;
+        goto sqlerror; /* LCOV_EXCL_LINE */
     sqlite3_reset(stmt_insert_exec);
     return 0;
 
-sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
+sqlerror:
     log_critical(0, "sqlite3 error inserting exec: %s", sqlite3_errmsg(db));
     return -1;
     /* LCOV_EXCL_STOP */

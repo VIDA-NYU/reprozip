@@ -213,7 +213,7 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
                             pathname,
                             mode,
                             path_is_dir(pathname)) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
     }
 
     free(pathname);
@@ -240,14 +240,14 @@ static int syscall_filecreating(const char *name, struct Process *process,
                                 read_path,
                                 FILE_READ | FILE_LINK,
                                 is_dir) != 0)
-                return -1;
+                return -1; /* LCOV_EXCL_LINE */
             free(read_path);
         }
         if(db_add_file_open(process->identifier,
                             written_path,
                             FILE_WRITE | FILE_LINK,
                             is_dir) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
         free(written_path);
     }
     return 0;
@@ -271,14 +271,14 @@ static int syscall_filecreating_at(const char *name, struct Process *process,
                                     read_path,
                                     FILE_READ | FILE_LINK,
                                     is_dir) != 0)
-                    return -1;
+                    return -1; /* LCOV_EXCL_LINE */
                 free(read_path);
             }
             if(db_add_file_open(process->identifier,
                                 written_path,
                                 FILE_WRITE | FILE_LINK,
                                 is_dir) != 0)
-                return -1;
+                return -1; /* LCOV_EXCL_LINE */
             free(written_path);
         }
         else
@@ -302,7 +302,7 @@ static int syscall_filestat(const char *name, struct Process *process,
                             pathname,
                             FILE_STAT | (no_deref?FILE_LINK:0),
                             path_is_dir(pathname)) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
         free(pathname);
     }
     return 0;
@@ -323,7 +323,7 @@ static int syscall_readlink(const char *name, struct Process *process,
                             pathname,
                             FILE_STAT | FILE_LINK,
                             0) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
         free(pathname);
     }
     return 0;
@@ -345,7 +345,7 @@ static int syscall_mkdir(const char *name, struct Process *process,
                             pathname,
                             FILE_WRITE,
                             1) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
         free(pathname);
     }
     return 0;
@@ -368,7 +368,7 @@ static int syscall_chdir(const char *name, struct Process *process,
                             pathname,
                             FILE_WDIR,
                             1) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
     }
     return 0;
 }
@@ -409,7 +409,9 @@ static int record_shebangs(struct Process *process, const char *exec_target)
             struct stat statbuf;
             if(stat(exec_target, &statbuf) != 0)
             {
+                /* LCOV_EXCL_START : stat() shouldn't fail if fopen() above worked */
                 log_error(process->tid, "couldn't stat executed file %s", exec_target);
+                /* LCOV_EXCL_STOP */
             }
             else
             {
@@ -447,10 +449,12 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                     }
                     if(ret < 0)
                     {
+                        /* LCOV_EXCL_START : Shouldn't ever fail */
                         free(groups);
                         log_critical(process->tid, "getgroups() failed: %s",
                                      strerror(errno));
                         return -1;
+                        /* LCOV_EXCL_STOP */
                     }
 
                     // Check if the gid is one of our groups
@@ -510,7 +514,7 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                     pathname,
                                     FILE_READ,
                                     0) != 0)
-                    return -1;
+                    return -1; /* LCOV_EXCL_LINE */
                 free(pathname);
             }
             else
@@ -518,7 +522,7 @@ static int record_shebangs(struct Process *process, const char *exec_target)
                                     start,
                                     FILE_READ,
                                     0) != 0)
-                    return -1;
+                    return -1; /* LCOV_EXCL_LINE */
             exec_target = strcpy(target_buffer, start);
         }
     }
@@ -599,7 +603,7 @@ int syscall_execve_event(struct Process *process)
 
         /* The process that called execve() disappears without any trace */
         if(db_add_exit(exec_process->identifier, 0) != 0)
-            return -1;
+            return -1; /* LCOV_EXCL_LINE */
         log_debug(exec_process->tid,
                   "original exec'ing thread removed, tgid: %d",
                   process->tid);
@@ -619,18 +623,18 @@ int syscall_execve_event(struct Process *process)
                    (const char *const*)execi->argv,
                    (const char *const*)execi->envp,
                    process->threadgroup->wd) != 0)
-        return -1;
+        return -1; /* LCOV_EXCL_LINE */
     /* Note that here, the database records that the thread leader called
      * execve, instead of thread exec_process->tid. */
     log_info(process->tid, "successfully exec'd %s", execi->binary);
 
     /* Follow shebangs */
     if(record_shebangs(process, execi->binary) != 0)
-        return -1;
+        return -1; /* LCOV_EXCL_LINE */
 
     if(trace_add_files_from_proc(process->identifier, process->tid,
                                  execi->binary) != 0)
-        return -1;
+        return -1; /* LCOV_EXCL_LINE */
 
     free_execve_info(execi);
     return 0;
@@ -755,7 +759,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
     if(db_add_process(&new_process->identifier,
                       process->identifier,
                       process->threadgroup->wd, is_thread) != 0)
-        return -1;
+        return -1; /* LCOV_EXCL_LINE */
 
     return 0;
 }
@@ -869,9 +873,11 @@ static int syscall_xxx_at(const char *name, struct Process *process,
             entry = &tbl->entries[real_syscall];
         if(entry == NULL || entry->name == NULL)
         {
+            /* LCOV_EXCL_START : Internal error, our syscall table is broken */
             log_critical(process->tid, "INVALID SYSCALL in *at dispatch: %d",
                          real_syscall);
             return 0;
+            /* LCOV_EXCL_STOP */
         }
         else
         {
