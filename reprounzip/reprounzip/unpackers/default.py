@@ -18,6 +18,9 @@ from __future__ import division, print_function, unicode_literals
 
 import argparse
 import copy
+from elftools.common.exceptions import ELFError
+from elftools.elf.elffile import ELFFile
+from elftools.elf.segments import InterpSegment
 import logging
 import os
 import platform
@@ -43,6 +46,17 @@ from reprounzip.utils import unicode_, irange, iteritems, itervalues, \
 
 
 logger = logging.getLogger('reprounzip')
+
+
+def get_elf_interpreter(file):
+    try:
+        elf = ELFFile(file)
+        for segment in elf.iter_segments():
+            if isinstance(segment, InterpSegment):
+                return segment.get_interp_name()
+        return None
+    except ELFError:
+        return None
 
 
 def installpkgs(args):
@@ -255,6 +269,14 @@ def directory_run(args):
         # Rebuild string
         path = ':'.join(unicode_(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
+
+        interpreter = get_elf_interpreter(
+            join_root(root, PosixPath(run['binary'])).open('rb'),
+        )
+        if interpreter is not None:
+            interpreter = Path(interpreter)
+            if interpreter.exists():
+                cmd += '%s ' % shell_escape(str(join_root(root, interpreter)))
 
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
