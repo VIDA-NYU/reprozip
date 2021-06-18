@@ -15,7 +15,8 @@ req = [
     'rpaths>=0.8',
     'usagestats>=0.3',
     'requests',
-    'distro']
+    'distro',
+    'pyelftools']
 setup(name='reprounzip',
       version='1.0.16',
       packages=['reprounzip', 'reprounzip.unpackers',
