@@ -593,7 +593,7 @@ int syscall_execve_event(struct Process *process)
             log_critical(process->tid,
                          "execve() completed but call wasn't recorded");
             return -1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
         execi = exec_process->execve_info;
 
@@ -686,7 +686,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
                      "process created new process %d but we didn't see syscall "
                      "entry", new_tid);
         return -1;
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
     }
     else if(event == PTRACE_EVENT_CLONE)
         is_thread = process->params[0].u & CLONE_THREAD;
@@ -715,7 +715,7 @@ int syscall_fork_event(struct Process *process, unsigned int event)
                          "just created process that is already running "
                          "(status=%d)", new_process->status);
             return -1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
         new_process->status = PROCSTAT_ATTACHED;
         ptrace(PTRACE_SYSCALL, new_process->tid, NULL, NULL);
@@ -1220,7 +1220,7 @@ int syscall_handle(struct Process *process)
         syscall_type = SYSCALL_X86_64_x32;
         if(logging_level <= 5)
             log_debug(process->tid, "syscall %d (x32) (%s)", syscall, inout);
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
     }
     else
     {
@@ -1250,7 +1250,7 @@ int syscall_handle(struct Process *process)
         if(syscall < 0 || syscall >= 2000)
             /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
@@ -1276,7 +1276,7 @@ int syscall_handle(struct Process *process)
             /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "out of syscall with execve_info != NULL");
             return -1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
 
         }
         process->current_syscall = -1;

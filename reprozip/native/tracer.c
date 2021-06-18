@@ -345,7 +345,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
              * mistakingly call it while there is no child to wait for */
             log_critical(0, "waitpid failed: %s", strerror(errno));
             return -1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
         if(WIFEXITED(status) || WIFSIGNALED(status))
         {
@@ -381,7 +381,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 log_critical(0, "only UNKNOWN processes remaining (%d)",
                              (unsigned int)nprocs);
                 return -1;
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
             continue;
         }
@@ -446,7 +446,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 /* LCOV_EXCL_START : GETREGSET was added by Linux 2.6.34 in
                  * May 2010 (2225a122) */
                 ptrace(PTRACE_GETREGS, tid, NULL, &regs);
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
 #if defined(I386)
             if(!process->in_syscall)
@@ -543,7 +543,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                           "NOT delivering SIGTRAP to %d\n"
                           "    waitstatus=0x%X", tid, status);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
             /* Other signal, let the process handle it */
             else
@@ -559,7 +559,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     log_error(tid, "    NOT delivering: %s", strerror(errno));
                     if(signum != SIGSTOP)
                         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
-                    /* LCOV_EXCL_END */
+                    /* LCOV_EXCL_STOP */
                 }
             }
         }
@@ -715,7 +715,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             cleanup();
             restore_signals();
             return 1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
     }
 

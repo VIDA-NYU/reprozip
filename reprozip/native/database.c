@@ -23,7 +23,7 @@ static sqlite3_uint64 gettime(void)
         log_critical(0, "getting time failed (clock_gettime): %s",
                      strerror(errno));
         exit(125);
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
     }
     timestamp = now.tv_sec;
     timestamp *= 1000000000;
@@ -248,7 +248,7 @@ sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
     log_critical(0, "sqlite3 error inserting process: %s", sqlite3_errmsg(db));
     return -1;
-    /* LCOV_EXCL_END */
+    /* LCOV_EXCL_STOP */
 }
 
 int db_add_first_process(unsigned int *id, const char *working_dir)
@@ -271,7 +271,7 @@ sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
     log_critical(0, "sqlite3 error setting exitcode: %s", sqlite3_errmsg(db));
     return -1;
-    /* LCOV_EXCL_END */
+    /* LCOV_EXCL_STOP */
 }
 
 int db_add_file_open(unsigned int process, const char *name,
@@ -294,7 +294,7 @@ sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
     log_critical(0, "sqlite3 error inserting file: %s", sqlite3_errmsg(db));
     return -1;
-    /* LCOV_EXCL_END */
+    /* LCOV_EXCL_STOP */
 }
 
 static char *strarray2nulsep(const char *const *array, size_t *plen)
@@ -362,5 +362,5 @@ sqlerror:
     /* LCOV_EXCL_START : Insertions shouldn't fail */
     log_critical(0, "sqlite3 error inserting exec: %s", sqlite3_errmsg(db));
     return -1;
-    /* LCOV_EXCL_END */
+    /* LCOV_EXCL_STOP */
 }
