@@ -112,7 +112,6 @@ def call_output(args, stream='out'):
     return retcode, b''.join(output)
 
 
-@print_arg_list
 def check_output(args, stream='out'):
     retcode, output = call_output(args, stream)
     if retcode != 0:

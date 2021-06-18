@@ -16,6 +16,9 @@ This file contains the default plugins that come with reprounzip:
 
 import argparse
 import copy
+from elftools.common.exceptions import ELFError
+from elftools.elf.elffile import ELFFile
+from elftools.elf.segments import InterpSegment
 import logging
 import os
 import platform
@@ -40,6 +43,17 @@ from reprounzip.utils import make_dir_writable, rmtree_fixed, copyfile, \
 
 
 logger = logging.getLogger('reprounzip')
+
+
+def get_elf_interpreter(file):
+    try:
+        elf = ELFFile(file)
+        for segment in elf.iter_segments():
+            if isinstance(segment, InterpSegment):
+                return segment.get_interp_name()
+        return None
+    except ELFError:
+        return None
 
 
 def installpkgs(args):
@@ -216,19 +230,21 @@ def directory_run(args):
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode,
                                                 ['/sbin/ldconfig', '-v', '-N'])
-    lib_dirs = ('export LD_LIBRARY_PATH=%s' % ':'.join(
-                shell_escape(str(join_root(root, d)))
-                for d in lib_dirs))
 
-    cmds = [lib_dirs]
+    cmds = []
     for run_number in selected_runs:
         run = runs[run_number]
         cmd = 'cd %s && ' % shell_escape(
             str(join_root(root, Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
+        cmd += 'LD_LIBRARY_PATH=%s' % ':'.join(
+            shell_escape(str(join_root(root, d)))
+            for d in lib_dirs
+        )
         environ = run['environ']
         environ = fixup_environment(environ, args)
         if args.x11:
+            environ = dict(environ)
             if 'DISPLAY' in os.environ:
                 environ['DISPLAY'] = os.environ['DISPLAY']
             if 'XAUTHORITY' in os.environ:
@@ -249,6 +265,14 @@ def directory_run(args):
         # Rebuild string
         path = ':'.join(str(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
+
+        interpreter = get_elf_interpreter(
+            join_root(root, PosixPath(run['binary'])).open('rb'),
+        )
+        if interpreter is not None:
+            interpreter = Path(interpreter)
+            if interpreter.exists():
+                cmd += '%s ' % shell_escape(str(join_root(root, interpreter)))
 
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
@@ -579,6 +603,7 @@ def chroot_run(args):
         forwarders.append(fwd)
 
     signals.pre_run(target=target)
+    logger.debug("Running: %s", cmds)
     retcode = interruptible_call(cmds, shell=True)
     print("\n*** Command finished, status: %d\n" % retcode, file=sys.stderr)
     signals.post_run(target=target, retcode=retcode)
