@@ -806,17 +806,17 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_call(rpuz + ['showfiles', name])
         # Lists packages
         check_call(rpuz + ['installpkgs', '--summary', name])
-        # Unpack chroot
-        check_call(sudo + rpuz + ['chroot', 'setup', name, 'simplechroot'])
-        # Run chroot
-        check_simple(sudo + rpuz + ['chroot', 'run', 'simplechroot'], 'err')
-        output_in_chroot = Path('simplechroot/root/tmp')
-        output_in_chroot = output_in_chroot.listdir('reprozip_*')[0]
-        output_in_chroot = output_in_chroot / 'simple_output.txt'
-        out = subprocess.check_output(sudo + ['cat', str(output_in_chroot)])
-        assert out.decode('utf-8').strip() == '42'
+        # Unpack directory
+        check_call(rpuz + ['directory', 'setup', name, 'simpledir'])
+        # Run directory
+        check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
+        output_in_dir = Path('simpledir/root/tmp')
+        output_in_dir = output_in_dir.listdir('reprozip_*')[0]
+        output_in_dir = output_in_dir / 'simple_output.txt'
+        with output_in_dir.open(encoding='utf-8') as fp:
+            assert fp.read().strip() == '42'
         # Delete with wrong command (should fail)
-        p = subprocess.Popen(rpuz + ['directory', 'destroy', 'simplechroot'],
+        p = subprocess.Popen(rpuz + ['chroot', 'destroy', 'simpledir'],
                              stderr=subprocess.PIPE)
         out, err = p.communicate()
         assert p.poll() != 0
@@ -825,8 +825,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             err = err[2:]
         assert b"Wrong unpacker used" in err[0]
         assert err[1].startswith(b"usage: ")
-        # Delete chroot
-        check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot'])
+        # Delete directory
+        check_call(rpuz + ['directory', 'destroy', 'simpledir'])
 
     # ########################################
     # Copies back coverage report
