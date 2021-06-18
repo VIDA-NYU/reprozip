@@ -63,7 +63,7 @@ char *abspath(const char *wd, const char *path)
         memcpy(result, wd, len_wd);
         strcpy(result + len_wd, path);
         return result;
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
     }
     else
     {
@@ -93,7 +93,7 @@ char *get_wd(void)
                 free(path);
                 log_error(0, "getcwd failed: %s", strerror(errno));
                 return strdup("/UNKNOWN");
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
             free(path);
             size <<= 1;
@@ -146,8 +146,8 @@ int path_is_dir(const char *pathname)
         /* LCOV_EXCL_START : shouldn't happen because a tracer process just
          * accessed it */
         log_error(0, "error stat()ing %s: %s", pathname, strerror(errno));
-        /* LCOV_EXCL_END */
         return 0;
+        /* LCOV_EXCL_STOP */
     }
     return S_ISDIR(buf.st_mode)?1:0;
 }

@@ -189,7 +189,7 @@ void trace_free_process(struct Process *process)
         process->threadgroup = NULL;
     }
     else
-        log_debug(process->tid, "threadgroup==NULL");
+        log_debug(process->tid, "threadgroup==NULL"); /* LCOV_EXCL_LINE */
     if(process->execve_info != NULL)
     {
         free_execve_info(process->execve_info);
@@ -273,11 +273,13 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
         char *pathname = line + path_offset;
         if(ret != 7)
         {
+            /* LCOV_EXCL_START : Broken or unexpected proc file format*/
             log_error(tid, "Invalid format in /proc/%d/maps (%d):\n  %s", tid,
                       ret, line);
             free(line);
             fclose(fp);
             return -1;
+            /* LCOV_EXCL_STOP */
         }
 
 #ifdef DEBUG_PROC_PARSER
@@ -358,7 +360,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
              * mistakingly call it while there is no child to wait for */
             log_critical(0, "waitpid failed: %s", strerror(errno));
             return -1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
         if(WIFEXITED(status) || WIFSIGNALED(status))
         {
@@ -380,7 +382,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     cpu_time_val = cpu_time;
                 if(db_add_exit(process->identifier, exitcode,
                                cpu_time_val) != 0)
-                    return -1;
+                    return -1; /* LCOV_EXCL_LINE */
                 trace_free_process(process);
             }
             trace_count_processes(&nprocs, &unknown);
@@ -399,7 +401,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 log_critical(0, "only UNKNOWN processes remaining (%d)",
                              (unsigned int)nprocs);
                 return -1;
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
             continue;
         }
@@ -464,7 +466,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                 /* LCOV_EXCL_START : GETREGSET was added by Linux 2.6.34 in
                  * May 2010 (2225a122) */
                 ptrace(PTRACE_GETREGS, tid, NULL, &regs);
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
 #if defined(I386)
             if(!process->in_syscall)
@@ -526,7 +528,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
             }
 #endif
             if(syscall_handle(process) != 0)
-                return -1;
+                return -1; /* LCOV_EXCL_LINE */
         }
         /* Handle signals */
         else if(WIFSTOPPED(status))
@@ -561,7 +563,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                           "NOT delivering SIGTRAP to %d\n"
                           "    waitstatus=0x%X", tid, status);
                 ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
-                /* LCOV_EXCL_END */
+                /* LCOV_EXCL_STOP */
             }
             /* Other signal, let the process handle it */
             else
@@ -577,7 +579,7 @@ static int trace(pid_t first_proc, int *first_exit_code)
                     log_error(tid, "    NOT delivering: %s", strerror(errno));
                     if(signum != SIGSTOP)
                         ptrace(PTRACE_SYSCALL, tid, NULL, NULL);
-                    /* LCOV_EXCL_END */
+                    /* LCOV_EXCL_STOP */
                 }
             }
         }
@@ -733,7 +735,7 @@ int fork_and_trace(const char *binary, int argc, char **argv,
             cleanup();
             restore_signals();
             return 1;
-            /* LCOV_EXCL_END */
+            /* LCOV_EXCL_STOP */
         }
     }
 
@@ -747,8 +749,10 @@ int fork_and_trace(const char *binary, int argc, char **argv,
 
     if(db_close(0) != 0)
     {
+        /* LCOV_EXCL_START : Closing database shouldn't fail */
         restore_signals();
         return 1;
+        /* LCOV_EXCL_STOP */
     }
 
     restore_signals();

@@ -24,7 +24,7 @@ static long tracee_getword(pid_t tid, const void *addr)
          * execve(), which will dup arguments when entering the syscall */
         log_error(tid, "tracee_getword() failed: %s", strerror(errno));
         return 0;
-        /* LCOV_EXCL_END */
+        /* LCOV_EXCL_STOP */
     }
     return res;
 }
