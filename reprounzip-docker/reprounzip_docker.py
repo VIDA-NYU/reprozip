@@ -17,6 +17,7 @@ import logging
 import os
 import re
 from rpaths import Path, PosixPath
+import shutil
 import socket
 import subprocess
 import sys
@@ -27,10 +28,11 @@ from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
-    make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
-    FileUploader, FileDownloader, get_runs, add_environment_options, \
-    parse_environment_args, interruptible_call, metadata_read, \
-    metadata_write, metadata_initial_iofiles, metadata_update_run, parse_ports
+    make_unique_name, shell_escape, select_installer, busybox_url, \
+    rpzsudo_binary, FileUploader, FileDownloader, get_runs, \
+    add_environment_options, parse_environment_args, interruptible_call, \
+    metadata_read, metadata_write, metadata_initial_iofiles, \
+    metadata_update_run, parse_ports
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
 from reprounzip.utils import join_root, download_file
 
@@ -173,9 +175,9 @@ def docker_setup_create(args):
             fp.write('COPY busybox /busybox\n')
 
             # Installs rpzsudo
-            download_file(sudo_url(arch),
-                          target / 'rpzsudo',
-                          'rpzsudo-%s' % arch)
+            with rpzsudo_binary(arch) as f_in:
+                with (target / 'rpzsudo').open('wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
             fp.write('COPY rpzsudo /rpzsudo\n\n')
 
             fp.write('COPY data.tgz /reprozip_data.tgz\n\n')

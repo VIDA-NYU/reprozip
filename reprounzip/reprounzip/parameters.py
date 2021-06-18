@@ -9,8 +9,8 @@ schedule from ReproZip's releases. To account for that, ReproZip downloads a
 "parameter file", which is just a JSON with a bunch of parameters.
 
 In there you will find things like the address of some binaries that are
-downloaded from the web (rpzsudo and busybox), and the name of Vagrant boxes
-and Docker images for various operating systems.
+downloaded from the web (busybox), and the name of Vagrant boxes and Docker
+images for various operating systems.
 """
 
 from distutils.version import LooseVersion
@@ -92,12 +92,6 @@ _bundled_parameters = {
     "busybox_url": {
         "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",
         "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"
-    },
-    "rpzsudo_url": {
-        "x86_64": "https://github.com/remram44/static-sudo/releases/download/"
-                  "current/rpzsudo-x86_64",
-        "i686": "https://github.com/remram44/static-sudo/releases/download/"
-                "current/rpzsudo-i686"
     },
     "docker_images": {
         "default": {

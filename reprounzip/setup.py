@@ -20,7 +20,7 @@ setup(name='reprounzip',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
       package_data={
-          'reprounzip': ['reprozip-ca.crt'],
+          'reprounzip': ['reprozip-ca.crt', 'rpzsudo-i686', 'rpzsudo-x86_64'],
       },
       entry_points={
           'console_scripts': [

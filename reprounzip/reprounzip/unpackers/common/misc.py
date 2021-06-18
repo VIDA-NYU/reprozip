@@ -11,15 +11,15 @@ import logging
 import itertools
 import os
 import pickle
+import pkg_resources
 import random
 import re
-import warnings
-
 from rpaths import PosixPath, Path
 import signal
 import subprocess
 import sys
 import tarfile
+import warnings
 
 import reprounzip.common
 from reprounzip.common import RPZPack
@@ -126,10 +126,13 @@ def busybox_url(arch):
     return get_parameter('busybox_url')[arch]
 
 
-def sudo_url(arch):
-    """Gets the correct URL for the rpzsudo binary given the architecture.
+def rpzsudo_binary(arch):
+    """Gets the rpzsudo file given the architecture.
     """
-    return get_parameter('rpzsudo_url')[arch]
+    return pkg_resources.resource_stream(
+        __name__.split('.', 1)[0],
+        'rpzsudo-%s' % arch,
+    )
 
 
 class FileUploader(object):
