@@ -168,6 +168,8 @@ def docker_setup_create(args):
         logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
                                           newline='\n') as dockerfile:
+            dockerfile.write('# syntax=docker/dockerfile:1.2\n\n')
+
             dockerfile.write('FROM %s\n\n' % base_image)
 
             # Installs busybox
@@ -182,9 +184,7 @@ def docker_setup_create(args):
                           'rpzsudo-%s' % arch)
             dockerfile.write('COPY rpzsudo /rpzsudo\n\n')
 
-            dockerfile.write('COPY data.tgz /reprozip_data.tgz\n\n')
-            dockerfile.write('COPY rpz-files.list /rpz-files.list\n')
-            dockerfile.write('RUN \\\n'
+            dockerfile.write('RUN --mount=type=bind,target=/rpzcontext \\\n'
                              '    chmod +x /busybox /rpzsudo && \\\n')
 
             if args.install_pkgs:
@@ -247,15 +247,15 @@ def docker_setup_create(args):
             # FIXME : for some reason we need reversed() here, I'm not sure why
             # Need to read more of tar's docs.
             # TAR bug: --no-overwrite-dir removes --keep-old-files
-            with (target / 'rpz-files.list').open('wb') as filelist:
+            with (target / 'files.list').open('wb') as filelist:
                 for p in reversed(pathlist):
                     filelist.write(join_root(rpz_pack.data_prefix, p).path)
                     filelist.write(b'\0')
             dockerfile.write(
                 '    cd / && '
-                '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
-                '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                '/busybox echo "TAR reports errors, this might or might '
+                '(tar zpxf /rpzcontext/data.tgz -U --recursive-unlink '
+                '--numeric-owner --strip=1 --null -T /rpzcontext/files.list '
+                '|| /busybox echo "TAR reports errors, this might or might '
                 'not prevent the execution to run")\n')
 
         # Meta-data for reprounzip
@@ -288,7 +288,8 @@ def docker_setup_build(args):
     try:
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
-                                  cwd=target.path)
+                                  cwd=target.path,
+                                  env={'DOCKER_BUILDKIT': '1'})
     except OSError:
         logger.critical("docker executable not found")
         sys.exit(1)
