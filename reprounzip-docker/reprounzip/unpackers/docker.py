@@ -167,25 +167,25 @@ def docker_setup_create(args):
         # Writes Dockerfile
         logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
-                                          newline='\n') as fp:
-            fp.write('FROM %s\n\n' % base_image)
+                                          newline='\n') as dockerfile:
+            dockerfile.write('FROM %s\n\n' % base_image)
 
             # Installs busybox
             download_file(busybox_url(arch),
                           target / 'busybox',
                           'busybox-%s' % arch)
-            fp.write('COPY busybox /busybox\n')
+            dockerfile.write('COPY busybox /busybox\n')
 
             # Installs rpzsudo
             download_file(sudo_url(arch),
                           target / 'rpzsudo',
                           'rpzsudo-%s' % arch)
-            fp.write('COPY rpzsudo /rpzsudo\n\n')
+            dockerfile.write('COPY rpzsudo /rpzsudo\n\n')
 
-            fp.write('COPY data.tgz /reprozip_data.tgz\n\n')
-            fp.write('COPY rpz-files.list /rpz-files.list\n')
-            fp.write('RUN \\\n'
-                     '    chmod +x /busybox /rpzsudo && \\\n')
+            dockerfile.write('COPY data.tgz /reprozip_data.tgz\n\n')
+            dockerfile.write('COPY rpz-files.list /rpz-files.list\n')
+            dockerfile.write('RUN \\\n'
+                             '    chmod +x /busybox /rpzsudo && \\\n')
 
             if args.install_pkgs:
                 # Install every package through package manager
@@ -207,9 +207,11 @@ def docker_setup_create(args):
                 # Updates package sources
                 update_script = installer.update_script()
                 if update_script:
-                    fp.write('    %s && \\\n' % update_script)
+                    dockerfile.write('    %s && \\\n' % update_script)
                 # Installs necessary packages
-                fp.write('    %s && \\\n' % installer.install_script(packages))
+                dockerfile.write(
+                    '    %s && \\\n' % installer.install_script(packages),
+                )
                 logger.info("Dockerfile will install the %d software "
                             "packages that were not packed", len(packages))
             else:
@@ -245,15 +247,16 @@ def docker_setup_create(args):
             # FIXME : for some reason we need reversed() here, I'm not sure why
             # Need to read more of tar's docs.
             # TAR bug: --no-overwrite-dir removes --keep-old-files
-            with (target / 'rpz-files.list').open('wb') as lfp:
+            with (target / 'rpz-files.list').open('wb') as filelist:
                 for p in reversed(pathlist):
-                    lfp.write(join_root(rpz_pack.data_prefix, p).path)
-                    lfp.write(b'\0')
-            fp.write('    cd / && '
-                     '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
-                     '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                     '/busybox echo "TAR reports errors, this might or might '
-                     'not prevent the execution to run")\n')
+                    filelist.write(join_root(rpz_pack.data_prefix, p).path)
+                    filelist.write(b'\0')
+            dockerfile.write(
+                '    cd / && '
+                '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
+                '--numeric-owner --strip=1 --null -T /rpz-files.list || '
+                '/busybox echo "TAR reports errors, this might or might '
+                'not prevent the execution to run")\n')
 
         # Meta-data for reprounzip
         write_dict(target, metadata_initial_iofiles(config))
