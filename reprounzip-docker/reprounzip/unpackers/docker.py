@@ -30,6 +30,7 @@ from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, \
     UsageError, CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, sudo_url, \
+    rpztar_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, interruptible_call, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
@@ -182,10 +183,16 @@ def docker_setup_create(args):
                           'rpzsudo-%s' % arch)
             dockerfile.write('COPY rpzsudo /rpzsudo\n\n')
 
+            # Installs rpztar
+            download_file(rpztar_url(arch),
+                          target / 'rpztar',
+                          'rpztar-%s' % arch)
+            dockerfile.write('COPY rpztar /rpztar\n\n')
+
             dockerfile.write('COPY data.tgz /reprozip_data.tgz\n\n')
             dockerfile.write('COPY rpz-files.list /rpz-files.list\n')
             dockerfile.write('RUN \\\n'
-                             '    chmod +x /busybox /rpzsudo && \\\n')
+                             '    chmod +x /busybox /rpzsudo /rpztar && \\\n')
 
             if args.install_pkgs:
                 # Install every package through package manager
@@ -244,19 +251,14 @@ def docker_setup_create(args):
                     else:
                         logger.info("Missing file %s", path)
             rpz_pack.close()
-            # FIXME : for some reason we need reversed() here, I'm not sure why
-            # Need to read more of tar's docs.
-            # TAR bug: --no-overwrite-dir removes --keep-old-files
             with (target / 'rpz-files.list').open('wb') as filelist:
-                for p in reversed(pathlist):
-                    filelist.write(join_root(rpz_pack.data_prefix, p).path)
+                for p in pathlist:
+                    filelist.write(join_root(PosixPath(''), p).path)
                     filelist.write(b'\0')
             dockerfile.write(
                 '    cd / && '
-                '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
-                '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                '/busybox echo "TAR reports errors, this might or might '
-                'not prevent the execution to run")\n')
+                + '/rpztar /reprozip_data.tgz /rpz-files.list\n',
+            )
 
         # Meta-data for reprounzip
         write_dict(target, metadata_initial_iofiles(config))
