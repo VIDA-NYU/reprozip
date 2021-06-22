@@ -165,25 +165,25 @@ def docker_setup_create(args):
         # Writes Dockerfile
         logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
-                                          newline='\n') as fp:
-            fp.write('FROM %s\n\n' % base_image)
+                                          newline='\n') as dockerfile:
+            dockerfile.write('FROM %s\n\n' % base_image)
 
             # Installs busybox
             download_file(busybox_url(arch),
                           target / 'busybox',
                           'busybox-%s' % arch)
-            fp.write('COPY busybox /busybox\n')
+            dockerfile.write('COPY busybox /busybox\n')
 
             # Installs rpzsudo
             with rpzsudo_binary(arch) as f_in:
                 with (target / 'rpzsudo').open('wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
-            fp.write('COPY rpzsudo /rpzsudo\n\n')
+            dockerfile.write('COPY rpzsudo /rpzsudo\n\n')
 
-            fp.write('COPY data.tgz /reprozip_data.tgz\n\n')
-            fp.write('COPY rpz-files.list /rpz-files.list\n')
-            fp.write('RUN \\\n'
-                     '    chmod +x /busybox /rpzsudo && \\\n')
+            dockerfile.write('COPY data.tgz /reprozip_data.tgz\n\n')
+            dockerfile.write('COPY rpz-files.list /rpz-files.list\n')
+            dockerfile.write('RUN \\\n'
+                             '    chmod +x /busybox /rpzsudo && \\\n')
 
             if args.install_pkgs:
                 # Install every package through package manager
@@ -205,9 +205,11 @@ def docker_setup_create(args):
                 # Updates package sources
                 update_script = installer.update_script()
                 if update_script:
-                    fp.write('    %s && \\\n' % update_script)
+                    dockerfile.write('    %s && \\\n' % update_script)
                 # Installs necessary packages
-                fp.write('    %s && \\\n' % installer.install_script(packages))
+                dockerfile.write(
+                    '    %s && \\\n' % installer.install_script(packages),
+                )
                 logger.info("Dockerfile will install the %d software "
                             "packages that were not packed", len(packages))
             else:
@@ -243,30 +245,32 @@ def docker_setup_create(args):
             # FIXME : for some reason we need reversed() here, I'm not sure why
             # Need to read more of tar's docs.
             # TAR bug: --no-overwrite-dir removes --keep-old-files
-            with (target / 'rpz-files.list').open('wb') as lfp:
+            with (target / 'rpz-files.list').open('wb') as filelist:
                 for p in reversed(pathlist):
-                    lfp.write(join_root(rpz_pack.data_prefix, p).path)
-                    lfp.write(b'\0')
-            fp.write('    cd / && '
-                     '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
-                     '--numeric-owner --strip=1 --null -T /rpz-files.list || '
-                     '/busybox echo "TAR reports errors, this might or might '
-                     'not prevent the execution to run")\n')
+                    filelist.write(join_root(rpz_pack.data_prefix, p).path)
+                    filelist.write(b'\0')
+            dockerfile.write(
+                '    cd / && '
+                '(tar zpxf /reprozip_data.tgz -U --recursive-unlink '
+                '--numeric-owner --strip=1 --null -T /rpz-files.list || '
+                '/busybox echo "TAR reports errors, this might or might '
+                'not prevent the execution to run")\n')
 
             # Setup entry point
-            fp.write('COPY rpz_entrypoint.sh /rpz_entrypoint.sh\n'
-                     'ENTRYPOINT ["/busybox", "sh", "/rpz_entrypoint.sh"]\n')
+            dockerfile.write(
+                'COPY rpz_entrypoint.sh /rpz_entrypoint.sh\n'
+                'ENTRYPOINT ["/busybox", "sh", "/rpz_entrypoint.sh"]\n')
 
         # Write entry point script
         logger.info("Writing %s...", target / 'rpz_entrypoint.sh')
         with (target / 'rpz_entrypoint.sh').open('w', encoding='utf-8',
-                                                 newline='\n') as fp:
+                                                 newline='\n') as script:
             # The entrypoint gets some arguments from the run command
             # By default, it just does all the runs
             # "run N" executes the run with that number
             # "cmd STR" sets a replacement command-line for the next run
             # "do STR" executes a command as-is
-            fp.write(
+            script.write(
                 '#!/bin/sh\n'
                 '\n'
                 'COMMAND=\n'
@@ -275,8 +279,8 @@ def docker_setup_create(args):
                 'if [ $# = 0 ]; then\n'
                 '    exec /busybox sh /rpz_entrypoint.sh')
             for nb in range(len(runs)):
-                fp.write(' run %d' % nb)
-            fp.write(
+                script.write(' run %d' % nb)
+            script.write(
                 '\n'
                 'fi\n'
                 '\n'
@@ -294,12 +298,12 @@ def docker_setup_create(args):
                 '>&2\n'
                 '            echo "The runs in this image are:" >&2\n')
             for run in runs:
-                fp.write(
+                script.write(
                     '            echo "    {name}: {cmdline}" >&2\n'.format(
                         name=run['id'],
                         cmdline=' '.join(shell_escape(a)
                                          for a in run['argv'])))
-            fp.write(
+            script.write(
                 '            exit 0\n'
                 '        ;;\n'
                 '        do)\n'
@@ -319,7 +323,7 @@ def docker_setup_create(args):
                 '            case "$1" in\n')
             for i, run in enumerate(runs):
                 cmdline = ' '.join([run['binary']] + run['argv'][1:])
-                fp.write(
+                script.write(
                     '                {name})\n'
                     '                    RUNCOMMAND={cmd}\n'
                     '                    RUNWD={wd}\n'
@@ -335,7 +339,7 @@ def docker_setup_create(args):
                             for k, v in run['environ'].items())),
                         uid=run.get('uid', 1000),
                         gid=run.get('gid', 1000)))
-            fp.write(
+            script.write(
                 '                *)\n'
                 '                    echo "RPZ: Unknown run $1" >&2\n'
                 '                    exit 1\n'
