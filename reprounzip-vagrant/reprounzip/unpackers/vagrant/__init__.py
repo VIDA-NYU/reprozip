@@ -707,7 +707,7 @@ class SSHDownloader(FileDownloader):
 
         # Move file to final destination
         try:
-            ltemp.rename(local_path)
+            ltemp.move(local_path)
         except OSError as e:
             logger.critical("Couldn't download output file: %s\n%s",
                             remote_path, str(e))
