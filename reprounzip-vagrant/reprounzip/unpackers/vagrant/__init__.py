@@ -284,45 +284,46 @@ def vagrant_setup_create(args):
         # Writes setup script
         logger.info("Writing setup script %s...", target / 'setup.sh')
         with (target / 'setup.sh').open('w', encoding='utf-8',
-                                        newline='\n') as fp:
-            fp.write('#!/bin/sh\n\nset -e\n\n')
+                                        newline='\n') as script:
+            script.write('#!/bin/sh\n\nset -e\n\n')
             if packages:
                 # Updates package sources
                 update_script = installer.update_script()
                 if update_script:
-                    fp.write(update_script)
-                fp.write('\n')
+                    script.write(update_script)
+                script.write('\n')
                 # Installs necessary packages
-                fp.write(installer.install_script(packages))
-                fp.write('\n')
+                script.write(installer.install_script(packages))
+                script.write('\n')
                 # TODO : Compare package versions (painful because of sh)
 
             # Untar
             if use_chroot:
-                fp.write('\n'
-                         'mkdir /experimentroot; cd /experimentroot\n')
-                fp.write('tar zpxf /vagrant/data.tgz --numeric-owner '
-                         '--strip=1 %s\n' % rpz_pack.data_prefix)
+                script.write('\n'
+                             'mkdir /experimentroot; cd /experimentroot\n')
+                script.write('tar zpxf /vagrant/data.tgz --numeric-owner '
+                             '--strip=1 %s\n' % rpz_pack.data_prefix)
                 if mount_bind:
-                    fp.write('\n'
-                             'mkdir -p /experimentroot/dev\n'
-                             'mkdir -p /experimentroot/proc\n')
+                    script.write('\n'
+                                 'mkdir -p /experimentroot/dev\n'
+                                 'mkdir -p /experimentroot/proc\n')
 
                 for pkg in packages:
-                    fp.write('\n# Copies files from package %s\n' % pkg.name)
+                    script.write('\n# Copies files from package %s\n'
+                                 % pkg.name)
                     for f in pkg.files:
                         f = f.path
                         dest = join_root(PosixPath('/experimentroot'), f)
-                        fp.write('mkdir -p %s\n' %
-                                 shell_escape(unicode_(f.parent)))
-                        fp.write('cp -L %s %s\n' % (
-                                 shell_escape(unicode_(f)),
-                                 shell_escape(unicode_(dest))))
-                fp.write(
+                        script.write('mkdir -p %s\n' %
+                                     shell_escape(unicode_(f.parent)))
+                        script.write('cp -L %s %s\n' % (
+                                     shell_escape(unicode_(f)),
+                                     shell_escape(unicode_(dest))))
+                script.write(
                     '\n'
                     'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
             else:
-                fp.write('\ncd /\n')
+                script.write('\ncd /\n')
                 paths = set()
                 pathlist = []
                 # Adds intermediate directories, and checks for existence in
@@ -352,13 +353,14 @@ def vagrant_setup_create(args):
                 # an error if an existing file is encountered. --skip-old-files
                 # was introduced too recently. Instead, we just ignore the exit
                 # status
-                with (target / 'rpz-files.list').open('wb') as lfp:
+                with (target / 'rpz-files.list').open('wb') as filelist:
                     for p in reversed(pathlist):
-                        lfp.write(join_root(rpz_pack.data_prefix, p).path)
-                        lfp.write(b'\0')
-                fp.write('tar zpxf /vagrant/data.tgz --keep-old-files '
-                         '--numeric-owner --strip=1 '
-                         '--null -T /vagrant/rpz-files.list || /bin/true\n')
+                        filelist.write(join_root(PosixPath(''), p).path)
+                        filelist.write(b'\0')
+                script.write('tar zpxf /vagrant/data.tgz --keep-old-files '
+                             '--numeric-owner --strip=1 '
+                             '--null -T /vagrant/rpz-files.list '
+                             '|| /bin/true\n')
 
             # Copies busybox
             if use_chroot:
@@ -366,7 +368,7 @@ def vagrant_setup_create(args):
                 download_file(busybox_url(arch),
                               target / 'busybox',
                               'busybox-%s' % arch)
-                fp.write(r'''
+                script.write(r'''
 cp /vagrant/busybox /experimentroot/busybox
 chmod +x /experimentroot/busybox
 mkdir -p /experimentroot/bin
@@ -406,33 +408,33 @@ def write_vagrantfile(target, unpacked_info):
 
     logger.info("Writing %s...", target / 'Vagrantfile')
     with (target / 'Vagrantfile').open('w', encoding='utf-8',
-                                       newline='\n') as fp:
+                                       newline='\n') as vgfile:
         # Vagrant header and version
-        fp.write(
+        vgfile.write(
             '# -*- mode: ruby -*-\n'
             '# vi: set ft=ruby\n\n'
             'VAGRANTFILE_API_VERSION = "2"\n\n'
             'Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n')
         # Selects which box to install
-        fp.write('  config.vm.box = "%s"\n' % box)
+        vgfile.write('  config.vm.box = "%s"\n' % box)
         # Run the setup script on the virtual machine
-        fp.write('  config.vm.provision "shell", path: "setup.sh"\n')
+        vgfile.write('  config.vm.provision "shell", path: "setup.sh"\n')
 
         # Memory size
         if memory is not None or gui:
-            fp.write('  config.vm.provider "virtualbox" do |v|\n')
+            vgfile.write('  config.vm.provider "virtualbox" do |v|\n')
             if memory is not None:
-                fp.write('    v.memory = %d\n' % memory)
+                vgfile.write('    v.memory = %d\n' % memory)
             if gui:
-                fp.write('    v.gui = true\n')
-            fp.write('  end\n')
+                vgfile.write('    v.gui = true\n')
+            vgfile.write('  end\n')
 
         # Port forwarding
         for port in ports:
-            fp.write('  config.vm.network "forwarded_port", host: '
-                     '%s, guest: %s, protocol: "%s"\n' % port)
+            vgfile.write('  config.vm.network "forwarded_port", host: '
+                         '%s, guest: %s, protocol: "%s"\n' % port)
 
-        fp.write('end\n')
+        vgfile.write('end\n')
 
 
 @target_must_exist
