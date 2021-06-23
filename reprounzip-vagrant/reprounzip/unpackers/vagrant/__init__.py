@@ -164,16 +164,20 @@ def machine_setup(target):
 
     if use_chroot:
         # Mount directories
+        logger.debug("Mounting directories")
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(IgnoreMissingKey())
         ssh.connect(**info)
         chan = ssh.get_transport().open_session()
         chan.exec_command(
             '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
-                'if ! grep -q "/experimentroot/dev " /proc/mounts; then '
+                'if ! grep -q "/experimentroot " /etc/mtab; then '
+                'mount -o bind /.experimentdata /experimentroot; '
+                'fi; '
+                'if ! grep -q "/experimentroot/dev " /etc/mtab; then '
                 'mount -o rbind /dev /experimentroot/dev; '
                 'fi; '
-                'if ! grep -q "/experimentroot/proc " /proc/mounts; then '
+                'if ! grep -q "/experimentroot/proc " /etc/mtab; then '
                 'mount -t proc none /experimentroot/proc; '
                 'fi'))
         if chan.recv_exit_status() != 0:
@@ -181,6 +185,7 @@ def machine_setup(target):
             sys.exit(1)
         if gui:
             # Mount X11 socket
+            logger.debug("Mounting X11 socket")
             chan = ssh.get_transport().open_session()
             chan.exec_command(
                 '/usr/bin/sudo /bin/sh -c %s' % shell_escape(
@@ -194,6 +199,8 @@ def machine_setup(target):
                 logger.critical("Couldn't mount X11 sockets in chroot")
                 sys.exit(1)
         ssh.close()
+    else:
+        logger.debug("NOT mounting directories")
 
     return info
 
@@ -312,20 +319,21 @@ chmod +x /usr/local/bin/rpztar
             # Untar
             if use_chroot:
                 script.write('\n'
-                             'mkdir /experimentroot; cd /experimentroot\n')
+                             'mkdir /experimentroot\n'
+                             'mkdir /.experimentdata; cd /.experimentdata\n')
                 script.write('tar zpxf /vagrant/data.tgz --numeric-owner '
                              '--strip=1 %s\n' % rpz_pack.data_prefix)
                 if mount_bind:
                     script.write('\n'
-                                 'mkdir -p /experimentroot/dev\n'
-                                 'mkdir -p /experimentroot/proc\n')
+                                 'mkdir -p /.experimentdata/dev\n'
+                                 'mkdir -p /.experimentdata/proc\n')
 
                 for pkg in packages:
                     script.write('\n# Copies files from package %s\n'
                                  % pkg.name)
                     for f in pkg.files:
                         f = f.path
-                        dest = join_root(PosixPath('/experimentroot'), f)
+                        dest = join_root(PosixPath('/.experimentdata'), f)
                         script.write('mkdir -p %s\n' %
                                      shell_escape(unicode_(f.parent)))
                         script.write('cp -L %s %s\n' % (
@@ -333,7 +341,7 @@ chmod +x /usr/local/bin/rpztar
                                      shell_escape(unicode_(dest))))
                 script.write(
                     '\n'
-                    'cp /etc/resolv.conf /experimentroot/etc/resolv.conf\n')
+                    'cp /etc/resolv.conf /.experimentdata/etc/resolv.conf\n')
             else:
                 script.write('\ncd /\n')
                 paths = set()
@@ -373,11 +381,11 @@ chmod +x /usr/local/bin/rpztar
                               target / 'busybox',
                               'busybox-%s' % arch)
                 script.write(r'''
-cp /vagrant/busybox /experimentroot/busybox
-chmod +x /experimentroot/busybox
-mkdir -p /experimentroot/bin
-[ -e /experimentroot/bin/sh ] || \
-    ln -s /busybox /experimentroot/bin/sh
+cp /vagrant/busybox /.experimentdata/busybox
+chmod +x /.experimentdata/busybox
+mkdir -p /.experimentdata/bin
+[ -e /.experimentdata/bin/sh ] || \
+    ln -s /busybox /.experimentdata/bin/sh
 ''')
 
         # Copies pack
