@@ -396,7 +396,7 @@ def docker_setup_build(args):
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
                                   cwd=target.path,
-                                  env={'DOCKER_BUILDKIT': '1'})
+                                  env=dict(os.environ, DOCKER_BUILDKIT='1'))
     except OSError:
         logger.critical("docker executable not found")
         sys.exit(1)
