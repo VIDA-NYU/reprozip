@@ -166,6 +166,8 @@ def docker_setup_create(args):
         logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
                                           newline='\n') as dockerfile:
+            dockerfile.write('# syntax=docker/dockerfile:1.2\n\n')
+
             dockerfile.write('FROM %s\n\n' % base_image)
 
             # Installs busybox
@@ -186,9 +188,7 @@ def docker_setup_create(args):
                           'rpztar-%s' % arch)
             dockerfile.write('COPY rpztar /rpztar\n\n')
 
-            dockerfile.write('COPY data.tgz /reprozip_data.tgz\n\n')
-            dockerfile.write('COPY rpz-files.list /rpz-files.list\n')
-            dockerfile.write('RUN \\\n'
+            dockerfile.write('RUN --mount=type=bind,target=/rpzcontext \\\n'
                              '    chmod +x /busybox /rpzsudo /rpztar && \\\n')
 
             if args.install_pkgs:
@@ -248,13 +248,13 @@ def docker_setup_create(args):
                     else:
                         logger.info("Missing file %s", path)
             rpz_pack.close()
-            with (target / 'rpz-files.list').open('wb') as filelist:
+            with (target / 'files.list').open('wb') as filelist:
                 for p in pathlist:
                     filelist.write(join_root(PosixPath(''), p).path)
                     filelist.write(b'\0')
             dockerfile.write(
                 '    cd / && '
-                + '/rpztar /reprozip_data.tgz /rpz-files.list\n',
+                + '/rpztar /rpzcontext/data.tgz /rpzcontext/files.list\n',
             )
 
             # Setup entry point
@@ -395,7 +395,8 @@ def docker_setup_build(args):
     try:
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
-                                  cwd=target.path)
+                                  cwd=target.path,
+                                  env={'DOCKER_BUILDKIT': '1'})
     except OSError:
         logger.critical("docker executable not found")
         sys.exit(1)
