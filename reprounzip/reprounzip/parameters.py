@@ -100,6 +100,12 @@ _bundled_parameters = {
         "i686": "https://github.com/remram44/static-sudo/releases/download/"
                 "current/rpzsudo-i686"
     },
+    "rpztar_url": {
+        "x86_64": "https://github.com/remram44/rpztar/releases/download/"
+                  "v1/rpztar-x86_64",
+        "i686": "https://github.com/remram44/rpztar/releases/download/"
+                "v1/rpztar-i686"
+    },
     "docker_images": {
         "default": "debian",
         "images": {
