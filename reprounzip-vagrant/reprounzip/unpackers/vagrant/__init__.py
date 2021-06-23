@@ -29,6 +29,7 @@ from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
     make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
+    rpztar_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
@@ -297,6 +298,17 @@ def vagrant_setup_create(args):
                 script.write('\n')
                 # TODO : Compare package versions (painful because of sh)
 
+            # Copies rpztar
+            if not use_chroot:
+                arch = runs[0]['architecture']
+                download_file(rpztar_url(arch),
+                              target / 'rpztar',
+                              'rpztar-%s' % arch)
+                script.write(r'''
+cp /vagrant/rpztar /usr/local/bin/rpztar
+chmod +x /usr/local/bin/rpztar
+''')
+
             # Untar
             if use_chroot:
                 script.write('\n'
@@ -346,21 +358,13 @@ def vagrant_setup_create(args):
                             pathlist.append(path)
                         else:
                             logger.info("Missing file %s", path)
-                # FIXME : for some reason we need reversed() here, I'm not sure
-                # why. Need to read more of tar's docs.
-                # TAR bug: --no-overwrite-dir removes --keep-old-files
-                # TAR bug: there is no way to make --keep-old-files not report
-                # an error if an existing file is encountered. --skip-old-files
-                # was introduced too recently. Instead, we just ignore the exit
-                # status
                 with (target / 'rpz-files.list').open('wb') as filelist:
-                    for p in reversed(pathlist):
+                    for p in pathlist:
                         filelist.write(join_root(PosixPath(''), p).path)
                         filelist.write(b'\0')
-                script.write('tar zpxf /vagrant/data.tgz --keep-old-files '
-                             '--numeric-owner --strip=1 '
-                             '--null -T /vagrant/rpz-files.list '
-                             '|| /bin/true\n')
+                script.write('/usr/local/bin/rpztar '
+                             '/vagrant/data.tgz '
+                             '/vagrant/rpz-files.list\n')
 
             # Copies busybox
             if use_chroot:
