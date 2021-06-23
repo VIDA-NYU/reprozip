@@ -407,8 +407,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrantchroot').path,
-                               'arg2:voutput1.txt'])
-            with Path('voutput1.txt').open(encoding='utf-8') as fp:
+                               'arg2:voutput3.txt'])
+            with Path('voutput3.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Replace input file via path
             check_call(rpuz + ['vagrant', 'upload',
@@ -476,8 +476,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
                                (tests / 'vagrant/simplevagrant').path,
-                               'arg2:voutput1.txt'])
-            with Path('voutput1.txt').open(encoding='utf-8') as fp:
+                               'arg2:woutput3.txt'])
+            with Path('woutput3.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',

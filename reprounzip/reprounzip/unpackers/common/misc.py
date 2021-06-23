@@ -135,6 +135,12 @@ def rpzsudo_binary(arch):
     )
 
 
+def rpztar_url(arch):
+    """Gets the correct URL for the rpztar binary given the architecture.
+    """
+    return get_parameter('rpztar_url')[arch]
+
+
 class FileUploader(object):
     """Common logic for 'upload' commands.
     """

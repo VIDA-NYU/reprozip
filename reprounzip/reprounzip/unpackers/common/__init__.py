@@ -13,6 +13,7 @@ from reprounzip.unpackers.common.misc import UsageError, \
     COMPAT_OK, COMPAT_NO, COMPAT_MAYBE, \
     composite_action, target_must_exist, unique_names, \
     make_unique_name, shell_escape, load_config, busybox_url, rpzsudo_binary, \
+    rpztar_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     parse_environment_args, fixup_environment, interruptible_call, \
     metadata_read, metadata_write, metadata_initial_iofiles, \
@@ -26,7 +27,7 @@ __all__ = ['THIS_DISTRIBUTION', 'PKG_NOT_INSTALLED', 'select_installer',
            'UsageError', 'CantFindInstaller',
            'composite_action', 'target_must_exist', 'unique_names',
            'make_unique_name', 'shell_escape', 'load_config', 'busybox_url',
-           'rpzsudo_binary',
+           'rpzsudo_binary', 'rpztar_url',
            'join_root', 'FileUploader', 'FileDownloader', 'get_runs',
            'add_environment_options', 'parse_environment_args',
            'fixup_environment', 'interruptible_call', 'metadata_read',

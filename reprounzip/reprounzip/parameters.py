@@ -93,6 +93,12 @@ _bundled_parameters = {
         "x86_64": "https://s3.amazonaws.com/reprozip-files/busybox-x86_64",
         "i686": "https://s3.amazonaws.com/reprozip-files/busybox-i686"
     },
+    "rpztar_url": {
+        "x86_64": "https://github.com/remram44/rpztar/releases/download/"
+                  "v1/rpztar-x86_64",
+        "i686": "https://github.com/remram44/rpztar/releases/download/"
+                "v1/rpztar-i686"
+    },
     "docker_images": {
         "default": {
             "distribution": "debian",
