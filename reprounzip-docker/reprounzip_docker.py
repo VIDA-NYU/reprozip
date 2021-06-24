@@ -166,7 +166,8 @@ def docker_setup_create(args):
         logger.info("Writing %s...", target / 'Dockerfile')
         with (target / 'Dockerfile').open('w', encoding='utf-8',
                                           newline='\n') as dockerfile:
-            dockerfile.write('# syntax=docker/dockerfile:1.2\n\n')
+            if args.use_buildkit:
+                dockerfile.write('# syntax=docker/dockerfile:1.2\n\n')
 
             dockerfile.write('FROM %s\n\n' % base_image)
 
@@ -188,8 +189,18 @@ def docker_setup_create(args):
                           'rpztar-%s' % arch)
             dockerfile.write('COPY rpztar /rpztar\n\n')
 
-            dockerfile.write('RUN --mount=type=bind,target=/rpzcontext \\\n'
-                             '    chmod +x /busybox /rpzsudo /rpztar && \\\n')
+            if args.use_buildkit:
+                dockerfile.write(
+                    'RUN --mount=type=bind,target=/rpz \\\n'
+                    '    chmod +x /busybox /rpzsudo /rpztar && \\\n'
+                )
+            else:
+                dockerfile.write('COPY data.tgz /rpz-data.tgz\n\n')
+                dockerfile.write('COPY files.list /rpz-files.list\n')
+                dockerfile.write(
+                    'RUN \\\n'
+                    '    chmod +x /busybox /rpzsudo /rpztar && \\\n'
+                )
 
             if args.install_pkgs:
                 # Install every package through package manager
@@ -252,10 +263,15 @@ def docker_setup_create(args):
                 for p in pathlist:
                     filelist.write(join_root(PosixPath(''), p).path)
                     filelist.write(b'\0')
-            dockerfile.write(
-                '    cd / && '
-                + '/rpztar /rpzcontext/data.tgz /rpzcontext/files.list\n',
-            )
+
+            if args.use_buildkit:
+                dockerfile.write(
+                    '    cd / && /rpztar /rpz/data.tgz /rpz/files.list\n',
+                )
+            else:
+                dockerfile.write(
+                    '    cd / && /rpztar /rpz-data.tgz /rpz-files.list\n',
+                )
 
             # Setup entry point
             dockerfile.write(
@@ -393,10 +409,13 @@ def docker_setup_build(args):
 
     logger.info("Calling 'docker build'...")
     try:
+        env = None
+        if args.use_buildkit:
+            env = dict(os.environ, DOCKER_BUILDKIT='1')
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
                                   cwd=target.path,
-                                  env=dict(os.environ, DOCKER_BUILDKIT='1'))
+                                  env=env)
     except OSError:
         logger.critical("docker executable not found")
         sys.exit(1)
@@ -955,6 +974,14 @@ def setup(parser, **kwargs):
     def add_opt_general(opts):
         opts.add_argument('target', nargs=1, help="Experiment directory")
 
+    def add_opt_setup(opts):
+        opts.add_argument('--use-buildkit', action='store_true',
+                          default=True, dest='use_buildkit',
+                          help=argparse.SUPPRESS)
+        opts.add_argument('--dont-use-buildkit', action='store_false',
+                          default=True, dest='use_buildkit',
+                          help=argparse.SUPPRESS)
+
     # Common between setup and setup/create
     def add_opt_setup_create(opts):
         opts.add_argument('pack', nargs=1, help="Pack to extract")
@@ -987,19 +1014,22 @@ def setup(parser, **kwargs):
 
     parser_setup_create = subparsers.add_parser('setup/create')
     add_opt_setup_create(parser_setup_create)
+    add_opt_setup(parser_setup_create)
     add_opt_general(parser_setup_create)
     parser_setup_create.set_defaults(func=docker_setup_create)
 
     # setup/build
     parser_setup_build = subparsers.add_parser('setup/build')
-    add_opt_general(parser_setup_build)
     add_opt_setup_build(parser_setup_build)
+    add_opt_setup(parser_setup_build)
+    add_opt_general(parser_setup_build)
     parser_setup_build.set_defaults(func=docker_setup_build)
 
     # setup
     parser_setup = subparsers.add_parser('setup')
     add_opt_setup_create(parser_setup)
     add_opt_setup_build(parser_setup)
+    add_opt_setup(parser_setup)
     add_opt_general(parser_setup)
     parser_setup.set_defaults(func=docker_setup)
 

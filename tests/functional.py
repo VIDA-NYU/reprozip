@@ -489,58 +489,60 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         if (tests / 'vagrant/simplevagrant').exists():
             (tests / 'vagrant/simplevagrant').rmtree()
 
-    # Unpack Docker
-    check_call(rpuz + ['docker', 'setup/create', 'simple.rpz', 'simpledocker'])
-    print("\nDocker project set up in simpledocker", file=sys.stderr)
-    try:
-        if run_docker:
-            check_call(rpuz + ['docker', 'setup/build', 'simpledocker'])
-            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out')
-            # Get output file
-            check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               'arg2:doutput1.txt'])
-            with Path('doutput1.txt').open(encoding='utf-8') as fp:
-                assert fp.read().strip() == '42'
-            # Get random file
-            check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               '%s:bind.bin' % (Path.cwd() / 'simple')])
-            assert same_files('simple.orig', 'bind.bin')
-            # Replace input file
-            check_call(rpuz + ['docker', 'upload', 'simpledocker',
-                               '%s:arg1' % (tests / 'simple_input2.txt')])
-            check_call(rpuz + ['docker', 'upload', 'simpledocker'])
-            check_call(rpuz + ['showfiles', 'simpledocker'])
-            # Run again
-            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
-            # Get output file
-            check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               'arg2:doutput2.txt'])
-            with Path('doutput2.txt').open(encoding='utf-8') as fp:
-                assert fp.read().strip() == '36'
-            # Reset input file
-            check_call(rpuz + ['docker', 'upload', 'simpledocker',
-                               ':arg1'])
-            # Run again
-            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out')
-            # Get output file
-            check_call(rpuz + ['docker', 'download', 'simpledocker',
-                               'arg2:doutput1.txt'])
-            with Path('doutput1.txt').open(encoding='utf-8') as fp:
-                assert fp.read().strip() == '42'
-            # Replace input file via path
-            check_call(rpuz + ['docker', 'upload', 'simpledocker',
-                               '%s:%s' % (tests / 'simple_input2.txt',
-                                          tests / 'simple_input.txt')])
-            # Run again
-            check_simple(rpuz + ['docker', 'run', 'simpledocker'], 'out', 2)
-            # Destroy
-            check_call(rpuz + ['docker', 'destroy', 'simpledocker'])
-        elif interactive:
-            print("Test and press enter", file=sys.stderr)
-            sys.stdin.readline()
-    finally:
-        if Path('simpledocker').exists():
-            Path('simpledocker').rmtree()
+    # Unpack Docker, both with and without buildkit
+    for arg, sufx in (('--dont-use-buildkit', ''), ('--use-buildkit', '-bk')):
+        path = 'simpledocker' + sufx
+        check_call(rpuz + ['docker', 'setup/create',
+                           arg, 'simple.rpz', path])
+        print("\nDocker project set up in %s" % path, file=sys.stderr)
+        try:
+            if run_docker:
+                check_call(rpuz + ['docker', 'setup/build', arg, path])
+                check_simple(rpuz + ['docker', 'run', path], 'out')
+                # Get output file
+                check_call(rpuz + ['docker', 'download', path,
+                                   'arg2:doutput1.txt'])
+                with Path('doutput1.txt').open(encoding='utf-8') as fp:
+                    assert fp.read().strip() == '42'
+                # Get random file
+                check_call(rpuz + ['docker', 'download', path,
+                                   '%s:bind.bin' % (Path.cwd() / 'simple')])
+                assert same_files('simple.orig', 'bind.bin')
+                # Replace input file
+                check_call(rpuz + ['docker', 'upload', path,
+                                   '%s:arg1' % (tests / 'simple_input2.txt')])
+                check_call(rpuz + ['docker', 'upload', path])
+                check_call(rpuz + ['showfiles', path])
+                # Run again
+                check_simple(rpuz + ['docker', 'run', path], 'out', 2)
+                # Get output file
+                check_call(rpuz + ['docker', 'download', path,
+                                   'arg2:doutput2.txt'])
+                with Path('doutput2.txt').open(encoding='utf-8') as fp:
+                    assert fp.read().strip() == '36'
+                # Reset input file
+                check_call(rpuz + ['docker', 'upload', path, ':arg1'])
+                # Run again
+                check_simple(rpuz + ['docker', 'run', path], 'out')
+                # Get output file
+                check_call(rpuz + ['docker', 'download', path,
+                                   'arg2:doutput1.txt'])
+                with Path('doutput1.txt').open(encoding='utf-8') as fp:
+                    assert fp.read().strip() == '42'
+                # Replace input file via path
+                check_call(rpuz + ['docker', 'upload', path,
+                                   '%s:%s' % (tests / 'simple_input2.txt',
+                                              tests / 'simple_input.txt')])
+                # Run again
+                check_simple(rpuz + ['docker', 'run', path], 'out', 2)
+                # Destroy
+                check_call(rpuz + ['docker', 'destroy', path])
+            elif interactive:
+                print("Test and press enter", file=sys.stderr)
+                sys.stdin.readline()
+        finally:
+            if Path(path).exists():
+                Path(path).rmtree()
 
     # ########################################
     # 'threads' program: testrun
