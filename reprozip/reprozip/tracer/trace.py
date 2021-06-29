@@ -26,8 +26,8 @@ from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip_core.common import File, InputOutputFile, \
     load_config, save_config, FILE_READ, FILE_WRITE, FILE_LINK
-from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
-    identify_packages
+from reprozip.packages.linux import magic_dirs, system_dirs
+from reprozip.packages import identify_packages
 from reprozip_core.utils import flatten, UniqueNames, normalize_path, \
     find_all_links
 

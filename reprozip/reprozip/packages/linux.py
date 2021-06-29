@@ -2,11 +2,9 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-"""Package identification routines.
+"""Package identification for Linux distributions.
 
-This module contains the :func:`~reprozip.tracer.linux_pkgs.identify_packages`
-function that sorts a list of files between their distribution packages,
-depending on what Linux distribution we are running on.
+This module contains the package identification for Linux distributions.
 
 Currently supported package managers:
 - dpkg (Debian, Ubuntu)
