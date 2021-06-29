@@ -10,7 +10,7 @@ import sys
 import unittest
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, \
-    InputOutputFile
+    InputOutputFile, create_trace_schema
 from reprozip.tracer.trace import get_files, compile_inputs_outputs
 from reprozip import traceutils
 from reprozip_core.utils import UniqueNames, make_dir_writable
@@ -266,7 +266,7 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
             trace = self.tmpdir / ('trace%d.sqlite3' % i)
             conn = sqlite3.connect(str(trace))  # connect() only accepts str
             conn.row_factory = sqlite3.Row
-            traceutils.create_schema(conn)
+            create_trace_schema(conn)
             conn.executescript('PRAGMA foreign_keys=OFF; BEGIN TRANSACTION;' +
                                dat +
                                'COMMIT;')

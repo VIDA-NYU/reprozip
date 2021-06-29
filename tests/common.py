@@ -5,7 +5,7 @@
 from rpaths import Path
 import sqlite3
 
-from reprozip.traceutils import create_schema
+from reprozip_core.common import create_trace_schema
 
 
 def make_database(insert, path=None):
@@ -16,7 +16,7 @@ def make_database(insert, path=None):
         conn = sqlite3.connect('')
     conn.row_factory = sqlite3.Row
 
-    create_schema(conn)
+    create_trace_schema(conn)
 
     run = -1
     for timestamp, l in enumerate(insert):

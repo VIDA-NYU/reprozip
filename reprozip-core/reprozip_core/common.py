@@ -613,6 +613,74 @@ additional_patterns:
 """)
 
 
+def create_trace_schema(conn):
+    """Create the trace database schema on a given SQLite3 connection.
+    """
+    sql = [
+        '''
+        CREATE TABLE processes(
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
+            parent INTEGER,
+            timestamp INTEGER NOT NULL,
+            exit_timestamp INTEGER,
+            cpu_time INTEGER,
+            is_thread BOOLEAN NOT NULL,
+            exitcode INTEGER
+            );
+        ''',
+        '''
+        CREATE INDEX proc_parent_idx ON processes(parent);
+        ''',
+        '''
+        CREATE TABLE opened_files(
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            mode INTEGER NOT NULL,
+            is_directory BOOLEAN NOT NULL,
+            process INTEGER NOT NULL
+            );
+        ''',
+        '''
+        CREATE INDEX open_proc_idx ON opened_files(process);
+        ''',
+        '''
+        CREATE TABLE executed_files(
+            id INTEGER NOT NULL PRIMARY KEY,
+            name TEXT NOT NULL,
+            run_id INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL,
+            process INTEGER NOT NULL,
+            argv TEXT NOT NULL,
+            envp TEXT NOT NULL,
+            workingdir TEXT NOT NULL
+            );
+        ''',
+        '''
+        CREATE INDEX exec_proc_idx ON executed_files(process);
+        ''',
+        '''
+        CREATE TABLE connections(
+            id INTEGER NOT NULL PRIMARY KEY,
+            run_id INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL,
+            process INTEGER NOT NULL,
+            inbound INTEGER NOT NULL,
+            family TEXT NULL,
+            protocol TEXT NULL,
+            address TEXT NULL
+            );
+        ''',
+        '''
+        CREATE INDEX connections_proc_idx ON connections(process);
+        ''',
+    ]
+    for stmt in sql:
+        conn.execute(stmt)
+
+
 class LoggingDateFormatter(logging.Formatter):
     """Formatter that puts milliseconds in the timestamp.
     """
