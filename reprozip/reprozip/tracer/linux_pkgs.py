@@ -10,6 +10,7 @@ depending on what Linux distribution we are running on.
 
 Currently supported package managers:
 - dpkg (Debian, Ubuntu)
+- rpm (CentOS, Fedora)
 """
 
 from __future__ import division, print_function, unicode_literals
