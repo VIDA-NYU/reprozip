@@ -24,10 +24,11 @@ def builtin(input_files, **kwargs):
         lst = []
         for path in input_files[i]:
             if (
-                    # Hidden files
-                    path.unicodename[0] == '.' or
-                    # Shared libraries
-                    _so_file.search(path.name)):
+                # Hidden files
+                path.unicodename[0] == '.' or
+                # Shared libraries
+                _so_file.search(path.name)
+            ):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
@@ -38,8 +39,15 @@ def builtin(input_files, **kwargs):
 def python(files, input_files, **kwargs):
     add = []
     for path, fi in iteritems(files):
+        # Include .py files instead of .pyc
         if path.ext == b'.pyc':
-            pyfile = path.parent / path.stem + '.py'
+            if path.parent.name == b'__pycache__':
+                # Python 3: /dir/__pycache__/mod.cpython-38.pyc -> /dir/mod.py
+                basename = path.unicodename.split('.', 1)[0]
+                pyfile = path.parent.parent / basename + '.py'
+            else:
+                # Python2: /dir/mod.pyc -> /dir/moc.py
+                pyfile = path.parent / path.stem + '.py'
             if pyfile.is_file():
                 if pyfile not in files:
                     logger.info("Adding %s", pyfile)
