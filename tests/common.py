@@ -8,6 +8,7 @@ from rpaths import Path
 import sqlite3
 
 from reprounzip.utils import PY3
+from reprozip.traceutils import create_schema
 
 
 def make_database(insert, path=None):
@@ -22,54 +23,7 @@ def make_database(insert, path=None):
         conn = sqlite3.connect('')
     conn.row_factory = sqlite3.Row
 
-    conn.execute(
-        '''
-        CREATE TABLE processes(
-            id INTEGER NOT NULL PRIMARY KEY,
-            run_id INTEGER NOT NULL,
-            parent INTEGER,
-            timestamp INTEGER NOT NULL,
-            is_thread BOOLEAN NOT NULL,
-            exitcode INTEGER
-            );
-        ''')
-    conn.execute(
-        '''
-        CREATE INDEX proc_parent_idx ON processes(parent);
-        ''')
-    conn.execute(
-        '''
-        CREATE TABLE opened_files(
-            id INTEGER NOT NULL PRIMARY KEY,
-            run_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            timestamp INTEGER NOT NULL,
-            mode INTEGER NOT NULL,
-            is_directory BOOLEAN NOT NULL,
-            process INTEGER NOT NULL
-            );
-        ''')
-    conn.execute(
-        '''
-        CREATE INDEX open_proc_idx ON opened_files(process);
-        ''')
-    conn.execute(
-        '''
-        CREATE TABLE executed_files(
-            id INTEGER NOT NULL PRIMARY KEY,
-            name TEXT NOT NULL,
-            run_id INTEGER NOT NULL,
-            timestamp INTEGER NOT NULL,
-            process INTEGER NOT NULL,
-            argv TEXT NOT NULL,
-            envp TEXT NOT NULL,
-            workingdir TEXT NOT NULL
-            );
-        ''')
-    conn.execute(
-        '''
-        CREATE INDEX exec_proc_idx ON executed_files(process);
-        ''')
+    create_schema(conn)
 
     for timestamp, l in enumerate(insert):
         if l[0] == 'proc':
