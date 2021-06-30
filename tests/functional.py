@@ -55,10 +55,12 @@ def in_temp_dir(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         tmp = Path.tempdir(prefix='reprozip_tests_')
+        prev_cwd = Path.cwd()
         try:
-            with tmp.in_dir():
-                return f(*args, **kwargs)
+            os.chdir(tmp)
+            return f(*args, **kwargs)
         finally:
+            os.chdir(prev_cwd)
             tmp.rmtree(ignore_errors=True)
     return wrapper
 
