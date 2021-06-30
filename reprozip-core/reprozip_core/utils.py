@@ -358,17 +358,6 @@ def rmtree_fixed(path):
 check_output = subprocess.check_output
 
 
-def copyfile(source, destination, CHUNK_SIZE=4096):
-    """Copies from one file object to another.
-    """
-    while True:
-        chunk = source.read(CHUNK_SIZE)
-        if chunk:
-            destination.write(chunk)
-        if len(chunk) != CHUNK_SIZE:
-            break
-
-
 def download_file(url, dest, cachename=None, ssl_verify=None):
     """Downloads a file using a local cache.
 

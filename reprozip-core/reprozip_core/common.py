@@ -25,13 +25,14 @@ import logging.handlers
 import os
 import pkg_resources
 from rpaths import PosixPath, Path
+import shutil
 import sys
 import tarfile
 import usagestats
 import yaml
 
 from .utils import UniqueNames, escape, optional_return_type, isodatetime, \
-    hsize, join_root, copyfile
+    hsize, join_root
 
 
 logger = logging.getLogger(__name__.split('.', 1)[0])
@@ -287,7 +288,7 @@ class RPZPack(object):
         elif self.version == 2:
             with target.open('wb') as fp:
                 data = self.tar.extractfile('DATA.tar.gz')
-                copyfile(data, fp)
+                shutil.copyfileobj(data, fp)
                 data.close()
 
     def close(self):

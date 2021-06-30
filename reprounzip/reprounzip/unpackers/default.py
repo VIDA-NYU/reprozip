@@ -23,6 +23,7 @@ import logging
 import os
 import platform
 from rpaths import PosixPath, DefaultAbstractPath, Path
+import shutil
 import socket
 import subprocess
 import sys
@@ -38,7 +39,7 @@ from reprounzip.unpackers.common import THIS_DISTRIBUTION, PKG_NOT_INSTALLED, \
     interruptible_call, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run
 from reprounzip.unpackers.common.x11 import X11Handler, LocalForwarder
-from reprozip_core.utils import make_dir_writable, rmtree_fixed, copyfile, \
+from reprozip_core.utils import make_dir_writable, rmtree_fixed, \
     download_file
 
 
@@ -751,7 +752,7 @@ class LocalDownloader(FileDownloader):
                             remote_path)
             return False
         with remote_path.open('rb') as fp:
-            copyfile(fp, sys.stdout.buffer)
+            shutil.copyfileobj(fp, sys.stdout.buffer)
         return True
 
     def download(self, remote_path, local_path):

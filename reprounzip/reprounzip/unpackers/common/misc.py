@@ -15,6 +15,7 @@ import pkg_resources
 import random
 import re
 from rpaths import PosixPath, Path
+import shutil
 import signal
 import subprocess
 import sys
@@ -24,7 +25,7 @@ import warnings
 import reprozip_core.common
 from reprozip_core.common import RPZPack
 from reprounzip.parameters import get_parameter
-from reprozip_core.utils import join_root, copyfile
+from reprozip_core.utils import join_root
 
 
 logger = logging.getLogger('reprounzip')
@@ -345,7 +346,7 @@ class FileDownloader(object):
             return False
         # Output to stdout
         with temp.open('rb') as fp:
-            copyfile(fp, sys.stdout.buffer)
+            shutil.copyfileobj(fp, sys.stdout.buffer)
         temp.remove()
         return True
 
