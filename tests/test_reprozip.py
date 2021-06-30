@@ -181,11 +181,11 @@ class TestFiles(unittest.TestCase):
                               set(fi.path for fi in files))
 
     def test_multiple_runs(self):
-        def fail(s):
-            assert False, "Shouldn't be called?"
-        old = Path.is_file, Path.stat
-        Path.is_file = lambda s: True
-        Path.stat = fail
+        # Input/output determination will stat files, so mock that
+        file_stat = Path('/etc/passwd').stat()
+        old = Path.is_file, Path.exists, Path.stat
+        Path.is_file = Path.exists = lambda s: True
+        Path.stat = lambda s: file_stat
         try:
             files, inputs, outputs = self.do_test([
                 ('proc', 0, None, False),
@@ -217,7 +217,7 @@ class TestFiles(unittest.TestCase):
             self.assertEqualPaths([{"/some/cli"}, {"/some/rw"}],
                                   [set(run) for run in outputs])
         finally:
-            Path.is_file, Path.stat = old
+            Path.is_file, Path.exists, Path.stat = old
 
 
 class TestCombine(unittest.TestCase):
