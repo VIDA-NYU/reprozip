@@ -279,9 +279,12 @@ def find_all_links(filename, include_target=False):
 def join_root(root, path):
     """Prepends `root` to the absolute path `path`.
     """
-    p_root, p_loc = path.split_root()
-    assert p_root == b'/'
-    return root / p_loc
+    path = str(path)
+    assert path.startswith('/')
+    path = path[1:]
+    if path.startswith('/'):
+        path = path[1:]
+    return root / path
 
 
 @contextlib.contextmanager

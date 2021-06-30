@@ -87,7 +87,12 @@ def data_path(filename, prefix=Path('DATA')):
     >>> data_path(PurePosixPath('/var/lib/../www/index.html'))
     PurePosixPath('DATA/var/www/index.html')
     """
-    return prefix / filename.split_root()[1]
+    filename = str(filename)
+    if filename.startswith('/'):
+        filename = filename[1:]
+    if filename.startswith('/'):
+        filename = filename[1:]
+    return prefix / filename
 
 
 class PackBuilder(object):
