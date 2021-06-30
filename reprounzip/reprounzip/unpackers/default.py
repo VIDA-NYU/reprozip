@@ -456,7 +456,7 @@ def chroot_create(args):
                     dest = join_root(root, path)
                     dest.parent.mkdir(parents=True)
                     if path.is_symlink():
-                        dest.symlink_to(path.read_link())
+                        dest.symlink_to(os.readlink(path))
                     else:
                         path.copy(dest)
                     if restore_owner:

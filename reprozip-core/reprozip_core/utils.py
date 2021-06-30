@@ -238,7 +238,8 @@ def find_all_links_recursive(filename, files):
             # Adds the link itself
             files.add(path)
 
-            target = path.read_link(absolute=True)
+            target = Path(os.readlink(path))
+            target = (path.parent / target).absolute()
             # Here, target might contain a number of symlinks
             if target not in files:
                 # Recurse on this new path

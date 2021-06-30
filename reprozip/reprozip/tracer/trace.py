@@ -63,7 +63,9 @@ class TracedFile(File):
         size = None
         if path.exists():
             if path.is_symlink():
-                self.comment = "Link to %s" % path.read_link(absolute=True)
+                target = Path(os.readlink(path))
+                target = (path.parent / target).absolute()
+                self.comment = "Link to %s" % target
             elif path.is_dir():
                 self.comment = "Directory"
             else:
