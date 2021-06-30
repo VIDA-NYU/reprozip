@@ -745,9 +745,9 @@ class ContainerUploader(FileUploader):
 
         from_image = self.unpacked_info['current_image']
 
-        with self.build_directory.open('w', 'Dockerfile',
-                                       encoding='utf-8',
-                                       newline='\n') as dockerfile:
+        with (self.build_directory / 'Dockerfile').open(
+            'w', encoding='utf-8', newline='\n',
+        ) as dockerfile:
             dockerfile.write('FROM %s\n\n' % from_image.decode('ascii'))
             for src, target in self.docker_copy:
                 # FIXME : spaces in filenames will probably break Docker

@@ -227,8 +227,8 @@ def do_vistrails(target, pack=None, **kwargs):
     vtdir = Path(tempfile.mkdtemp(prefix='reprounzip_vistrails_'))
     ids = IdScope()
     try:
-        with vtdir.open('w', 'vistrail',
-                        encoding='utf-8', newline='\n') as fp:
+        with (vtdir / 'vistrail').open('w',
+                                       encoding='utf-8', newline='\n') as fp:
             wf = Workflow(fp, ids)
 
             # Directory module, refering to this directory
