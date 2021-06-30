@@ -170,7 +170,7 @@ def directory_create(args):
             # Makes symlink targets relative
             if m.issym():
                 linkname = PurePosixPath(m.linkname)
-                if linkname.is_absolute:
+                if linkname.is_absolute():
                     m.linkname = join_root(
                         root,
                         PurePosixPath(m.linkname),
@@ -291,7 +291,7 @@ def directory_run(args):
                     p = Path(argv[i])
                 except UnicodeEncodeError:
                     continue
-                if p.is_absolute:
+                if p.is_absolute():
                     rp = join_root(root, p)
                     if (rp.exists() or
                             (len(rp.parts) > 3 and rp.parent.exists())):
