@@ -239,12 +239,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # There might be more output files: the C coverage files
     found = 0
     for fdict in inputs_outputs:
-        if Path(fdict['path']).name == b'simple_input.txt':
+        if Path(fdict['path']).name == 'simple_input.txt':
             assert fdict['name'] == 'arg1'
             assert fdict['read_by_runs'] == [0]
             assert not fdict.get('written_by_runs')
             found |= 0x01
-        elif Path(fdict['path']).name == b'simple_output.txt':
+        elif Path(fdict['path']).name == 'simple_output.txt':
             assert fdict['name'] == 'arg2'
             assert not fdict.get('read_by_runs')
             assert fdict['written_by_runs'] == [0]

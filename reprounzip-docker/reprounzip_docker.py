@@ -761,7 +761,7 @@ class ContainerUploader(FileUploader):
                 tar = tarfile.open(str(self.target / 'data.tgz'), 'r:*')
                 try:
                     info = tar.getmember(str(
-                        join_root(PurePosixPath(b'DATA'), target)
+                        join_root(PurePosixPath('DATA'), target)
                     ))
                     uid, gid = info.uid, info.gid
                 except KeyError:

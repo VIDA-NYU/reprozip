@@ -143,7 +143,7 @@ class RPZPack(object):
                 version = None
             if version in (1, 2):
                 self.version = version
-                self.data_prefix = PurePosixPath(b'DATA')
+                self.data_prefix = PurePosixPath('DATA')
             else:
                 raise ValueError(
                     "Unknown format version %r (maybe you should upgrade "
@@ -270,7 +270,7 @@ class RPZPack(object):
         Raises KeyError if no such path exists.
         """
         path = PurePosixPath(path)
-        path = join_root(PurePosixPath(b'DATA'), path)
+        path = join_root(PurePosixPath('DATA'), path)
         return copy.copy(self.data.getmember(path))
 
     def extract_data(self, root, members):

@@ -132,7 +132,7 @@ class DpkgManager(PkgManager):
             out, err = proc.communicate()
             for line in out.splitlines():
                 pkgname, path = line.split(b': ', 1)
-                path = Path(path.strip())
+                path = Path(path.strip().decode('utf-8', 'surrogateescape'))
                 # 8-bit safe encoding, because this might be a localized error
                 # message (that we don't care about)
                 pkgname = pkgname.decode('iso-8859-1')

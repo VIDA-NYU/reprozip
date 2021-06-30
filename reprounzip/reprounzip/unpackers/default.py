@@ -229,7 +229,9 @@ def directory_run(args):
             if len(line) < 2 or line[0] in (b' ', b'\t'):
                 continue
             if line.endswith(b':'):
-                lib_dirs.append(Path(line[:-1]))
+                lib_dirs.append(Path(
+                    line[:-1].decode('utf-8', 'surrogateescape'),
+                ))
     finally:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode,
