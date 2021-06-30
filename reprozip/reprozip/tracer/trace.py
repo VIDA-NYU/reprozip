@@ -70,7 +70,7 @@ class TracedFile(File):
             elif path.is_dir():
                 self.comment = "Directory"
             else:
-                size = path.size()
+                size = path.stat().st_size
                 self.comment = hsize(size)
         self.what = None
         self.runs = defaultdict(lambda: None)
