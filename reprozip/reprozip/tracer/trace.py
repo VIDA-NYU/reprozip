@@ -378,7 +378,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
 
     # Identifies which file comes from which package
     if sort_packages:
-        files, packages = identify_packages(files)
+        files, packages = identify_packages(files)  ##
     else:
         packages = []
 

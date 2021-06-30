@@ -68,7 +68,7 @@ def canonicalize_config(packages, other_files, additional_patterns,
                     len(add_files))
         if add_files:
             if sort_packages:
-                add_files, add_packages = identify_packages(add_files)
+                add_files, add_packages = identify_packages(add_files)  ##
             else:
                 add_packages = []
             other_files, packages = combine_files(add_files, add_packages,
