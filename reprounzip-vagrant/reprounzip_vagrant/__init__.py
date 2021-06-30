@@ -344,9 +344,10 @@ chmod +x /usr/local/bin/rpztar
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
                     if f.path.name == 'resolv.conf' and (
-                            f.path.lies_under('/etc') or
-                            f.path.lies_under('/run') or
-                            f.path.lies_under('/var')):
+                        PurePosixPath('/etc') in f.path.parents or
+                        PurePosixPath('/run') in f.path.parents or
+                        PurePosixPath('/var') in f.path.parents
+                    ):
                         continue
                     path = PurePosixPath('/')
                     for c in rpz_pack.remove_data_prefix(f.path).parts:

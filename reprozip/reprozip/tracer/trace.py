@@ -199,7 +199,7 @@ def get_files(conn):
                # not fi.path.stat().st_mode & 0b111 and
                fi.path not in executed and
                # not in a system directory
-               not any(fi.path.lies_under(m)
+               not any(PurePosixPath(m) in fi.path.parents
                        for m in magic_dirs + system_dirs)]
               for r, lst in enumerate(access_files)]
 
@@ -211,7 +211,7 @@ def get_files(conn):
                 # WRITTEN
                 fi.runs[r] == TracedFile.WRITTEN and
                 # not in a system directory
-                not any(fi.path.lies_under(m)
+                not any(PurePosixPath(m) in fi.path.parents
                         for m in magic_dirs + system_dirs)]
                for r, lst in enumerate(access_files)]
 
@@ -227,7 +227,7 @@ def get_files(conn):
         fi
         for fi in files.values()
         if fi.what == TracedFile.READ_THEN_WRITTEN and
-        not any(fi.path.lies_under(m) for m in magic_dirs)]
+        not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)]
     if read_then_written_files:
         logger.warning(
             "Some files were read and then written. We will only pack the "
@@ -240,8 +240,9 @@ def get_files(conn):
     files = set(
         fi
         for fi in files.values()
-        if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                     for m in magic_dirs))
+        if fi.what != TracedFile.WRITTEN
+        and not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)
+    )
     return files, inputs, outputs
 
 
@@ -308,8 +309,10 @@ def trace(binary, argv, directory, append, verbosity='unset'):
         binary = binary.path
 
     cwd = Path.cwd()
-    if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
-            not cwd.lies_under('/usr/local')):
+    if (
+        any(PurePosixPath(c) in cwd.parents for c in magic_dirs + system_dirs)
+        and PurePosixPath('/usr/local') not in cwd.parents
+    ):
         logger.warning(
             "You are running this experiment from a system directory! "
             "Autodetection of non-system files will probably not work as "

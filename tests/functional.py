@@ -777,7 +777,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         SELECT name, argv FROM executed_files
         ''')
     executed = [(Path(r[0]), r[1]) for r in rows
-                if Path(r[0]).lies_under(Path.cwd())]
+                if Path.cwd() in Path(r[0]).parents]
 
     print("other_files: %r" % sorted(other_files), file=sys.stderr)
     print("opened: %r" % opened, file=sys.stderr)

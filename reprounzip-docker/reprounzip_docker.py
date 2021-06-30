@@ -243,9 +243,10 @@ def docker_setup_create(args):
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
                 if f.path.name in ('resolv.conf', 'hosts') and (
-                        f.path.lies_under('/etc') or
-                        f.path.lies_under('/run') or
-                        f.path.lies_under('/var')):
+                    PurePosixPath('/etc') in f.path.parents or
+                    PurePosixPath('/run') in f.path.parents or
+                    PurePosixPath('/var') in f.path.parents
+                ):
                     continue
                 path = PurePosixPath('/')
                 for c in rpz_pack.remove_data_prefix(f.path).parts:

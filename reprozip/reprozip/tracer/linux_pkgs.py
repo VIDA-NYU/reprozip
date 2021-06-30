@@ -87,12 +87,14 @@ class PkgManager(object):
 
     def _filter(self, f):
         # Special files
-        if any(f.path.lies_under(c) for c in magic_dirs):
+        if any(PurePosixPath(c) in f.path.parents for c in magic_dirs):
             return True
 
         # If it's not in a system directory, no need to look for it
-        if (f.path.lies_under('/usr/local') or
-                not any(f.path.lies_under(c) for c in system_dirs)):
+        if (
+            PurePosixPath('/usr/local') in f.path.parents or
+            not any(PurePosixPath(c) in f.path.parents for c in system_dirs)
+        ):
             self.unknown_files.add(f)
             return True
 
