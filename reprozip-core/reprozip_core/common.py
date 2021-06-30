@@ -417,6 +417,21 @@ def load_iofiles(config, runs):
     return files
 
 
+def _bytes_to_surrogates(container):
+    if isinstance(container, dict):
+        iterator = container.items()
+    elif isinstance(container, list):
+        iterator = enumerate(container)
+    else:
+        raise TypeError
+
+    for k, v in iterator:
+        if isinstance(v, bytes):
+            container[k] = v.decode('utf-8', 'surrogateescape')
+        elif isinstance(v, (list, dict)):
+            _bytes_to_surrogates(v)
+
+
 def load_config(filename, canonical, File=File, Package=Package):
     """Loads a YAML configuration file.
 
@@ -430,6 +445,9 @@ def load_config(filename, canonical, File=File, Package=Package):
     """
     with filename.open(encoding='utf-8') as fp:
         config = yaml.safe_load(fp)
+
+    # Turn bytes values into Python 3 str values
+    _bytes_to_surrogates(config)
 
     ver = LooseVersion(config['version'])
 
