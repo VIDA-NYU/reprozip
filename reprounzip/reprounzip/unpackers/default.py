@@ -267,7 +267,7 @@ def directory_run(args):
         # The same paths but in the directory
         dir_path = [join_root(root, d)
                     for d in path
-                    if d.root == '/']
+                    if d.anchor == '/']
         # Rebuild string
         path = ':'.join(str(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
@@ -294,7 +294,7 @@ def directory_run(args):
                 if p.is_absolute:
                     rp = join_root(root, p)
                     if (rp.exists() or
-                            (len(rp.components) > 3 and rp.parent.exists())):
+                            (len(rp.parts) > 3 and rp.parent.exists())):
                         argv[i] = str(rp)
                         rewritten = True
             if rewritten:
@@ -455,8 +455,8 @@ def chroot_create(args):
                         continue
                     dest = join_root(root, path)
                     dest.parent.mkdir(parents=True)
-                    if path.is_link():
-                        dest.symlink(path.read_link())
+                    if path.is_symlink():
+                        dest.symlink_to(path.read_link())
                     else:
                         path.copy(dest)
                     if restore_owner:
@@ -501,10 +501,10 @@ def chroot_create(args):
                 busybox_path.chmod(0o755)
                 if not sh_path.lexists():
                     sh_path.parent.mkdir(parents=True)
-                    sh_path.symlink('/bin/busybox')
+                    sh_path.symlink_to('/bin/busybox')
                 if not env_path.lexists():
                     env_path.parent.mkdir(parents=True)
-                    env_path.symlink('/bin/busybox')
+                    env_path.symlink_to('/bin/busybox')
 
         # Original input files, so upload can restore them
         input_files = [f.path for f in config.inputs_outputs.values()
@@ -709,7 +709,7 @@ class LocalUploader(FileUploader):
         except KeyError:
             return None
         member = copy.copy(member)
-        member.name = str(temp.components[-1])
+        member.name = str(temp.parts[-1])
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp

@@ -242,13 +242,13 @@ def docker_setup_create(args):
             data_files = rpz_pack.data_filenames()
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
-                if f.path.unicodename in ('resolv.conf', 'hosts') and (
+                if f.path.name in ('resolv.conf', 'hosts') and (
                         f.path.lies_under('/etc') or
                         f.path.lies_under('/run') or
                         f.path.lies_under('/var')):
                     continue
                 path = PurePosixPath('/')
-                for c in rpz_pack.remove_data_prefix(f.path).components:
+                for c in rpz_pack.remove_data_prefix(f.path).parts:
                     path = path / c
                     if path in paths:
                         continue
@@ -725,7 +725,7 @@ class ContainerUploader(FileUploader):
         self.docker_copy = []
 
     def upload_file(self, local_path, input_path):
-        stem, ext = local_path.stem, local_path.ext
+        stem, ext = local_path.stem, local_path.suffix
         name = local_path.name
         nb = 0
         while (self.build_directory / name).exists():

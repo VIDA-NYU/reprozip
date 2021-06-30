@@ -48,7 +48,7 @@ def expand_patterns(patterns):
     non_empty_dirs = {Path('/')}
     for p in files | dirs:
         path = Path('/')
-        for c in p.components[1:]:
+        for c in p.parts[1:]:
             path = path / c
             non_empty_dirs.add(path)
 
@@ -101,7 +101,7 @@ class PackBuilder(object):
         if filename in self.seen:
             return
         path = Path('/')
-        for c in filename.components[1:]:
+        for c in filename.parts[1:]:
             path = path / c
             if path in self.seen:
                 continue
@@ -188,7 +188,7 @@ def pack(target, directory, sort_packages):
 
         tar.add(str(tmp), 'DATA.tar.gz')
     finally:
-        tmp.remove()
+        tmp.unlink()
 
     logger.info("Adding metadata...")
     # Stores pack version
@@ -199,7 +199,7 @@ def pack(target, directory, sort_packages):
             fp.write(b'REPROZIP VERSION 2\n')
         tar.add(str(manifest), 'METADATA/version')
     finally:
-        manifest.remove()
+        manifest.unlink()
 
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
@@ -228,7 +228,7 @@ def pack(target, directory, sort_packages):
 
         tar.add(str(can_configfile), 'METADATA/config.yml')
     finally:
-        can_configfile.remove()
+        can_configfile.unlink()
 
     tar.close()
 

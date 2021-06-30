@@ -20,7 +20,7 @@ class TraceHandler(RequestHandler):
 
     def post(self):
         self._notebook_file = Path(self.get_body_argument('file'))
-        name = self._notebook_file.unicodename
+        name = self._notebook_file.name
         if name.endswith('.ipynb'):
             name = name[:-6]
         name = u'%s_%s.rpz' % (name, datetime.now().strftime('%Y%m%d-%H%M%S'))
@@ -49,7 +49,7 @@ class TraceHandler(RequestHandler):
         if returncode == 0:
             # Pack
             if self._pack_file.exists():
-                self._pack_file.remove()
+                self._pack_file.unlink()
             proc = Subprocess(
                 ['reprozip', 'pack', '-d',
                  self._tempdir.path,

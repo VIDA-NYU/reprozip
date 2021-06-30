@@ -62,7 +62,7 @@ class TracedFile(File):
         path = Path(path)
         size = None
         if path.exists():
-            if path.is_link():
+            if path.is_symlink():
                 self.comment = "Link to %s" % path.read_link(absolute=True)
             elif path.is_dir():
                 self.comment = "Directory"
@@ -124,7 +124,7 @@ def get_files(conn):
     # Adds dynamic linkers
     for libdir in (Path('/lib'), Path('/lib64')):
         if libdir.exists():
-            for linker in libdir.listdir('*ld-linux*'):
+            for linker in libdir.glob('*ld-linux*'):
                 for filename in find_all_links(linker, True):
                     if filename not in files:
                         f = TracedFile(filename)
@@ -530,9 +530,9 @@ def compile_inputs_outputs(runs, inputs, outputs):
                 file_names[fi] = make_unique(
                     'arg%s' % '_'.join('%s' % s for s in parts))
             else:
-                file_names[fi] = make_unique('arg_%s' % fi.unicodename)
+                file_names[fi] = make_unique('arg_%s' % fi.name)
         else:
-            file_names[fi] = make_unique(fi.unicodename)
+            file_names[fi] = make_unique(fi.name)
 
     return dict((n, InputOutputFile(p, readers.get(p, []), writers.get(p, [])))
                 for p, n in file_names.items())

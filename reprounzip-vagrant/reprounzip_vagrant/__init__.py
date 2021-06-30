@@ -141,7 +141,7 @@ def machine_setup(target):
     if 'identityfile' in vagrant_info:
         key_file = vagrant_info['identityfile']
     else:
-        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+        key_file = Path('~/.vagrant.d/insecure_private_key').expanduser()
     info = dict(hostname=vagrant_info.get('hostname', '127.0.0.1'),
                 port=int(vagrant_info.get('port', 2222)),
                 username=vagrant_info.get('user', 'vagrant'),
@@ -349,7 +349,7 @@ chmod +x /usr/local/bin/rpztar
                             f.path.lies_under('/var')):
                         continue
                     path = PurePosixPath('/')
-                    for c in rpz_pack.remove_data_prefix(f.path).components:
+                    for c in rpz_pack.remove_data_prefix(f.path).parts:
                         path = path / c
                         if path in paths:
                             continue
@@ -636,7 +636,7 @@ class SSHUploader(FileUploader):
         if chan.recv_exit_status() != 0:
             logger.critical("Couldn't move file in virtual machine")
             try:
-                ltemp.remove()
+                ltemp.unlink()
             except OSError:
                 pass
             sys.exit(1)
@@ -705,7 +705,7 @@ class SSHDownloader(FileDownloader):
         if chan.recv_exit_status() != 0:
             logger.critical("Couldn't copy file in virtual machine")
             try:
-                ltemp.remove()
+                ltemp.unlink()
             except OSError:
                 pass
             return False
@@ -716,7 +716,7 @@ class SSHDownloader(FileDownloader):
         except OSError as e:
             logger.critical("Couldn't download output file: %s\n%s",
                             remote_path, str(e))
-            ltemp.remove()
+            ltemp.unlink()
             return False
         return True
 

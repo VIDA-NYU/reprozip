@@ -205,7 +205,7 @@ def testrun(args):
 
         return c
     finally:
-        database.remove()
+        database.unlink()
 
 
 def trace(args):
@@ -256,9 +256,9 @@ def pack(args):
     Reads in the configuration file and writes out a tarball.
     """
     target = Path(args.target)
-    if not target.unicodename.lower().endswith('.rpz'):
+    if not target.name.lower().endswith('.rpz'):
         target = Path(target.path + b'.rpz')
-        logger.warning("Changing output filename to %s", target.unicodename)
+        logger.warning("Changing output filename to %s", target.name)
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 

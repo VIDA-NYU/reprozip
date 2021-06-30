@@ -205,7 +205,7 @@ class FileUploader(object):
                                                              input_path,
                                                              temp)
                     if local_path is None:
-                        temp.remove()
+                        temp.unlink()
                         logger.warning("No original packed, can't restore "
                                        "input file %s", input_name)
                         continue
@@ -221,7 +221,7 @@ class FileUploader(object):
                 self.upload_file(local_path, input_path)
 
                 if temp is not None:
-                    temp.remove()
+                    temp.unlink()
                     self.input_files.pop(input_name, None)
                 else:
                     self.input_files[input_name] = local_path.absolute().path
@@ -243,7 +243,7 @@ class FileUploader(object):
         except KeyError:
             return None
         member = copy.copy(member)
-        member.name = str(temp.components[-1])
+        member.name = str(temp.parts[-1])
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp
@@ -347,7 +347,7 @@ class FileDownloader(object):
         # Output to stdout
         with temp.open('rb') as fp:
             shutil.copyfileobj(fp, sys.stdout.buffer)
-        temp.remove()
+        temp.unlink()
         return True
 
     def download(self, remote_path, local_path):

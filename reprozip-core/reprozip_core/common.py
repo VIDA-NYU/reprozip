@@ -163,7 +163,7 @@ class RPZPack(object):
     def remove_data_prefix(self, path):
         if not isinstance(path, PurePosixPath):
             path = PurePosixPath(path)
-        components = path.components[1:]
+        components = path.parts[1:]
         if not components:
             return path.__class__('')
         return path.__class__(*components)
@@ -183,7 +183,7 @@ class RPZPack(object):
 
     def _extract_file(self, member, target):
         member = copy.copy(member)
-        member.name = str(target.components[-1])
+        member.name = str(target.parts[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
         target.chmod(0o644)
@@ -213,7 +213,7 @@ class RPZPack(object):
         os.close(fd)
         self.extract_config(tmp)
         yield tmp
-        tmp.remove()
+        tmp.unlink()
 
     def extract_trace(self, target):
         """Extracts the trace database to the specified path.
@@ -245,7 +245,7 @@ class RPZPack(object):
         os.close(fd)
         self.extract_trace(tmp)
         yield tmp
-        tmp.remove()
+        tmp.unlink()
 
     def list_data(self):
         """Returns tarfile.TarInfo objects for all the data paths.
@@ -719,7 +719,7 @@ def setup_logging(tag, verbosity):
     # File logger
     if os.environ.get('REPROZIP_NO_LOGFILE', '').lower() in ('', 'false',
                                                              '0', 'off'):
-        dotrpz = Path('~/.reprozip').expand_user()
+        dotrpz = Path('~/.reprozip').expanduser()
         try:
             if not dotrpz.is_dir():
                 dotrpz.mkdir()

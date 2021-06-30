@@ -150,7 +150,7 @@ class X11Handler(BaseX11Handler):
             xauthority = Path(os.environ['XAUTHORITY'])
         # Note: I'm assuming here that Xauthority has no XDG support
         else:
-            xauthority = Path('~').expand_user() / '.Xauthority'
+            xauthority = Path('~').expanduser() / '.Xauthority'
 
         # Read Xauthority file
         xauth_entries = {}

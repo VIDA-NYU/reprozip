@@ -64,7 +64,7 @@ def update_parameters():
             logger.info("Downloaded parameters.json doesn't load, using "
                         "bundled parameters")
             try:
-                filename.remove()
+                filename.unlink()
             except OSError:
                 pass
         else:

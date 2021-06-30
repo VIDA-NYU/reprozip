@@ -226,7 +226,7 @@ def normalize_path(path):
 
 def find_all_links_recursive(filename, files):
     path = Path('/')
-    for c in filename.components[1:]:
+    for c in filename.parts[1:]:
         # At this point, path is a canonical path, and all links in it have
         # been resolved
 
@@ -234,7 +234,7 @@ def find_all_links_recursive(filename, files):
         path = path / c
 
         # That component is possibly a link
-        if path.is_link():
+        if path.is_symlink():
             # Adds the link itself
             files.add(path)
 
@@ -309,7 +309,7 @@ def make_dir_writable(directory):
     try:
         # Add u+x to all directories up to the target
         path = Path('/')
-        for c in directory.components[1:-1]:
+        for c in directory.parts[1:-1]:
             path = path / c
             sb = path.stat()
             if sb.st_uid == uid and not sb.st_mode & 0o100:
@@ -336,7 +336,7 @@ def rmtree_fixed(path):
     If a directory with -w or -x is encountered, it gets fixed and deletion
     continues.
     """
-    if path.is_link():
+    if path.is_symlink():
         raise OSError("Cannot call rmtree on a symbolic link")
 
     uid = os.getuid()
@@ -345,11 +345,11 @@ def rmtree_fixed(path):
     if st.st_uid == uid and st.st_mode & 0o700 != 0o700:
         path.chmod(st.st_mode | 0o700)
 
-    for entry in path.listdir():
+    for entry in path.iterdir():
         if stat.S_ISDIR(entry.lstat().st_mode):
             rmtree_fixed(entry)
         else:
-            entry.remove()
+            entry.unlink()
 
     path.rmdir()
 
@@ -369,14 +369,14 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
     if cachename is None:
         if dest is None:
             raise ValueError("One of 'dest' or 'cachename' must be specified")
-        cachename = dest.components[-1]
+        cachename = dest.name
 
     headers = {}
 
     if 'XDG_CACHE_HOME' in os.environ:
         cache = Path(os.environ['XDG_CACHE_HOME'])
     else:
-        cache = Path('~/.cache').expand_user()
+        cache = Path('~/.cache').expanduser()
     cache = cache / 'reprozip' / cachename
     if cache.exists():
         mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
@@ -416,7 +416,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
         response.close()
     except Exception as e:  # pragma: no cover
         try:
-            cache.remove()
+            cache.unlink()
         except OSError:
             pass
         raise e

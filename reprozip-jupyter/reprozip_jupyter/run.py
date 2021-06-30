@@ -39,7 +39,7 @@ def process_connection_file(original):
 
     yield fixed_file, ports
 
-    fixed_file.remove()
+    fixed_file.unlink()
 
 
 class RPZKernelManager(IOLoopKernelManager):

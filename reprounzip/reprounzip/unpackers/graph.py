@@ -162,7 +162,7 @@ class Process(object):
 
     def json(self, process_map):
         name = "%d" % self.pid
-        long_name = "%s (%d)" % (PurePosixPath(self.binary).components[-1]
+        long_name = "%s (%d)" % (PurePosixPath(self.binary).parts[-1]
                                  if self.binary else "-",
                                  self.pid)
         description = "%s\n%d" % (self.binary, self.pid)
@@ -567,11 +567,11 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
     # Filter other files
     if level_other_files == LVL_OTHER_ALL and file_depth is not None:
-        other_files = set(PurePosixPath(*f.components[:file_depth + 1])
+        other_files = set(PurePosixPath(*f.parts[:file_depth + 1])
                           for f in other_files)
         edges = OrderedSet((prog,
                             f if f in package_map
-                            else PurePosixPath(*f.components[:file_depth + 1]),
+                            else PurePosixPath(*f.parts[:file_depth + 1]),
                             mode,
                             argv)
                            for prog, f, mode, argv in edges)

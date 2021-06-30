@@ -40,7 +40,7 @@ def download_file_retry(url, dest):
                     response.close()
             except Exception as e:
                 try:
-                    dest.remove()
+                    dest.unlink()
                 except OSError:
                     pass
                 raise e
@@ -225,7 +225,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     assert orig_output_location.is_file()
     with orig_output_location.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
-    orig_output_location.remove()
+    orig_output_location.unlink()
     # Read config
     with Path('rpz-simple/config.yml').open(encoding='utf-8') as fp:
         conf = yaml.safe_load(fp)
@@ -681,7 +681,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     conn.close()
     # Check that created files won't be packed
     for f in config.get('other_files'):
-        if 'dir2' in Path(f).parent.components:
+        if 'dir2' in Path(f).parent.parts:
             raise AssertionError("Created file shouldn't be packed: %s" %
                                  Path(f))
 
@@ -738,11 +738,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Test shebang corner-cases
     #
 
-    Path('a').symlink('b')
+    Path('a').symlink_to('b')
     with Path('b').open('w') as fp:
         fp.write('#!%s 0\nsome content\n' % (Path.cwd() / 'c'))
     Path('b').chmod(0o744)
-    Path('c').symlink('d')
+    Path('c').symlink_to('d')
     with Path('d').open('w') as fp:
         fp.write('#!e')
     Path('d').chmod(0o744)
@@ -851,7 +851,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Run directory
         check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
         output_in_dir = Path('simpledir/root/tmp')
-        output_in_dir = output_in_dir.listdir('reprozip_*')[0]
+        output_in_dir = list(output_in_dir.glob('reprozip_*'))[0]
         output_in_dir = output_in_dir / 'simple_output.txt'
         with output_in_dir.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
