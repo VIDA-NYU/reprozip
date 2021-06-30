@@ -12,6 +12,7 @@ import logging
 import os
 from rpaths import Path
 import sqlite3
+import tempfile
 
 from reprozip_core.common import create_trace_schema
 from reprozip.tracer.trace import TracedFile
@@ -58,7 +59,8 @@ def combine_traces(traces, target):
     """
     # We are probably overwriting one of the traces we're reading, so write to
     # a temporary file first then move it
-    fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
+    fd, output = tempfile.mkstemp('.sqlite3', 'reprozip_combined_')
+    output = Path(output)
     conn = sqlite3.connect(str(output))  # connect() only accepts str
     os.close(fd)
     conn.row_factory = sqlite3.Row

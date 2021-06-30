@@ -13,6 +13,7 @@ from rpaths import Path
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import yaml
 
 from reprozip_core.common import FILE_READ, FILE_WRITE
@@ -54,7 +55,7 @@ def download_file_retry(url, dest):
 def in_temp_dir(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        tmp = Path.tempdir(prefix='reprozip_tests_')
+        tmp = Path(tempfile.mkdtemp(prefix='reprozip_tests_'))
         prev_cwd = Path.cwd()
         try:
             os.chdir(tmp)

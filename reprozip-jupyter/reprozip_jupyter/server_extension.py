@@ -7,6 +7,7 @@ from notebook.utils import url_path_join as ujoin
 from rpaths import Path
 import subprocess
 import sys
+import tempfile
 from tornado.concurrent import Future
 from tornado.process import Subprocess
 from tornado.web import RequestHandler
@@ -27,7 +28,7 @@ class TraceHandler(RequestHandler):
         self._pack_file = self._notebook_file.parent / name
         self.nbapp.log.info("reprozip: tracing request from client: file=%r",
                             self._notebook_file)
-        self._tempdir = Path.tempdir()
+        self._tempdir = Path(tempfile.mkdtemp())
         self.nbapp.log.info("reprozip: created temp directory %r",
                             self._tempdir)
         self._future = Future()

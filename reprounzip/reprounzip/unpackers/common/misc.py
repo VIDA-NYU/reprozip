@@ -20,6 +20,7 @@ import signal
 import subprocess
 import sys
 import tarfile
+import tempfile
 import warnings
 
 import reprozip_core.common
@@ -199,7 +200,8 @@ class FileUploader(object):
                 if not local_path:
                     # Restore original file from pack
                     logger.debug("Restoring input file %s", input_path)
-                    fd, temp = Path.tempfile(prefix='reprozip_input_')
+                    fd, temp = tempfile.mkstemp(prefix='reprozip_input_')
+                    temp = Path(temp)
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
                                                              input_path,
@@ -339,7 +341,8 @@ class FileDownloader(object):
 
     def download_and_print(self, remote_path):
         # Download to temporary file
-        fd, temp = Path.tempfile(prefix='reprozip_output_')
+        fd, temp = tempfile.mkstemp(prefix='reprozip_output_')
+        temp = Path(temp)
         os.close(fd)
         download_status = self.download(remote_path, temp)
         if download_status is not None and not download_status:

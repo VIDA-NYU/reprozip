@@ -7,6 +7,7 @@ import os
 import sqlite3
 from rpaths import AbstractPath, Path
 import sys
+import tempfile
 import unittest
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, \
@@ -26,7 +27,7 @@ class TestReprozip(unittest.TestCase):
             self.assertEqual(oct((path.stat().st_mode & 0o0700) >> 6),
                              oct(mod))
 
-        tmp = Path.tempdir()
+        tmp = Path(tempfile.mkdtemp())
         try:
             (tmp / 'some' / 'path').mkdir(parents=True)
             (tmp / 'some' / 'path').chmod(0o555)
@@ -47,7 +48,7 @@ class TestReprozip(unittest.TestCase):
             self.assertEqual(oct((path.stat().st_mode & 0o0700) >> 6),
                              oct(mod))
 
-        tmp = Path.tempdir()
+        tmp = Path(tempfile.mkdtemp())
         try:
             (tmp / 'some' / 'complete' / 'path').mkdir(parents=True)
             (tmp / 'some' / 'complete' / 'path').chmod(0o555)
@@ -221,7 +222,7 @@ class TestFiles(unittest.TestCase):
 
 class TestCombine(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = Path.tempdir()
+        self.tmpdir = Path(tempfile.mkdtemp())
 
     def tearDown(self):
         self.tmpdir.rmtree()

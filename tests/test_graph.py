@@ -4,6 +4,7 @@
 
 import json
 from rpaths import Path
+import tempfile
 import unittest
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, FILE_STAT
@@ -19,7 +20,7 @@ class TestGraph(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._trace = Path.tempdir(prefix='rpz_testdb_')
+        cls._trace = Path(tempfile.mkdtemp(prefix='rpz_testdb_'))
         conn = make_database([
             ('proc', 0, None, False),
             ('open', 0, "/some/dir", True, FILE_WDIR),
@@ -135,7 +136,7 @@ other_files:
 
     def do_dot_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
-        tmpdir = Path.tempdir(prefix='rpz_testgraph_')
+        tmpdir = Path(tempfile.mkdtemp(prefix='rpz_testgraph_'))
         target = tmpdir / 'graph.dot'
         try:
             graph.generate(target,
@@ -154,7 +155,7 @@ other_files:
 
     def do_json_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
-        tmpdir = Path.tempdir(prefix='rpz_testgraph_')
+        tmpdir = Path(tempfile.mkdtemp(prefix='rpz_testgraph_'))
         target = tmpdir / 'graph.json'
         try:
             graph.generate(target,

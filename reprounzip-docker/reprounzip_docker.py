@@ -22,6 +22,7 @@ import socket
 import subprocess
 import sys
 import tarfile
+import tempfile
 
 from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
@@ -722,7 +723,7 @@ class ContainerUploader(FileUploader):
                   file=sys.stderr)
             sys.exit(1)
 
-        self.build_directory = Path.tempdir(prefix='reprozip_build_')
+        self.build_directory = Path(tempfile.mkdtemp(prefix='reprozip_build_'))
         self.docker_copy = []
 
     def upload_file(self, local_path, input_path):
@@ -840,7 +841,7 @@ class ContainerDownloader(FileDownloader):
     def download(self, remote_path, local_path):
         # Docker copies to a file in the specified directory, cannot just take
         # a file name (#4272)
-        tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
+        tmpdir = Path(tempfile.mkdtemp(prefix='reprozip_docker_output_'))
         try:
             ret = subprocess.call(self.docker_cmd +
                                   ['cp',

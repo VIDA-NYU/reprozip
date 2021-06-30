@@ -17,6 +17,7 @@ import os
 from rpaths import Path
 import sqlite3
 import sys
+import tempfile
 import traceback
 
 from reprozip import __version__ as reprozip_version
@@ -183,7 +184,8 @@ def testrun(args):
 
     Not really useful, except for debugging.
     """
-    fd, database = Path.tempfile(prefix='reprozip_', suffix='.sqlite3')
+    fd, database = tempfile.mkstemp(prefix='reprozip_', suffix='.sqlite3')
+    database = Path(database)
     os.close(fd)
     try:
         if args.arg0 is not None:

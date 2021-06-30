@@ -16,6 +16,7 @@ import os
 from rpaths import Path
 import subprocess
 import sys
+import tempfile
 
 from reprozip_core.common import setup_logging
 
@@ -32,7 +33,8 @@ def process_connection_file(original):
 
     ports = [value for key, value in data.items() if key.endswith('_port')]
 
-    fd, fixed_file = Path.tempfile(suffix='.json')
+    fd, fixed_file = tempfile.mkstemp(prefix='reprounzip_', suffix='.json')
+    fixed_file = Path(fixed_file)
     with fixed_file.open('w') as fp:
         json.dump(data, fp)
     os.close(fd)

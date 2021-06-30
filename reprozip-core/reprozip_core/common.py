@@ -28,6 +28,7 @@ from rpaths import PosixPath, Path
 import shutil
 import sys
 import tarfile
+import tempfile
 import usagestats
 import yaml
 
@@ -209,7 +210,8 @@ class RPZPack(object):
     def with_config(self):
         """Context manager that extracts the config to  a temporary file.
         """
-        fd, tmp = Path.tempfile(prefix='reprounzip_')
+        fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
+        tmp = Path(tmp)
         os.close(fd)
         self.extract_config(tmp)
         yield tmp
@@ -241,7 +243,8 @@ class RPZPack(object):
     def with_trace(self):
         """Context manager that extracts the trace database to a temporary file.
         """
-        fd, tmp = Path.tempfile(prefix='reprounzip_')
+        fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
+        tmp = Path(tmp)
         os.close(fd)
         self.extract_trace(tmp)
         yield tmp

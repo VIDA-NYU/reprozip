@@ -15,6 +15,7 @@ import os
 from rpaths import Path
 import string
 import sys
+import tempfile
 import tarfile
 import uuid
 
@@ -159,7 +160,8 @@ def pack(target, directory, sort_packages):
     logger.info("Creating pack %s...", target)
     tar = tarfile.open(str(target), 'w:')
 
-    fd, tmp = Path.tempfile()
+    fd, tmp = tempfile.mkstemp(prefix='reprozip_', suffix='.tar')
+    tmp = Path(tmp)
     os.close(fd)
     try:
         datatar = PackBuilder(tmp)
@@ -197,7 +199,8 @@ def pack(target, directory, sort_packages):
 
     logger.info("Adding metadata...")
     # Stores pack version
-    fd, manifest = Path.tempfile(prefix='reprozip_', suffix='.txt')
+    fd, manifest = tempfile.mkstemp(prefix='reprozip_', suffix='.txt')
+    manifest = Path(manifest)
     os.close(fd)
     try:
         with manifest.open('wb') as fp:
@@ -223,7 +226,8 @@ def pack(target, directory, sort_packages):
     pack_id = str(uuid.uuid4())
 
     # Stores canonical config
-    fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
+    fd, can_configfile = tempfile.mkstemp(suffix='.yml', prefix='rpz_config_')
+    can_configfile = Path(can_configfile)
     os.close(fd)
     try:
         save_config(can_configfile, runs, packages, other_files,

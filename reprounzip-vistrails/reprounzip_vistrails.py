@@ -24,6 +24,7 @@ import os
 from rpaths import Path
 import subprocess
 import sys
+import tempfile
 import zipfile
 
 from reprozip_core.common import load_config, setup_logging, record_usage
@@ -222,7 +223,7 @@ def do_vistrails(target, pack=None, **kwargs):
     # Writes VisTrails workflow
     bundle = target / 'vistrails.vt'
     logger.info("Writing VisTrails workflow %s...", bundle)
-    vtdir = Path.tempdir(prefix='reprounzip_vistrails_')
+    vtdir = Path(tempfile.mkdtemp(prefix='reprounzip_vistrails_'))
     ids = IdScope()
     try:
         with vtdir.open('w', 'vistrail',
