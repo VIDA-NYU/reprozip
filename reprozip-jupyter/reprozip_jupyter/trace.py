@@ -6,6 +6,7 @@
 """
 
 import argparse
+import contextlib
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import KernelManager
 from jupyter_client.managerabc import KernelManagerABC
@@ -15,7 +16,9 @@ from nbconvert.preprocessors.execute import CellExecutionError
 import nbformat
 import os
 from rpaths import Path
+import shutil
 import sys
+import tempfile
 
 from reprozip_core.common import setup_logging
 
@@ -74,14 +77,23 @@ class RPZKernelManager(KernelManager):
         # Add the input file to the configuration
         config = self.rpz_options.config_file()
 
-        with config.rewrite(encoding='utf-8') as (read, write):
-            for line in read:
-                write.write(line)
-                if line == 'inputs_outputs:\n':
-                    write.write('  - name: jupyter_connection_file'
-                                '  # Needed for reprozip-jupyter operations\n'
-                                '    read_by_runs: [0]\n'
-                                '    path: %s\n' % self.connection_file)
+        with contextlib.ExitStack() as context:
+            new_config = Path(context.enter_context(
+                tempfile.TemporaryFile(dir=config.parent),
+            ))
+            write = context.enter_context(new_config.open('w'))
+            with config.open('r') as read:
+                for line in read:
+                    write.write(line)
+                    if line == 'inputs_outputs:\n':
+                        write.write(
+                            '  - name: jupyter_connection_file'
+                            '  # Needed for reprozip-jupyter operations\n'
+                            '    read_by_runs: [0]\n'
+                            '    path: %s\n' % self.connection_file
+                        )
+            write.flush()
+            shutil.copy(new_config, config)
 
 
 KernelManagerABC.register(RPZKernelManager)
