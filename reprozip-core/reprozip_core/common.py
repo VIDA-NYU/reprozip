@@ -143,7 +143,7 @@ class RPZPack(object):
                 version = None
             if version in (1, 2):
                 self.version = version
-                self.data_prefix = PosixPath(b'DATA')
+                self.data_prefix = PurePosixPath(b'DATA')
             else:
                 raise ValueError(
                     "Unknown format version %r (maybe you should upgrade "
@@ -161,8 +161,8 @@ class RPZPack(object):
             assert False
 
     def remove_data_prefix(self, path):
-        if not isinstance(path, PosixPath):
-            path = PosixPath(path)
+        if not isinstance(path, PurePosixPath):
+            path = PurePosixPath(path)
         components = path.components[1:]
         if not components:
             return path.__class__('')
@@ -260,7 +260,7 @@ class RPZPack(object):
         Those paths begin with a slash / and the 'DATA' prefix has been
         removed.
         """
-        return set(PosixPath(m.name[4:])
+        return set(PurePosixPath(m.name[4:])
                    for m in self.data.getmembers()
                    if m.name.startswith('DATA/'))
 
@@ -269,8 +269,8 @@ class RPZPack(object):
 
         Raises KeyError if no such path exists.
         """
-        path = PosixPath(path)
-        path = join_root(PosixPath(b'DATA'), path)
+        path = PurePosixPath(path)
+        path = join_root(PurePosixPath(b'DATA'), path)
         return copy.copy(self.data.getmember(path))
 
     def extract_data(self, root, members):
@@ -306,7 +306,7 @@ class InvalidConfig(ValueError):
 def read_files(files, File=File):
     if files is None:
         return []
-    return [File(PosixPath(f)) for f in files]
+    return [File(PurePosixPath(f)) for f in files]
 
 
 def read_packages(packages, File=File, Package=Package):
@@ -362,7 +362,7 @@ def load_iofiles(config, runs):
                                        wkey: [i]})
 
     files = {}  # name:str: InputOutputFile
-    paths = {}  # path:PosixPath: name:str
+    paths = {}  # path:PurePosixPath: name:str
     required_keys = {'name', 'path'}
     optional_keys = {'read_by_runs', 'written_by_runs'}
     uniquenames = UniqueNames()
@@ -376,7 +376,7 @@ def load_iofiles(config, runs):
             logger.warning("File name looks like a path: %s, prefixing with "
                            ".", name)
             name = '.%s' % name
-        path = PosixPath(f['path'])
+        path = PurePosixPath(f['path'])
         readers = sorted(f.get('read_by_runs', []))
         writers = sorted(f.get('written_by_runs', []))
         if (

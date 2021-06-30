@@ -126,7 +126,7 @@ def directory_create(args):
         logger.critical("Target directory exists")
         sys.exit(1)
 
-    if not issubclass(DefaultAbstractPath, PosixPath):
+    if not isinstance(Path(), PurePosixPath):
         logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
@@ -169,9 +169,12 @@ def directory_create(args):
             m.name = str(rpz_pack.remove_data_prefix(m.name))
             # Makes symlink targets relative
             if m.issym():
-                linkname = PosixPath(m.linkname)
+                linkname = PurePosixPath(m.linkname)
                 if linkname.is_absolute:
-                    m.linkname = join_root(root, PosixPath(m.linkname)).path
+                    m.linkname = join_root(
+                        root,
+                        PurePosixPath(m.linkname),
+                    ).path
         logger.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
@@ -257,7 +260,7 @@ def directory_run(args):
 
         # PATH
         # Get the original PATH components
-        path = [PosixPath(d)
+        path = [PurePosixPath(d)
                 for d in run['environ'].get('PATH', '').split(':')]
         # The same paths but in the directory
         dir_path = [join_root(root, d)
@@ -268,7 +271,7 @@ def directory_run(args):
         cmd += 'PATH=%s ' % shell_escape(path)
 
         interpreter = get_elf_interpreter(
-            join_root(root, PosixPath(run['binary'])).open('rb'),
+            join_root(root, PurePosixPath(run['binary'])).open('rb'),
         )
         if interpreter is not None:
             interpreter = Path(interpreter)
@@ -406,7 +409,7 @@ def chroot_create(args):
         logger.critical("Target directory exists")
         sys.exit(1)
 
-    if not issubclass(DefaultAbstractPath, PosixPath):
+    if not isinstance(Path(), PurePosixPath):
         logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
@@ -698,7 +701,9 @@ class LocalUploader(FileUploader):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
         try:
-            member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+            member = tar.getmember(str(
+                join_root(PurePosixPath(''), input_path),
+            ))
         except KeyError:
             return None
         member = copy.copy(member)

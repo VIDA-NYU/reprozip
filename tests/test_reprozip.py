@@ -146,7 +146,7 @@ class TestFiles(unittest.TestCase):
             return set(cls.make_paths(e) for e in obj)
         elif isinstance(obj, list):
             return [cls.make_paths(e) for e in obj]
-        elif isinstance(obj, AbstractPath):
+        elif isinstance(obj, PurePath):
             return obj
         elif isinstance(obj, (bytes, str)):
             return Path(obj)

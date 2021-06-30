@@ -186,7 +186,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 if input_name.startswith('/'):
-                    input_path = PosixPath(input_name)
+                    input_path = PurePosixPath(input_name)
                 else:
                     try:
                         input_path = inputs_outputs[input_name].path
@@ -238,7 +238,7 @@ class FileUploader(object):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / self.data_tgz), 'r:*')
         try:
-            member = tar.getmember(str(join_root(PosixPath('DATA'),
+            member = tar.getmember(str(join_root(PurePosixPath('DATA'),
                                                  input_path)))
         except KeyError:
             return None
@@ -304,7 +304,7 @@ class FileDownloader(object):
             # Download files
             for output_name, local_path in resolved_files:
                 if output_name.startswith('/'):
-                    remote_path = PosixPath(output_name)
+                    remote_path = PurePosixPath(output_name)
                 else:
                     try:
                         remote_path = inputs_outputs[output_name].path

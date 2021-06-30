@@ -247,7 +247,7 @@ def docker_setup_create(args):
                         f.path.lies_under('/run') or
                         f.path.lies_under('/var')):
                     continue
-                path = PosixPath('/')
+                path = PurePosixPath('/')
                 for c in rpz_pack.remove_data_prefix(f.path).components:
                     path = path / c
                     if path in paths:
@@ -261,7 +261,7 @@ def docker_setup_create(args):
             rpz_pack.close()
             with (target / 'files.list').open('wb') as filelist:
                 for p in pathlist:
-                    filelist.write(join_root(PosixPath(''), p).path)
+                    filelist.write(join_root(PurePosixPath(''), p).path)
                     filelist.write(b'\0')
 
             if args.use_buildkit:
@@ -761,7 +761,7 @@ class ContainerUploader(FileUploader):
                 tar = tarfile.open(str(self.target / 'data.tgz'), 'r:*')
                 try:
                     info = tar.getmember(str(
-                        join_root(PosixPath(b'DATA'), target)
+                        join_root(PurePosixPath(b'DATA'), target)
                     ))
                     uid, gid = info.uid, info.gid
                 except KeyError:

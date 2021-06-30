@@ -162,7 +162,7 @@ class Process(object):
 
     def json(self, process_map):
         name = "%d" % self.pid
-        long_name = "%s (%d)" % (PosixPath(self.binary).components[-1]
+        long_name = "%s (%d)" % (PurePosixPath(self.binary).components[-1]
                                  if self.binary else "-",
                                  self.pid)
         description = "%s\n%d" % (self.binary, self.pid)
@@ -522,7 +522,7 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
                 logger.debug("AGG %s -> %s", pathuni, prefix)
                 pathuni = prefix
                 break
-        return PosixPath(pathuni)
+        return PurePosixPath(pathuni)
 
     files_new = set()
     for fi in files:
@@ -567,11 +567,11 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
 
     # Filter other files
     if level_other_files == LVL_OTHER_ALL and file_depth is not None:
-        other_files = set(PosixPath(*f.components[:file_depth + 1])
+        other_files = set(PurePosixPath(*f.components[:file_depth + 1])
                           for f in other_files)
         edges = OrderedSet((prog,
                             f if f in package_map
-                            else PosixPath(*f.components[:file_depth + 1]),
+                            else PurePosixPath(*f.components[:file_depth + 1]),
                             mode,
                             argv)
                            for prog, f, mode, argv in edges)

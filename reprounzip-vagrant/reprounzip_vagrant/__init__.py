@@ -325,7 +325,7 @@ chmod +x /usr/local/bin/rpztar
                                  % pkg.name)
                     for f in pkg.files:
                         f = f.path
-                        dest = join_root(PosixPath('/experimentroot'), f)
+                        dest = join_root(PurePosixPath('/experimentroot'), f)
                         script.write('mkdir -p %s\n' %
                                      shell_escape(str(f.parent)))
                         script.write('cp -L %s %s\n' % (
@@ -348,7 +348,7 @@ chmod +x /usr/local/bin/rpztar
                             f.path.lies_under('/run') or
                             f.path.lies_under('/var')):
                         continue
-                    path = PosixPath('/')
+                    path = PurePosixPath('/')
                     for c in rpz_pack.remove_data_prefix(f.path).components:
                         path = path / c
                         if path in paths:
@@ -360,7 +360,7 @@ chmod +x /usr/local/bin/rpztar
                             logger.info("Missing file %s", path)
                 with (target / 'rpz-files.list').open('wb') as filelist:
                     for p in pathlist:
-                        filelist.write(join_root(PosixPath(''), p).path)
+                        filelist.write(join_root(PurePosixPath(''), p).path)
                         filelist.write(b'\0')
                 script.write('/usr/local/bin/rpztar '
                              '/vagrant/data.tgz '
@@ -606,14 +606,14 @@ class SSHUploader(FileUploader):
 
     def upload_file(self, local_path, input_path):
         if self.use_chroot:
-            remote_path = join_root(PosixPath('/experimentroot'),
+            remote_path = join_root(PurePosixPath('/experimentroot'),
                                     input_path)
         else:
             remote_path = input_path
 
         temp = make_unique_name(b'reprozip_input_')
         ltemp = self.target / temp
-        rtemp = PosixPath('/vagrant') / temp
+        rtemp = PurePosixPath('/vagrant') / temp
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
@@ -683,10 +683,13 @@ class SSHDownloader(FileDownloader):
 
     def download(self, remote_path, local_path):
         if self.use_chroot:
-            remote_path = join_root(PosixPath('/experimentroot'), remote_path)
+            remote_path = join_root(
+                PurePosixPath('/experimentroot'),
+                remote_path,
+            )
 
         temp = make_unique_name(b'reprozip_output_')
-        rtemp = PosixPath('/vagrant') / temp
+        rtemp = PurePosixPath('/vagrant') / temp
         ltemp = self.target / temp
 
         # Copy file to shared folder

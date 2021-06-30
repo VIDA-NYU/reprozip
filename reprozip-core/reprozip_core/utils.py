@@ -218,9 +218,9 @@ def normalize_path(path):
     """
     # For some reason, os.path.normpath() keeps multiple leading slashes
     # We don't want this since it has no meaning on Linux
-    path = PosixPath(path)
+    path = PurePosixPath(path)
     if path.path.startswith(path._sep + path._sep):
-        path = PosixPath(path.path[1:])
+        path = PurePosixPath(path.path[1:])
     return path
 
 

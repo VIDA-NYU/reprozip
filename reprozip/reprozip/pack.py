@@ -82,10 +82,10 @@ def data_path(filename, prefix=Path('DATA')):
 
     Example:
 
-    >>> data_path(PosixPath('/var/lib/../../../../tmp/test'))
-    PosixPath(b'DATA/tmp/test')
-    >>> data_path(PosixPath('/var/lib/../www/index.html'))
-    PosixPath(b'DATA/var/www/index.html')
+    >>> data_path(PurePosixPath('/var/lib/../../../../tmp/test'))
+    PurePosixPath('DATA/tmp/test')
+    >>> data_path(PurePosixPath('/var/lib/../www/index.html'))
+    PurePosixPath('DATA/var/www/index.html')
     """
     return prefix / filename.split_root()[1]
 
