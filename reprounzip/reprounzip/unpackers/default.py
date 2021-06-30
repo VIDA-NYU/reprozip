@@ -458,7 +458,7 @@ def chroot_create(args):
                     if path.is_symlink():
                         dest.symlink_to(os.readlink(path))
                     else:
-                        path.copy(dest)
+                        shutil.copy(path, dest)
                     if restore_owner:
                         stat = path.stat()
                         os.chown(dest, stat.st_uid, stat.st_gid)
@@ -483,7 +483,7 @@ def chroot_create(args):
         resolvconf_src = Path('/etc/resolv.conf')
         if resolvconf_src.exists():
             try:
-                resolvconf_src.copy(root / 'etc/resolv.conf')
+                shutil.copy(resolvconf_src, root / 'etc/resolv.conf')
             except IOError:
                 pass
 
@@ -720,7 +720,7 @@ class LocalUploader(FileUploader):
         # Copy
         orig_stat = remote_path.stat()
         with make_dir_writable(remote_path.parent):
-            local_path.copyfile(remote_path)
+            shutil.copyfile(local_path, remote_path)
             remote_path.chmod(orig_stat.st_mode & 0o7777)
             if self.restore_owner:
                 os.chown(remote_path, orig_stat.st_uid, orig_stat.st_gid)
@@ -770,8 +770,8 @@ class LocalDownloader(FileDownloader):
             logger.critical("Can't get output file (doesn't exist): %s",
                             remote_path)
             return False
-        remote_path.copyfile(local_path)
-        remote_path.copymode(local_path)
+        shutil.copyfile(remote_path, local_path)
+        shutil.copymode(remote_path, local_path)
         return True
 
 

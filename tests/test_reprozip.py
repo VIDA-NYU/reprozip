@@ -3,9 +3,9 @@
 # See file LICENSE for full license details.
 
 import os
-
 import sqlite3
 from rpaths import AbstractPath, Path
+import shutil
 import sys
 import tempfile
 import unittest
@@ -39,7 +39,7 @@ class TestReprozip(unittest.TestCase):
         finally:
             (tmp / 'some').chmod(0o755)
             (tmp / 'some' / 'path').chmod(0o755)
-            tmp.rmtree()
+            shutil.rmtree(tmp)
 
     @unittest.skipUnless(hasattr(os, 'chown'), "No POSIX file permissions")
     def test_make_dir_writable2(self):
@@ -65,7 +65,7 @@ class TestReprozip(unittest.TestCase):
             (tmp / 'some').chmod(0o755)
             (tmp / 'some' / 'complete').chmod(0o755)
             (tmp / 'some' / 'complete' / 'path').chmod(0o755)
-            tmp.rmtree()
+            shutil.rmtree(tmp)
 
     def test_argparse(self):
         """Tests argument parsing"""
@@ -225,7 +225,7 @@ class TestCombine(unittest.TestCase):
         self.tmpdir = Path(tempfile.mkdtemp())
 
     def tearDown(self):
-        self.tmpdir.rmtree()
+        shutil.rmtree(self.tmpdir)
 
     def test_combine(self):
         traces = []

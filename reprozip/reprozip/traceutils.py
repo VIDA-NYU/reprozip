@@ -11,6 +11,7 @@ process itself.
 import logging
 import os
 from rpaths import Path
+import shutil
 import sqlite3
 import tempfile
 
@@ -218,4 +219,4 @@ def combine_traces(traces, target):
     # Move database to final destination
     if not target.exists():
         target.mkdir()
-    output.move(target / 'trace.sqlite3')
+    shutil.move(output, target / 'trace.sqlite3')

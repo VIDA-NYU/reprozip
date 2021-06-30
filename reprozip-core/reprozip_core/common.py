@@ -287,7 +287,7 @@ class RPZPack(object):
         """Copies the file in which the data lies to the specified destination.
         """
         if self.version == 1:
-            self.pack.copyfile(target)
+            shutil.copyfile(self.pack, target)
         elif self.version == 2:
             with target.open('wb') as fp:
                 data = self.tar.extractfile('DATA.tar.gz')

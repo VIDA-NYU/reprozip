@@ -10,6 +10,7 @@ import os
 import re
 import requests
 from rpaths import Path
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -62,7 +63,7 @@ def in_temp_dir(f):
             return f(*args, **kwargs)
         finally:
             os.chdir(prev_cwd)
-            tmp.rmtree(ignore_errors=True)
+            shutil.rmtree(tmp, ignore_errors=True)
     return wrapper
 
 
@@ -430,7 +431,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrantchroot').exists():
-            (tests / 'vagrant/simplevagrantchroot').rmtree()
+            shutil.rmtree(tests / 'vagrant/simplevagrantchroot')
     # Unpack Vagrant without chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
@@ -490,7 +491,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrant').exists():
-            (tests / 'vagrant/simplevagrant').rmtree()
+            shutil.rmtree(tests / 'vagrant/simplevagrant')
 
     # Unpack Docker, both with and without buildkit
     for arg, sufx in (('--dont-use-buildkit', ''), ('--use-buildkit', '-bk')):
@@ -545,7 +546,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                 sys.stdin.readline()
         finally:
             if Path(path).exists():
-                Path(path).rmtree()
+                shutil.rmtree(Path(path))
 
     # ########################################
     # 'threads' program: testrun
@@ -877,4 +878,4 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     coverage = Path('.coverage')
     if coverage.exists():
-        coverage.copyfile(tests.parent / '.coverage.runpy')
+        shutil.copyfile(coverage, tests.parent / '.coverage.runpy')

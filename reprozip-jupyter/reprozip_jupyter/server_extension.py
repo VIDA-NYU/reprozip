@@ -5,6 +5,7 @@
 from datetime import datetime
 from notebook.utils import url_path_join as ujoin
 from rpaths import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -60,7 +61,7 @@ class TraceHandler(RequestHandler):
             proc.set_exit_callback(self._packing_done)
             self.nbapp.log.info("reprozip: started packing...")
         else:
-            self._tempdir.rmtree()
+            shutil.rmtree(self._tempdir)
             if returncode == 3:
                 self.set_header('Content-Type', 'application/json')
                 self.finish(
@@ -80,7 +81,7 @@ class TraceHandler(RequestHandler):
             self.nbapp.log.info("reprozip: response sent!")
         else:
             self.send_error(500)
-        self._tempdir.rmtree()
+        shutil.rmtree(self._tempdir)
         self._future.set_result(None)
 
 

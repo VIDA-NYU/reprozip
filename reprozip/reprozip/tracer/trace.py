@@ -17,6 +17,7 @@ import os
 from pkg_resources import iter_entry_points
 import platform
 from rpaths import Path
+import shutil
 import sqlite3
 import sys
 import warnings
@@ -337,14 +338,14 @@ def trace(binary, argv, directory, append, verbosity='unset'):
             elif r in 'sS':
                 sys.exit(125)
             elif r in 'dD':
-                directory.rmtree()
+                shutil.rmtree(directory)
                 directory.mkdir()
             logger.warning(
                 "You can use --overwrite to replace the existing trace "
                 "(or --continue to append\nwithout prompt)")
         elif append is False:
             logger.info("Removing existing trace directory %s", directory)
-            directory.rmtree()
+            shutil.rmtree(directory)
             directory.mkdir(parents=True)
     else:
         if append is True:

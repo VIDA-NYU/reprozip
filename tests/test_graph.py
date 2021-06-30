@@ -4,6 +4,7 @@
 
 import json
 from rpaths import Path
+import shutil
 import tempfile
 import unittest
 
@@ -132,7 +133,7 @@ other_files:
 
     @classmethod
     def tearDownClass(cls):
-        cls._trace.rmtree()
+        shutil.rmtree(cls._trace)
 
     def do_dot_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
@@ -151,7 +152,7 @@ other_files:
             if expected is not False:
                 raise
         finally:
-            tmpdir.rmtree()
+            shutil.rmtree(tmpdir)
 
     def do_json_test(self, expected, **kwargs):
         graph.Process._id_gen = 0
@@ -171,7 +172,7 @@ other_files:
             if expected is not False:
                 raise
         finally:
-            tmpdir.rmtree()
+            shutil.rmtree(tmpdir)
 
     def do_tests(self, expected_dot, expected_json, **kwargs):
         self.do_dot_test(expected_dot, **kwargs)

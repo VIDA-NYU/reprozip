@@ -121,7 +121,7 @@ def docker_setup(args):
     try:
         docker_setup_build(args)
     except BaseException:
-        Path(args.target[0]).rmtree(ignore_errors=True)
+        shutil.rmtree(args.target[0], ignore_errors=True)
         raise
 
 
@@ -388,7 +388,7 @@ def docker_setup_create(args):
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
-        target.rmtree(ignore_errors=True)
+        shutil.rmtree(target, ignore_errors=True)
         raise
 
 
@@ -734,13 +734,13 @@ class ContainerUploader(FileUploader):
             nb += 1
             name = stem + ('_%d' % nb).encode('ascii') + ext
         name = Path(name)
-        local_path.copyfile(self.build_directory / name)
+        shutil.copyfile(local_path, self.build_directory / name)
         logger.info("Copied file %s to %s", local_path, name)
         self.docker_copy.append((name, input_path))
 
     def finalize(self):
         if not self.docker_copy:
-            self.build_directory.rmtree()
+            shutil.rmtree(self.build_directory)
             return
 
         from_image = self.unpacked_info['current_image']
@@ -803,7 +803,7 @@ class ContainerUploader(FileUploader):
             self.unpacked_info['current_image'] = image
             write_dict(self.target, self.unpacked_info)
 
-        self.build_directory.rmtree()
+        shutil.rmtree(self.build_directory)
 
 
 @target_must_exist
@@ -850,9 +850,9 @@ class ContainerDownloader(FileDownloader):
             if ret != 0:
                 logger.critical("Can't get output file: %s", remote_path)
                 return False
-            (tmpdir / remote_path.name).copyfile(local_path)
+            shutil.copyfile(tmpdir / remote_path.name, local_path)
         finally:
-            tmpdir.rmtree()
+            shutil.rmtree(tmpdir)
         return True
 
     def finalize(self):
@@ -916,7 +916,7 @@ def docker_destroy_dir(args):
 
     logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
-    target.rmtree()
+    shutil.rmtree(target)
     signals.post_destroy(target=target)
 
 

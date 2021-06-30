@@ -18,6 +18,7 @@ import os
 import paramiko
 import re
 from rpaths import PosixPath, Path
+import shutil
 import subprocess
 import sys
 
@@ -401,7 +402,7 @@ mkdir -p /.experimentdata/bin
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
-        target.rmtree(ignore_errors=True)
+        shutil.rmtree(target, ignore_errors=True)
         raise
 
 
@@ -618,7 +619,7 @@ class SSHUploader(FileUploader):
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
-        local_path.copyfile(ltemp)
+        shutil.copyfile(local_path, ltemp)
 
         # Move it
         logger.info("Moving file into place...")
@@ -713,7 +714,7 @@ class SSHDownloader(FileDownloader):
 
         # Move file to final destination
         try:
-            ltemp.move(local_path)
+            shutil.move(ltemp, local_path)
         except OSError as e:
             logger.critical("Couldn't download output file: %s\n%s",
                             remote_path, str(e))
@@ -769,7 +770,7 @@ def vagrant_destroy_dir(args):
     read_dict(target)
 
     signals.pre_destroy(target=target)
-    target.rmtree()
+    shutil.rmtree(target)
     signals.post_destroy(target=target)
 
 

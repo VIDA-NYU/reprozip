@@ -19,6 +19,7 @@ import operator
 import os
 import requests
 from rpaths import Path, PosixPath
+import shutil
 import stat
 import subprocess
 import time
@@ -405,7 +406,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
                 logger.warning("Download %s: error downloading %s: %s",
                                cachename, url, e)
             if dest is not None:
-                cache.copy(dest)
+                shutil.copy(cache, dest)
                 return dest
             else:
                 return cache
@@ -427,7 +428,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
     logger.info("Downloaded %s successfully", cachename)
 
     if dest is not None:
-        cache.copy(dest)
+        shutil.copy(cache, dest)
         return dest
     else:
         return cache

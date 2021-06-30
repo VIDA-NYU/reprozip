@@ -22,6 +22,7 @@ import itertools
 import logging
 import os
 from rpaths import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -272,7 +273,7 @@ def do_vistrails(target, pack=None, **kwargs):
                     z.write(vtdir / path, path)
             z.close()
     finally:
-        vtdir.rmtree()
+        shutil.rmtree(vtdir)
 
 
 def setup_vistrails():
