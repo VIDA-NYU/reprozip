@@ -229,6 +229,8 @@ def vagrant_setup_create(args):
 
     signals.pre_setup(target=target, pack=pack)
 
+    target.mkdir()
+
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
     rpz_pack.extract_config(target / 'config.yml')
@@ -278,8 +280,6 @@ def vagrant_setup_create(args):
             logger.error("Need to install %d packages but couldn't select a "
                          "package installer: %s",
                          len(packages), e)
-
-    target.mkdir(parents=True)
 
     try:
         # Writes setup script

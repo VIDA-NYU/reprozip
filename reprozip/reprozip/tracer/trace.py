@@ -346,7 +346,7 @@ def trace(binary, argv, directory, append, verbosity='unset'):
         elif append is False:
             logger.info("Removing existing trace directory %s", directory)
             shutil.rmtree(directory)
-            directory.mkdir(parents=True)
+            directory.mkdir()
     else:
         if append is True:
             logger.warning("--continue was set but trace doesn't exist yet")

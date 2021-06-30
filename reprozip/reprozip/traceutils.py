@@ -217,6 +217,5 @@ def combine_traces(traces, target):
     conn.close()
 
     # Move database to final destination
-    if not target.exists():
-        target.mkdir()
+    target.mkdir(exist_ok=True)
     shutil.move(output, target / 'trace.sqlite3')

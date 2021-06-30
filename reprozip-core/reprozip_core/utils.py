@@ -387,7 +387,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
         mtime = email.utils.formatdate(cache.stat().st_mtime, usegmt=True)
         headers['If-Modified-Since'] = mtime
 
-    cache.parent.mkdir(parents=True)
+    cache.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         response = requests.get(url, headers=headers,

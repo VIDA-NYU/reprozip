@@ -132,6 +132,8 @@ def directory_create(args):
 
     signals.pre_setup(target=target, pack=pack)
 
+    target.mkdir()
+
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
     rpz_pack.extract_config(target / 'config.yml')
@@ -140,7 +142,6 @@ def directory_create(args):
     config = load_config_file(target / 'config.yml', True)
     packages = config.packages
 
-    target.mkdir()
     root = (target / 'root').absolute()
 
     # Checks packages
@@ -420,6 +421,8 @@ def chroot_create(args):
     # We can only restore owner/group of files if running as root
     restore_owner = should_restore_owner(args.restore_owner)
 
+    target.mkdir()
+
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
     rpz_pack.extract_config(target / 'config.yml')
@@ -428,7 +431,6 @@ def chroot_create(args):
     config = load_config_file(target / 'config.yml', True)
     packages = config.packages
 
-    target.mkdir()
     root = (target / 'root').absolute()
 
     root.mkdir()
@@ -454,7 +456,7 @@ def chroot_create(args):
                         missing_files = True
                         continue
                     dest = join_root(root, path)
-                    dest.parent.mkdir(parents=True)
+                    dest.parent.mkdir(parents=True, exist_ok=True)
                     if path.is_symlink():
                         dest.symlink_to(os.readlink(path))
                     else:
@@ -493,17 +495,17 @@ def chroot_create(args):
         if not os.path.lexists(sh_path) or not os.path.lexists(env_path):
             logger.info("Setting up busybox...")
             busybox_path = join_root(root, Path('/bin/busybox'))
-            busybox_path.parent.mkdir(parents=True)
+            busybox_path.parent.mkdir(parents=True, exist_ok=True)
             with make_dir_writable(join_root(root, Path('/bin'))):
                 download_file(busybox_url(config.runs[0]['architecture']),
                               busybox_path,
                               'busybox-%s' % config.runs[0]['architecture'])
                 busybox_path.chmod(0o755)
                 if not os.path.lexists(sh_path):
-                    sh_path.parent.mkdir(parents=True)
+                    sh_path.parent.mkdir(parents=True, exist_ok=True)
                     sh_path.symlink_to('/bin/busybox')
                 if not os.path.lexists(env_path):
-                    env_path.parent.mkdir(parents=True)
+                    env_path.parent.mkdir(parents=True, exist_ok=True)
                     env_path.symlink_to('/bin/busybox')
 
         # Original input files, so upload can restore them
@@ -536,13 +538,13 @@ def chroot_mount(args):
 
     # Create proc mount
     d = target / 'root/proc'
-    d.mkdir(parents=True)
+    d.mkdir(parents=True, exist_ok=True)
     subprocess.check_call(['mount', '-t', 'proc', 'none', str(d)])
 
     # Bind /dev from host
     for m in ('/dev', '/dev/pts'):
         d = join_root(target / 'root', Path(m))
-        d.mkdir(parents=True)
+        d.mkdir(parents=True, exist_ok=True)
         logger.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
