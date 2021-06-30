@@ -580,7 +580,7 @@ def docker_run(args):
 
 class ContainerUploader(FileUploader):
     def __init__(self, target, input_files, files, unpacked_info,
-                 docker_cmd='docker'):
+                 docker_cmd=['docker']):
         self.unpacked_info = unpacked_info
         self.docker_cmd = docker_cmd
         config = load_config(target / 'config.yml', True)
@@ -701,7 +701,8 @@ def docker_upload(args):
 
 
 class ContainerDownloader(FileDownloader):
-    def __init__(self, target, files, image, all_=False, docker_cmd='docker'):
+    def __init__(self, target, files, image, all_=False,
+                 docker_cmd=['docker']):
         self.image = image
         self.docker_cmd = docker_cmd
         FileDownloader.__init__(self, target, files, all_=all_)
