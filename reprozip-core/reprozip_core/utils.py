@@ -382,7 +382,7 @@ def download_file(url, dest, cachename=None, ssl_verify=None):
         cache = Path('~/.cache').expanduser()
     cache = cache / 'reprozip' / cachename
     if cache.exists():
-        mtime = email.utils.formatdate(cache.mtime(), usegmt=True)
+        mtime = email.utils.formatdate(cache.stat().st_mtime, usegmt=True)
         headers['If-Modified-Since'] = mtime
 
     cache.parent.mkdir(parents=True)

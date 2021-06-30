@@ -461,7 +461,7 @@ def chroot_create(args):
                         path.copy(dest)
                     if restore_owner:
                         stat = path.stat()
-                        dest.chown(stat.st_uid, stat.st_gid)
+                        os.chown(dest, stat.st_uid, stat.st_gid)
             if missing_files:
                 record_usage(chroot_mising_files=True)
 
@@ -490,7 +490,7 @@ def chroot_create(args):
         # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
         sh_path = join_root(root, Path('/bin/sh'))
         env_path = join_root(root, Path('/usr/bin/env'))
-        if not sh_path.lexists() or not env_path.lexists():
+        if not os.path.lexists(sh_path) or not os.path.lexists(env_path):
             logger.info("Setting up busybox...")
             busybox_path = join_root(root, Path('/bin/busybox'))
             busybox_path.parent.mkdir(parents=True)
@@ -499,10 +499,10 @@ def chroot_create(args):
                               busybox_path,
                               'busybox-%s' % config.runs[0]['architecture'])
                 busybox_path.chmod(0o755)
-                if not sh_path.lexists():
+                if not os.path.lexists(sh_path):
                     sh_path.parent.mkdir(parents=True)
                     sh_path.symlink_to('/bin/busybox')
-                if not env_path.lexists():
+                if not os.path.lexists(env_path):
                     env_path.parent.mkdir(parents=True)
                     env_path.symlink_to('/bin/busybox')
 
@@ -723,7 +723,7 @@ class LocalUploader(FileUploader):
             local_path.copyfile(remote_path)
             remote_path.chmod(orig_stat.st_mode & 0o7777)
             if self.restore_owner:
-                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+                os.chown(remote_path, orig_stat.st_uid, orig_stat.st_gid)
 
 
 @target_must_exist
