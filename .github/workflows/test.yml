@@ -106,13 +106,20 @@ jobs:
         else
             pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
         fi
-    - name: Test
+    - name: Unit tests
       run: |
         export PYTHONUNBUFFERED=1
         if [ "$TEST_MODE" = "coverage" ]; then
             export COVER="coverage run --append --source=$PWD --branch"
         fi
-        python tests --run-docker
+        python tests --unittests
+    - name: Functional test
+      run: |
+        export PYTHONUNBUFFERED=1
+        if [ "$TEST_MODE" = "coverage" ]; then
+            export COVER="coverage run --append --source=$PWD --branch"
+        fi
+        python tests --functests --run-docker
     - name: Upload coverage
       if: matrix.mode == 'coverage'
       run: |
