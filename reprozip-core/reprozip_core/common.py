@@ -766,7 +766,7 @@ def setup_usage_report(name, version):
         version='%s %s' % (name, version),
         unique_user_id=True,
         env_var='REPROZIP_USAGE_STATS',
-        ssl_verify=certificate_file.path)
+        ssl_verify=certificate_file)
     try:
         os.getcwd().encode('ascii')
     except (UnicodeEncodeError, UnicodeDecodeError):

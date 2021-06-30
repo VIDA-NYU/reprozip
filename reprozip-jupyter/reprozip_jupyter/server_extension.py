@@ -38,8 +38,8 @@ class TraceHandler(RequestHandler):
              'from reprozip_jupyter.main import main; main()',
              'trace',
              '--dont-save-notebook',
-             '-d', self._tempdir.path,
-             self._notebook_file.path],
+             '-d', self._tempdir,
+             self._notebook_file],
             stdin=subprocess.PIPE)
         proc.stdin.close()
         proc.set_exit_callback(self._trace_done)
@@ -54,8 +54,8 @@ class TraceHandler(RequestHandler):
                 self._pack_file.unlink()
             proc = Subprocess(
                 ['reprozip', 'pack', '-d',
-                 self._tempdir.path,
-                 self._pack_file.path],
+                 self._tempdir,
+                 self._pack_file],
                 stdin=subprocess.PIPE)
             proc.stdin.close()
             proc.set_exit_callback(self._packing_done)

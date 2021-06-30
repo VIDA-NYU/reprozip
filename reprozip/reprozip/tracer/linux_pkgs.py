@@ -128,7 +128,7 @@ class DpkgManager(PkgManager):
                 break
 
             proc = subprocess.Popen(['dpkg-query', '-S'] +
-                                    [path.path for path in batch],
+                                    [path for path in batch],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             out, err = proc.communicate()
@@ -216,7 +216,7 @@ class RpmManager(PkgManager):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
     def _get_packages_for_file(self, filename):
-        p = subprocess.Popen(['rpm', '-qf', filename.path,
+        p = subprocess.Popen(['rpm', '-qf', filename,
                               '--qf', '%{NAME}'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)

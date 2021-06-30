@@ -136,7 +136,7 @@ class TestFiles(unittest.TestCase):
         try:
             files, inputs, outputs = get_files(conn)
             files = set(fi for fi in files
-                        if not fi.path.path.startswith((b'/lib', b'/usr/lib')))
+                        if not str(fi.path).startswith(('/lib', '/usr/lib')))
             return files, inputs, outputs
         finally:
             conn.close()

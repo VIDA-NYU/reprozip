@@ -226,7 +226,7 @@ class FileUploader(object):
                     temp.unlink()
                     self.input_files.pop(input_name, None)
                 else:
-                    self.input_files[input_name] = local_path.absolute().path
+                    self.input_files[input_name] = bytes(local_path.absolute())
         finally:
             self.finalize()
 

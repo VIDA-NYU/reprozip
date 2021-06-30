@@ -172,10 +172,10 @@ def directory_create(args):
             if m.issym():
                 linkname = PurePosixPath(m.linkname)
                 if linkname.is_absolute():
-                    m.linkname = join_root(
+                    m.linkname = bytes(join_root(
                         root,
                         PurePosixPath(m.linkname),
-                    ).path
+                    ))
         logger.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()

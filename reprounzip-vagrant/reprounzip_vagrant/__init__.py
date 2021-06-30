@@ -109,13 +109,13 @@ def machine_setup(target):
     """
     try:
         out = subprocess.check_output(['vagrant', 'ssh-config'],
-                                      cwd=target.path,
+                                      cwd=target,
                                       stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
         logger.info("Calling 'vagrant up'...")
         try:
-            retcode = subprocess.check_call(['vagrant', 'up'], cwd=target.path)
+            retcode = subprocess.check_call(['vagrant', 'up'], cwd=target)
         except OSError:
             logger.critical("vagrant executable not found")
             sys.exit(1)
@@ -125,7 +125,7 @@ def machine_setup(target):
                 sys.exit(1)
         # Try again
         out = subprocess.check_output(['vagrant', 'ssh-config'],
-                                      cwd=target.path)
+                                      cwd=target)
 
     vagrant_info = {}
     for line in out.split(b'\n'):
@@ -362,7 +362,7 @@ chmod +x /usr/local/bin/rpztar
                             logger.info("Missing file %s", path)
                 with (target / 'rpz-files.list').open('wb') as filelist:
                     for p in pathlist:
-                        filelist.write(join_root(PurePosixPath(''), p).path)
+                        filelist.write(bytes(join_root(PurePosixPath(''), p)))
                         filelist.write(b'\0')
                 script.write('/usr/local/bin/rpztar '
                              '/vagrant/data.tgz '
@@ -508,7 +508,7 @@ def vagrant_run(args):
         logger.info("Some requested ports are not yet forwarded, running "
                     "'vagrant reload'")
         retcode = subprocess.call(['vagrant', 'reload', '--no-provision'],
-                                  cwd=target.path)
+                                  cwd=target)
         if retcode != 0:
             logger.critical("vagrant reload failed with code %d, aborting",
                             retcode)
@@ -625,14 +625,17 @@ class SSHUploader(FileUploader):
         logger.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
         chmod_cmd = '/bin/chmod --reference=%s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
         mv_cmd = '/bin/mv %s %s' % (
-            shell_escape(rtemp.path),
-            shell_escape(remote_path.path))
+            shell_escape(str(rtemp)),
+            shell_escape(str(remote_path)),
+        )
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ' && '.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
@@ -698,10 +701,11 @@ class SSHDownloader(FileDownloader):
         logger.info("Copying file to shared folder...")
         chan = self.ssh.get_transport().open_session()
         cp_cmd = '/bin/cp %s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
-        chown_cmd = '/bin/chown vagrant %s' % shell_escape(rtemp.path)
-        chmod_cmd = '/bin/chmod 644 %s' % shell_escape(rtemp.path)
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
+        chown_cmd = '/bin/chown vagrant %s' % shell_escape(str(rtemp))
+        chmod_cmd = '/bin/chmod 644 %s' % shell_escape(str(rtemp))
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
             ' && '.join((cp_cmd, chown_cmd, chmod_cmd))))
         if chan.recv_exit_status() != 0:
@@ -743,7 +747,7 @@ def vagrant_suspend(args):
     """
     target = Path(args.target[0])
 
-    retcode = subprocess.call(['vagrant', 'suspend'], cwd=target.path)
+    retcode = subprocess.call(['vagrant', 'suspend'], cwd=target)
     if retcode != 0:
         logger.critical("vagrant suspend failed with code %d, ignoring...",
                         retcode)
@@ -756,7 +760,7 @@ def vagrant_destroy_vm(args):
     target = Path(args.target[0])
     read_dict(target)
 
-    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
+    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target)
     if retcode != 0:
         logger.critical("vagrant destroy failed with code %d, ignoring...",
                         retcode)

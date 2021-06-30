@@ -263,7 +263,7 @@ def docker_setup_create(args):
             rpz_pack.close()
             with (target / 'files.list').open('wb') as filelist:
                 for p in pathlist:
-                    filelist.write(join_root(PurePosixPath(''), p).path)
+                    filelist.write(bytes(join_root(PurePosixPath(''), p)))
                     filelist.write(b'\0')
 
             if args.use_buildkit:
@@ -416,7 +416,7 @@ def docker_setup_build(args):
             env = dict(os.environ, DOCKER_BUILDKIT='1')
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
-                                  cwd=target.path,
+                                  cwd=target,
                                   env=env)
     except OSError:
         logger.critical("docker executable not found")
@@ -786,7 +786,7 @@ class ContainerUploader(FileUploader):
         image = make_unique_name(b'reprounzip_image_')
         retcode = subprocess.call(self.docker_cmd +
                                   ['build', '-t', image, '.'],
-                                  cwd=self.build_directory.path)
+                                  cwd=self.build_directory)
         if retcode != 0:
             logger.critical("docker build failed with code %d", retcode)
             sys.exit(1)
@@ -845,8 +845,8 @@ class ContainerDownloader(FileDownloader):
         try:
             ret = subprocess.call(self.docker_cmd +
                                   ['cp',
-                                   self.container + b':' + remote_path.path,
-                                   tmpdir.path])
+                                   self.container + b':' + bytes(remote_path),
+                                   tmpdir])
             if ret != 0:
                 logger.critical("Can't get output file: %s", remote_path)
                 return False

@@ -356,7 +356,7 @@ def trace(binary, argv, directory, append, verbosity='unset'):
     database = directory / 'trace.sqlite3'
     logger.info("Running program")
     # Might raise _pytracer.Error
-    c = _pytracer.execute(binary, argv, database.path)
+    c = _pytracer.execute(binary, argv, bytes(database))
     if c != 0:
         if c & 0x0100:
             logger.warning("Program appears to have been terminated by "
