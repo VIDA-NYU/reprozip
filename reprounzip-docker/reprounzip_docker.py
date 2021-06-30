@@ -821,7 +821,10 @@ def docker_upload(args):
 
 
 class ContainerDownloader(FileDownloader):
-    def __init__(self, target, files, image, all_=False, docker_cmd='docker'):
+    def __init__(
+        self, target, files, image, all_=False,
+        docker_cmd=['docker'],
+    ):
         self.image = image
         self.docker_cmd = docker_cmd
         FileDownloader.__init__(self, target, files, all_=all_)
