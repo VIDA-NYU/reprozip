@@ -16,7 +16,6 @@ setup(name='reprounzip-vagrant',
               'vagrant = reprounzip_vagrant:setup']},
       install_requires=[
           'reprounzip>=2.0.0,<3.0.0',
-          'rpaths>=0.8',
           'paramiko'],
       description="Allows the ReproZip unpacker to create virtual machines",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
