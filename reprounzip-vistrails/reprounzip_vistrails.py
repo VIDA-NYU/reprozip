@@ -267,8 +267,9 @@ def do_vistrails(target, pack=None, **kwargs):
 
         with bundle.open('wb') as fp:
             z = zipfile.ZipFile(fp, 'w')
-            for path in vtdir.recursedir():
-                z.write(vtdir / path, path)
+            for path in vtdir.glob('**/*'):
+                if not path.is_dir():
+                    z.write(vtdir / path, path)
             z.close()
     finally:
         vtdir.rmtree()
