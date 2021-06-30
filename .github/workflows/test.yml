@@ -5,6 +5,61 @@ on:
   - pull_request
 
 jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      REPROZIP_USAGE_STATS: "off"
+      REPROZIP_PARAMETERS: "false"
+      LANG: C
+      LC_ALL: C
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        if [ -z "${XDG_CACHE_HOME-}" ]; then
+            mkdir -p ~/.cache/reprozip
+        else
+            mkdir -p "$XDG_CACHE_HOME/reprozip"
+        fi
+
+        pip install flake8 readme_renderer
+    - name: flake8
+      run: flake8 --ignore=E731,W503,W504
+    - name: Check for non-ASCII files
+      run: |
+        find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
+            T=$(file -b --mime "$i")
+            if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
+                echo "$i is not ASCII"
+                exit 1
+            fi
+        done)
+    - name: Check logging usage
+      run: |
+        find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -exec sh -c "grep 'logging\\.\\(debug\\|warning\\|critical\\|error\\|info\\)' \"\$@\" && exit 1; exit 0" {} +
+    - name: Check READMEs
+      run: |
+        for pkg in reprozip reprounzip reprozip-* reprounzip-*; do
+            (cd $pkg && python setup.py check -r -s)
+        done
+
+  check-images:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install dependencies
+      run: |
+        pip install ./reprozip-core ./reprounzip
+    - name: Check images
+      run: |
+        python tests --check-vagrant-images --check-docker-images
+
   test:
     strategy:
       fail-fast: false
@@ -18,17 +73,13 @@ jobs:
         - os: ubuntu-latest
           mode: coverage
           python: "3.9"
-        - os: ubuntu-latest
-          mode: checks
-          python: "3.9"
-        - os: ubuntu-latest
-          mode: check-images
-          python: "3.9"
     runs-on: ${{ matrix.os }}
     env:
       TEST_MODE: ${{ matrix.mode }}
       REPROZIP_USAGE_STATS: "off"
-      REPROZIP_PARAMETERS: false
+      REPROZIP_PARAMETERS: "false"
+      LANG: C
+      LC_ALL: C
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
@@ -42,64 +93,26 @@ jobs:
             mkdir -p "$XDG_CACHE_HOME/reprozip"
         fi
 
-        case "$TEST_MODE"
-        in
-            tests|coverage|check-images)
-                if [ "$TEST_MODE" = "coverage" ]; then
-                    export CFLAGS="-fprofile-arcs -ftest-coverage"
-                fi
-                PKGS="libc6-dev-i386 gcc-multilib libsqlite3-dev"
-                if [ "$TEST_MODE" = "coverage" ]; then PKGS="$PKGS lcov"; fi
-                sudo apt-get update -qq
-                sudo apt-get install -qq $PKGS
-                if [ $TEST_MODE = "coverage" ]; then
-                    pip install 'coverage>=5,<6'
-                    pip install -e ./reprozip-core -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
-                else
-                    pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
-                fi
-                ;;
-            checks)
-                pip install flake8 readme_renderer
-                ;;
-            *)
-                exit 1
-                ;;
-        esac
+        if [ "$TEST_MODE" = "coverage" ]; then
+            export CFLAGS="-fprofile-arcs -ftest-coverage"
+        fi
+        PKGS="libc6-dev-i386 gcc-multilib libsqlite3-dev"
+        if [ "$TEST_MODE" = "coverage" ]; then PKGS="$PKGS lcov"; fi
+        sudo apt-get update -qq
+        sudo apt-get install -qq $PKGS
+        if [ $TEST_MODE = "coverage" ]; then
+            pip install 'coverage>=5,<6'
+            pip install -e ./reprozip-core -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
+        else
+            pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
+        fi
     - name: Test
       run: |
-        export LANG=C
-        export LC_ALL=C
-        case "$TEST_MODE"
-        in
-            tests|coverage)
-                export PYTHONUNBUFFERED=1
-                if [ "$TEST_MODE" = "coverage" ]; then
-                    export COVER="coverage run --append --source=$PWD --branch"
-                fi
-                python tests --run-docker
-                ;;
-            check-images)
-                python tests --check-vagrant-images --check-docker-images
-                ;;
-            checks)
-                flake8 --ignore=E731,W503,W504
-                find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -or -name '*.sh' -or -name '*.h' -or -name '*.c' | (set +x; while read i; do
-                    T=$(file -b --mime "$i")
-                    if ! ( echo "$T" | grep -q ascii || echo "$T" | grep -q empty ) ; then
-                        echo "$i is not ASCII"
-                        exit 1
-                    fi
-                done)
-                find reprozip reprounzip reprozip-* reprounzip-* -name '*.py' -exec sh -c "grep 'logging\\.\\(debug\\|warning\\|critical\\|error\\|info\\)' \"\$@\" && exit 1; exit 0" {} +
-                for pkg in reprozip reprounzip reprozip-* reprounzip-*; do
-                    (cd $pkg && python setup.py check -r -s)
-                done
-                ;;
-            *)
-                exit 1
-                ;;
-        esac
+        export PYTHONUNBUFFERED=1
+        if [ "$TEST_MODE" = "coverage" ]; then
+            export COVER="coverage run --append --source=$PWD --branch"
+        fi
+        python tests --run-docker
     - name: Upload coverage
       if: matrix.mode == 'coverage'
       run: |
