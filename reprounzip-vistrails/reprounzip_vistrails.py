@@ -21,7 +21,7 @@ from datetime import datetime
 import itertools
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import shutil
 import subprocess
 import sys

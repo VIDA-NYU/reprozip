@@ -2,7 +2,7 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-from rpaths import Path
+from pathlib import Path
 import sqlite3
 
 from reprozip_core.common import create_trace_schema

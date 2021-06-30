@@ -17,8 +17,8 @@ import locale
 import logging
 import operator
 import os
+from pathlib import Path, PurePosixPath
 import requests
-from rpaths import Path, PosixPath
 import shutil
 import stat
 import subprocess

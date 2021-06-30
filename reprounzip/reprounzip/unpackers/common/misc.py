@@ -10,11 +10,11 @@ import functools
 import logging
 import itertools
 import os
+from pathlib import Path, PurePosixPath
 import pickle
 import pkg_resources
 import random
 import re
-from rpaths import PosixPath, Path
 import shutil
 import signal
 import subprocess

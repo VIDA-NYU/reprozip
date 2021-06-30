@@ -23,8 +23,8 @@ import json
 import logging
 import logging.handlers
 import os
+from pathlib import Path, PurePosixPath
 import pkg_resources
-from rpaths import PosixPath, Path
 import shutil
 import sys
 import tarfile

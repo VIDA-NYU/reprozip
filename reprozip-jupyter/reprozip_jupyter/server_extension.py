@@ -4,7 +4,7 @@
 
 from datetime import datetime
 from notebook.utils import url_path_join as ujoin
-from rpaths import Path
+from pathlib import Path
 import shutil
 import subprocess
 import sys

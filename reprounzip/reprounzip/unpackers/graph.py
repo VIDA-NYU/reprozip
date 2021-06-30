@@ -19,8 +19,8 @@ from distutils.version import LooseVersion
 import heapq
 import json
 import logging
+from pathlib import Path, PurePosixPath
 import re
-from rpaths import PosixPath, Path
 import sqlite3
 import sys
 

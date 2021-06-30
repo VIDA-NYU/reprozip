@@ -7,9 +7,9 @@
 import functools
 import logging
 import os
+from pathlib import Path
 import re
 import requests
-from rpaths import Path
 import shutil
 import sqlite3
 import subprocess

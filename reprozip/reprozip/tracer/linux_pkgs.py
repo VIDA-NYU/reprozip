@@ -16,7 +16,7 @@ Currently supported package managers:
 import distro
 import itertools
 import logging
-from rpaths import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import time
 

@@ -3,8 +3,8 @@
 # See file LICENSE for full license details.
 
 import os
+from pathlib import Path, PurePath
 import sqlite3
-from rpaths import AbstractPath, Path
 import shutil
 import sys
 import tempfile

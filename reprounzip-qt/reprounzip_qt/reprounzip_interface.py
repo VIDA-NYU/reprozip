@@ -5,7 +5,7 @@
 import itertools
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import pickle
 import subprocess
 import sys

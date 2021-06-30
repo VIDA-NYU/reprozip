@@ -15,7 +15,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert.preprocessors.execute import CellExecutionError
 import nbformat
 import os
-from rpaths import Path
+from pathlib import Path
 import shutil
 import sys
 import tempfile

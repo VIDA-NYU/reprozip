@@ -14,9 +14,9 @@ from collections import defaultdict
 from itertools import count
 import logging
 import os
+from pathlib import Path, PurePosixPath
 from pkg_resources import iter_entry_points
 import platform
-from rpaths import Path
 import shutil
 import sqlite3
 import sys

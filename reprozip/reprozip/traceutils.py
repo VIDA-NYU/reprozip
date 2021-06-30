@@ -10,7 +10,7 @@ process itself.
 
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import shutil
 import sqlite3
 import tempfile

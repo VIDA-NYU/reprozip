@@ -14,7 +14,7 @@ import argparse
 import locale
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import sqlite3
 import sys
 import tempfile

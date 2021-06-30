@@ -15,8 +15,8 @@ import argparse
 import distro
 import json
 import logging
+from pathlib import Path
 import platform
-from rpaths import Path
 import sys
 
 from reprozip_core.common import RPZPack, load_config as load_config_file

@@ -8,7 +8,7 @@
 import contextlib
 import logging
 import os
-from rpaths import Path, PosixPath
+from pathlib import Path, PurePosixPath
 import select
 import socket
 import struct

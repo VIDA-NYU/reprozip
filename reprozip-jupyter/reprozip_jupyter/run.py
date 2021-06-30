@@ -13,7 +13,7 @@ import logging
 from notebook.notebookapp import NotebookApp
 from notebook.services.kernels.kernelmanager import MappingKernelManager
 import os
-from rpaths import Path
+from pathlib import Path
 import subprocess
 import sys
 import tempfile

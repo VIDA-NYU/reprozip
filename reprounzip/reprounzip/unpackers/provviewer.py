@@ -13,7 +13,7 @@ See schema: https://git.io/provviewer-xsd
 import argparse
 import logging
 from distutils.version import LooseVersion
-from rpaths import Path
+from pathlib import Path
 import sqlite3
 import sys
 

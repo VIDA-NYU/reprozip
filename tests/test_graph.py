@@ -3,7 +3,7 @@
 # See file LICENSE for full license details.
 
 import json
-from rpaths import Path
+from pathlib import Path
 import shutil
 import tempfile
 import unittest

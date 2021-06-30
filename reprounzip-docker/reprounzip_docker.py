@@ -15,8 +15,8 @@ from itertools import chain
 import json
 import logging
 import os
+from pathlib import Path, PurePosixPath
 import re
-from rpaths import Path, PosixPath
 import shutil
 import socket
 import subprocess

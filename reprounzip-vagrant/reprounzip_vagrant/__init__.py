@@ -16,8 +16,8 @@ from distutils.version import LooseVersion
 import logging
 import os
 import paramiko
+from pathlib import Path, PurePosixPath
 import re
-from rpaths import PosixPath, Path
 import shutil
 import subprocess
 import sys

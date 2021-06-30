@@ -21,8 +21,8 @@ from elftools.elf.elffile import ELFFile
 from elftools.elf.segments import InterpSegment
 import logging
 import os
+from pathlib import Path, PurePosixPath
 import platform
-from rpaths import PosixPath, DefaultAbstractPath, Path
 import shutil
 import socket
 import subprocess
