@@ -7,12 +7,14 @@ from __future__ import division, print_function, unicode_literals
 import itertools
 import logging
 import os
+from rpaths import Path
 import pickle
 import subprocess
 import sys
 import time
 import yaml
 
+from reprounzip.common import load_config
 from reprounzip_qt.qt_terminal import run_in_builtin_terminal
 
 
@@ -96,17 +98,19 @@ class FileStatus(object):
         self.is_input = is_input
         self.is_output = is_output
 
+    def __repr__(self):
+        return '<FileStatus name=%r>' % self.name
+
 
 class FilesStatus(object):
     def __init__(self, directory):
         self.directory = directory
-        with open(os.path.join(directory, 'config.yml')) as fp:
-            config = yaml.safe_load(fp)
+        config = load_config(Path(directory) / 'config.yml', True)
 
-        self.files = [FileStatus(f['name'], f['path'],
-                                 f.get('read_by_runs'),
-                                 f.get('written_by_runs'))
-                      for f in config.get('inputs_outputs') or []]
+        self.files = [
+            FileStatus(name, f.path, f.read_runs, f.write_runs)
+            for name, f in config.inputs_outputs.items()
+        ]
         logger.info("Loaded %d files from the configuration", len(self.files))
         self._refresh()
 
