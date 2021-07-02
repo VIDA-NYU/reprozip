@@ -21,14 +21,14 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
-    make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
-    rpztar_url, \
+    shell_escape, select_installer, busybox_url, join_root, rpztar_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
@@ -613,9 +613,11 @@ class SSHUploader(FileUploader):
         else:
             remote_path = input_path
 
-        temp = make_unique_name(b'reprozip_input_')
-        ltemp = self.target / temp
-        rtemp = PurePosixPath('/vagrant') / temp
+        ltemp = Path(tempfile.mktemp(
+            prefix='reprozip_input_',
+            dir=self.target,
+        ))
+        rtemp = PurePosixPath('/vagrant') / ltemp.name
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
@@ -693,9 +695,11 @@ class SSHDownloader(FileDownloader):
                 remote_path,
             )
 
-        temp = make_unique_name(b'reprozip_output_')
-        rtemp = PurePosixPath('/vagrant') / temp
-        ltemp = self.target / temp
+        ltemp = Path(tempfile.mktemp(
+            prefix='reprozip_output_',
+            dir=self.target,
+        ))
+        rtemp = PurePosixPath('/vagrant') / ltemp.name
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
