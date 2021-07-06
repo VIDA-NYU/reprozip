@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.1 (???)
----------
+1.1 (2021-07-06)
+----------------
+
+(reprounzip-vistrails didn't change)
 
 Bugfixes:
 * Fix possible crash reading `docker inspect` output

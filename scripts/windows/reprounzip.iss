@@ -9,7 +9,7 @@
 
 [Setup]
 AppName=ReproUnzip
-AppVerName=ReproUnzip 1.0.16
+AppVerName=ReproUnzip 1.1
 OutputBaseFilename=reprounzip-setup
 DefaultGroupName=ReproUnzip
 DefaultDirName={pf}\ReproUnzip
