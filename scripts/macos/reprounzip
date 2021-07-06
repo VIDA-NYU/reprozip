@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec "$(dirname "$0")/python27/bin/reprounzip" "$@"
+exec "$(dirname "$0")/python3/bin/reprounzip" "$@"

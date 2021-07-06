@@ -1160,7 +1160,7 @@
 										<key>LANGUAGE</key>
 										<string>English</string>
 										<key>VALUE</key>
-										<string>Python 2.7, ReproUnzip and plugins.</string>
+										<string>Python 3.9, ReproUnzip and plugins.</string>
 									</dict>
 								</array>
 								<key>OPTIONS</key>
