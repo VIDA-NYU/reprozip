@@ -19,7 +19,7 @@ setup(name='reprounzip-vagrant',
               'vagrant = reprounzip.unpackers.vagrant:setup']},
       namespace_packages=['reprounzip', 'reprounzip.unpackers'],
       install_requires=[
-          'reprounzip>=1.0.10',
+          'reprounzip>=1.1',
           'rpaths>=0.8',
           'paramiko'],
       description="Allows the ReproZip unpacker to create virtual machines",
