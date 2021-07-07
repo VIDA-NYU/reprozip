@@ -10,7 +10,7 @@ from qtpy import QtCore, QtWidgets
 import sys
 
 
-if sys.version >= (3,):
+if sys.version_info >= (3,):
     from html import escape
 else:
     from cgi import escape
