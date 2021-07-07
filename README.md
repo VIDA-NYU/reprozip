@@ -119,7 +119,7 @@ For more information, please visit [the informational page](https://sustainable-
 License
 -------
 
-* Copyright (C) 2014-2017, New York University
+* Copyright (C) 2014, New York University
 
 Licensed under a **BSD 3-Clause license**. See the file [LICENSE.txt](LICENSE.txt) for details.
 
