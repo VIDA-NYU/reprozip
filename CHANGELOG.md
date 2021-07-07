@@ -18,6 +18,7 @@ Enhancements:
 * Always show full path of executed files in `reprozip testrun`
 * Improved merging of pack on top of base image in reprounzip-docker
 * Made sure the root is a mountpoint in reprounzip-vagrant, as some applications expect it (e.g. Elasticsearch)
+* Disable unpacker options that won't work in reprounzip-qt (e.g. 'directory' and 'chroot' on non-Linux)
 
 1.0.16 (2019-02-06)
 -------------------
