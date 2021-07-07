@@ -7,6 +7,7 @@ from __future__ import division, print_function, unicode_literals
 import os
 from qtpy import QtCore, QtWidgets
 import subprocess
+import sys
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, \
@@ -28,6 +29,10 @@ class UnpackerOptions(QtWidgets.QWidget):
     def options(self):
         return {'args': []}
 
+    @staticmethod
+    def available():
+        return True
+
 
 class DirectoryOptions(UnpackerOptions):
     def __init__(self):
@@ -35,6 +40,10 @@ class DirectoryOptions(UnpackerOptions):
         self.layout().addWidget(
             QtWidgets.QLabel("(directory unpacker has no option)"),
             0, 0, 1, 2)
+
+    @staticmethod
+    def available():
+        return sys.platform.startswith('linux')
 
 
 class ChrootOptions(UnpackerOptions):
@@ -74,6 +83,10 @@ class ChrootOptions(UnpackerOptions):
             chroot_magic_dirs=self.magic_dirs.checkState())
 
         return options
+
+    @staticmethod
+    def available():
+        return sys.platform.startswith('linux')
 
 
 class DockerOptions(UnpackerOptions):
@@ -247,11 +260,13 @@ class UnpackTab(QtWidgets.QWidget):
                          QtCore.Qt.AlignTop)
         ulayout = QtWidgets.QVBoxLayout()
         self.unpackers = QtWidgets.QButtonGroup()
-        for i, name in enumerate(n for n, c in self.UNPACKERS):
+        for i, (name, opts) in enumerate(self.UNPACKERS):
             radio = QtWidgets.QRadioButton(name)
             radio.unpacker = name
             self.unpackers.addButton(radio, i)
             ulayout.addWidget(radio)
+            if not opts.available():
+                radio.setDisabled(True)
         layout.addLayout(ulayout, 1, 1, 1, 2)
 
         group = QtWidgets.QGroupBox(title="Unpacker options")
