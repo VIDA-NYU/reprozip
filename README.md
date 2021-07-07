@@ -1,10 +1,10 @@
 [![Build Status](https://github.com/VIDA-NYU/reprozip/workflows/Test/badge.svg)](https://github.com/VIDA-NYU/reprozip/actions)
-[![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=1.0.x)](https://codecov.io/github/VIDA-NYU/reprozip?branch=1.0.x)
-[![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.0.x)](https://docs.reprozip.org/en/1.0.x/)
+[![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=1.x)](https://codecov.io/github/VIDA-NYU/reprozip?branch=1.x)
+[![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.x)](https://docs.reprozip.org/en/1.x/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/remram44)
 [![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.2558333-green.svg)](https://doi.org/10.5281/zenodo.2558333)
+[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.5081097-green.svg)](https://doi.org/10.5281/zenodo.5081097)
 
 ReproZip
 ========
@@ -119,7 +119,7 @@ For more information, please visit [the informational page](https://sustainable-
 License
 -------
 
-* Copyright (C) 2014-2017, New York University
+* Copyright (C) 2014, New York University
 
 Licensed under a **BSD 3-Clause license**. See the file [LICENSE.txt](LICENSE.txt) for details.
 

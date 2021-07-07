@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ReproZip'
-copyright = u'2014-2017, New York University'
+copyright = u'2014, New York University'
 
 authors = [u'Fernando Chirigati', u'Remi Rampin',
            u'Juliana Freire', u'Dennis Shasha']

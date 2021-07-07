@@ -3,11 +3,11 @@ export DYLD_FRAMEWORK_PATH=/opt/reprounzip/Frameworks
 export CFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk"
 export LDFLAGS="-mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk"
 export MACOS_DEPLOYMENT_TARGET=10.8
-Build Python with --prefix=/opt/reprounzip/python27
+Build Python with --prefix=/opt/reprounzip/python3
 Copy reprounzip, reprounzip-qt, and reprozip-jupyter to /opt/reprounzip
 Install pip with get-pip.py
 Install reprounzip, reprounzip-docker, reprounzip-vagrant, reprounzip-vistrails
-Install sip and PyQt4
+Install sip and PyQt5
 Install reprounzip-qt
 Build shim application:
     gcc -mmacosx-version-min=10.8 -isysroot /Developer/SDKs/MacOSX10.8.sdk \

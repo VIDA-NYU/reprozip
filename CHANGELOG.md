@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.0 (???)
+2.0.0 (???)
 -----------
 
 Behavior change:
@@ -10,6 +10,27 @@ Behavior change:
 Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
+
+1.1 (2021-07-06)
+----------------
+
+(reprounzip-vistrails didn't change)
+
+Bugfixes:
+* Fix possible crash reading `docker inspect` output
+* Fix reprozip-jupyter on more recent Tornado
+* Fix failure in reprounzip-docker upload if `/bin/sh` is missing
+* Have `reprounzip directory` execute with the correct interpreter (e.g. packed `ld-linux.so`)
+* Fix "invalid cross-device link" errors in vagrant download if the destination is not on the same device as the unpacked directory
+
+Enhancements:
+* Add PyQt5 compatibility to reprounzip-qt
+* reprounzip-docker: Keep ownership of uploaded files
+* Add a new certificate to download parameters, valid through 2121 (previous expires 2024)
+* Always show full path of executed files in `reprozip testrun`
+* Improved merging of pack on top of base image in reprounzip-docker
+* Made sure the root is a mountpoint in reprounzip-vagrant, as some applications expect it (e.g. Elasticsearch)
+* Disable unpacker options that won't work in reprounzip-qt (e.g. 'directory' and 'chroot' on non-Linux)
 
 1.0.16 (2019-02-06)
 -------------------

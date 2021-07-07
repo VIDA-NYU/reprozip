@@ -1,12 +1,17 @@
-# Copyright (C) 2014-2017 New York University
+# Copyright (C) 2014 New York University
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-import cgi
 import locale
 import logging
 from qtpy import QtCore, QtWidgets
 import sys
+
+
+if sys.version_info >= (3,):
+    from html import escape
+else:
+    from cgi import escape
 
 
 logger = logging.getLogger('reprounzip_qt')
@@ -80,7 +85,7 @@ body {
 </style>
 ''')
         self.text.append('<span style="color: blue;">%s</span>' %
-                         cgi.escape(' '.join(cmdline)))
+                         escape(' '.join(cmdline)))
 
     def _enter(self):
         cmd = self.input.text()
@@ -91,13 +96,13 @@ body {
         out = self.process.readAllStandardOutput()
         out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
                                 'replace')
-        self.text.append('<span>%s</span>' % cgi.escape(out))
+        self.text.append('<span>%s</span>' % escape(out))
 
     def _read_stderr(self):
         out = self.process.readAllStandardError()
         out = bytes(out).decode(locale.getpreferredencoding() or 'UTF-8',
                                 'replace')
-        self.text.append('<span class="err">%s</span>' % cgi.escape(out))
+        self.text.append('<span class="err">%s</span>' % escape(out))
 
     def _finished(self, code, status):
         good = False

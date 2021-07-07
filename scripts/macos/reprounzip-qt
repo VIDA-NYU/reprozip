@@ -2,4 +2,4 @@
 
 DYLD_FRAMEWORK_PATH=/opt/reprounzip/Frameworks; export DYLD_FRAMEWORK_PATH
 PATH="/opt/reprounzip:$PATH"
-exec "$(dirname "$0")/python27/bin/reprounzip-qt" "$@"
+exec "$(dirname "$0")/python3/bin/reprounzip-qt" "$@"

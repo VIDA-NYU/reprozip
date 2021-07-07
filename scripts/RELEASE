@@ -1,31 +1,27 @@
 Update the CHANGELOG.md file
 
+Upload parameters to stats.reprozip.org
+
 Bump versions in setup.py files, __init__.py files, docs/conf.py, installers
+
+Set correct metadata on Zenodo, update badge in README
 
 Create a signed tag for the version
     git tag -s 1.0.11
 
-Make sdists, wheels, gpg sigs, upload to PyPI using twine
+Make sdists, wheels, upload to PyPI using twine
 
-Make binary Linux wheels using scripts/linux-wheels.sh
-
-Create a release on GitHub, add the CHANGELOG to it, link to the attached files
-    Mention which packages didn't change
-    Don't forget to update the links in the description
-    Don't forget to link to previous releases of packages that didn't change
-    Attach tarballs and wheels
-    Attach installers
-
-Set correct metadata on Zenodo, update badge in README
-
-Update conda-forge feedstocks
+Make binary Linux wheels
 
 Build Windows installer using native Python installer & InnoDB
 
 Build MacOS installer using Python built from source, App shim, Packages.app
 
-Build Anaconda packages using scripts/conda/conda.py
+Create a release on GitHub, add the CHANGELOG to it, link to the attached files
+    Mention which packages didn't change
+    Don't forget to update the links in the description
+    Attach installers
+
+Update conda-forge feedstocks
 
 Update S3 bucket so website links redirect to newest binaries
-
-Upload parameters to stats.reprozip.org

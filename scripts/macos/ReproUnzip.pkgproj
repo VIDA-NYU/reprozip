@@ -558,7 +558,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1.0</string>
+				<string>2.0.0</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -1114,7 +1114,7 @@
 				<key>USE_HFS+_COMPRESSION</key>
 				<false/>
 				<key>VERSION</key>
-				<string>1.1.0</string>
+				<string>2.0.0</string>
 			</dict>
 			<key>TYPE</key>
 			<integer>0</integer>
@@ -1160,7 +1160,7 @@
 										<key>LANGUAGE</key>
 										<string>English</string>
 										<key>VALUE</key>
-										<string>Python 2.7, ReproUnzip and plugins.</string>
+										<string>Python 3.9, ReproUnzip and plugins.</string>
 									</dict>
 								</array>
 								<key>OPTIONS</key>
