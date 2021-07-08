@@ -44,7 +44,7 @@ def python(files, input_files, **kwargs):
                 pyfile = path.parent.parent / basename + '.py'
             else:
                 # Python2: /dir/mod.pyc -> /dir/moc.py
-                pyfile = path.parent / path.stem + '.py'
+                pyfile = path.parent / (path.stem + '.py')
             if pyfile.is_file():
                 if pyfile not in files:
                     logger.info("Adding %s", pyfile)
