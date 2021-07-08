@@ -108,3 +108,13 @@ def ruby(files, input_files, **kwargs):
 
     for directory in directories:
         add_recursive(directory)
+
+    for i in irange(len(input_files)):
+        lst = []
+        for path in input_files[i]:
+            if gemy_path.match(str(path)) or appdir_paths.match(str(path)):
+                logger.info("Removing input %s", path)
+            else:
+                lst.append(path)
+
+        input_files[i] = lst
