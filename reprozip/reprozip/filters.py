@@ -4,6 +4,7 @@
 
 import logging
 import re
+from pathlib import Path
 
 from reprozip.tracer.trace import TracedFile
 
@@ -57,6 +58,56 @@ def python(files, input_files, **kwargs):
         lst = []
         for path in input_files[i]:
             if path.suffix in ('.py', '.pyc'):
+                logger.info("Removing input %s", path)
+            else:
+                lst.append(path)
+
+        input_files[i] = lst
+
+
+def ruby(files, input_files, **kwargs):
+    extensions = {'.rb', '.haml', '.slim', '.erb', '.js', '.html'}
+    ignored_dirs = {
+        'spec', 'test', 'tests', 'guides', 'doc-api', 'rdoc', 'doc',
+    }
+
+    gemy_path = re.compile(r'^.*/ruby[-/]\d+\.\d+\.\d+/gems')
+    appdir_paths = re.compile(r'^.*/app/(views|controllers|models|helpers)')
+
+    directories = set()
+
+    for path, fi in files.items():
+        m1 = gemy_path.match(str(path))
+        if m1:
+            directories.add(Path(m1.group(0)))
+
+        m2 = appdir_paths.match(str(path))
+        if m2:
+            app_root = Path(m2.group(0)).parent.parent
+            if (app_root / 'config/application.rb').is_file():
+                directories.add(app_root)
+
+    def add_recursive(dir_or_file):
+        if (
+            dir_or_file.is_file()
+            and dir_or_file.suffix in extensions
+        ):
+            logger.info("Adding %s", dir_or_file)
+            files[dir_or_file] = TracedFile(dir_or_file)
+        elif (
+            dir_or_file.is_dir()
+            and dir_or_file.name not in ignored_dirs
+        ):
+            for child in dir_or_file.iterdir():
+                add_recursive(child)
+
+    for directory in directories:
+        add_recursive(directory)
+
+    for i in range(len(input_files)):
+        lst = []
+        for path in input_files[i]:
+            if gemy_path.match(str(path)) or appdir_paths.match(str(path)):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
