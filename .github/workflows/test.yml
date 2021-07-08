@@ -31,6 +31,8 @@ jobs:
       REPROZIP_PARAMETERS: https://stats.reprozip.org/parameters/travis/
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 20
     - uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python }}
