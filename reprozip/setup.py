@@ -51,7 +51,7 @@ setup(name='reprozip',
           'reprozip.filters': [
               'python = reprozip.filters:python',
               'builtin = reprozip.filters:builtin',
-              'ruby = reprozip.filters:ruby_gems_and_apps']},
+              'ruby = reprozip.filters:ruby']},
       install_requires=req,
       description="Linux tool enabling reproducible experiments (packer)",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",

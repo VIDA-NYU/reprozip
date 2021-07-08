@@ -68,7 +68,7 @@ def python(files, input_files, **kwargs):
         input_files[i] = lst
 
 
-def ruby_gems_and_apps(files, input_files, **kwargs):
+def ruby(files, input_files, **kwargs):
     extensions = list(map(lambda ext: ext.encode('utf-8'),
                           ['.rb',
                            '.haml',

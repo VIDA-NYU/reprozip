@@ -11,7 +11,7 @@ import shutil
 from rpaths import Path
 # from reprozip.tracer.trace import TracedFile
 from reprozip.common import File
-from reprozip.filters import ruby_gems_and_apps
+from reprozip.filters import ruby
 
 
 class MockTracedFile(File):
@@ -64,7 +64,7 @@ class RailsFilterTest(unittest.TestCase):
                 f = MockTracedFile(path)
                 files[f.path] = f
 
-        ruby_gems_and_apps(files, input_files)
+        ruby(files, input_files)
 
         for gf in gemfiles:
             gfp = gemdir / gf
@@ -85,7 +85,7 @@ class RailsFilterTest(unittest.TestCase):
                 f = MockTracedFile(path)
                 files[f.path] = f
 
-        ruby_gems_and_apps(files, input_files)
+        ruby(files, input_files)
 
         for gf in gemfiles:
             gfp = gemdir / gf
@@ -112,7 +112,7 @@ class RailsFilterTest(unittest.TestCase):
         viewsdir = MockTracedFile(railsdir / 'app/views')
         files[viewsdir.path] = viewsdir
 
-        ruby_gems_and_apps(files, input_files)
+        ruby(files, input_files)
 
         for fi in railsfiles[1:]:
             fp = railsdir / fi
@@ -138,7 +138,7 @@ class RailsFilterTest(unittest.TestCase):
         viewsdir = MockTracedFile(norailsdir / 'app/views')
         files[viewsdir.path] = viewsdir
 
-        ruby_gems_and_apps(files, input_files)
+        ruby(files, input_files)
 
         for fi in norailsfiles:
             fp = norailsdir / fi
