@@ -21,9 +21,11 @@ from datetime import datetime
 import itertools
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 
 from reprozip_core.common import load_config, setup_logging, record_usage
@@ -222,11 +224,11 @@ def do_vistrails(target, pack=None, **kwargs):
     # Writes VisTrails workflow
     bundle = target / 'vistrails.vt'
     logger.info("Writing VisTrails workflow %s...", bundle)
-    vtdir = Path.tempdir(prefix='reprounzip_vistrails_')
+    vtdir = Path(tempfile.mkdtemp(prefix='reprounzip_vistrails_'))
     ids = IdScope()
     try:
-        with vtdir.open('w', 'vistrail',
-                        encoding='utf-8', newline='\n') as fp:
+        with (vtdir / 'vistrail').open('w',
+                                       encoding='utf-8', newline='\n') as fp:
             wf = Workflow(fp, ids)
 
             # Directory module, refering to this directory
@@ -266,12 +268,12 @@ def do_vistrails(target, pack=None, **kwargs):
 
         with bundle.open('wb') as fp:
             z = zipfile.ZipFile(fp, 'w')
-            with vtdir.in_dir():
-                for path in Path('.').recursedir():
-                    z.write(str(path))
+            for path in vtdir.glob('**/*'):
+                if not path.is_dir():
+                    z.write(vtdir / path, path)
             z.close()
     finally:
-        vtdir.rmtree()
+        shutil.rmtree(vtdir)
 
 
 def setup_vistrails():

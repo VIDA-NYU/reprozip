@@ -14,9 +14,10 @@ from collections import defaultdict
 from itertools import count
 import logging
 import os
+from pathlib import Path, PurePosixPath
 from pkg_resources import iter_entry_points
 import platform
-from rpaths import Path
+import shutil
 import sqlite3
 import sys
 import warnings
@@ -62,12 +63,14 @@ class TracedFile(File):
         path = Path(path)
         size = None
         if path.exists():
-            if path.is_link():
-                self.comment = "Link to %s" % path.read_link(absolute=True)
+            if path.is_symlink():
+                target = Path(os.readlink(path))
+                target = (path.parent / target).absolute()
+                self.comment = "Link to %s" % target
             elif path.is_dir():
                 self.comment = "Directory"
             else:
-                size = path.size()
+                size = path.stat().st_size
                 self.comment = hsize(size)
         self.what = None
         self.runs = defaultdict(lambda: None)
@@ -124,7 +127,7 @@ def get_files(conn):
     # Adds dynamic linkers
     for libdir in (Path('/lib'), Path('/lib64')):
         if libdir.exists():
-            for linker in libdir.listdir('*ld-linux*'):
+            for linker in libdir.glob('*ld-linux*'):
                 for filename in find_all_links(linker, True):
                     if filename not in files:
                         f = TracedFile(filename)
@@ -199,7 +202,7 @@ def get_files(conn):
                # not fi.path.stat().st_mode & 0b111 and
                fi.path not in executed and
                # not in a system directory
-               not any(fi.path.lies_under(m)
+               not any(PurePosixPath(m) in fi.path.parents
                        for m in magic_dirs + system_dirs)]
               for r, lst in enumerate(access_files)]
 
@@ -211,7 +214,7 @@ def get_files(conn):
                 # WRITTEN
                 fi.runs[r] == TracedFile.WRITTEN and
                 # not in a system directory
-                not any(fi.path.lies_under(m)
+                not any(PurePosixPath(m) in fi.path.parents
                         for m in magic_dirs + system_dirs)]
                for r, lst in enumerate(access_files)]
 
@@ -227,7 +230,7 @@ def get_files(conn):
         fi
         for fi in files.values()
         if fi.what == TracedFile.READ_THEN_WRITTEN and
-        not any(fi.path.lies_under(m) for m in magic_dirs)]
+        not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)]
     if read_then_written_files:
         logger.warning(
             "Some files were read and then written. We will only pack the "
@@ -240,8 +243,9 @@ def get_files(conn):
     files = set(
         fi
         for fi in files.values()
-        if fi.what != TracedFile.WRITTEN and not any(fi.path.lies_under(m)
-                                                     for m in magic_dirs))
+        if fi.what != TracedFile.WRITTEN
+        and not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)
+    )
     return files, inputs, outputs
 
 
@@ -308,8 +312,10 @@ def trace(binary, argv, directory, append, verbosity='unset'):
         binary = binary.path
 
     cwd = Path.cwd()
-    if (any(cwd.lies_under(c) for c in magic_dirs + system_dirs) and
-            not cwd.lies_under('/usr/local')):
+    if (
+        any(PurePosixPath(c) in cwd.parents for c in magic_dirs + system_dirs)
+        and PurePosixPath('/usr/local') not in cwd.parents
+    ):
         logger.warning(
             "You are running this experiment from a system directory! "
             "Autodetection of non-system files will probably not work as "
@@ -332,15 +338,15 @@ def trace(binary, argv, directory, append, verbosity='unset'):
             elif r in 'sS':
                 sys.exit(125)
             elif r in 'dD':
-                directory.rmtree()
+                shutil.rmtree(directory)
                 directory.mkdir()
             logger.warning(
                 "You can use --overwrite to replace the existing trace "
                 "(or --continue to append\nwithout prompt)")
         elif append is False:
             logger.info("Removing existing trace directory %s", directory)
-            directory.rmtree()
-            directory.mkdir(parents=True)
+            shutil.rmtree(directory)
+            directory.mkdir()
     else:
         if append is True:
             logger.warning("--continue was set but trace doesn't exist yet")
@@ -350,7 +356,7 @@ def trace(binary, argv, directory, append, verbosity='unset'):
     database = directory / 'trace.sqlite3'
     logger.info("Running program")
     # Might raise _pytracer.Error
-    c = _pytracer.execute(binary, argv, database.path)
+    c = _pytracer.execute(binary, argv, bytes(database))
     if c != 0:
         if c & 0x0100:
             logger.warning("Program appears to have been terminated by "
@@ -530,9 +536,9 @@ def compile_inputs_outputs(runs, inputs, outputs):
                 file_names[fi] = make_unique(
                     'arg%s' % '_'.join('%s' % s for s in parts))
             else:
-                file_names[fi] = make_unique('arg_%s' % fi.unicodename)
+                file_names[fi] = make_unique('arg_%s' % fi.name)
         else:
-            file_names[fi] = make_unique(fi.unicodename)
+            file_names[fi] = make_unique(fi.name)
 
     return dict((n, InputOutputFile(p, readers.get(p, []), writers.get(p, [])))
                 for p, n in file_names.items())

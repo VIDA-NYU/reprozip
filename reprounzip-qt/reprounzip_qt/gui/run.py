@@ -200,7 +200,7 @@ class FilesManager(QtWidgets.QDialog):
             self.b_download.setEnabled(True)
             self.b_reset.setEnabled(False)
             self.f_name.setText(file_status.name)
-            self.f_path.setText(file_status.path)
+            self.f_path.setText(str(file_status))
             self.f_status.setEnabled(False)
             if file_status.assigned is None:
                 self.f_status.setText("(original)")

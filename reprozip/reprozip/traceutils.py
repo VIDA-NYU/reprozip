@@ -10,8 +10,10 @@ process itself.
 
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
+import shutil
 import sqlite3
+import tempfile
 
 from reprozip_core.common import create_trace_schema
 from reprozip.tracer.trace import TracedFile
@@ -58,7 +60,8 @@ def combine_traces(traces, target):
     """
     # We are probably overwriting one of the traces we're reading, so write to
     # a temporary file first then move it
-    fd, output = Path.tempfile('.sqlite3', 'reprozip_combined_')
+    fd, output = tempfile.mkstemp('.sqlite3', 'reprozip_combined_')
+    output = Path(output)
     conn = sqlite3.connect(str(output))  # connect() only accepts str
     os.close(fd)
     conn.row_factory = sqlite3.Row
@@ -214,6 +217,5 @@ def combine_traces(traces, target):
     conn.close()
 
     # Move database to final destination
-    if not target.exists():
-        target.mkdir()
-    output.move(target / 'trace.sqlite3')
+    target.mkdir(exist_ok=True)
+    shutil.move(output, target / 'trace.sqlite3')

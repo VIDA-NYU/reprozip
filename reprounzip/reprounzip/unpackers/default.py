@@ -21,8 +21,8 @@ from elftools.elf.elffile import ELFFile
 from elftools.elf.segments import InterpSegment
 import logging
 import os
+from pathlib import Path, PurePosixPath
 import platform
-from rpaths import PosixPath, DefaultAbstractPath, Path
 import shutil
 import socket
 import subprocess
@@ -126,11 +126,13 @@ def directory_create(args):
         logger.critical("Target directory exists")
         sys.exit(1)
 
-    if not issubclass(DefaultAbstractPath, PosixPath):
+    if not isinstance(Path(), PurePosixPath):
         logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
     signals.pre_setup(target=target, pack=pack)
+
+    target.mkdir()
 
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
@@ -140,7 +142,6 @@ def directory_create(args):
     config = load_config_file(target / 'config.yml', True)
     packages = config.packages
 
-    target.mkdir()
     root = (target / 'root').absolute()
 
     # Checks packages
@@ -169,9 +170,12 @@ def directory_create(args):
             m.name = str(rpz_pack.remove_data_prefix(m.name))
             # Makes symlink targets relative
             if m.issym():
-                linkname = PosixPath(m.linkname)
-                if linkname.is_absolute:
-                    m.linkname = join_root(root, PosixPath(m.linkname)).path
+                linkname = PurePosixPath(m.linkname)
+                if linkname.is_absolute():
+                    m.linkname = bytes(join_root(
+                        root,
+                        PurePosixPath(m.linkname),
+                    ))
         logger.info("Extracting files...")
         rpz_pack.extract_data(root, members)
         rpz_pack.close()
@@ -226,7 +230,9 @@ def directory_run(args):
             if len(line) < 2 or line[0] in (b' ', b'\t'):
                 continue
             if line.endswith(b':'):
-                lib_dirs.append(Path(line[:-1]))
+                lib_dirs.append(Path(
+                    line[:-1].decode('utf-8', 'surrogateescape'),
+                ))
     finally:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode,
@@ -257,18 +263,18 @@ def directory_run(args):
 
         # PATH
         # Get the original PATH components
-        path = [PosixPath(d)
+        path = [PurePosixPath(d)
                 for d in run['environ'].get('PATH', '').split(':')]
         # The same paths but in the directory
         dir_path = [join_root(root, d)
                     for d in path
-                    if d.root == '/']
+                    if d.anchor == '/']
         # Rebuild string
         path = ':'.join(str(d) for d in dir_path + path)
         cmd += 'PATH=%s ' % shell_escape(path)
 
         interpreter = get_elf_interpreter(
-            join_root(root, PosixPath(run['binary'])).open('rb'),
+            join_root(root, PurePosixPath(run['binary'])).open('rb'),
         )
         if interpreter is not None:
             interpreter = Path(interpreter)
@@ -286,10 +292,10 @@ def directory_run(args):
                     p = Path(argv[i])
                 except UnicodeEncodeError:
                     continue
-                if p.is_absolute:
+                if p.is_absolute():
                     rp = join_root(root, p)
                     if (rp.exists() or
-                            (len(rp.components) > 3 and rp.parent.exists())):
+                            (len(rp.parts) > 3 and rp.parent.exists())):
                         argv[i] = str(rp)
                         rewritten = True
             if rewritten:
@@ -406,7 +412,7 @@ def chroot_create(args):
         logger.critical("Target directory exists")
         sys.exit(1)
 
-    if not issubclass(DefaultAbstractPath, PosixPath):
+    if not isinstance(Path(), PurePosixPath):
         logger.critical("Not unpacking on POSIX system")
         sys.exit(1)
 
@@ -414,6 +420,8 @@ def chroot_create(args):
 
     # We can only restore owner/group of files if running as root
     restore_owner = should_restore_owner(args.restore_owner)
+
+    target.mkdir()
 
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
@@ -423,7 +431,6 @@ def chroot_create(args):
     config = load_config_file(target / 'config.yml', True)
     packages = config.packages
 
-    target.mkdir()
     root = (target / 'root').absolute()
 
     root.mkdir()
@@ -449,14 +456,14 @@ def chroot_create(args):
                         missing_files = True
                         continue
                     dest = join_root(root, path)
-                    dest.parent.mkdir(parents=True)
-                    if path.is_link():
-                        dest.symlink(path.read_link())
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    if path.is_symlink():
+                        dest.symlink_to(os.readlink(path))
                     else:
-                        path.copy(dest)
+                        shutil.copy(path, dest)
                     if restore_owner:
                         stat = path.stat()
-                        dest.chown(stat.st_uid, stat.st_gid)
+                        os.chown(dest, stat.st_uid, stat.st_gid)
             if missing_files:
                 record_usage(chroot_mising_files=True)
 
@@ -478,28 +485,28 @@ def chroot_create(args):
         resolvconf_src = Path('/etc/resolv.conf')
         if resolvconf_src.exists():
             try:
-                resolvconf_src.copy(root / 'etc/resolv.conf')
+                shutil.copy(resolvconf_src, root / 'etc/resolv.conf')
             except IOError:
                 pass
 
         # Sets up /bin/sh and /usr/bin/env, downloading busybox if necessary
         sh_path = join_root(root, Path('/bin/sh'))
         env_path = join_root(root, Path('/usr/bin/env'))
-        if not sh_path.lexists() or not env_path.lexists():
+        if not os.path.lexists(sh_path) or not os.path.lexists(env_path):
             logger.info("Setting up busybox...")
             busybox_path = join_root(root, Path('/bin/busybox'))
-            busybox_path.parent.mkdir(parents=True)
+            busybox_path.parent.mkdir(parents=True, exist_ok=True)
             with make_dir_writable(join_root(root, Path('/bin'))):
                 download_file(busybox_url(config.runs[0]['architecture']),
                               busybox_path,
                               'busybox-%s' % config.runs[0]['architecture'])
                 busybox_path.chmod(0o755)
-                if not sh_path.lexists():
-                    sh_path.parent.mkdir(parents=True)
-                    sh_path.symlink('/bin/busybox')
-                if not env_path.lexists():
-                    env_path.parent.mkdir(parents=True)
-                    env_path.symlink('/bin/busybox')
+                if not os.path.lexists(sh_path):
+                    sh_path.parent.mkdir(parents=True, exist_ok=True)
+                    sh_path.symlink_to('/bin/busybox')
+                if not os.path.lexists(env_path):
+                    env_path.parent.mkdir(parents=True, exist_ok=True)
+                    env_path.symlink_to('/bin/busybox')
 
         # Original input files, so upload can restore them
         input_files = [f.path for f in config.inputs_outputs.values()
@@ -531,13 +538,13 @@ def chroot_mount(args):
 
     # Create proc mount
     d = target / 'root/proc'
-    d.mkdir(parents=True)
+    d.mkdir(parents=True, exist_ok=True)
     subprocess.check_call(['mount', '-t', 'proc', 'none', str(d)])
 
     # Bind /dev from host
     for m in ('/dev', '/dev/pts'):
         d = join_root(target / 'root', Path(m))
-        d.mkdir(parents=True)
+        d.mkdir(parents=True, exist_ok=True)
         logger.info("Mounting %s on %s...", m, d)
         subprocess.check_call(['mount', '-o', 'bind', m, str(d)])
 
@@ -698,11 +705,13 @@ class LocalUploader(FileUploader):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / 'inputs.tar.gz'), 'r:*')
         try:
-            member = tar.getmember(str(join_root(PosixPath(''), input_path)))
+            member = tar.getmember(str(
+                join_root(PurePosixPath(''), input_path),
+            ))
         except KeyError:
             return None
         member = copy.copy(member)
-        member.name = str(temp.components[-1])
+        member.name = str(temp.parts[-1])
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp
@@ -713,10 +722,10 @@ class LocalUploader(FileUploader):
         # Copy
         orig_stat = remote_path.stat()
         with make_dir_writable(remote_path.parent):
-            local_path.copyfile(remote_path)
+            shutil.copyfile(local_path, remote_path)
             remote_path.chmod(orig_stat.st_mode & 0o7777)
             if self.restore_owner:
-                remote_path.chown(orig_stat.st_uid, orig_stat.st_gid)
+                os.chown(remote_path, orig_stat.st_uid, orig_stat.st_gid)
 
 
 @target_must_exist
@@ -763,8 +772,8 @@ class LocalDownloader(FileDownloader):
             logger.critical("Can't get output file (doesn't exist): %s",
                             remote_path)
             return False
-        remote_path.copyfile(local_path)
-        remote_path.copymode(local_path)
+        shutil.copyfile(remote_path, local_path)
+        shutil.copymode(remote_path, local_path)
         return True
 
 

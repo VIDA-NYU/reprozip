@@ -11,7 +11,7 @@ from reprozip.tracer.trace import TracedFile
 logger = logging.getLogger('reprozip')
 
 
-_so_file = re.compile(br'\.so(\.[0-9]+)*$')
+_so_file = re.compile(r'\.so(\.[0-9]+)*$')
 
 
 def builtin(input_files, **kwargs):
@@ -22,7 +22,7 @@ def builtin(input_files, **kwargs):
         for path in input_files[i]:
             if (
                 # Hidden files
-                path.unicodename[0] == '.' or
+                path.name[0] == '.' or
                 # Shared libraries
                 _so_file.search(path.name)
             ):
@@ -37,10 +37,10 @@ def python(files, input_files, **kwargs):
     add = []
     for path, fi in files.items():
         # Include .py files instead of .pyc
-        if path.ext == b'.pyc':
+        if path.suffix == '.pyc':
             if path.parent.name == b'__pycache__':
                 # Python 3: /dir/__pycache__/mod.cpython-38.pyc -> /dir/mod.py
-                basename = path.unicodename.split('.', 1)[0]
+                basename = path.name.split('.', 1)[0]
                 pyfile = path.parent.parent / basename + '.py'
             else:
                 # Python2: /dir/mod.pyc -> /dir/moc.py
@@ -56,7 +56,7 @@ def python(files, input_files, **kwargs):
     for i in range(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.ext in (b'.py', b'.pyc'):
+            if path.suffix in ('.py', '.pyc'):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)

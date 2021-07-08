@@ -13,7 +13,7 @@ See schema: https://git.io/provviewer-xsd
 import argparse
 import logging
 from distutils.version import LooseVersion
-from rpaths import Path
+from pathlib import Path
 import sqlite3
 import sys
 
@@ -130,10 +130,10 @@ def generate(target, configfile, database):
                           'targetID': 'process%d' % r_id})
     cur.close()
 
-    file2package = dict((f.path.path, pkg)
+    file2package = dict((str(f.path), pkg)
                         for pkg in config.packages
                         for f in pkg.files)
-    inputs_outputs = dict((f.path.path, (bool(f.write_runs),
+    inputs_outputs = dict((str(f.path), (bool(f.write_runs),
                                          bool(f.read_runs)))
                           for n, f in config.inputs_outputs.items())
 

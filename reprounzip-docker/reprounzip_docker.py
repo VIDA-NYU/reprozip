@@ -15,13 +15,14 @@ from itertools import chain
 import json
 import logging
 import os
+from pathlib import Path, PurePosixPath
 import re
-from rpaths import Path, PosixPath
 import shutil
 import socket
 import subprocess
 import sys
 import tarfile
+import tempfile
 
 from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
@@ -120,7 +121,7 @@ def docker_setup(args):
     try:
         docker_setup_build(args)
     except BaseException:
-        Path(args.target[0]).rmtree(ignore_errors=True)
+        shutil.rmtree(args.target[0], ignore_errors=True)
         raise
 
 
@@ -242,13 +243,14 @@ def docker_setup_create(args):
             data_files = rpz_pack.data_filenames()
             listoffiles = list(chain(other_files, missing_files))
             for f in listoffiles:
-                if f.path.unicodename in ('resolv.conf', 'hosts') and (
-                        f.path.lies_under('/etc') or
-                        f.path.lies_under('/run') or
-                        f.path.lies_under('/var')):
+                if f.path.name in ('resolv.conf', 'hosts') and (
+                    PurePosixPath('/etc') in f.path.parents or
+                    PurePosixPath('/run') in f.path.parents or
+                    PurePosixPath('/var') in f.path.parents
+                ):
                     continue
-                path = PosixPath('/')
-                for c in rpz_pack.remove_data_prefix(f.path).components:
+                path = PurePosixPath('/')
+                for c in rpz_pack.remove_data_prefix(f.path).parts:
                     path = path / c
                     if path in paths:
                         continue
@@ -261,7 +263,7 @@ def docker_setup_create(args):
             rpz_pack.close()
             with (target / 'files.list').open('wb') as filelist:
                 for p in pathlist:
-                    filelist.write(join_root(PosixPath(''), p).path)
+                    filelist.write(bytes(join_root(PurePosixPath(''), p)))
                     filelist.write(b'\0')
 
             if args.use_buildkit:
@@ -386,7 +388,7 @@ def docker_setup_create(args):
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
-        target.rmtree(ignore_errors=True)
+        shutil.rmtree(target, ignore_errors=True)
         raise
 
 
@@ -414,7 +416,7 @@ def docker_setup_build(args):
             env = dict(os.environ, DOCKER_BUILDKIT='1')
         retcode = subprocess.call(args.docker_cmd.split() + ['build', '-t'] +
                                   args.docker_option + [image, '.'],
-                                  cwd=target.path,
+                                  cwd=target,
                                   env=env)
     except OSError:
         logger.critical("docker executable not found")
@@ -721,31 +723,31 @@ class ContainerUploader(FileUploader):
                   file=sys.stderr)
             sys.exit(1)
 
-        self.build_directory = Path.tempdir(prefix='reprozip_build_')
+        self.build_directory = Path(tempfile.mkdtemp(prefix='reprozip_build_'))
         self.docker_copy = []
 
     def upload_file(self, local_path, input_path):
-        stem, ext = local_path.stem, local_path.ext
+        stem, ext = local_path.stem, local_path.suffix
         name = local_path.name
         nb = 0
         while (self.build_directory / name).exists():
             nb += 1
             name = stem + ('_%d' % nb).encode('ascii') + ext
         name = Path(name)
-        local_path.copyfile(self.build_directory / name)
+        shutil.copyfile(local_path, self.build_directory / name)
         logger.info("Copied file %s to %s", local_path, name)
         self.docker_copy.append((name, input_path))
 
     def finalize(self):
         if not self.docker_copy:
-            self.build_directory.rmtree()
+            shutil.rmtree(self.build_directory)
             return
 
         from_image = self.unpacked_info['current_image']
 
-        with self.build_directory.open('w', 'Dockerfile',
-                                       encoding='utf-8',
-                                       newline='\n') as dockerfile:
+        with (self.build_directory / 'Dockerfile').open(
+            'w', encoding='utf-8', newline='\n',
+        ) as dockerfile:
             dockerfile.write('FROM %s\n\n' % from_image.decode('ascii'))
             for src, target in self.docker_copy:
                 # FIXME : spaces in filenames will probably break Docker
@@ -761,7 +763,7 @@ class ContainerUploader(FileUploader):
                 tar = tarfile.open(str(self.target / 'data.tgz'), 'r:*')
                 try:
                     info = tar.getmember(str(
-                        join_root(PosixPath(b'DATA'), target)
+                        join_root(PurePosixPath('DATA'), target)
                     ))
                     uid, gid = info.uid, info.gid
                 except KeyError:
@@ -784,7 +786,7 @@ class ContainerUploader(FileUploader):
         image = make_unique_name(b'reprounzip_image_')
         retcode = subprocess.call(self.docker_cmd +
                                   ['build', '-t', image, '.'],
-                                  cwd=self.build_directory.path)
+                                  cwd=self.build_directory)
         if retcode != 0:
             logger.critical("docker build failed with code %d", retcode)
             sys.exit(1)
@@ -801,7 +803,7 @@ class ContainerUploader(FileUploader):
             self.unpacked_info['current_image'] = image
             write_dict(self.target, self.unpacked_info)
 
-        self.build_directory.rmtree()
+        shutil.rmtree(self.build_directory)
 
 
 @target_must_exist
@@ -839,18 +841,18 @@ class ContainerDownloader(FileDownloader):
     def download(self, remote_path, local_path):
         # Docker copies to a file in the specified directory, cannot just take
         # a file name (#4272)
-        tmpdir = Path.tempdir(prefix='reprozip_docker_output_')
+        tmpdir = Path(tempfile.mkdtemp(prefix='reprozip_docker_output_'))
         try:
             ret = subprocess.call(self.docker_cmd +
                                   ['cp',
-                                   self.container + b':' + remote_path.path,
-                                   tmpdir.path])
+                                   self.container + b':' + bytes(remote_path),
+                                   tmpdir])
             if ret != 0:
                 logger.critical("Can't get output file: %s", remote_path)
                 return False
-            (tmpdir / remote_path.name).copyfile(local_path)
+            shutil.copyfile(tmpdir / remote_path.name, local_path)
         finally:
-            tmpdir.rmtree()
+            shutil.rmtree(tmpdir)
         return True
 
     def finalize(self):
@@ -914,7 +916,7 @@ def docker_destroy_dir(args):
 
     logger.info("Removing directory %s...", target)
     signals.pre_destroy(target=target)
-    target.rmtree()
+    shutil.rmtree(target)
     signals.post_destroy(target=target)
 
 

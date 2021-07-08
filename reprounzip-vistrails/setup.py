@@ -9,8 +9,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
-    'reprounzip>=2.0.0,<3.0.0',
-    'rpaths>=0.8']
+    'reprounzip>=2.0.0,<3.0.0']
 setup(name='reprounzip-vistrails',
       version='2.0.0',
       py_modules=['reprounzip_vistrails'],

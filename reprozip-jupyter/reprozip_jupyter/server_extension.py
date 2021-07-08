@@ -4,9 +4,11 @@
 
 from datetime import datetime
 from notebook.utils import url_path_join as ujoin
-from rpaths import Path
+from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 from tornado.concurrent import Future
 from tornado.process import Subprocess
 from tornado.web import RequestHandler
@@ -20,14 +22,14 @@ class TraceHandler(RequestHandler):
 
     def post(self):
         self._notebook_file = Path(self.get_body_argument('file'))
-        name = self._notebook_file.unicodename
+        name = self._notebook_file.name
         if name.endswith('.ipynb'):
             name = name[:-6]
         name = u'%s_%s.rpz' % (name, datetime.now().strftime('%Y%m%d-%H%M%S'))
         self._pack_file = self._notebook_file.parent / name
         self.nbapp.log.info("reprozip: tracing request from client: file=%r",
                             self._notebook_file)
-        self._tempdir = Path.tempdir()
+        self._tempdir = Path(tempfile.mkdtemp())
         self.nbapp.log.info("reprozip: created temp directory %r",
                             self._tempdir)
         self._future = Future()
@@ -36,8 +38,8 @@ class TraceHandler(RequestHandler):
              'from reprozip_jupyter.main import main; main()',
              'trace',
              '--dont-save-notebook',
-             '-d', self._tempdir.path,
-             self._notebook_file.path],
+             '-d', self._tempdir,
+             self._notebook_file],
             stdin=subprocess.PIPE)
         proc.stdin.close()
         proc.set_exit_callback(self._trace_done)
@@ -49,17 +51,17 @@ class TraceHandler(RequestHandler):
         if returncode == 0:
             # Pack
             if self._pack_file.exists():
-                self._pack_file.remove()
+                self._pack_file.unlink()
             proc = Subprocess(
                 ['reprozip', 'pack', '-d',
-                 self._tempdir.path,
-                 self._pack_file.path],
+                 self._tempdir,
+                 self._pack_file],
                 stdin=subprocess.PIPE)
             proc.stdin.close()
             proc.set_exit_callback(self._packing_done)
             self.nbapp.log.info("reprozip: started packing...")
         else:
-            self._tempdir.rmtree()
+            shutil.rmtree(self._tempdir)
             if returncode == 3:
                 self.set_header('Content-Type', 'application/json')
                 self.finish(
@@ -79,7 +81,7 @@ class TraceHandler(RequestHandler):
             self.nbapp.log.info("reprozip: response sent!")
         else:
             self.send_error(500)
-        self._tempdir.rmtree()
+        shutil.rmtree(self._tempdir)
         self._future.set_result(None)
 
 

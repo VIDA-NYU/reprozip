@@ -35,8 +35,7 @@ with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
     'PyYAML',
-    'rpaths>=0.8',
-    'usagestats>=0.3',
+    'usagestats>=1.0.1',
     'requests',
     'distro',
     'reprozip-core>=2.0.0,<3.0.0']

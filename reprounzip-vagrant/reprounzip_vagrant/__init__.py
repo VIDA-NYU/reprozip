@@ -16,18 +16,19 @@ from distutils.version import LooseVersion
 import logging
 import os
 import paramiko
+from pathlib import Path, PurePosixPath
 import re
-from rpaths import PosixPath, Path
+import shutil
 import subprocess
 import sys
+import tempfile
 
 from reprozip_core.common import load_config, record_usage, RPZPack
 from reprounzip import signals
 from reprounzip.parameters import get_parameter
 from reprounzip.unpackers.common import COMPAT_OK, COMPAT_MAYBE, COMPAT_NO, \
     CantFindInstaller, composite_action, target_must_exist, \
-    make_unique_name, shell_escape, select_installer, busybox_url, join_root, \
-    rpztar_url, \
+    shell_escape, select_installer, busybox_url, join_root, rpztar_url, \
     FileUploader, FileDownloader, get_runs, add_environment_options, \
     fixup_environment, metadata_read, metadata_write, \
     metadata_initial_iofiles, metadata_update_run, parse_ports
@@ -108,13 +109,13 @@ def machine_setup(target):
     """
     try:
         out = subprocess.check_output(['vagrant', 'ssh-config'],
-                                      cwd=target.path,
+                                      cwd=target,
                                       stderr=subprocess.PIPE)
     except subprocess.CalledProcessError:
         # Makes sure the VM is running
         logger.info("Calling 'vagrant up'...")
         try:
-            retcode = subprocess.check_call(['vagrant', 'up'], cwd=target.path)
+            retcode = subprocess.check_call(['vagrant', 'up'], cwd=target)
         except OSError:
             logger.critical("vagrant executable not found")
             sys.exit(1)
@@ -124,7 +125,7 @@ def machine_setup(target):
                 sys.exit(1)
         # Try again
         out = subprocess.check_output(['vagrant', 'ssh-config'],
-                                      cwd=target.path)
+                                      cwd=target)
 
     vagrant_info = {}
     for line in out.split(b'\n'):
@@ -141,7 +142,7 @@ def machine_setup(target):
     if 'identityfile' in vagrant_info:
         key_file = vagrant_info['identityfile']
     else:
-        key_file = Path('~/.vagrant.d/insecure_private_key').expand_user()
+        key_file = Path('~/.vagrant.d/insecure_private_key').expanduser()
     info = dict(hostname=vagrant_info.get('hostname', '127.0.0.1'),
                 port=int(vagrant_info.get('port', 2222)),
                 username=vagrant_info.get('user', 'vagrant'),
@@ -228,6 +229,8 @@ def vagrant_setup_create(args):
 
     signals.pre_setup(target=target, pack=pack)
 
+    target.mkdir()
+
     # Unpacks configuration file
     rpz_pack = RPZPack(pack)
     rpz_pack.extract_config(target / 'config.yml')
@@ -278,8 +281,6 @@ def vagrant_setup_create(args):
                          "package installer: %s",
                          len(packages), e)
 
-    target.mkdir(parents=True)
-
     try:
         # Writes setup script
         logger.info("Writing setup script %s...", target / 'setup.sh')
@@ -325,7 +326,7 @@ chmod +x /usr/local/bin/rpztar
                                  % pkg.name)
                     for f in pkg.files:
                         f = f.path
-                        dest = join_root(PosixPath('/experimentroot'), f)
+                        dest = join_root(PurePosixPath('/experimentroot'), f)
                         script.write('mkdir -p %s\n' %
                                      shell_escape(str(f.parent)))
                         script.write('cp -L %s %s\n' % (
@@ -344,12 +345,13 @@ chmod +x /usr/local/bin/rpztar
                 data_files = rpz_pack.data_filenames()
                 for f in other_files:
                     if f.path.name == 'resolv.conf' and (
-                            f.path.lies_under('/etc') or
-                            f.path.lies_under('/run') or
-                            f.path.lies_under('/var')):
+                        PurePosixPath('/etc') in f.path.parents or
+                        PurePosixPath('/run') in f.path.parents or
+                        PurePosixPath('/var') in f.path.parents
+                    ):
                         continue
-                    path = PosixPath('/')
-                    for c in rpz_pack.remove_data_prefix(f.path).components:
+                    path = PurePosixPath('/')
+                    for c in rpz_pack.remove_data_prefix(f.path).parts:
                         path = path / c
                         if path in paths:
                             continue
@@ -360,7 +362,7 @@ chmod +x /usr/local/bin/rpztar
                             logger.info("Missing file %s", path)
                 with (target / 'rpz-files.list').open('wb') as filelist:
                     for p in pathlist:
-                        filelist.write(join_root(PosixPath(''), p).path)
+                        filelist.write(bytes(join_root(PurePosixPath(''), p)))
                         filelist.write(b'\0')
                 script.write('/usr/local/bin/rpztar '
                              '/vagrant/data.tgz '
@@ -400,7 +402,7 @@ mkdir -p /.experimentdata/bin
 
         signals.post_setup(target=target, pack=pack)
     except Exception:
-        target.rmtree(ignore_errors=True)
+        shutil.rmtree(target, ignore_errors=True)
         raise
 
 
@@ -506,7 +508,7 @@ def vagrant_run(args):
         logger.info("Some requested ports are not yet forwarded, running "
                     "'vagrant reload'")
         retcode = subprocess.call(['vagrant', 'reload', '--no-provision'],
-                                  cwd=target.path)
+                                  cwd=target)
         if retcode != 0:
             logger.critical("vagrant reload failed with code %d, aborting",
                             retcode)
@@ -606,37 +608,42 @@ class SSHUploader(FileUploader):
 
     def upload_file(self, local_path, input_path):
         if self.use_chroot:
-            remote_path = join_root(PosixPath('/experimentroot'),
+            remote_path = join_root(PurePosixPath('/experimentroot'),
                                     input_path)
         else:
             remote_path = input_path
 
-        temp = make_unique_name(b'reprozip_input_')
-        ltemp = self.target / temp
-        rtemp = PosixPath('/vagrant') / temp
+        ltemp = Path(tempfile.mktemp(
+            prefix='reprozip_input_',
+            dir=self.target,
+        ))
+        rtemp = PurePosixPath('/vagrant') / ltemp.name
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
-        local_path.copyfile(ltemp)
+        shutil.copyfile(local_path, ltemp)
 
         # Move it
         logger.info("Moving file into place...")
         chan = self.ssh.get_transport().open_session()
         chown_cmd = '/bin/chown --reference=%s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
         chmod_cmd = '/bin/chmod --reference=%s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
         mv_cmd = '/bin/mv %s %s' % (
-            shell_escape(rtemp.path),
-            shell_escape(remote_path.path))
+            shell_escape(str(rtemp)),
+            shell_escape(str(remote_path)),
+        )
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
                           ' && '.join((chown_cmd, chmod_cmd, mv_cmd))))
         if chan.recv_exit_status() != 0:
             logger.critical("Couldn't move file in virtual machine")
             try:
-                ltemp.remove()
+                ltemp.unlink()
             except OSError:
                 pass
             sys.exit(1)
@@ -683,37 +690,43 @@ class SSHDownloader(FileDownloader):
 
     def download(self, remote_path, local_path):
         if self.use_chroot:
-            remote_path = join_root(PosixPath('/experimentroot'), remote_path)
+            remote_path = join_root(
+                PurePosixPath('/experimentroot'),
+                remote_path,
+            )
 
-        temp = make_unique_name(b'reprozip_output_')
-        rtemp = PosixPath('/vagrant') / temp
-        ltemp = self.target / temp
+        ltemp = Path(tempfile.mktemp(
+            prefix='reprozip_output_',
+            dir=self.target,
+        ))
+        rtemp = PurePosixPath('/vagrant') / ltemp.name
 
         # Copy file to shared folder
         logger.info("Copying file to shared folder...")
         chan = self.ssh.get_transport().open_session()
         cp_cmd = '/bin/cp %s %s' % (
-            shell_escape(remote_path.path),
-            shell_escape(rtemp.path))
-        chown_cmd = '/bin/chown vagrant %s' % shell_escape(rtemp.path)
-        chmod_cmd = '/bin/chmod 644 %s' % shell_escape(rtemp.path)
+            shell_escape(str(remote_path)),
+            shell_escape(str(rtemp)),
+        )
+        chown_cmd = '/bin/chown vagrant %s' % shell_escape(str(rtemp))
+        chmod_cmd = '/bin/chmod 644 %s' % shell_escape(str(rtemp))
         chan.exec_command('/usr/bin/sudo /bin/sh -c %s' % shell_escape(
             ' && '.join((cp_cmd, chown_cmd, chmod_cmd))))
         if chan.recv_exit_status() != 0:
             logger.critical("Couldn't copy file in virtual machine")
             try:
-                ltemp.remove()
+                ltemp.unlink()
             except OSError:
                 pass
             return False
 
         # Move file to final destination
         try:
-            ltemp.move(local_path)
+            shutil.move(ltemp, local_path)
         except OSError as e:
             logger.critical("Couldn't download output file: %s\n%s",
                             remote_path, str(e))
-            ltemp.remove()
+            ltemp.unlink()
             return False
         return True
 
@@ -738,7 +751,7 @@ def vagrant_suspend(args):
     """
     target = Path(args.target[0])
 
-    retcode = subprocess.call(['vagrant', 'suspend'], cwd=target.path)
+    retcode = subprocess.call(['vagrant', 'suspend'], cwd=target)
     if retcode != 0:
         logger.critical("vagrant suspend failed with code %d, ignoring...",
                         retcode)
@@ -751,7 +764,7 @@ def vagrant_destroy_vm(args):
     target = Path(args.target[0])
     read_dict(target)
 
-    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target.path)
+    retcode = subprocess.call(['vagrant', 'destroy', '-f'], cwd=target)
     if retcode != 0:
         logger.critical("vagrant destroy failed with code %d, ignoring...",
                         retcode)
@@ -765,7 +778,7 @@ def vagrant_destroy_dir(args):
     read_dict(target)
 
     signals.pre_destroy(target=target)
-    target.rmtree()
+    shutil.rmtree(target)
     signals.post_destroy(target=target)
 
 

@@ -3,10 +3,11 @@
 # See file LICENSE for full license details.
 
 import os
-
+from pathlib import Path, PurePath
 import sqlite3
-from rpaths import AbstractPath, Path
+import shutil
 import sys
+import tempfile
 import unittest
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, \
@@ -26,7 +27,7 @@ class TestReprozip(unittest.TestCase):
             self.assertEqual(oct((path.stat().st_mode & 0o0700) >> 6),
                              oct(mod))
 
-        tmp = Path.tempdir()
+        tmp = Path(tempfile.mkdtemp())
         try:
             (tmp / 'some' / 'path').mkdir(parents=True)
             (tmp / 'some' / 'path').chmod(0o555)
@@ -38,7 +39,7 @@ class TestReprozip(unittest.TestCase):
         finally:
             (tmp / 'some').chmod(0o755)
             (tmp / 'some' / 'path').chmod(0o755)
-            tmp.rmtree()
+            shutil.rmtree(tmp)
 
     @unittest.skipUnless(hasattr(os, 'chown'), "No POSIX file permissions")
     def test_make_dir_writable2(self):
@@ -47,7 +48,7 @@ class TestReprozip(unittest.TestCase):
             self.assertEqual(oct((path.stat().st_mode & 0o0700) >> 6),
                              oct(mod))
 
-        tmp = Path.tempdir()
+        tmp = Path(tempfile.mkdtemp())
         try:
             (tmp / 'some' / 'complete' / 'path').mkdir(parents=True)
             (tmp / 'some' / 'complete' / 'path').chmod(0o555)
@@ -64,7 +65,7 @@ class TestReprozip(unittest.TestCase):
             (tmp / 'some').chmod(0o755)
             (tmp / 'some' / 'complete').chmod(0o755)
             (tmp / 'some' / 'complete' / 'path').chmod(0o755)
-            tmp.rmtree()
+            shutil.rmtree(tmp)
 
     def test_argparse(self):
         """Tests argument parsing"""
@@ -135,7 +136,7 @@ class TestFiles(unittest.TestCase):
         try:
             files, inputs, outputs = get_files(conn)
             files = set(fi for fi in files
-                        if not fi.path.path.startswith((b'/lib', b'/usr/lib')))
+                        if not str(fi.path).startswith(('/lib', '/usr/lib')))
             return files, inputs, outputs
         finally:
             conn.close()
@@ -146,7 +147,7 @@ class TestFiles(unittest.TestCase):
             return set(cls.make_paths(e) for e in obj)
         elif isinstance(obj, list):
             return [cls.make_paths(e) for e in obj]
-        elif isinstance(obj, AbstractPath):
+        elif isinstance(obj, PurePath):
             return obj
         elif isinstance(obj, (bytes, str)):
             return Path(obj)
@@ -180,11 +181,11 @@ class TestFiles(unittest.TestCase):
                               set(fi.path for fi in files))
 
     def test_multiple_runs(self):
-        def fail(s):
-            assert False, "Shouldn't be called?"
-        old = Path.is_file, Path.stat
-        Path.is_file = lambda s: True
-        Path.stat = fail
+        # Input/output determination will stat files, so mock that
+        file_stat = Path('/etc/passwd').stat()
+        old = Path.is_file, Path.exists, Path.stat
+        Path.is_file = Path.exists = lambda s: True
+        Path.stat = lambda s: file_stat
         try:
             files, inputs, outputs = self.do_test([
                 ('proc', 0, None, False),
@@ -216,15 +217,15 @@ class TestFiles(unittest.TestCase):
             self.assertEqualPaths([{"/some/cli"}, {"/some/rw"}],
                                   [set(run) for run in outputs])
         finally:
-            Path.is_file, Path.stat = old
+            Path.is_file, Path.exists, Path.stat = old
 
 
 class TestCombine(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = Path.tempdir()
+        self.tmpdir = Path(tempfile.mkdtemp())
 
     def tearDown(self):
-        self.tmpdir.rmtree()
+        shutil.rmtree(self.tmpdir)
 
     def test_combine(self):
         traces = []

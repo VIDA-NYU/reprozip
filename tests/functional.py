@@ -7,12 +7,14 @@
 import functools
 import logging
 import os
+from pathlib import Path, PurePath
 import re
 import requests
-from rpaths import Path
+import shutil
 import sqlite3
 import subprocess
 import sys
+import tempfile
 import yaml
 
 from reprozip_core.common import FILE_READ, FILE_WRITE
@@ -40,7 +42,7 @@ def download_file_retry(url, dest):
                     response.close()
             except Exception as e:
                 try:
-                    dest.remove()
+                    dest.unlink()
                 except OSError:
                     pass
                 raise e
@@ -54,12 +56,14 @@ def download_file_retry(url, dest):
 def in_temp_dir(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        tmp = Path.tempdir(prefix='reprozip_tests_')
+        tmp = Path(tempfile.mkdtemp(prefix='reprozip_tests_'))
+        prev_cwd = Path.cwd()
         try:
-            with tmp.in_dir():
-                return f(*args, **kwargs)
+            os.chdir(tmp)
+            return f(*args, **kwargs)
         finally:
-            tmp.rmtree(ignore_errors=True)
+            os.chdir(prev_cwd)
+            shutil.rmtree(tmp, ignore_errors=True)
     return wrapper
 
 
@@ -70,6 +74,7 @@ def print_arg_list(f):
     def wrapper(arglist, *args, **kwargs):
         print("\nreprozip-tests$ " +
               " ".join(a if isinstance(a, str)
+                       else str(a) if isinstance(a, PurePath)
                        else a.decode('utf-8', 'replace')
                        for a in arglist), file=sys.stderr)
         return f(arglist, *args, **kwargs)
@@ -121,7 +126,7 @@ def check_output(args, stream='out'):
 
 def build(target, sources, args=[]):
     check_call(['/usr/bin/env', 'CFLAGS=', 'cc', '-o', target] +
-               [(tests / s).path
+               [tests / s
                 for s in sources] +
                args)
 
@@ -160,8 +165,8 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     reprounzip_main = tests.parent / 'reprounzip/reprounzip/__main__.py'
 
     verbose = ['-v'] * 3
-    rpz = rpz_python + [reprozip_main.absolute().path] + verbose
-    rpuz = rpuz_python + [reprounzip_main.absolute().path] + verbose
+    rpz = rpz_python + [reprozip_main.absolute()] + verbose
+    rpuz = rpuz_python + [reprounzip_main.absolute()] + verbose
 
     print("Command lines are:\n%r\n%r" % (rpz, rpuz), file=sys.stderr)
 
@@ -219,13 +224,13 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Trace
     check_call(rpz + ['trace', '--overwrite', '-d', 'rpz-simple',
                       './simple',
-                      (tests / 'simple_input.txt').path,
+                      tests / 'simple_input.txt',
                       'simple_output.txt'])
     orig_output_location = Path('simple_output.txt').absolute()
     assert orig_output_location.is_file()
     with orig_output_location.open(encoding='utf-8') as fp:
         assert fp.read().strip() == '42'
-    orig_output_location.remove()
+    orig_output_location.unlink()
     # Read config
     with Path('rpz-simple/config.yml').open(encoding='utf-8') as fp:
         conf = yaml.safe_load(fp)
@@ -239,12 +244,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # There might be more output files: the C coverage files
     found = 0
     for fdict in inputs_outputs:
-        if Path(fdict['path']).name == b'simple_input.txt':
+        if Path(fdict['path']).name == 'simple_input.txt':
             assert fdict['name'] == 'arg1'
             assert fdict['read_by_runs'] == [0]
             assert not fdict.get('written_by_runs')
             found |= 0x01
-        elif Path(fdict['path']).name == b'simple_output.txt':
+        elif Path(fdict['path']).name == 'simple_output.txt':
             assert fdict['name'] == 'arg2'
             assert not fdict.get('read_by_runs')
             assert fdict['written_by_runs'] == [0]
@@ -362,132 +367,132 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Unpack Vagrant-chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--memory', '512',
                        '--use-chroot', 'simple.rpz',
-                       (tests / 'vagrant/simplevagrantchroot').path])
+                       tests / 'vagrant/simplevagrantchroot'])
     print("\nVagrant project set up in simplevagrantchroot", file=sys.stderr)
     try:
         if run_vagrant:
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrantchroot').path],
+                                 tests / 'vagrant/simplevagrantchroot'],
                          'out')
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                'arg2:voutput1.txt'])
             with Path('voutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Get random file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                '%s:binvc.bin' % (Path.cwd() / 'simple')])
             assert same_files('simple.orig', 'binvc.bin')
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                '%s:arg1' % (tests / 'simple_input2.txt')])
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrantchroot').path])
+                               tests / 'vagrant/simplevagrantchroot'])
             # Run again
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrantchroot').path],
+                                 tests / 'vagrant/simplevagrantchroot'],
                          'out', 2)
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                'arg2:voutput2.txt'])
             with Path('voutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
             # Reset input file
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                ':arg1'])
             # Run again
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrantchroot').path],
+                                 tests / 'vagrant/simplevagrantchroot'],
                          'out')
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                'arg2:voutput3.txt'])
             with Path('voutput3.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Replace input file via path
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrantchroot').path,
+                               tests / 'vagrant/simplevagrantchroot',
                                '%s:%s' % (tests / 'simple_input2.txt',
                                           tests / 'simple_input.txt')])
             # Run again
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrantchroot').path],
+                                 tests / 'vagrant/simplevagrantchroot'],
                          'out', 2)
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
-                               (tests / 'vagrant/simplevagrantchroot').path])
+                               tests / 'vagrant/simplevagrantchroot'])
         elif interactive:
             print("Test and press enter", file=sys.stderr)
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrantchroot').exists():
-            (tests / 'vagrant/simplevagrantchroot').rmtree()
+            shutil.rmtree(tests / 'vagrant/simplevagrantchroot')
     # Unpack Vagrant without chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--dont-use-chroot',
                        'simple.rpz',
-                       (tests / 'vagrant/simplevagrant').path])
+                       tests / 'vagrant/simplevagrant'])
     print("\nVagrant project set up in simplevagrant", file=sys.stderr)
     try:
         if run_vagrant:
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrant').path],
+                                 tests / 'vagrant/simplevagrant'],
                          'out')
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                'arg2:woutput1.txt'])
             with Path('woutput1.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Get random file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                '%s:binvs.bin' % (Path.cwd() / 'simple')])
             assert same_files('simple.orig', 'binvs.bin')
             # Replace input file
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                '%s:arg1' % (tests / 'simple_input2.txt')])
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrant').path])
+                               tests / 'vagrant/simplevagrant'])
             # Run again
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrant').path],
+                                 tests / 'vagrant/simplevagrant'],
                          'out', 2)
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                'arg2:woutput2.txt'])
             with Path('woutput2.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '36'
             # Reset input file
             check_call(rpuz + ['vagrant', 'upload',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                ':arg1'])
             # Run again
             check_simple(rpuz + ['vagrant', 'run', '--no-stdin',
-                                 (tests / 'vagrant/simplevagrant').path],
+                                 tests / 'vagrant/simplevagrant'],
                          'out')
             # Get output file
             check_call(rpuz + ['vagrant', 'download',
-                               (tests / 'vagrant/simplevagrant').path,
+                               tests / 'vagrant/simplevagrant',
                                'arg2:woutput3.txt'])
             with Path('woutput3.txt').open(encoding='utf-8') as fp:
                 assert fp.read().strip() == '42'
             # Destroy
             check_call(rpuz + ['vagrant', 'destroy',
-                               (tests / 'vagrant/simplevagrant').path])
+                               tests / 'vagrant/simplevagrant'])
         elif interactive:
             print("Test and press enter", file=sys.stderr)
             sys.stdin.readline()
     finally:
         if (tests / 'vagrant/simplevagrant').exists():
-            (tests / 'vagrant/simplevagrant').rmtree()
+            shutil.rmtree(tests / 'vagrant/simplevagrant')
 
     # Unpack Docker, both with and without buildkit
     for arg, sufx in (('--dont-use-buildkit', ''), ('--use-buildkit', '-bk')):
@@ -542,7 +547,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                 sys.stdin.readline()
         finally:
             if Path(path).exists():
-                Path(path).rmtree()
+                shutil.rmtree(Path(path))
 
     # ########################################
     # 'threads' program: testrun
@@ -681,7 +686,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     conn.close()
     # Check that created files won't be packed
     for f in config.get('other_files'):
-        if 'dir2' in Path(f).parent.components:
+        if 'dir2' in Path(f).parent.parts:
             raise AssertionError("Created file shouldn't be packed: %s" %
                                  Path(f))
 
@@ -738,11 +743,11 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Test shebang corner-cases
     #
 
-    Path('a').symlink('b')
+    Path('a').symlink_to('b')
     with Path('b').open('w') as fp:
         fp.write('#!%s 0\nsome content\n' % (Path.cwd() / 'c'))
     Path('b').chmod(0o744)
-    Path('c').symlink('d')
+    Path('c').symlink_to('d')
     with Path('d').open('w') as fp:
         fp.write('#!e')
     Path('d').chmod(0o744)
@@ -777,7 +782,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         SELECT name, argv FROM executed_files
         ''')
     executed = [(Path(r[0]), r[1]) for r in rows
-                if Path(r[0]).lies_under(Path.cwd())]
+                if Path.cwd() in Path(r[0]).parents]
 
     print("other_files: %r" % sorted(other_files), file=sys.stderr)
     print("opened: %r" % opened, file=sys.stderr)
@@ -851,7 +856,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         # Run directory
         check_simple(rpuz + ['directory', 'run', 'simpledir'], 'err')
         output_in_dir = Path('simpledir/root/tmp')
-        output_in_dir = output_in_dir.listdir('reprozip_*')[0]
+        output_in_dir = list(output_in_dir.glob('reprozip_*'))[0]
         output_in_dir = output_in_dir / 'simple_output.txt'
         with output_in_dir.open(encoding='utf-8') as fp:
             assert fp.read().strip() == '42'
@@ -874,4 +879,4 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
 
     coverage = Path('.coverage')
     if coverage.exists():
-        coverage.copyfile(tests.parent / '.coverage.runpy')
+        shutil.copyfile(coverage, tests.parent / '.coverage.runpy')

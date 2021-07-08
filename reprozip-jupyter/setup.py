@@ -15,8 +15,7 @@ setup(name='reprozip-jupyter',
       entry_points={
           'console_scripts': [
               'reprozip-jupyter = reprozip_jupyter.main:main']},
-      install_requires=['rpaths',
-                        'notebook', 'jupyter_client', 'nbformat', 'nbconvert',
+      install_requires=['notebook', 'jupyter_client', 'nbformat', 'nbconvert',
                         'reprounzip>=2.0.0,<3.0.0'],
       description="Jupyter Notebook tracing/reproduction using ReproZip",
       author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",

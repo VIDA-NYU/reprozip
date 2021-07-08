@@ -16,7 +16,7 @@ Currently supported package managers:
 import distro
 import itertools
 import logging
-from rpaths import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import time
 
@@ -87,12 +87,14 @@ class PkgManager(object):
 
     def _filter(self, f):
         # Special files
-        if any(f.path.lies_under(c) for c in magic_dirs):
+        if any(PurePosixPath(c) in f.path.parents for c in magic_dirs):
             return True
 
         # If it's not in a system directory, no need to look for it
-        if (f.path.lies_under('/usr/local') or
-                not any(f.path.lies_under(c) for c in system_dirs)):
+        if (
+            PurePosixPath('/usr/local') in f.path.parents or
+            not any(PurePosixPath(c) in f.path.parents for c in system_dirs)
+        ):
             self.unknown_files.add(f)
             return True
 
@@ -126,13 +128,13 @@ class DpkgManager(PkgManager):
                 break
 
             proc = subprocess.Popen(['dpkg-query', '-S'] +
-                                    [path.path for path in batch],
+                                    [path for path in batch],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             out, err = proc.communicate()
             for line in out.splitlines():
                 pkgname, path = line.split(b': ', 1)
-                path = Path(path.strip())
+                path = Path(path.strip().decode('utf-8', 'surrogateescape'))
                 # 8-bit safe encoding, because this might be a localized error
                 # message (that we don't care about)
                 pkgname = pkgname.decode('iso-8859-1')
@@ -214,7 +216,7 @@ class RpmManager(PkgManager):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
     def _get_packages_for_file(self, filename):
-        p = subprocess.Popen(['rpm', '-qf', filename.path,
+        p = subprocess.Popen(['rpm', '-qf', filename,
                               '--qf', '%{NAME}'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)

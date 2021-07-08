@@ -10,16 +10,17 @@ import functools
 import logging
 import itertools
 import os
+from pathlib import Path, PurePosixPath
 import pickle
 import pkg_resources
 import random
 import re
-from rpaths import PosixPath, Path
 import shutil
 import signal
 import subprocess
 import sys
 import tarfile
+import tempfile
 import warnings
 
 import reprozip_core.common
@@ -186,7 +187,7 @@ class FileUploader(object):
                 local_path, input_name = filespec_split
 
                 if input_name.startswith('/'):
-                    input_path = PosixPath(input_name)
+                    input_path = PurePosixPath(input_name)
                 else:
                     try:
                         input_path = inputs_outputs[input_name].path
@@ -199,13 +200,14 @@ class FileUploader(object):
                 if not local_path:
                     # Restore original file from pack
                     logger.debug("Restoring input file %s", input_path)
-                    fd, temp = Path.tempfile(prefix='reprozip_input_')
+                    fd, temp = tempfile.mkstemp(prefix='reprozip_input_')
+                    temp = Path(temp)
                     os.close(fd)
                     local_path = self.extract_original_input(input_name,
                                                              input_path,
                                                              temp)
                     if local_path is None:
-                        temp.remove()
+                        temp.unlink()
                         logger.warning("No original packed, can't restore "
                                        "input file %s", input_name)
                         continue
@@ -221,10 +223,10 @@ class FileUploader(object):
                 self.upload_file(local_path, input_path)
 
                 if temp is not None:
-                    temp.remove()
+                    temp.unlink()
                     self.input_files.pop(input_name, None)
                 else:
-                    self.input_files[input_name] = local_path.absolute().path
+                    self.input_files[input_name] = bytes(local_path.absolute())
         finally:
             self.finalize()
 
@@ -238,12 +240,12 @@ class FileUploader(object):
     def extract_original_input(self, input_name, input_path, temp):
         tar = tarfile.open(str(self.target / self.data_tgz), 'r:*')
         try:
-            member = tar.getmember(str(join_root(PosixPath('DATA'),
+            member = tar.getmember(str(join_root(PurePosixPath('DATA'),
                                                  input_path)))
         except KeyError:
             return None
         member = copy.copy(member)
-        member.name = str(temp.components[-1])
+        member.name = str(temp.parts[-1])
         tar.extract(member, str(temp.parent))
         tar.close()
         return temp
@@ -304,7 +306,7 @@ class FileDownloader(object):
             # Download files
             for output_name, local_path in resolved_files:
                 if output_name.startswith('/'):
-                    remote_path = PosixPath(output_name)
+                    remote_path = PurePosixPath(output_name)
                 else:
                     try:
                         remote_path = inputs_outputs[output_name].path
@@ -339,7 +341,8 @@ class FileDownloader(object):
 
     def download_and_print(self, remote_path):
         # Download to temporary file
-        fd, temp = Path.tempfile(prefix='reprozip_output_')
+        fd, temp = tempfile.mkstemp(prefix='reprozip_output_')
+        temp = Path(temp)
         os.close(fd)
         download_status = self.download(remote_path, temp)
         if download_status is not None and not download_status:
@@ -347,7 +350,7 @@ class FileDownloader(object):
         # Output to stdout
         with temp.open('rb') as fp:
             shutil.copyfileobj(fp, sys.stdout.buffer)
-        temp.remove()
+        temp.unlink()
         return True
 
     def download(self, remote_path, local_path):

@@ -8,7 +8,7 @@
 import contextlib
 import logging
 import os
-from rpaths import Path, PosixPath
+from pathlib import Path, PurePosixPath
 import select
 import socket
 import struct
@@ -133,7 +133,7 @@ class X11Handler(BaseX11Handler):
 
         self.target = target
 
-        self.xauth = PosixPath('/.reprounzip_xauthority')
+        self.xauth = PurePosixPath('/.reprounzip_xauthority')
         self.display = (int(display) if display is not None
                         else self.DISPLAY_NUMBER)
         logger.debug("X11 support enabled; will create Xauthority file %s "
@@ -150,7 +150,7 @@ class X11Handler(BaseX11Handler):
             xauthority = Path(os.environ['XAUTHORITY'])
         # Note: I'm assuming here that Xauthority has no XDG support
         else:
-            xauthority = Path('~').expand_user() / '.Xauthority'
+            xauthority = Path('~').expanduser() / '.Xauthority'
 
         # Read Xauthority file
         xauth_entries = {}

@@ -12,9 +12,10 @@ and config YAML.
 import itertools
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import string
 import sys
+import tempfile
 import tarfile
 import uuid
 
@@ -34,11 +35,12 @@ def expand_patterns(patterns):
 
     # Finds all matching paths
     for pattern in patterns:
+        paths = list(Path('/').glob(pattern))
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Expanding pattern %r into %d paths",
                          pattern,
-                         len(list(Path('/').recursedir(pattern))))
-        for path in Path('/').recursedir(pattern):
+                         len(paths))
+        for path in paths:
             if path.is_dir():
                 dirs.add(path)
             else:
@@ -48,7 +50,7 @@ def expand_patterns(patterns):
     non_empty_dirs = {Path('/')}
     for p in files | dirs:
         path = Path('/')
-        for c in p.components[1:]:
+        for c in p.parts[1:]:
             path = path / c
             non_empty_dirs.add(path)
 
@@ -82,12 +84,17 @@ def data_path(filename, prefix=Path('DATA')):
 
     Example:
 
-    >>> data_path(PosixPath('/var/lib/../../../../tmp/test'))
-    PosixPath(b'DATA/tmp/test')
-    >>> data_path(PosixPath('/var/lib/../www/index.html'))
-    PosixPath(b'DATA/var/www/index.html')
+    >>> data_path(PurePosixPath('/var/lib/../../../../tmp/test'))
+    PurePosixPath('DATA/tmp/test')
+    >>> data_path(PurePosixPath('/var/lib/../www/index.html'))
+    PurePosixPath('DATA/var/www/index.html')
     """
-    return prefix / filename.split_root()[1]
+    filename = str(filename)
+    if filename.startswith('/'):
+        filename = filename[1:]
+    if filename.startswith('/'):
+        filename = filename[1:]
+    return prefix / filename
 
 
 class PackBuilder(object):
@@ -101,7 +108,7 @@ class PackBuilder(object):
         if filename in self.seen:
             return
         path = Path('/')
-        for c in filename.components[1:]:
+        for c in filename.parts[1:]:
             path = path / c
             if path in self.seen:
                 continue
@@ -154,7 +161,8 @@ def pack(target, directory, sort_packages):
     logger.info("Creating pack %s...", target)
     tar = tarfile.open(str(target), 'w:')
 
-    fd, tmp = Path.tempfile()
+    fd, tmp = tempfile.mkstemp(prefix='reprozip_', suffix='.tar')
+    tmp = Path(tmp)
     os.close(fd)
     try:
         datatar = PackBuilder(tmp)
@@ -188,18 +196,19 @@ def pack(target, directory, sort_packages):
 
         tar.add(str(tmp), 'DATA.tar.gz')
     finally:
-        tmp.remove()
+        tmp.unlink()
 
     logger.info("Adding metadata...")
     # Stores pack version
-    fd, manifest = Path.tempfile(prefix='reprozip_', suffix='.txt')
+    fd, manifest = tempfile.mkstemp(prefix='reprozip_', suffix='.txt')
+    manifest = Path(manifest)
     os.close(fd)
     try:
         with manifest.open('wb') as fp:
             fp.write(b'REPROZIP VERSION 2\n')
         tar.add(str(manifest), 'METADATA/version')
     finally:
-        manifest.remove()
+        manifest.unlink()
 
     # Stores the original trace
     trace = directory / 'trace.sqlite3'
@@ -218,7 +227,8 @@ def pack(target, directory, sort_packages):
     pack_id = str(uuid.uuid4())
 
     # Stores canonical config
-    fd, can_configfile = Path.tempfile(suffix='.yml', prefix='rpz_config_')
+    fd, can_configfile = tempfile.mkstemp(suffix='.yml', prefix='rpz_config_')
+    can_configfile = Path(can_configfile)
     os.close(fd)
     try:
         save_config(can_configfile, runs, packages, other_files,
@@ -228,7 +238,7 @@ def pack(target, directory, sort_packages):
 
         tar.add(str(can_configfile), 'METADATA/config.yml')
     finally:
-        can_configfile.remove()
+        can_configfile.unlink()
 
     tar.close()
 

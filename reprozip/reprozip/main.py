@@ -14,9 +14,10 @@ import argparse
 import locale
 import logging
 import os
-from rpaths import Path
+from pathlib import Path
 import sqlite3
 import sys
+import tempfile
 import traceback
 
 from reprozip import __version__ as reprozip_version
@@ -183,7 +184,8 @@ def testrun(args):
 
     Not really useful, except for debugging.
     """
-    fd, database = Path.tempfile(prefix='reprozip_', suffix='.sqlite3')
+    fd, database = tempfile.mkstemp(prefix='reprozip_', suffix='.sqlite3')
+    database = Path(database)
     os.close(fd)
     try:
         if args.arg0 is not None:
@@ -192,7 +194,7 @@ def testrun(args):
             argv = args.cmdline
         logger.debug("Starting tracer, binary=%r, argv=%r",
                      args.cmdline[0], argv)
-        c = _pytracer.execute(args.cmdline[0], argv, database.path)
+        c = _pytracer.execute(args.cmdline[0], argv, bytes(database))
         print("\n\n-----------------------------------------------------------"
               "--------------------")
         print_db(database)
@@ -205,7 +207,7 @@ def testrun(args):
 
         return c
     finally:
-        database.remove()
+        database.unlink()
 
 
 def trace(args):
@@ -256,9 +258,9 @@ def pack(args):
     Reads in the configuration file and writes out a tarball.
     """
     target = Path(args.target)
-    if not target.unicodename.lower().endswith('.rpz'):
-        target = Path(target.path + b'.rpz')
-        logger.warning("Changing output filename to %s", target.unicodename)
+    if not target.name.lower().endswith('.rpz'):
+        target = Path(str(target) + '.rpz')
+        logger.warning("Changing output filename to %s", target.name)
     reprozip.pack.pack(target, Path(args.dir), args.identify_packages)
 
 

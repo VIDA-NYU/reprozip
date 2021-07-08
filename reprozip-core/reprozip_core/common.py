@@ -23,11 +23,12 @@ import json
 import logging
 import logging.handlers
 import os
+from pathlib import Path, PurePosixPath
 import pkg_resources
-from rpaths import PosixPath, Path
 import shutil
 import sys
 import tarfile
+import tempfile
 import usagestats
 import yaml
 
@@ -143,7 +144,7 @@ class RPZPack(object):
                 version = None
             if version in (1, 2):
                 self.version = version
-                self.data_prefix = PosixPath(b'DATA')
+                self.data_prefix = PurePosixPath('DATA')
             else:
                 raise ValueError(
                     "Unknown format version %r (maybe you should upgrade "
@@ -161,9 +162,9 @@ class RPZPack(object):
             assert False
 
     def remove_data_prefix(self, path):
-        if not isinstance(path, PosixPath):
-            path = PosixPath(path)
-        components = path.components[1:]
+        if not isinstance(path, PurePosixPath):
+            path = PurePosixPath(path)
+        components = path.parts[1:]
         if not components:
             return path.__class__('')
         return path.__class__(*components)
@@ -183,7 +184,7 @@ class RPZPack(object):
 
     def _extract_file(self, member, target):
         member = copy.copy(member)
-        member.name = str(target.components[-1])
+        member.name = str(target.parts[-1])
         self.tar.extract(member,
                          path=str(Path.cwd() / target.parent))
         target.chmod(0o644)
@@ -209,11 +210,12 @@ class RPZPack(object):
     def with_config(self):
         """Context manager that extracts the config to  a temporary file.
         """
-        fd, tmp = Path.tempfile(prefix='reprounzip_')
+        fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
+        tmp = Path(tmp)
         os.close(fd)
         self.extract_config(tmp)
         yield tmp
-        tmp.remove()
+        tmp.unlink()
 
     def extract_trace(self, target):
         """Extracts the trace database to the specified path.
@@ -241,11 +243,12 @@ class RPZPack(object):
     def with_trace(self):
         """Context manager that extracts the trace database to a temporary file.
         """
-        fd, tmp = Path.tempfile(prefix='reprounzip_')
+        fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
+        tmp = Path(tmp)
         os.close(fd)
         self.extract_trace(tmp)
         yield tmp
-        tmp.remove()
+        tmp.unlink()
 
     def list_data(self):
         """Returns tarfile.TarInfo objects for all the data paths.
@@ -260,7 +263,7 @@ class RPZPack(object):
         Those paths begin with a slash / and the 'DATA' prefix has been
         removed.
         """
-        return set(PosixPath(m.name[4:])
+        return set(PurePosixPath(m.name[4:])
                    for m in self.data.getmembers()
                    if m.name.startswith('DATA/'))
 
@@ -269,8 +272,8 @@ class RPZPack(object):
 
         Raises KeyError if no such path exists.
         """
-        path = PosixPath(path)
-        path = join_root(PosixPath(b'DATA'), path)
+        path = PurePosixPath(path)
+        path = join_root(PurePosixPath('DATA'), path)
         return copy.copy(self.data.getmember(path))
 
     def extract_data(self, root, members):
@@ -284,7 +287,7 @@ class RPZPack(object):
         """Copies the file in which the data lies to the specified destination.
         """
         if self.version == 1:
-            self.pack.copyfile(target)
+            shutil.copyfile(self.pack, target)
         elif self.version == 2:
             with target.open('wb') as fp:
                 data = self.tar.extractfile('DATA.tar.gz')
@@ -306,7 +309,7 @@ class InvalidConfig(ValueError):
 def read_files(files, File=File):
     if files is None:
         return []
-    return [File(PosixPath(f)) for f in files]
+    return [File(PurePosixPath(f)) for f in files]
 
 
 def read_packages(packages, File=File, Package=Package):
@@ -362,7 +365,7 @@ def load_iofiles(config, runs):
                                        wkey: [i]})
 
     files = {}  # name:str: InputOutputFile
-    paths = {}  # path:PosixPath: name:str
+    paths = {}  # path:PurePosixPath: name:str
     required_keys = {'name', 'path'}
     optional_keys = {'read_by_runs', 'written_by_runs'}
     uniquenames = UniqueNames()
@@ -376,7 +379,7 @@ def load_iofiles(config, runs):
             logger.warning("File name looks like a path: %s, prefixing with "
                            ".", name)
             name = '.%s' % name
-        path = PosixPath(f['path'])
+        path = PurePosixPath(f['path'])
         readers = sorted(f.get('read_by_runs', []))
         writers = sorted(f.get('written_by_runs', []))
         if (
@@ -414,6 +417,21 @@ def load_iofiles(config, runs):
     return files
 
 
+def _bytes_to_surrogates(container):
+    if isinstance(container, dict):
+        iterator = container.items()
+    elif isinstance(container, list):
+        iterator = enumerate(container)
+    else:
+        raise TypeError
+
+    for k, v in iterator:
+        if isinstance(v, bytes):
+            container[k] = v.decode('utf-8', 'surrogateescape')
+        elif isinstance(v, (list, dict)):
+            _bytes_to_surrogates(v)
+
+
 def load_config(filename, canonical, File=File, Package=Package):
     """Loads a YAML configuration file.
 
@@ -427,6 +445,9 @@ def load_config(filename, canonical, File=File, Package=Package):
     """
     with filename.open(encoding='utf-8') as fp:
         config = yaml.safe_load(fp)
+
+    # Turn bytes values into Python 3 str values
+    _bytes_to_surrogates(config)
 
     ver = LooseVersion(config['version'])
 
@@ -719,7 +740,7 @@ def setup_logging(tag, verbosity):
     # File logger
     if os.environ.get('REPROZIP_NO_LOGFILE', '').lower() in ('', 'false',
                                                              '0', 'off'):
-        dotrpz = Path('~/.reprozip').expand_user()
+        dotrpz = Path('~/.reprozip').expanduser()
         try:
             if not dotrpz.is_dir():
                 dotrpz.mkdir()
@@ -763,7 +784,7 @@ def setup_usage_report(name, version):
         version='%s %s' % (name, version),
         unique_user_id=True,
         env_var='REPROZIP_USAGE_STATS',
-        ssl_verify=certificate_file.path)
+        ssl_verify=certificate_file)
     try:
         os.getcwd().encode('ascii')
     except (UnicodeEncodeError, UnicodeDecodeError):
