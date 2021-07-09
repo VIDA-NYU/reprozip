@@ -214,7 +214,7 @@ def get_files(conn):
                for r, lst in enumerate(access_files)]
 
     # Run the list of files through the filter plugins
-    run_filter_plugins(files, inputs)
+    run_filter_plugins(files, inputs)  ##
 
     # Files removed from plugins should be removed from inputs as well
     inputs = [[path for path in lst if path in files]
