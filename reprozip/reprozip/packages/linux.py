@@ -28,7 +28,7 @@ magic_dirs = ('/dev', '/proc', '/sys')
 system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var', '/run')
 
 
-class PkgManager(object):
+class LinuxPkgManager(object):
     """Base class for package identifiers.
 
     Subclasses should provide either `search_for_files` or `search_for_file`
@@ -109,7 +109,7 @@ class PkgManager(object):
 MAX_ARGV = 800
 
 
-class DpkgManager(PkgManager):
+class DpkgManager(LinuxPkgManager):
     """Package identifier for deb-based systems (Debian, Ubuntu).
     """
     def search_for_files(self, files):
@@ -210,7 +210,7 @@ class DpkgManager(PkgManager):
             return None
 
 
-class RpmManager(PkgManager):
+class RpmManager(LinuxPkgManager):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
     def _get_packages_for_file(self, filename):
