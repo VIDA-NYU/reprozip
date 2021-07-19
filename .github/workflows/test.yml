@@ -75,11 +75,13 @@ jobs:
         export REPROZIP_TEST_PYTHON="$(which python) -Wd"
         case "$TEST_MODE"
         in
-            tests|coverage)
+            coverage)
                 export PYTHONUNBUFFERED=1
-                if [ "$TEST_MODE" = "coverage" ]; then
-                    export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-docker/reprounzip,$PWD/reprounzip-vagrant/reprounzip,$PWD/reprounzip-vistrails/reprounzip --branch"
-                fi
+                export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-docker/reprounzip,$PWD/reprounzip-vagrant/reprounzip,$PWD/reprounzip-vistrails/reprounzip,$PWD/tests --branch"
+                python -Wd -m $COVER -m tests --run-docker
+                ;;
+            tests)
+                export PYTHONUNBUFFERED=1
                 python -Wd tests --run-docker
                 ;;
             check-images)
