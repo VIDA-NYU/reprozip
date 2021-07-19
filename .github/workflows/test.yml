@@ -72,6 +72,7 @@ jobs:
       run: |
         export LANG=C
         export LC_ALL=C
+        export REPROZIP_TEST_PYTHON="$(which python) -Wd"
         case "$TEST_MODE"
         in
             tests|coverage)
@@ -79,10 +80,10 @@ jobs:
                 if [ "$TEST_MODE" = "coverage" ]; then
                     export COVER="coverage run --append --source=$PWD/reprozip/reprozip,$PWD/reprounzip/reprounzip,$PWD/reprounzip-docker/reprounzip,$PWD/reprounzip-vagrant/reprounzip,$PWD/reprounzip-vistrails/reprounzip --branch"
                 fi
-                python tests --run-docker
+                python -Wd tests --run-docker
                 ;;
             check-images)
-                python tests --check-vagrant-images --check-docker-images
+                python -Wd tests --check-vagrant-images --check-docker-images
                 ;;
             checks)
                 flake8 --ignore=E731,W503,W504
