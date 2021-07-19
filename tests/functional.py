@@ -130,25 +130,23 @@ def build(target, sources, args=[]):
 
 @in_temp_dir
 def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
-    rpz_python = [os.environ.get('REPROZIP_PYTHON', sys.executable)]
-    rpuz_python = [os.environ.get('REPROUNZIP_PYTHON', sys.executable)]
+    python_exe = os.environ.get('REPROZIP_TEST_PYTHON', sys.executable)
+    python_exe = python_exe.split(' ')
 
     # Can't match on the SignalWarning category here because of a Python bug
     # http://bugs.python.org/issue22543
     if raise_warnings:
-        rpz_python.extend(['-W', 'error:signal'])
-        rpuz_python.extend(['-W', 'error:signal'])
+        python_exe.extend(['-W', 'error:signal'])
 
     if 'COVER' in os.environ:
-        rpz_python.extend(['-m'] + os.environ['COVER'].split(' '))
-        rpuz_python.extend(['-m'] + os.environ['COVER'].split(' '))
+        python_exe.extend(['-m'] + os.environ['COVER'].split(' '))
 
     reprozip_main = tests.parent / 'reprozip/reprozip/main.py'
     reprounzip_main = tests.parent / 'reprounzip/reprounzip/main.py'
 
     verbose = ['-v'] * 3
-    rpz = rpz_python + [reprozip_main.absolute().path] + verbose
-    rpuz = rpuz_python + [reprounzip_main.absolute().path] + verbose
+    rpz = python_exe + [reprozip_main.absolute().path] + verbose
+    rpuz = python_exe + [reprounzip_main.absolute().path] + verbose
 
     print("Command lines are:\n%r\n%r" % (rpz, rpuz))
 
@@ -319,7 +317,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
                                      orig_output_location)
         # Run using reprounzip-vistrails
         check_simple(
-            sudo + rpuz_python +
+            sudo + python_exe +
             ['-m', 'reprounzip.plugins.vistrails', '1',
              'chroot', 'simplechroot_vt', '0',
              '--input-file', 'arg1:%s' % (tests / 'simple_input2.txt'),
