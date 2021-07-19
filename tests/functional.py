@@ -260,7 +260,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     out, err = p.communicate()
     assert p.poll() != 0
     err = err.splitlines()
-    while b"DeprecationWarning" in err[0]:
+    while b"DeprecationWarning" in err[0] or b"ImportWarning" in err[0]:
         err = err[2:]
     assert b"Wrong unpacker used" in err[0]
     assert err[1].startswith(b"usage: ")
@@ -301,7 +301,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         out, err = p.communicate()
         assert p.poll() != 0
         err = err.splitlines()
-        while b"DeprecationWarning" in err[0]:
+        while b"DeprecationWarning" in err[0] or b"ImportWarning" in err[0]:
             err = err[2:]
         assert b"Wrong unpacker used" in err[0]
         assert err[1].startswith(b"usage:")
@@ -819,7 +819,7 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         out, err = p.communicate()
         assert p.poll() != 0
         err = err.splitlines()
-        while b"DeprecationWarning" in err[0]:
+        while b"DeprecationWarning" in err[0] or b"ImportWarning" in err[0]:
             err = err[2:]
         assert b"Wrong unpacker used" in err[0]
         assert err[1].startswith(b"usage: ")
