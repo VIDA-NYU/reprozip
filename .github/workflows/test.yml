@@ -115,14 +115,17 @@ jobs:
         if [ "$TEST_MODE" = "coverage" ]; then
             export COVER="coverage run --append --source=$PWD --branch"
         fi
-        python tests --unittests
+        python -Wd tests --unittests
     - name: Functional test
       run: |
         export PYTHONUNBUFFERED=1
+        export REPROZIP_TEST_PYTHON="$(which python) -Wd"
         if [ "$TEST_MODE" = "coverage" ]; then
             export COVER="coverage run --append --source=$PWD --branch"
+            python -Wd -m $COVER -m tests --functests --run-docker
+        else
+            python -Wd tests --functests --run-docker
         fi
-        python tests --functests --run-docker
     - name: Upload coverage
       if: matrix.mode == 'coverage'
       run: |
