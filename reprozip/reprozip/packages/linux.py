@@ -11,12 +11,10 @@ Currently supported package managers:
 - rpm (CentOS, Fedora)
 """
 
-import distro
 import itertools
 import logging
 from pathlib import Path, PurePosixPath
 import subprocess
-import time
 
 from reprozip_core.common import Package
 
@@ -239,27 +237,3 @@ class RpmPackages(BaseLinuxPackages):
             return pkg
         else:
             return None
-
-
-def identify_packages(files):
-    """Organizes the files, using the distribution's package manager.
-    """
-    distribution = distro.id()
-    if distribution in ('debian', 'ubuntu'):
-        logger.info("Identifying Debian packages for %d files...", len(files))
-        manager = DebPackages()
-    elif (distribution in ('centos', 'centos linux',
-                           'fedora', 'scientific linux') or
-            distribution.startswith('red hat')):
-        logger.info("Identifying RPM packages for %d files...", len(files))
-        manager = RpmPackages()
-    else:
-        logger.info("Unknown distribution, can't identify packages")
-        return files, []
-
-    begin = time.time()
-    manager.search_for_files(files)
-    logger.debug("Assigning files to packages took %f seconds",
-                 (time.time() - begin))
-
-    return manager.unknown_files, list(manager.packages.values())
