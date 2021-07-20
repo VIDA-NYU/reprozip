@@ -42,6 +42,8 @@ in a separate module which they both depend on.
 * 1.1:
   - adds `processes.exit_timestamp`
   - adds `processes.cpu_time`
+* 2.0:
+  - change packages from list of packages to list of environments
 """
 
 import contextlib
@@ -146,6 +148,21 @@ class Package(object):
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.version)
+
+
+class Environment(object):
+    """A package manager environment, containing packages.
+    """
+    def __init__(self, package_manager, path, packages=None):
+        self.package_manager = package_manager
+        self.path = path
+        self.packages = packages if packages is not None else []
+
+    def add_package(self, package):
+        self.packages.append(package)
+
+    def __str__(self):
+        return '%s at %s' % (self.package_manager, self.path)
 
 
 class RPZPack(object):
@@ -343,7 +360,20 @@ def read_packages(packages):
     return new_pkgs
 
 
-Config = optional_return_type(['runs', 'packages', 'other_files'],
+def read_environments(
+    environments,
+    Environment=Environment, File=File, Package=Package,
+):
+    if environments is None:
+        return []
+    new_environments = []
+    for env in environments:
+        env['packages'] = read_packages(env['packages'], File, Package)
+        new_environments.append(Environment(**env))
+    return new_environments
+
+
+Config = optional_return_type(['runs', 'environments', 'other_files'],
                               ['inputs_outputs', 'additional_patterns',
                                'format_version'])
 
@@ -476,11 +506,10 @@ def load_config(filename, canonical):
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
     # Accepts versions from 0.2 to 1.1 inclusive
-    elif not LooseVersion('0.2') <= ver < LooseVersion('1.2'):
-        pkgname = (__package__ or __name__).split('.', 1)[0]
+    elif not LooseVersion('0.2') <= ver < LooseVersion('2.1'):
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "
-                            "%s" % (ver, pkgname))
+                            "reprozip-core" % ver)
     unknown_keys = keys_ - {'pack_id', 'version', 'runs',
                             'inputs_outputs',
                             'packages', 'other_files',
@@ -490,7 +519,22 @@ def load_config(filename, canonical):
                        ', '.join(unknown_keys))
 
     runs = config.get('runs') or []
-    packages = read_packages(config.get('packages'))
+    if ver < LooseVersion('2.0'):
+        # Read the old flat 'packages' section, guess the package manager
+        packages = read_packages(config.get('packages'))
+        dist = config['runs'][0]['distribution'][0].lower()
+        if dist in ('debian', 'ubuntu'):
+            package_manager = 'dpkg'
+        elif (
+            dist in ('centos', 'centos linux', 'fedora', 'scientific linux')
+            or dist.startswith('red hat')
+        ):
+            package_manager = 'rpm'
+        else:
+            raise InvalidConfig("Unknown package manager listed")
+        environments = [Environment(package_manager, '/', packages)]
+    else:
+        environments = read_environments(config.get('packages'))
     other_files = read_files(config.get('other_files'))
 
     inputs_outputs = load_iofiles(config, runs)
@@ -500,7 +544,7 @@ def load_config(filename, canonical):
         if run.get('id') is None:
             run['id'] = "run%d" % i
 
-    record_usage_package(runs, packages, other_files,
+    record_usage_package(runs, environments, other_files,
                          inputs_outputs,
                          pack_id=config.get('pack_id'))
 
@@ -514,7 +558,7 @@ def load_config(filename, canonical):
     else:
         kwargs['additional_patterns'] = config.get('additional_patterns') or []
 
-    return Config(runs, packages, other_files,
+    return Config(runs, environments, other_files,
                   **kwargs)
 
 
@@ -525,30 +569,32 @@ def write_file(fp, fi, indent=0):
              ' # %s' % fi.comment if fi.comment is not None else ''))
 
 
-def write_package(fp, pkg, indent=0):
-    indent_str = "    " * indent
-    fp.write("%s  - name: \"%s\"\n" % (indent_str, escape(pkg.name)))
-    fp.write("%s    version: \"%s\"\n" % (indent_str, escape(pkg.version)))
+def write_package(fp, pkg, indent=3):
+    indent_str = "  " * indent
+    fp.write("%s- name: \"%s\"\n" % (indent_str, escape(pkg.name)))
+    fp.write("%s  version: \"%s\"\n" % (indent_str, escape(pkg.version)))
     if pkg.size is not None:
-        fp.write("%s    size: %d\n" % (indent_str, pkg.size))
-    fp.write("%s    packfiles: %s\n" % (indent_str, 'true' if pkg.packfiles
-                                                    else 'false'))
+        fp.write("%s  size: %d\n" % (indent_str, pkg.size))
+    fp.write("%s  packfiles: %s\n" % (
+        indent_str,
+        'true' if pkg.packfiles else 'false',
+    ))
     if pkg.meta:
-        fp.write("%s    meta: %s\n" % (indent_str, json.dumps(pkg.meta),))
-    fp.write("%s    files:\n"
-             "%s      # Total files used: %s\n" % (
+        fp.write("%s  meta: %s\n" % (indent_str, json.dumps(pkg.meta),))
+    fp.write("%s  files:\n"
+             "%s    # Total files used: %s\n" % (
                  indent_str, indent_str,
                  hsize(sum(fi.size
                            for fi in pkg.files
                            if fi.size is not None))))
     if pkg.size is not None:
-        fp.write("%s      # Installed package size: %s\n" % (
+        fp.write("%s    # Installed package size: %s\n" % (
                  indent_str, hsize(pkg.size)))
     for fi in sorted(pkg.files, key=lambda fi_: fi_.path):
         write_file(fp, fi, indent + 1)
 
 
-def save_config(filename, runs, packages, other_files, reprozip_version,
+def save_config(filename, runs, environments, other_files, reprozip_version,
                 inputs_outputs=None,
                 canonical=False, pack_id=None):
     """Saves the configuration to a YAML file.
@@ -570,7 +616,7 @@ version: "{format!s}"
 """.format(pack_id=(('\npack_id: "%s"' % pack_id) if pack_id is not None
                     else ''),
            version=escape(reprozip_version),
-           format='1.1',
+           format='2.0',
            date=isodatetime(),
            what=("# It was generated by the packer and you shouldn't need to "
                  "edit it" if canonical
@@ -616,8 +662,17 @@ packages:
 """)
 
         # Writes files
-        for pkg in sorted(packages, key=lambda p: p.name):
-            write_package(fp, pkg)
+        for environment in environments:
+            fp.write("""\
+  - package_manager: {manager}
+    environment: {path}
+    packages:
+""".format(
+                manager=environment.package_manager,
+                path=environment.path,
+            ))
+            for pkg in sorted(environment.packages, key=lambda p: p.name):
+                write_package(fp, pkg)
 
         fp.write("""\
 
@@ -820,7 +875,7 @@ def record_usage(**kwargs):
         _usage_report.note(kwargs)
 
 
-def record_usage_package(runs, packages, other_files,
+def record_usage_package(runs, environments, other_files,
                          inputs_outputs,
                          pack_id=None):
     """Records the info on some pack file into the current usage report.
@@ -830,10 +885,14 @@ def record_usage_package(runs, packages, other_files,
     for run in runs:
         record_usage(argv0=run['argv'][0])
     record_usage(pack_id=pack_id or '',
-                 nb_packages=len(packages),
+                 nb_environments=len(environments),
+                 nb_packages=sum(len(env.packages) for env in environments),
                  nb_package_files=sum(len(pkg.files)
-                                      for pkg in packages),
-                 packed_packages=sum(1 for pkg in packages
+                                      for env in environments
+                                      for pkg in env.packages),
+                 packed_packages=sum(1
+                                     for env in environments
+                                     for pkg in env.packages
                                      if pkg.packfiles),
                  nb_other_files=len(other_files),
                  nb_input_outputs_files=len(inputs_outputs),
