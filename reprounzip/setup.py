@@ -14,51 +14,65 @@ req = [
     'requests',
     'distro',
     'pyelftools',
-    'reprozip-core>=2.0.0,<3.0.0']
-setup(name='reprounzip',
-      version='2.0.0',
-      packages=['reprounzip', 'reprounzip.unpackers',
-                'reprounzip.unpackers.common', 'reprounzip.plugins'],
-      package_data={
-          'reprounzip': ['rpzsudo-i686', 'rpzsudo-x86_64'],
-      },
-      entry_points={
-          'console_scripts': [
-              'reprounzip = reprounzip.main:main'],
-          'reprounzip.unpackers': [
-              'info = reprounzip.pack_info:setup_info',
-              'showfiles = reprounzip.pack_info:setup_showfiles',
-              'graph = reprounzip.unpackers.graph:setup',
-              'provviewer = reprounzip.unpackers.provviewer:setup',
-              'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
-              'directory = reprounzip.unpackers.default:setup_directory',
-              'chroot = reprounzip.unpackers.default:setup_chroot']},
-      install_requires=req,
-      extras_require={
-          'all': ['reprounzip-vagrant>=1.0', 'reprounzip-docker>=1.0',
-                  'reprounzip-vistrails>=1.0']},
-      description="Linux tool enabling reproducible experiments (unpacker)",
-      author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
-      author_email='dev@reprozip.org',
-      maintainer="Remi Rampin",
-      maintainer_email='remi@rampin.org',
-      url='https://www.reprozip.org/',
-      project_urls={
-          'Homepage': 'https://github.com/ViDA-NYU/reprozip',
-          'Documentation': 'https://docs.reprozip.org/',
-          'Examples': 'https://examples.reprozip.org/',
-          'Say Thanks': 'https://saythanks.io/to/remram44',
-          'Source': 'https://github.com/ViDA-NYU/reprozip',
-          'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
-      },
-      long_description=description,
-      license='BSD-3-Clause',
-      keywords=['reprozip', 'reprounzip', 'reproducibility', 'provenance',
-                'vida', 'nyu'],
-      classifiers=[
-          'Development Status :: 5 - Production/Stable',
-          'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: BSD License',
-          'Programming Language :: Python :: 3',
-          'Topic :: Scientific/Engineering',
-          'Topic :: System :: Archiving'])
+    'reprozip-core>=2.0.0,<3.0.0',
+]
+setup(
+    name='reprounzip',
+    version='2.0.0',
+    packages=[
+        'reprounzip', 'reprounzip.unpackers',
+        'reprounzip.unpackers.common', 'reprounzip.plugins',
+    ],
+    package_data={
+        'reprounzip': ['rpzsudo-i686', 'rpzsudo-x86_64'],
+    },
+    entry_points={
+        'console_scripts': [
+            'reprounzip = reprounzip.main:main',
+        ],
+        'reprounzip.unpackers': [
+            'info = reprounzip.pack_info:setup_info',
+            'showfiles = reprounzip.pack_info:setup_showfiles',
+            'graph = reprounzip.unpackers.graph:setup',
+            'provviewer = reprounzip.unpackers.provviewer:setup',
+            'installpkgs = reprounzip.unpackers.default:setup_installpkgs',
+            'directory = reprounzip.unpackers.default:setup_directory',
+            'chroot = reprounzip.unpackers.default:setup_chroot',
+        ],
+    },
+    install_requires=req,
+    extras_require={
+        'all': [
+            'reprounzip-vagrant>=1.0', 'reprounzip-docker>=1.0',
+            'reprounzip-vistrails>=1.0',
+        ],
+    },
+    description="Linux tool enabling reproducible experiments (unpacker)",
+    author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
+    author_email='dev@reprozip.org',
+    maintainer="Remi Rampin",
+    maintainer_email='remi@rampin.org',
+    url='https://www.reprozip.org/',
+    project_urls={
+        'Homepage': 'https://github.com/ViDA-NYU/reprozip',
+        'Documentation': 'https://docs.reprozip.org/',
+        'Examples': 'https://examples.reprozip.org/',
+        'Say Thanks': 'https://saythanks.io/to/remram44',
+        'Source': 'https://github.com/ViDA-NYU/reprozip',
+        'Tracker': 'https://github.com/ViDA-NYU/reprozip/issues',
+    },
+    long_description=description,
+    license='BSD-3-Clause',
+    keywords=[
+        'reprozip', 'reprounzip', 'reproducibility', 'provenance',
+        'vida', 'nyu',
+    ],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3',
+        'Topic :: Scientific/Engineering',
+        'Topic :: System :: Archiving',
+    ],
+)
