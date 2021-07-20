@@ -54,6 +54,11 @@ setup(
         'console_scripts': [
             'reprozip = reprozip.main:main',
         ],
+        'reprozip.packagemanagers': [
+            'dpkg = reprozip.packages.linux:DebPackages',
+            'rpm = reprozip.packages.linux.RpmPackages',
+            'python = reprozip.packages.python:PythonManager',
+        ],
         'reprozip.filters': [
             'python = reprozip.filters:python',
             'builtin = reprozip.filters:builtin',
