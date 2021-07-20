@@ -28,7 +28,7 @@ magic_dirs = ('/dev', '/proc', '/sys')
 system_dirs = ('/bin', '/etc', '/lib', '/sbin', '/usr', '/var', '/run')
 
 
-class LinuxPkgManager(object):
+class BaseLinuxPackages(object):
     """Base class for package identifiers.
 
     Subclasses should provide either `search_for_files` or `search_for_file`
@@ -109,7 +109,7 @@ class LinuxPkgManager(object):
 MAX_ARGV = 800
 
 
-class DpkgManager(LinuxPkgManager):
+class DebPackages(BaseLinuxPackages):
     """Package identifier for deb-based systems (Debian, Ubuntu).
     """
     def search_for_files(self, files):
@@ -210,7 +210,7 @@ class DpkgManager(LinuxPkgManager):
             return None
 
 
-class RpmManager(LinuxPkgManager):
+class RpmPackages(BaseLinuxPackages):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
     def _get_packages_for_file(self, filename):
@@ -247,12 +247,12 @@ def identify_packages(files):
     distribution = distro.id()
     if distribution in ('debian', 'ubuntu'):
         logger.info("Identifying Debian packages for %d files...", len(files))
-        manager = DpkgManager()
+        manager = DebPackages()
     elif (distribution in ('centos', 'centos linux',
                            'fedora', 'scientific linux') or
             distribution.startswith('red hat')):
         logger.info("Identifying RPM packages for %d files...", len(files))
-        manager = RpmManager()
+        manager = RpmPackages()
     else:
         logger.info("Unknown distribution, can't identify packages")
         return files, []
