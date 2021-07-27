@@ -38,6 +38,10 @@ class BaseLinuxPackages(object):
         # All the packages identified, with their `files` attribute set
         self.packages = {}
 
+    @property
+    def environment_packages(self):
+        return {'/': self.packages.values()}
+
     def filter_files(self, files):
         seen_files = set()
         for f in files:
@@ -58,13 +62,13 @@ class BaseLinuxPackages(object):
             else:
                 pkgs = []
                 for pkgname in pkgnames:
-                    if pkgname in self.packages:
-                        pkgs.append(self.packages[pkgname])
+                    if pkgname in self._packages:
+                        pkgs.append(self._packages[pkgname])
                     else:
                         pkg = self._create_package(pkgname)
                         if pkg is not None:
-                            self.packages[pkgname] = pkg
-                            pkgs.append(self.packages[pkgname])
+                            self._packages[pkgname] = pkg
+                            pkgs.append(self._packages[pkgname])
                 if len(pkgs) == 1:
                     pkgs[0].add_file(f)
                     nb_pkg_files += 1
@@ -72,12 +76,12 @@ class BaseLinuxPackages(object):
                     self.unknown_files.add(f)
 
         # Filter out packages with no files
-        self.packages = {pkgname: pkg
-                         for pkgname, pkg in self.packages.items()
-                         if pkg.files}
+        self._packages = {pkgname: pkg
+                          for pkgname, pkg in self._packages.items()
+                          if pkg.files}
 
         logger.info("%d packages with %d files, and %d other files",
-                    len(self.packages),
+                    len(self._packages),
                     nb_pkg_files,
                     len(self.unknown_files))
 
@@ -157,16 +161,16 @@ class DebPackages(BaseLinuxPackages):
         for path, pkgname in found.items():
             if pkgname is None:
                 continue
-            if pkgname in self.packages:
-                package = self.packages[pkgname]
+            if pkgname in self._packages:
+                package = self._packages[pkgname]
             else:
                 package = self._create_package(pkgname)
-                self.packages[pkgname] = package
+                self._packages[pkgname] = package
             package.add_file(requested.pop(path))
             nb_pkg_files += 1
 
         logger.info("%d packages with %d files, and %d other files",
-                    len(self.packages),
+                    len(self._packages),
                     nb_pkg_files,
                     len(self.unknown_files))
 
