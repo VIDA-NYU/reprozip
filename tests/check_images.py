@@ -1,9 +1,16 @@
 import logging
+import re
 import requests
 import time
 
 from reprounzip.parameters import _bundled_parameters
-from reprounzip.utils import itervalues, iteritems
+from reprounzip.utils import itervalues, iteritems, PY3
+
+
+if PY3:
+    from urllib.parse import urlencode
+else:
+    from urllib import urlencode
 
 
 logger = logging.getLogger(__name__)
@@ -104,6 +111,41 @@ def check_vagrant():
         raise AssertionError("Missing Vagrant boxes")
 
 
+def list_docker_tags(repository, token=None):
+    headers = {}
+    if token is not None:
+        headers['Authorization'] = 'Bearer %s' % token
+    res = requests.get(
+        'https://%s/v2/%s/%s/tags/list' % (
+            repository[0], repository[1], repository[2],
+        ),
+        headers=headers,
+    )
+    if token is None and res.status_code == 401:
+        # Authenticate
+        m = re.match(
+            r'Bearer realm="([^"]+)",service="([^"]+)"',
+            res.headers['www-authenticate'],
+        )
+        if m is None:
+            res.raise_for_status()
+        scope = 'repository:%s/%s:pull' % (repository[1], repository[2])
+        res = requests.get(
+            m.group(1) + '?' + urlencode({
+                'service': m.group(2),
+                'scope': scope,
+            }),
+        )
+        res.raise_for_status()
+        token = res.json()['token']
+        # Try again with token
+        return list_docker_tags(repository, token)
+
+    res.raise_for_status()
+
+    return res.json()['tags']
+
+
 def check_docker():
     error = False
 
@@ -124,35 +166,24 @@ def check_docker():
         else:
             tag = 'latest'
         if len(image) == 1:
-            image = ['docker.io', 'library'] + image
+            image = ['index.docker.io', 'library'] + image
         elif len(image) == 2:
-            image = ['docker.io'] + image
+            image = ['index.docker.io'] + image
         repositories.setdefault(tuple(image[:3]), set()).add(tag)
 
     # Check that each repository has the required tags
     for repository, tags in iteritems(repositories):
-        registry = repository[0]
-        if registry == 'docker.io':
-            registry = 'hub.docker.com'
-        else:
-            raise AssertionError("Registry unsupported: %s" % registry)
-        url = (
-            'https://' + registry
-            + '/v1/repositories/' + repository[1]
-            + '/' + repository[2]
-            + '/tags'
-        )
-        res = requests.get(url)
-        if res.status_code != 200:
+        try:
+            actual_tags = list_docker_tags(repository)
+        except requests.HTTPError as e:
             logger.error(
                 "Docker repository not found: %d %s",
-                res.status_code,
-                url,
+                e.response.status_code,
+                e.request.url,
             )
             error = True
             continue
-        actual_tags = res.json()
-        actual_tags = set(entry['name'] for entry in actual_tags)
+        actual_tags = set(actual_tags)
         for tag in tags:
             if tag not in actual_tags:
                 logger.error(
