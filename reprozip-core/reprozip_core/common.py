@@ -52,7 +52,7 @@ class File(object):
     comment = None
 
     def __init__(self, path, size=None):
-        self.path = path
+        self.path = Path(path)
         self.size = size
 
     def __eq__(self, other):
@@ -67,6 +67,24 @@ class File(object):
 
     def __repr__(self):
         return '<File %r>' % self.path
+
+    @classmethod
+    def from_local(cls, path):
+        size = None
+        comment = None
+        if path.exists():
+            if path.is_symlink():
+                target = Path(os.readlink(path))
+                target = (path.parent / target).absolute()
+                comment = "Link to %s" % target
+            elif path.is_dir():
+                comment = "Directory"
+            else:
+                size = path.stat().st_size
+                comment = hsize(size)
+        file = cls(path, size)
+        file.comment = comment
+        return file
 
 
 class Package(object):

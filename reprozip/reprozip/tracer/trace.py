@@ -28,15 +28,15 @@ from reprozip_core.common import File, InputOutputFile, \
     load_config, save_config, FILE_READ, FILE_WRITE, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
-from reprozip_core.utils import flatten, UniqueNames, hsize, normalize_path, \
+from reprozip_core.utils import flatten, UniqueNames, normalize_path, \
     find_all_links
 
 
 logger = logging.getLogger('reprozip')
 
 
-class TracedFile(File):
-    """Subclass of `~reprozip_core.common.File` reading stats from filesystem.
+class TracedFile(object):
+    """A file being created from the trace. Will be converted to File.
 
     It also memorizes how files are used, to select files that are only read,
     and accurately guess input and output files.
@@ -57,24 +57,10 @@ class TracedFile(File):
     ONLY_READ = 1
     WRITTEN = 2
 
-    what = None
-
     def __init__(self, path):
-        path = Path(path)
-        size = None
-        if path.exists():
-            if path.is_symlink():
-                target = Path(os.readlink(path))
-                target = (path.parent / target).absolute()
-                self.comment = "Link to %s" % target
-            elif path.is_dir():
-                self.comment = "Directory"
-            else:
-                size = path.stat().st_size
-                self.comment = hsize(size)
+        self.path = Path(path)
         self.what = None
         self.runs = defaultdict(lambda: None)
-        File.__init__(self, path, size)
 
     def read(self, run):
         if self.what is None:
@@ -95,6 +81,9 @@ class TracedFile(File):
                 self.runs[run] = TracedFile.WRITTEN
             elif self.runs[run] == TracedFile.ONLY_READ:
                 self.runs[run] = TracedFile.READ_THEN_WRITTEN
+
+    def to_file(self):
+        return File.from_local(self.path)
 
 
 def run_filter_plugins(files, input_files):
@@ -241,7 +230,7 @@ def get_files(conn):
                               for fi in read_then_written_files))
 
     files = set(
-        fi
+        fi.to_file()
         for fi in files.values()
         if fi.what != TracedFile.WRITTEN
         and not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)
@@ -412,8 +401,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
     else:
         # Loads in previous config
         runs, oldpkgs, oldfiles = load_config(config,
-                                              canonical=False,
-                                              File=TracedFile)
+                                              canonical=False)
 
         # Same query as previous block but only gets last process
         executions = cur.execute(

@@ -15,8 +15,7 @@ import shutil
 import sqlite3
 import tempfile
 
-from reprozip_core.common import create_trace_schema
-from reprozip.tracer.trace import TracedFile
+from reprozip_core.common import create_trace_schema, File
 
 
 logger = logging.getLogger('reprozip')
@@ -32,14 +31,12 @@ def combine_files(newfiles, newpackages, oldfiles, oldpackages):
     for oldpkg in oldpackages:
         if oldpkg.name in packages:
             pkg = packages[oldpkg.name]
-            # Here we build TracedFiles from the Files so that the comment
-            # (size, etc) gets set
-            s = set(TracedFile(fi.path) for fi in oldpkg.files)
+            s = set(File.from_local(fi.path) for fi in oldpkg.files)
             s.update(pkg.files)
             oldpkg.files = list(s)
             packages[oldpkg.name] = oldpkg
         else:
-            oldpkg.files = [TracedFile(fi.path) for fi in oldpkg.files]
+            oldpkg.files = [File.from_local(fi.path) for fi in oldpkg.files]
             packages[oldpkg.name] = oldpkg
     packages = packages.values()
 

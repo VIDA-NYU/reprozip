@@ -6,7 +6,7 @@ import logging
 import re
 from pathlib import Path
 
-from reprozip.tracer.trace import TracedFile
+from reprozip_core.common import File
 
 
 logger = logging.getLogger('reprozip')
@@ -49,7 +49,7 @@ def python(files, input_files, **kwargs):
             if pyfile.is_file():
                 if pyfile not in files:
                     logger.info("Adding %s", pyfile)
-                    add.append(TracedFile(pyfile))
+                    add.append(File(pyfile))
 
     for fi in add:
         files[fi.path] = fi
@@ -93,7 +93,7 @@ def ruby(files, input_files, **kwargs):
             and dir_or_file.suffix in extensions
         ):
             logger.info("Adding %s", dir_or_file)
-            files[dir_or_file] = TracedFile(dir_or_file)
+            files[dir_or_file] = File(dir_or_file)
         elif (
             dir_or_file.is_dir()
             and dir_or_file.name not in ignored_dirs
