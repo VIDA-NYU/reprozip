@@ -25,7 +25,7 @@ import subprocess
 import time
 
 
-logger = logging.getLogger(__name__.split('.', 1)[0])
+logger = logging.getLogger('reprozip_core')
 
 
 class StreamWriter(object):

@@ -36,7 +36,7 @@ from .utils import UniqueNames, escape, optional_return_type, isodatetime, \
     hsize, join_root
 
 
-logger = logging.getLogger(__name__.split('.', 1)[0])
+logger = logging.getLogger('reprozip_core')
 
 
 FILE_READ = 0x01

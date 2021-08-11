@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from reprounzip.parameters import _bundled_parameters
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('reprozip-tests')
 
 
 def _vagrant_req(method, url, json):
