@@ -1,0 +1,141 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+authors:
+  - family-names: Rampin
+    given-names: Remi
+    affiliation: New York University
+    orcid: https://orcid.org/0000-0002-0524-2282
+    website: https://remi.rampin.org/
+  - family-names: Freire
+    given-names: Juliana
+    affiliation: New York University
+    orcid: https://orcid.org/0000-0003-3915-7075
+    website: https://vgc.poly.edu/~juliana/
+  - family-names: Chirigati
+    given-names: Fernando
+    affiliation: New York University
+    orcid: https://orcid.org/0000-0002-9566-5835
+    website: http://fchirigati.com/
+  - family-names: Shasha
+    given-names: Dennis
+    affiliation: New York University
+    orcid: https://orcid.org/0000-0002-7036-3312
+    website: http://cs.nyu.edu/shasha/
+  - family-names: Rampin
+    given-names: Vicky
+    affiliation: New York University
+    orcid: https://orcid.org/0000-0003-4298-168X
+    website: https://vicky.rampin.org/
+license: BSD-3-Clause
+url: https://www.reprozip.org/
+repository-code: https://github.com/VIDA-NYU/reprozip
+title: ReproZip
+abstract: |
+  ReproZip is a tool aimed at simplifying the process of creating reproducible experiments from command-line executions, a frequently-used common denominator in computational science. It tracks operating system calls and creates a package that contains all the binaries, files and dependencies required to run a given command on the author's computational environment (packing step).
+keywords: [python, linux, docker, reproducibility, provenance, reproducible-research, reproducible-science]
+references:
+  - type: proceedings
+    doi: 10.1145/2882903.2899401
+    conference:
+      name: "SIGMOD '16"
+      website: https://www.sigmod2016.org/
+      city: San Francisco
+      country: US
+    authors:
+      - family-names: Rampin
+        given-names: Remi
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-0524-2282
+        website: https://remi.rampin.org/
+      - family-names: Freire
+        given-names: Juliana
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0003-3915-7075
+        website: https://vgc.poly.edu/~juliana/
+      - family-names: Chirigati
+        given-names: Fernando
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-9566-5835
+        website: http://fchirigati.com/
+      - family-names: Shasha
+        given-names: Dennis
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-7036-3312
+        website: http://cs.nyu.edu/shasha/
+    date-published: 2016-06-26
+    year: 2016
+    month: 6
+    title: "ReproZip: Computational Reproducibility With Ease"
+    abstract: |
+      We present ReproZip, the recommended packaging tool for the SIGMOD Reproducibility Review. ReproZip was designed to simplify the process of making an existing computational experiment reproducible across platforms, even when the experiment was put together without reproducibility in mind. The tool creates a self-contained package for an experiment by automatically tracking and identifying all its required dependencies. The researcher can share the package with others, who can then use ReproZip to unpack the experiment, reproduce the findings on their favorite operating system, as well as modify the original experiment for reuse in new research, all with little effort. The demo will consist of examples of non-trivial experiments, showing how these can be packed in a Linux machine and reproduced on different machines and operating systems. Demo visitors will also be able to pack and reproduce their own experiments.
+  - type: proceedings
+    doi: 10.21105/joss.00107
+    journal: Journal of Open Source Software
+    authors:
+      - family-names: Rampin
+        given-names: Remi
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-0524-2282
+        website: https://remi.rampin.org/
+      - family-names: Freire
+        given-names: Juliana
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0003-3915-7075
+        website: https://vgc.poly.edu/~juliana/
+      - family-names: Chirigati
+        given-names: Fernando
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-9566-5835
+        website: http://fchirigati.com/
+      - family-names: Shasha
+        given-names: Dennis
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0002-7036-3312
+        website: http://cs.nyu.edu/shasha/
+      - family-names: Rampin
+        given-names: Vicky
+        affiliation: New York University
+        orcid: https://orcid.org/0000-0003-4298-168X
+        website: https://vicky.rampin.org/
+    date-published: 2016-12-01
+    year: 2016
+    month: 12
+    title: "ReproZip: The Reproducibility Packer"
+preferred-citation:
+  type: proceedings
+  doi: 10.1145/2882903.2899401
+  conference:
+    name: "SIGMOD '16"
+    website: https://www.sigmod2016.org/
+    city: San Francisco
+    country: US
+  authors:
+    - family-names: Rampin
+      given-names: Remi
+      affiliation: New York University
+      orcid: https://orcid.org/0000-0002-0524-2282
+      website: https://remi.rampin.org/
+    - family-names: Freire
+      given-names: Juliana
+      affiliation: New York University
+      orcid: https://orcid.org/0000-0003-3915-7075
+      website: https://vgc.poly.edu/~juliana/
+    - family-names: Chirigati
+      given-names: Fernando
+      affiliation: New York University
+      orcid: https://orcid.org/0000-0002-9566-5835
+      website: http://fchirigati.com/
+    - family-names: Shasha
+      given-names: Dennis
+      affiliation: New York University
+      orcid: https://orcid.org/0000-0002-7036-3312
+      website: http://cs.nyu.edu/shasha/
+  date-published: 2016-06-26
+  year: 2016
+  month: 6
+  title: "ReproZip: Computational Reproducibility With Ease"
+  abstract: |
+    We present ReproZip, the recommended packaging tool for the SIGMOD Reproducibility Review. ReproZip was designed to simplify the process of making an existing computational experiment reproducible across platforms, even when the experiment was put together without reproducibility in mind. The tool creates a self-contained package for an experiment by automatically tracking and identifying all its required dependencies. The researcher can share the package with others, who can then use ReproZip to unpack the experiment, reproduce the findings on their favorite operating system, as well as modify the original experiment for reuse in new research, all with little effort. The demo will consist of examples of non-trivial experiments, showing how these can be packed in a Linux machine and reproduced on different machines and operating systems. Demo visitors will also be able to pack and reproduce their own experiments.
+version: "1.1"
+date-released: 2021-07-06
+doi: 10.5281/zenodo.5081097
