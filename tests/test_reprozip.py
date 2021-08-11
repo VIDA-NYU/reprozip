@@ -9,10 +9,11 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
-from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, \
-    InputOutputFile, create_trace_schema
-from reprozip.tracer.trace import get_files, compile_inputs_outputs
+from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
+    Package, InputOutputFile, create_trace_schema
+from reprozip.tracer.trace import TracedFile, get_files, compile_inputs_outputs
 from reprozip import traceutils
 from reprozip_core.utils import UniqueNames, make_dir_writable
 
@@ -227,7 +228,7 @@ class TestCombine(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
-    def test_combine(self):
+    def test_combine_traces(self):
         traces = []
         sql_data = [
             '''
@@ -327,3 +328,48 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
              (3, 3, 12345678902005, 5, 0, 'INET6', 'TCP', '127.0.0.3:80'),
              (4, 4, 12345678903001, 6, 0, 'INET', 'UDP', '127.0.0.1:53')],
         ])
+
+    def test_combine_files(self):
+        # Patch TracedObject constructor to not go to disk to read size etc
+        def _mock_TracedObject_init(self, path):
+            super(TracedFile, self).__init__(path, None)
+
+        with mock.patch.object(
+            TracedFile, '__init__',
+            _mock_TracedObject_init,
+        ):
+            # Call combine_files()
+            files, packages = traceutils.combine_files(
+                [File('/tmp/a'), File('/tmp/c')],
+                [
+                    Package('pkg1', '1.0.0', [File('/usr/a'), File('/usr/c')]),
+                    Package('pkg2', '2.0.0', [File('/usr/d'), File('/usr/e')]),
+                ],
+                [File('/tmp/a'), File('/tmp/b')],
+                [
+                    Package('pkg1', '1.0.0', [File('/usr/a'), File('/usr/b')]),
+                    Package('pkg3', '3.0.0', [File('/usr/f'), File('/usr/g')]),
+                ],
+            )
+        self.assertEqual(
+            files,
+            {File('/tmp/a'), File('/tmp/b'), File('/tmp/c')},
+        )
+        self.assertEqual(
+            sorted(packages, key=lambda pkg: pkg.name),
+            [
+                Package('pkg1', '1.0.0'),
+                Package('pkg2', '2.0.0'),
+                Package('pkg3', '3.0.0'),
+            ],
+        )
+        packages = {pkg.name: pkg for pkg in packages}
+        self.assertEqual(set(packages['pkg1'].files), {
+            File('/usr/a'), File('/usr/b'), File('/usr/c'),
+        })
+        self.assertEqual(set(packages['pkg2'].files), {
+            File('/usr/d'), File('/usr/e'),
+        })
+        self.assertEqual(set(packages['pkg3'].files), {
+            File('/usr/f'), File('/usr/g'),
+        })

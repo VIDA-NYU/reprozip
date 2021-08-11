@@ -65,6 +65,9 @@ class File(object):
     def __hash__(self):
         return hash(self.path)
 
+    def __repr__(self):
+        return '<File %r>' % self.path
+
 
 class Package(object):
     """A distribution package, containing a set of files.
@@ -88,6 +91,9 @@ class Package(object):
 
     def add_file(self, file_):
         self.files.append(file_)
+
+    def __repr__(self):
+        return '<Package %r (%r)>' % (self.name, self.version)
 
     def __unicode__(self):
         return '%s (%s)' % (self.name, self.version)
