@@ -329,18 +329,18 @@ class InvalidConfig(ValueError):
     """
 
 
-def read_files(files, File=File):
+def read_files(files):
     if files is None:
         return []
     return [File(PurePosixPath(f)) for f in files]
 
 
-def read_packages(packages, File=File, Package=Package):
+def read_packages(packages):
     if packages is None:
         return []
     new_pkgs = []
     for pkg in packages:
-        pkg['files'] = read_files(pkg['files'], File)
+        pkg['files'] = read_files(pkg['files'])
         new_pkgs.append(Package(**pkg))
     return new_pkgs
 
@@ -455,7 +455,7 @@ def _bytes_to_surrogates(container):
             _bytes_to_surrogates(v)
 
 
-def load_config(filename, canonical, File=File, Package=Package):
+def load_config(filename, canonical):
     """Loads a YAML configuration file.
 
     `File` and `Package` parameters can be used to override the classes that
@@ -494,8 +494,8 @@ def load_config(filename, canonical, File=File, Package=Package):
                        ', '.join(unknown_keys))
 
     runs = config.get('runs') or []
-    packages = read_packages(config.get('packages'), File, Package)
-    other_files = read_files(config.get('other_files'), File)
+    packages = read_packages(config.get('packages'))
+    other_files = read_files(config.get('other_files'))
 
     inputs_outputs = load_iofiles(config, runs)
 
