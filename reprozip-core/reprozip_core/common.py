@@ -95,9 +95,8 @@ class Package(object):
     def __repr__(self):
         return '<Package %r (%r)>' % (self.name, self.version)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s (%s)' % (self.name, self.version)
-    __str__ = __unicode__
 
 
 # Pack format history:
