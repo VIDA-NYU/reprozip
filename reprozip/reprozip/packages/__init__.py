@@ -33,4 +33,4 @@ def identify_packages(files):
     logger.debug("Assigning files to packages took %f seconds",
                  (time.time() - begin))
 
-    return manager.unknown_files, list(manager.packages.values())
+    return manager.unknown_files, manager.package_envs

@@ -150,7 +150,7 @@ class Package(object):
         return '%s (%s)' % (self.name, self.version)
 
 
-class Environment(object):
+class PackageEnvironment(object):
     """A package manager environment, containing packages.
     """
     def __init__(self, package_manager, path, packages=None):
@@ -360,20 +360,19 @@ def read_packages(packages):
     return new_pkgs
 
 
-def read_environments(
-    environments,
-    Environment=Environment, File=File, Package=Package,
+def read_package_environments(
+    package_envs,
 ):
-    if environments is None:
+    if package_envs is None:
         return []
     new_environments = []
-    for env in environments:
-        env['packages'] = read_packages(env['packages'], File, Package)
-        new_environments.append(Environment(**env))
+    for env in package_envs:
+        env['packages'] = read_packages(env['packages'])
+        new_environments.append(PackageEnvironment(**env))
     return new_environments
 
 
-Config = optional_return_type(['runs', 'environments', 'other_files'],
+Config = optional_return_type(['runs', 'package_envs', 'other_files'],
                               ['inputs_outputs', 'additional_patterns',
                                'format_version'])
 
@@ -532,9 +531,9 @@ def load_config(filename, canonical):
             package_manager = 'rpm'
         else:
             raise InvalidConfig("Unknown package manager listed")
-        environments = [Environment(package_manager, '/', packages)]
+        package_envs = [PackageEnvironment(package_manager, '/', packages)]
     else:
-        environments = read_environments(config.get('packages'))
+        package_envs = read_package_environments(config.get('packages'))
     other_files = read_files(config.get('other_files'))
 
     inputs_outputs = load_iofiles(config, runs)
@@ -544,7 +543,7 @@ def load_config(filename, canonical):
         if run.get('id') is None:
             run['id'] = "run%d" % i
 
-    record_usage_package(runs, environments, other_files,
+    record_usage_package(runs, package_envs, other_files,
                          inputs_outputs,
                          pack_id=config.get('pack_id'))
 
@@ -558,13 +557,13 @@ def load_config(filename, canonical):
     else:
         kwargs['additional_patterns'] = config.get('additional_patterns') or []
 
-    return Config(runs, environments, other_files,
+    return Config(runs, package_envs, other_files,
                   **kwargs)
 
 
 def write_file(fp, fi, indent=0):
     fp.write("%s  - \"%s\"%s\n" % (
-             "    " * indent,
+             "  " * indent,
              escape(str(fi.path)),
              ' # %s' % fi.comment if fi.comment is not None else ''))
 
@@ -594,7 +593,7 @@ def write_package(fp, pkg, indent=3):
         write_file(fp, fi, indent + 1)
 
 
-def save_config(filename, runs, environments, other_files, reprozip_version,
+def save_config(filename, runs, package_envs, other_files, reprozip_version,
                 inputs_outputs=None,
                 canonical=False, pack_id=None):
     """Saves the configuration to a YAML file.
@@ -662,16 +661,16 @@ packages:
 """)
 
         # Writes files
-        for environment in environments:
+        for package_env in package_envs:
             fp.write("""\
   - package_manager: {manager}
     environment: {path}
     packages:
 """.format(
-                manager=environment.package_manager,
-                path=environment.path,
+                manager=package_env.package_manager,
+                path=package_env.path,
             ))
-            for pkg in sorted(environment.packages, key=lambda p: p.name):
+            for pkg in sorted(package_env.packages, key=lambda p: p.name):
                 write_package(fp, pkg)
 
         fp.write("""\
@@ -875,7 +874,7 @@ def record_usage(**kwargs):
         _usage_report.note(kwargs)
 
 
-def record_usage_package(runs, environments, other_files,
+def record_usage_package(runs, package_envs, other_files,
                          inputs_outputs,
                          pack_id=None):
     """Records the info on some pack file into the current usage report.
@@ -885,13 +884,13 @@ def record_usage_package(runs, environments, other_files,
     for run in runs:
         record_usage(argv0=run['argv'][0])
     record_usage(pack_id=pack_id or '',
-                 nb_environments=len(environments),
-                 nb_packages=sum(len(env.packages) for env in environments),
+                 nb_environments=len(package_envs),
+                 nb_packages=sum(len(env.packages) for env in package_envs),
                  nb_package_files=sum(len(pkg.files)
-                                      for env in environments
+                                      for env in package_envs
                                       for pkg in env.packages),
                  packed_packages=sum(1
-                                     for env in environments
+                                     for env in package_envs
                                      for pkg in env.packages
                                      if pkg.packfiles),
                  nb_other_files=len(other_files),

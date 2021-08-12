@@ -16,7 +16,7 @@ import logging
 from pathlib import Path, PurePosixPath
 import subprocess
 
-from reprozip_core.common import Package
+from reprozip_core.common import Package, PackageEnvironment
 
 
 logger = logging.getLogger('reprozip')
@@ -32,15 +32,18 @@ class BaseLinuxPackages(object):
     Subclasses should provide either `search_for_files` or `search_for_file`
     which actually identifies the package for a file.
     """
+    NAME = None
+
     def __init__(self):
         # Files that were not part of a package
         self.unknown_files = set()
         # All the packages identified, with their `files` attribute set
-        self.packages = {}
+        self._packages = {}
 
     @property
-    def environment_packages(self):
-        return {'/': self.packages.values()}
+    def package_envs(self):
+        assert self.NAME is not None
+        return [PackageEnvironment(self.NAME, '/', self._packages.values())]
 
     def filter_files(self, files):
         seen_files = set()
@@ -114,6 +117,8 @@ MAX_ARGV = 800
 class DebPackages(BaseLinuxPackages):
     """Package identifier for deb-based systems (Debian, Ubuntu).
     """
+    NAME = 'dpkg'
+
     def search_for_files(self, files):
         # Make a set of all the requested files
         requested = dict((f.path, f) for f in self.filter_files(files))
@@ -215,6 +220,8 @@ class DebPackages(BaseLinuxPackages):
 class RpmPackages(BaseLinuxPackages):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
+    NAME = 'rpm'
+
     def _get_packages_for_file(self, filename):
         p = subprocess.Popen(['rpm', '-qf', filename,
                               '--qf', '%{NAME}'],

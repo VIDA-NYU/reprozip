@@ -21,23 +21,23 @@ from reprozip_core.common import create_trace_schema, File
 logger = logging.getLogger('reprozip')
 
 
-def combine_files(newfiles, newpackages, oldfiles, oldpackages):
+def combine_files(new_files, new_package_envs, old_files, old_package_envs):
     """Merges two sets of packages and files.
     """
-    files = set(oldfiles)
-    files.update(newfiles)
+    files = set(old_files)
+    files.update(new_files)
 
-    packages = dict((pkg.name, pkg) for pkg in newpackages)
-    for oldpkg in oldpackages:
-        if oldpkg.name in packages:
-            pkg = packages[oldpkg.name]
-            s = set(File.from_local(fi.path) for fi in oldpkg.files)
+    packages = dict((pkg.name, pkg) for pkg in new_package_envs)
+    for old_pkg in old_package_envs:
+        if old_pkg.name in packages:
+            pkg = packages[old_pkg.name]
+            s = set(File.from_local(fi.path) for fi in old_pkg.files)
             s.update(pkg.files)
-            oldpkg.files = list(s)
-            packages[oldpkg.name] = oldpkg
+            old_pkg.files = list(s)
+            packages[old_pkg.name] = old_pkg
         else:
-            oldpkg.files = [File.from_local(fi.path) for fi in oldpkg.files]
-            packages[oldpkg.name] = oldpkg
+            old_pkg.files = [File.from_local(fi.path) for fi in old_pkg.files]
+            packages[old_pkg.name] = old_pkg
     packages = packages.values()
 
     return files, packages

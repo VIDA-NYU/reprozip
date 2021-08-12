@@ -58,7 +58,7 @@ def expand_patterns(patterns):
     return [File(p) for p in itertools.chain(dirs - non_empty_dirs, files)]
 
 
-def canonicalize_config(packages, other_files, additional_patterns,
+def canonicalize_config(package_envs, other_files, additional_patterns,
                         sort_packages):
     """Expands ``additional_patterns`` from the configuration file.
     """
@@ -68,12 +68,14 @@ def canonicalize_config(packages, other_files, additional_patterns,
                     len(add_files))
         if add_files:
             if sort_packages:
-                add_files, add_packages = identify_packages(add_files)  ##
+                add_files, add_package_envs = identify_packages(add_files)
             else:
-                add_packages = []
-            other_files, packages = combine_files(add_files, add_packages,
-                                                  other_files, packages)
-    return packages, other_files
+                add_package_envs = []
+            other_files, package_envs = combine_files(
+                add_files, add_package_envs,
+                other_files, package_envs,
+            )
+    return package_envs, other_files
 
 
 def data_path(filename, prefix=Path('DATA')):

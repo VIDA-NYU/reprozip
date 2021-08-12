@@ -214,7 +214,7 @@ def get_files(conn):
                for r, lst in enumerate(access_files)]
 
     # Run the list of files through the filter plugins
-    run_filter_plugins(files, inputs)  ##
+    run_filter_plugins(files, inputs)
 
     # Files removed from plugins should be removed from inputs as well
     inputs = [[path for path in lst if path in files]
@@ -378,9 +378,9 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
 
     # Identifies which file comes from which package
     if sort_packages:
-        files, packages = identify_packages(files)  ##
+        files, package_envs = identify_packages(files)
     else:
-        packages = []
+        package_envs = []
 
     # Writes configuration file
     config = directory / 'config.yml'
@@ -468,7 +468,7 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
     else:
         inputs_outputs = {}
 
-    save_config(config, runs, packages, files, reprozip_version,
+    save_config(config, runs, package_envs, files, reprozip_version,
                 inputs_outputs)
 
     print("Configuration file written in {0!s}".format(config))
