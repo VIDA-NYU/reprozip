@@ -56,7 +56,7 @@ setup(
         ],
         'reprozip.packagemanagers': [
             'dpkg = reprozip.packages.linux:DebPackages',
-            'rpm = reprozip.packages.linux.RpmPackages',
+            'rpm = reprozip.packages.linux:RpmPackages',
             'python = reprozip.packages.python:PythonManager',
         ],
         'reprozip.filters': [

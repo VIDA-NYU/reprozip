@@ -2,35 +2,31 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-import distro
 import logging
+from pkg_resources import iter_entry_points
 import time
-
-from . import linux
 
 
 logger = logging.getLogger('reprozip')
 
 
 def identify_packages(files):
-    """Organizes the files, using the distribution's package manager.
+    """Organizes the files, using package managers.
     """
-    distribution = distro.id()
-    if distribution in ('debian', 'ubuntu'):
-        logger.info("Identifying Debian packages for %d files...", len(files))
-        manager = linux.DebPackages()
-    elif (distribution in ('centos', 'centos linux',
-                           'fedora', 'scientific linux') or
-            distribution.startswith('red hat')):
-        logger.info("Identifying RPM packages for %d files...", len(files))
-        manager = linux.RpmPackages()
-    else:
-        logger.info("Unknown distribution, can't identify packages")
-        return files, []
+    unknown_files = set(files)
+    package_envs = []
 
-    begin = time.time()
-    manager.search_for_files(files)
-    logger.debug("Assigning files to packages took %f seconds",
-                 (time.time() - begin))
+    for entry_point in iter_entry_points('reprozip.packagemanagers'):
+        class_ = entry_point.load()
+        name = entry_point.name
 
-    return manager.unknown_files, manager.package_envs
+        logger.info("Running package manager plugin %s", name)
+        manager = class_()
+        begin = time.time()
+        manager.search_for_files(files)
+        logger.debug("Package manager plugin %s took %f seconds",
+                     (time.time() - begin))
+        unknown_files.intersection_update(manager.unknown_files)
+        package_envs.extend(manager.package_envs)
+
+    return list(unknown_files), package_envs

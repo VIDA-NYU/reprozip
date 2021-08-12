@@ -43,6 +43,8 @@ class BaseLinuxPackages(object):
     @property
     def package_envs(self):
         assert self.NAME is not None
+        if not self._packages:
+            return []
         return [PackageEnvironment(self.NAME, '/', self._packages.values())]
 
     def filter_files(self, files):
@@ -120,6 +122,20 @@ class DebPackages(BaseLinuxPackages):
     NAME = 'dpkg'
 
     def search_for_files(self, files):
+        # Check that dpkg-query is available
+        try:
+            proc = subprocess.Popen(
+                ['dpkg-query', '--version'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            proc.communicate()
+            if proc.wait() != 0:
+                return
+        except OSError:
+            return
+        logger.info("Identifying DEB packages for %d files...", len(files))
+
         # Make a set of all the requested files
         requested = dict((f.path, f) for f in self.filter_files(files))
         found = {}  # {path: pkgname}
@@ -221,6 +237,23 @@ class RpmPackages(BaseLinuxPackages):
     """Package identifier for rpm-based systems (Fedora, CentOS).
     """
     NAME = 'rpm'
+
+    def search_for_files(self, files):
+        # Check that rpm is available
+        try:
+            proc = subprocess.Popen(
+                ['rpm', '--version'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            proc.communicate()
+            if proc.wait() != 0:
+                return
+        except OSError:
+            return
+        logger.info("Identifying RPM packages for %d files...", len(files))
+
+        super(RpmPackages, self).search_for_files(files)
 
     def _get_packages_for_file(self, filename):
         p = subprocess.Popen(['rpm', '-qf', filename,

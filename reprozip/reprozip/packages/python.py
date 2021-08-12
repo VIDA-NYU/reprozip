@@ -26,3 +26,12 @@
 #     site-packages
 #       ...
 #   Include
+
+
+class PythonManager(object):
+    def __init__(self):
+        pass
+
+    def search_for_files(self, files):
+        self.package_envs = []
+        self.unknown_files = files
