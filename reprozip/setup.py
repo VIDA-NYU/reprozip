@@ -49,7 +49,7 @@ setup(
     name='reprozip',
     version='2.0.0',
     ext_modules=[pytracer],
-    packages=['reprozip', 'reprozip.tracer'],
+    packages=['reprozip'],
     entry_points={
         'console_scripts': [
             'reprozip = reprozip.main:main',

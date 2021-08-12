@@ -4,7 +4,7 @@
 
 """Tracing logic for reprozip.
 
-This module contains the :func:`~reprozip.tracer.tracer.tracer` function that
+This module contains the :func:`~reprozip.tracer.trace` function that
 invokes the C tracer (_pytracer) to build the SQLite trace file, and the
 generation logic for the config YAML file.
 """

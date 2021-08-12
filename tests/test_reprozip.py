@@ -13,7 +13,7 @@ from unittest import mock
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
     Package, InputOutputFile, create_trace_schema, load_config
-from reprozip.tracer.trace import TracedFile, get_files, compile_inputs_outputs
+from reprozip.tracer import TracedFile, get_files, compile_inputs_outputs
 from reprozip import traceutils
 from reprozip_core.utils import UniqueNames, make_dir_writable
 

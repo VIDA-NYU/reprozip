@@ -23,7 +23,7 @@ import traceback
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 import reprozip.pack
-import reprozip.tracer.trace
+import reprozip.tracer
 import reprozip.traceutils
 from reprozip_core.common import setup_logging, \
     setup_usage_report, enable_usage_report, \
@@ -228,15 +228,15 @@ def trace(args):
         append = False
     else:
         append = None
-    status = reprozip.tracer.trace.trace(args.cmdline[0],
-                                         argv,
-                                         Path(args.dir),
-                                         append,
-                                         args.verbosity)
-    reprozip.tracer.trace.write_configuration(Path(args.dir),
-                                              args.identify_packages,
-                                              args.find_inputs_outputs,
-                                              overwrite=False)
+    status = reprozip.tracer.trace(args.cmdline[0],
+                                   argv,
+                                   Path(args.dir),
+                                   append,
+                                   args.verbosity)
+    reprozip.tracer.write_configuration(Path(args.dir),
+                                        args.identify_packages,
+                                        args.find_inputs_outputs,
+                                        overwrite=False)
     return status
 
 
@@ -246,10 +246,10 @@ def reset(args):
     Just regenerates the configuration (config.yml) from the trace
     (trace.sqlite3).
     """
-    reprozip.tracer.trace.write_configuration(Path(args.dir),
-                                              args.identify_packages,
-                                              args.find_inputs_outputs,
-                                              overwrite=True)
+    reprozip.tracer.write_configuration(Path(args.dir),
+                                        args.identify_packages,
+                                        args.find_inputs_outputs,
+                                        overwrite=True)
 
 
 def pack(args):
@@ -283,10 +283,10 @@ def combine(args):
         traces.append(tracepath)
 
     reprozip.traceutils.combine_traces(traces, Path(args.dir))
-    reprozip.tracer.trace.write_configuration(Path(args.dir),
-                                              args.identify_packages,
-                                              args.find_inputs_outputs,
-                                              overwrite=True)
+    reprozip.tracer.write_configuration(Path(args.dir),
+                                        args.identify_packages,
+                                        args.find_inputs_outputs,
+                                        overwrite=True)
 
 
 def usage_report(args):
