@@ -3,7 +3,7 @@
 # See file LICENSE for full license details.
 
 import os
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PurePosixPath
 import sqlite3
 import shutil
 import sys
@@ -12,7 +12,7 @@ import unittest
 from unittest import mock
 
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
-    Package, InputOutputFile, create_trace_schema
+    Package, InputOutputFile, create_trace_schema, load_config
 from reprozip.tracer.trace import TracedFile, get_files, compile_inputs_outputs
 from reprozip import traceutils
 from reprozip_core.utils import UniqueNames, make_dir_writable
@@ -104,6 +104,216 @@ class TestReprozip(unittest.TestCase):
             print(">>>>> argparse tests", file=sys.stderr)
             sys.argv = old_argv
             reprozip.main.testrun, reprozip.main.setup_logging = old_funcs
+
+
+class TestConfig(unittest.TestCase):
+    def load_config(self, name, canonical):
+        path = Path(__file__).parent / 'configs' / name
+        config = load_config(path, canonical)
+        keys = {k for k in dir(config) if not k.startswith('_')}
+        keys -= {'count', 'index'}  # tuple methods
+        if canonical:
+            self.assertEqual(keys, {
+                'format_version', 'runs', 'inputs_outputs',
+                'packages', 'other_files',
+            })
+        else:
+            self.assertEqual(keys, {
+                'format_version', 'runs', 'inputs_outputs',
+                'packages', 'other_files',
+                'additional_patterns',
+            })
+        return config
+
+    def test_load_0_4_1(self):
+        config = self.load_config('config-0.4.1-edit.yml', False)
+        self.assertEqual(config.format_version, '0.4.1')
+        self.assertEqual(config.runs, [
+            {
+                'architecture': 'x86_64',
+                'argv': ['sh', '-c', 'wc -l /tmp/input.txt >/tmp/lines'],
+                'binary': '/bin/sh',
+                'distribution': ['Ubuntu', '20.04'],
+                'environ': {'HOME': '/home/remram', 'LANG': 'en_US.UTF-8'},
+                'exitcode': 0,
+                'gid': 1000,
+                'hostname': 'axon',
+                'id': 'run0',
+                'system': ['Linux', '5.4.0-80-generic'],
+                'uid': 1000,
+                'workingdir': '/home/remram',
+                'input_files': {
+                    'text': PurePosixPath('/tmp/input.txt'),
+                },
+                'output_files': {
+                    'lines': PurePosixPath('/tmp/lines'),
+                },
+            }
+        ])
+        self.assertEqual(config.inputs_outputs, {
+            'text': InputOutputFile(PurePosixPath('/tmp/input.txt'), [0], []),
+            'lines': InputOutputFile(PurePosixPath('/tmp/lines'), [], [0]),
+        })
+        self.assertEqual(config.packages, [
+            Package('coreutils', '8.30-3ubuntu2'),
+            Package('libc6', '2.31-0ubuntu9.3'),
+        ])
+        self.assertEqual(config.packages[0].files, [
+            File(PurePosixPath('/usr/bin/wc')),
+        ])
+        self.assertEqual(config.packages[1].files, [
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc-2.31.so')),
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc.so.6')),
+        ])
+        self.assertEqual(config.other_files, [
+            File(PurePosixPath('/tmp')),
+            File(PurePosixPath('/tmp/input.txt')),
+            File(PurePosixPath('/usr/lib/locale/locale-archive')),
+        ])
+        self.assertEqual(config.additional_patterns, ['/etc/apache2/**'])
+
+        config = self.load_config('config-0.4.1-packed.yml', True)
+        self.assertEqual(config.format_version, '0.4.1')
+        self.assertEqual(config.runs, [
+            {
+                'architecture': 'x86_64',
+                'argv': ['sh', '-c', 'wc -l /tmp/input.txt >/tmp/lines'],
+                'binary': '/bin/sh',
+                'distribution': ['Ubuntu', '20.04'],
+                'environ': {'HOME': '/home/remram', 'LANG': 'en_US.UTF-8'},
+                'exitcode': 0,
+                'gid': 1000,
+                'hostname': 'axon',
+                'id': 'run0',
+                'system': ['Linux', '5.4.0-80-generic'],
+                'uid': 1000,
+                'workingdir': '/home/remram',
+                'input_files': {
+                    'text': PurePosixPath('/tmp/input.txt'),
+                },
+                'output_files': {
+                    'lines': PurePosixPath('/tmp/lines'),
+                },
+            }
+        ])
+        self.assertEqual(config.inputs_outputs, {
+            'text': InputOutputFile(PurePosixPath('/tmp/input.txt'), [0], []),
+            'lines': InputOutputFile(PurePosixPath('/tmp/lines'), [], [0]),
+        })
+        self.assertEqual(config.packages, [
+            Package('coreutils', '8.30-3ubuntu2'),
+            Package('libc6', '2.31-0ubuntu9.3'),
+        ])
+        self.assertEqual(config.packages[0].files, [
+            File(PurePosixPath('/usr/bin/wc')),
+        ])
+        self.assertEqual(config.packages[1].files, [
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc-2.31.so')),
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc.so.6')),
+        ])
+        self.assertEqual(config.other_files, [
+            File(PurePosixPath('/tmp')),
+            File(PurePosixPath('/tmp/input.txt')),
+            File(PurePosixPath('/usr/lib/locale/locale-archive')),
+        ])
+
+    def test_load_0_8(self):
+        config = self.load_config('config-1.0-edit.yml', False)
+        self.assertEqual(config.format_version, '0.8')
+        self.assertEqual(config.runs, [
+            {
+                'architecture': 'x86_64',
+                'argv': ['sh', '-c', 'wc -l /tmp/input.txt >/tmp/lines'],
+                'binary': '/bin/sh',
+                'distribution': ['ubuntu', '20.04'],
+                'environ': {'HOME': '/home/remram', 'LANG': 'en_US.UTF-8'},
+                'exitcode': 0,
+                'gid': 1000,
+                'hostname': 'axon',
+                'id': 'run0',
+                'system': ['Linux', '5.4.0-80-generic'],
+                'uid': 1000,
+                'workingdir': '/home/remram',
+                'input_files': {
+                    'text': PurePosixPath('/tmp/input.txt'),
+                    'other': PurePosixPath('/tmp/other'),
+                },
+                'output_files': {
+                    'lines': PurePosixPath('/tmp/lines'),
+                    'other': PurePosixPath('/tmp/other'),
+                },
+            }
+        ])
+        self.assertEqual(config.inputs_outputs, {
+            'text': InputOutputFile(PurePosixPath('/tmp/input.txt'), [0], []),
+            'lines': InputOutputFile(PurePosixPath('/tmp/lines'), [], [0]),
+            'other': InputOutputFile(PurePosixPath('/tmp/other'), [0], [0]),
+        })
+        self.assertEqual(config.packages, [
+            Package('coreutils', '8.30-3ubuntu2'),
+            Package('libc6', '2.31-0ubuntu9.3'),
+        ])
+        self.assertEqual(config.packages[0].files, [
+            File(PurePosixPath('/usr/bin/wc')),
+        ])
+        self.assertEqual(config.packages[1].files, [
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc-2.31.so')),
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc.so.6')),
+        ])
+        self.assertEqual(config.other_files, [
+            File(PurePosixPath('/tmp')),
+            File(PurePosixPath('/tmp/input.txt')),
+            File(PurePosixPath('/usr/lib/locale/locale-archive')),
+        ])
+        self.assertEqual(config.additional_patterns, ['/etc/apache2/**'])
+
+        config = self.load_config('config-1.0-packed.yml', True)
+        self.assertEqual(config.format_version, '0.8')
+        self.assertEqual(config.runs, [
+            {
+                'architecture': 'x86_64',
+                'argv': ['sh', '-c', 'wc -l /tmp/input.txt >/tmp/lines'],
+                'binary': '/bin/sh',
+                'distribution': ['ubuntu', '20.04'],
+                'environ': {'HOME': '/home/remram', 'LANG': 'en_US.UTF-8'},
+                'exitcode': 0,
+                'gid': 1000,
+                'hostname': 'axon',
+                'id': 'run0',
+                'system': ['Linux', '5.4.0-80-generic'],
+                'uid': 1000,
+                'workingdir': '/home/remram',
+                'input_files': {
+                    'text': PurePosixPath('/tmp/input.txt'),
+                    'other': PurePosixPath('/tmp/other'),
+                },
+                'output_files': {
+                    'lines': PurePosixPath('/tmp/lines'),
+                    'other': PurePosixPath('/tmp/other'),
+                },
+            }
+        ])
+        self.assertEqual(config.inputs_outputs, {
+            'text': InputOutputFile(PurePosixPath('/tmp/input.txt'), [0], []),
+            'lines': InputOutputFile(PurePosixPath('/tmp/lines'), [], [0]),
+            'other': InputOutputFile(PurePosixPath('/tmp/other'), [0], [0]),
+        })
+        self.assertEqual(config.packages, [
+            Package('coreutils', '8.30-3ubuntu2'),
+            Package('libc6', '2.31-0ubuntu9.3'),
+        ])
+        self.assertEqual(config.packages[0].files, [
+            File(PurePosixPath('/usr/bin/wc')),
+        ])
+        self.assertEqual(config.packages[1].files, [
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc-2.31.so')),
+            File(PurePosixPath('/lib/x86_64-linux-gnu/libc.so.6')),
+        ])
+        self.assertEqual(config.other_files, [
+            File(PurePosixPath('/tmp')),
+            File(PurePosixPath('/tmp/input.txt')),
+            File(PurePosixPath('/usr/lib/locale/locale-archive')),
+        ])
 
 
 class TestNames(unittest.TestCase):
