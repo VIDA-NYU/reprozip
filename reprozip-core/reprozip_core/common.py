@@ -484,9 +484,7 @@ def load_config(filename, canonical):
     unknown_keys = keys_ - {'pack_id', 'version', 'runs',
                             'inputs_outputs',
                             'packages', 'other_files',
-                            'additional_patterns',
-                            # Deprecated
-                            'input_files', 'output_files'}
+                            'additional_patterns'}
     if unknown_keys:
         logger.warning("Unrecognized sections in configuration: %s",
                        ', '.join(unknown_keys))
