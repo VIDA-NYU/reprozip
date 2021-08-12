@@ -7,10 +7,41 @@
 This module contains functions that are specific to the reprozip software and
 its data formats, but that are shared between the reprozip and reprounzip
 packages. Because the packages can be installed separately, these functions are
-in a separate module which is duplicated between the packages.
+in a separate module which they both depend on.
 
-As long as these are small in number, they are not worth putting in a separate
-package that reprozip and reprounzip would both depend on.
+# Pack format history
+
+* 1: used by reprozip 0.2 through 0.7. Single tar.gz file, metadata under
+  `METADATA/`, data under `DATA/`
+* 2: pack is usually not compressed, metadata under `METADATA/`, data in
+  another `DATA.tar.gz` (files inside it still have the `DATA/` prefix for
+  ease-of-use in unpackers)
+
+# Pack metadata history
+
+* 0.2: used by reprozip 0.2
+* 0.2.1:
+  - config: comments directories as such in config
+  - trace database: adds `executed_files.workingdir`, adds `processes.exitcode`
+  - data: packs dynamic linkers
+* 0.3:
+  - config: don't list missing (unpacked) files in config
+  - trace database: adds `opened_files.is_directory`
+* 0.3.1: no change
+* 0.3.2: no change
+* 0.4:
+  - config: adds `input_files`, `output_files`, lists parent directories
+* 0.4.1: no change
+* 0.5: no change
+* 0.6: no change
+* 0.7:
+  - moves `input_files` and `output_files` from run to global scope
+  - adds `processes.is_thread` column to trace database
+* 0.8: adds `id` field to run
+* 1.0: no change, ReproZip 1.0 actually uses format 0.8
+* 1.1:
+  - adds `processes.exit_timestamp`
+  - adds `processes.cpu_time`
 """
 
 import contextlib
@@ -115,39 +146,6 @@ class Package(object):
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.version)
-
-
-# Pack format history:
-# 1: used by reprozip 0.2 through 0.7. Single tar.gz file, metadata under
-#   METADATA/, data under DATA/
-# 2: pack is usually not compressed, metadata under METADATA/, data in another
-#   DATA.tar.gz (files inside it still have the DATA/ prefix for ease-of-use
-#   in unpackers)
-#
-# Pack metadata history:
-# 0.2: used by reprozip 0.2
-# 0.2.1:
-#     config: comments directories as such in config
-#     trace database: adds executed_files.workingdir, adds processes.exitcode
-#     data: packs dynamic linkers
-# 0.3:
-#     config: don't list missing (unpacked) files in config
-#     trace database: adds opened_files.is_directory
-# 0.3.1: no change
-# 0.3.2: no change
-# 0.4:
-#     config: adds input_files, output_files, lists parent directories
-# 0.4.1: no change
-# 0.5: no change
-# 0.6: no change
-# 0.7:
-#     moves input_files and output_files from run to global scope
-#     adds processes.is_thread column to trace database
-# 0.8: adds 'id' field to run
-# 1.0: no change, ReproZip 1.0 actually uses format 0.8
-# 1.1:
-#     adds processes.exit_timestamp
-#     adds processes.cpu_time
 
 
 class RPZPack(object):
