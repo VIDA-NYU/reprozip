@@ -142,12 +142,6 @@ class TestConfig(unittest.TestCase):
                 'system': ['Linux', '5.4.0-80-generic'],
                 'uid': 1000,
                 'workingdir': '/home/remram',
-                'input_files': {
-                    'text': PurePosixPath('/tmp/input.txt'),
-                },
-                'output_files': {
-                    'lines': PurePosixPath('/tmp/lines'),
-                },
             }
         ])
         self.assertEqual(config.inputs_outputs, {
@@ -188,12 +182,6 @@ class TestConfig(unittest.TestCase):
                 'system': ['Linux', '5.4.0-80-generic'],
                 'uid': 1000,
                 'workingdir': '/home/remram',
-                'input_files': {
-                    'text': PurePosixPath('/tmp/input.txt'),
-                },
-                'output_files': {
-                    'lines': PurePosixPath('/tmp/lines'),
-                },
             }
         ])
         self.assertEqual(config.inputs_outputs, {
@@ -234,14 +222,6 @@ class TestConfig(unittest.TestCase):
                 'system': ['Linux', '5.4.0-80-generic'],
                 'uid': 1000,
                 'workingdir': '/home/remram',
-                'input_files': {
-                    'text': PurePosixPath('/tmp/input.txt'),
-                    'other': PurePosixPath('/tmp/other'),
-                },
-                'output_files': {
-                    'lines': PurePosixPath('/tmp/lines'),
-                    'other': PurePosixPath('/tmp/other'),
-                },
             }
         ])
         self.assertEqual(config.inputs_outputs, {
@@ -283,14 +263,6 @@ class TestConfig(unittest.TestCase):
                 'system': ['Linux', '5.4.0-80-generic'],
                 'uid': 1000,
                 'workingdir': '/home/remram',
-                'input_files': {
-                    'text': PurePosixPath('/tmp/input.txt'),
-                    'other': PurePosixPath('/tmp/other'),
-                },
-                'output_files': {
-                    'lines': PurePosixPath('/tmp/lines'),
-                    'other': PurePosixPath('/tmp/other'),
-                },
             }
         ])
         self.assertEqual(config.inputs_outputs, {

@@ -495,15 +495,6 @@ def load_config(filename, canonical):
 
     inputs_outputs = load_iofiles(config, runs)
 
-    # reprozip < 0.7 compatibility: set inputs/outputs on runs (for plugins)
-    for i, run in enumerate(runs):
-        run['input_files'] = dict((n, f.path)
-                                  for n, f in inputs_outputs.items()
-                                  if i in f.read_runs)
-        run['output_files'] = dict((n, f.path)
-                                   for n, f in inputs_outputs.items()
-                                   if i in f.write_runs)
-
     # reprozip < 0.8 compatibility: assign IDs to runs
     for i, run in enumerate(runs):
         if run.get('id') is None:
@@ -588,9 +579,6 @@ version: "{format!s}"
 
         fp.write("runs:\n")
         for i, run in enumerate(runs):
-            # Remove reprozip < 0.7 compatibility fields
-            run = dict((k, v) for k, v in run.items()
-                       if k not in ('input_files', 'output_files'))
             fp.write("# Run %d\n" % i)
             fp.write(dump([run]).decode('utf-8'))
             fp.write("\n")
