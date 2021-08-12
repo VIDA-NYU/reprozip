@@ -35,7 +35,7 @@ class StreamWriter(object):
         self.buffer = stream
 
     def writelines(self, lines):
-        self.write(str('').join(lines))
+        self.write(''.join(lines))
 
     def write(self, obj):
         if isinstance(obj, bytes):
@@ -158,7 +158,7 @@ def optional_return_type(req_args, other_args):
     dct = {'__new__': cstr}
     for i, n in enumerate(req_args):
         dct[n] = property(operator.itemgetter(i))
-    return type(str('OptionalReturnType'), (tuple,), dct)
+    return type('OptionalReturnType', (tuple,), dct)
 
 
 def tz_offset():
