@@ -60,7 +60,13 @@ def python(files, input_files, **kwargs):
     for i in irange(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.ext in (b'.py', b'.pyc'):
+            if (
+                path.ext in (b'.py', b'.pyc')
+                or (
+                    b'site-packages' in path.components
+                    and path.ext == b'.pth'
+                )
+            ):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
