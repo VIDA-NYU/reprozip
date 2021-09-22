@@ -160,10 +160,12 @@ def get_files(conn):
         # Adds symbolic links as read files
         for filename in find_all_links(r_name.parent if r_mode & FILE_LINK
                                        else r_name, False):
-            if filename not in files:
+            try:
+                f = files[filename]
+            except KeyError:
                 f = TracedFile(filename)
-                f.read(run)
                 files[f.path] = f
+            f.read(run)
         # Go to final target
         if not r_mode & FILE_LINK:
             r_name = r_name.resolve()
@@ -185,7 +187,11 @@ def get_files(conn):
                 files[fp.path] = fp
 
         # Identifies input files
-        if r_name.is_file() and r_name not in executed:
+        if (
+            not r_mode & FILE_LINK
+            and r_name.is_file()
+            and r_name not in executed
+        ):
             access_files[-1].add(f)
     cur.close()
 
