@@ -12,6 +12,7 @@ import codecs
 import contextlib
 from datetime import datetime
 import email.utils
+import io
 import itertools
 import locale
 import logging
@@ -23,6 +24,7 @@ import shutil
 import stat
 import subprocess
 import time
+import yaml
 
 
 logger = logging.getLogger('reprozip_core')
@@ -97,6 +99,38 @@ def escape(s):
     This does NOT add quotes around the string.
     """
     return s.replace('\\', '\\\\').replace('"', '\\"')
+
+
+class YamlIndentedListDumper(yaml.SafeDumper):
+    def __init__(self, *args, initial_indent=0, **kwargs):
+        super(YamlIndentedListDumper, self).__init__(*args, **kwargs)
+        for _ in range(initial_indent):
+            self.increase_indent()
+
+    # https://stackoverflow.com/a/39681672
+    def increase_indent(self, flow=False, indentless=False):
+        return super(YamlIndentedListDumper, self).increase_indent(flow, False)
+
+
+def yaml_dumps(x, *, initial_indent=0):
+    """Version of yaml.safe_dump() that indents lists.
+
+    Indenting items of a list plays better with comments. In addition, this
+    allows setting the initial indentation before dumping.
+    """
+    stream = io.StringIO()
+    dumper = YamlIndentedListDumper(
+        stream,
+        allow_unicode=True,
+        initial_indent=initial_indent,
+    )
+    try:
+        dumper.open()
+        dumper.represent(x)
+        dumper.close()
+    finally:
+        dumper.dispose()
+    return stream.getvalue().rstrip(' ')
 
 
 def optional_return_type(req_args, other_args):

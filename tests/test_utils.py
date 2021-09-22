@@ -4,7 +4,49 @@
 
 import unittest
 
-from reprozip_core.utils import optional_return_type
+from reprozip_core.utils import yaml_dumps, optional_return_type
+
+
+class TestYaml(unittest.TestCase):
+    def test_list_indent(self):
+        self.assertEqual(
+            yaml_dumps({'a': [{'b': 3}, {'b': 4}], 'c': {'d': 2}}),
+            (
+                ''
+                + 'a:\n'
+                + '  - b: 3\n'
+                + '  - b: 4\n'
+                + 'c:\n'
+                + '  d: 2\n'
+            )
+        )
+
+    def test_initial_indent(self):
+        self.assertEqual(
+            yaml_dumps(
+                {'a': [{'b': 3}, {'b': 4}], 'c': {'d': 2}},
+                initial_indent=2,
+            ),
+            (
+                ''
+                + '    a:\n'
+                + '      - b: 3\n'
+                + '      - b: 4\n'
+                + '    c:\n'
+                + '      d: 2\n'
+            )
+        )
+        self.assertEqual(
+            yaml_dumps(
+                [{'a': 1, 'b': 2}],
+                initial_indent=2,
+            ),
+            (
+                ''
+                + '    - a: 1\n'
+                + '      b: 2\n'
+            )
+        )
 
 
 class TestOptionalReturnType(unittest.TestCase):

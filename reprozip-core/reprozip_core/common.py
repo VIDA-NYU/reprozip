@@ -65,8 +65,8 @@ import tempfile
 import usagestats
 import yaml
 
-from .utils import UniqueNames, escape, optional_return_type, isodatetime, \
-    hsize, join_root
+from .utils import UniqueNames, escape, yaml_dumps, optional_return_type, \
+    isodatetime, hsize, join_root
 
 
 logger = logging.getLogger('reprozip_core')
@@ -601,7 +601,6 @@ def save_config(filename, runs, package_envs, other_files, reprozip_version,
     `canonical` indicates whether this is a canonical configuration file
     (no ``additional_patterns`` section).
     """
-    dump = lambda x: yaml.safe_dump(x, encoding='utf-8', allow_unicode=True)
     with filename.open('w', encoding='utf-8', newline='\n') as fp:
         # Writes preamble
         fp.write("""\
@@ -625,7 +624,7 @@ version: "{format!s}"
         fp.write("runs:\n")
         for i, run in enumerate(runs):
             fp.write("# Run %d\n" % i)
-            fp.write(dump([run]).decode('utf-8'))
+            fp.write(yaml_dumps([run], initial_indent=1))
             fp.write("\n")
 
         fp.write("""\
@@ -637,13 +636,13 @@ version: "{format!s}"
 # files from the experiment on demand, for the user to examine.
 # The name field is the identifier the user will use to access these files.
 inputs_outputs:""")
-        for n, f in inputs_outputs.items():
+        for n, f in sorted(inputs_outputs.items()):
             fp.write("""\
 
-- name: {name}
-  path: {path}
-  written_by_runs: {writers}
-  read_by_runs: {readers}""".format(name=n, path=str(f.path),
+  - name: {name}
+    path: {path}
+    written_by_runs: {writers}
+    read_by_runs: {readers}""".format(name=n, path=str(f.path),
                                     readers=repr(f.read_runs),
                                     writers=repr(f.write_runs)))
 
@@ -689,10 +688,10 @@ other_files:
 # patterns of files that will be included
 additional_patterns:
 # Example:
-#  - /etc/apache2/**  # Everything under apache2/
-#  - /var/log/apache2/*.log  # Log files directly under apache2/
-#  - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in
-#    # that container
+#   - /etc/apache2/**  # Everything under apache2/
+#   - /var/log/apache2/*.log  # Log files directly under apache2/
+#   - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in
+#     # that container
 """)
 
 
