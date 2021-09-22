@@ -57,7 +57,13 @@ def python(files, input_files, **kwargs):
     for i in range(len(input_files)):
         lst = []
         for path in input_files[i]:
-            if path.suffix in ('.py', '.pyc'):
+            if (
+                path.suffix in ('.py', '.pyc')
+                or (
+                    'site-packages' in path.parts
+                    and path.suffix == '.pth'
+                )
+            ):
                 logger.info("Removing input %s", path)
             else:
                 lst.append(path)
