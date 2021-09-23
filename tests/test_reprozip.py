@@ -11,10 +11,11 @@ import tempfile
 import unittest
 from unittest import mock
 
-from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
-    Package, InputOutputFile, create_trace_schema, load_config
+from reprozip.packages import python
 from reprozip.tracer import TracedFile, get_files, compile_inputs_outputs
 from reprozip import traceutils
+from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
+    Package, InputOutputFile, create_trace_schema, load_config
 from reprozip_core.utils import UniqueNames, make_dir_writable
 
 from tests.common import make_database
@@ -555,3 +556,49 @@ INSERT INTO "connections" VALUES(0,0,12345678903001,0,0,"INET","UDP",
         self.assertEqual(set(packages['pkg3'].files), {
             File('/usr/f'), File('/usr/g'),
         })
+
+
+class TestPython(unittest.TestCase):
+    def test_read_record(self):
+        record = (
+            b'tee-0.0.3.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCr'
+            b'XJQrAP7zeNuwvFQg,4\r\ntee-0.0.3.dist-info/METADATA,sha256=-qIsa6'
+            b'Q4ZpB195uN9cjwNBdrNN2sGvAgDPmksrPtUOM,2627\r\ntee-0.0.3.dist-inf'
+            b'o/RECORD,,\r\ntee-0.0.3.dist-info/WHEEL,sha256=EVRjI69F5qVjm_Ygq'
+            b'cTXPnTAv3BfSUr0WVAHuSP3Xoo,92\r\ntee-0.0.3.dist-info/top_level.t'
+            b'xt,sha256=i4hDwsI6lO-vqDTHtSVHqiy6Y-1RfHiR66W3OGMwSCs,4\r\ntee/_'
+            b'_init__.py,sha256=hq6Wp6wlqMMZCapwO2ct26nnqGkzi6kogmlngc0s8pg,82'
+            b'\r\ntee/__pycache__/__init__.cpython-38.pyc,,\r\ntee/__pycache__'
+            b'/tee.cpython-38.pyc,,\r\ntee/tee.py,sha256=b5kSuEX41q45cn6uWKraJ'
+            b'KdalY9uOw18JvNfSS9GxKM,2759\r\n'
+        )
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(record)
+            fp.flush()
+            self.assertEqual(
+                python.read_record(Path(fp.name)),
+                {'tee'},
+            )
+
+    def test_read_metadata(self):
+        metadata = (
+            b'Metadata-Version: 2.1\nName: tee\nVersion: 0.0.3\nSummary: Pytho'
+            b'n library to tee stderr/stdout temporarily\nHome-page: https://g'
+            b'ithub.com/algrebe/python-tee\nAuthor: Anthony Rebello\nAuthor-em'
+            b'ail: rebello.anthony@gmail.com\nLicense: MIT License\nDownload-U'
+            b'RL: https://github.com/algrebe/python-tee/tarball/0.0.3\nKeyword'
+            b's: tee\nPlatform: UNKNOWN\nClassifier: Programming Language :: P'
+            b'ython :: 2.7\nClassifier: Environment :: Console\nClassifier: In'
+            b'tended Audience :: Developers\nClassifier: License :: OSI Approv'
+            b'ed :: MIT License\n\npython-tee\n==========\n\n|Build Status| |P'
+            b'yPI version|\n\nPython library to tee stderr / stdout to a file'
+            b'\n\nInstallation\n------------\n\n.. code:: bash\n\n    pip inst'
+            b'all tee\n\n\n'
+        )
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(metadata)
+            fp.flush()
+            self.assertEqual(
+                python.read_metadata(Path(fp.name)),
+                ('tee', '0.0.3'),
+            )

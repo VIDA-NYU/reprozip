@@ -40,6 +40,45 @@ logger = logging.getLogger(__name__)
 _re_pythonver = re.compile(r'^python[0-9]+\.[0-9]+$')
 
 
+_re_record = re.compile(br'^([^,]+),([a-z0-9]{3,8}=[^,]+)?,([0-9]*)$')
+
+
+def read_record(path):
+    """Get the list of provided directories from dist-info/RECORD.
+    """
+    with path.open('rb') as fp:
+        lines = fp.read().splitlines()
+    top_level = set()
+    for line in lines:
+        m = _re_record.match(line)
+        if m is None:
+            logger.warning("Invalid entry in %s: %r", path, line)
+            continue
+        top = Path(m.group(1).decode('utf-8', 'surrogateescape')).parts[0]
+        if top.endswith('.dist-info'):
+            continue
+        if top == '__pycache__' or top.endswith('.pyc'):
+            continue
+        top_level.add(top)
+    return top_level
+
+
+def read_metadata(path):
+    """Get the name and version from dist-info/METADATA.
+    """
+    name = version = None
+    with path.open() as fp:
+        for line in fp:
+            line = line.strip()
+            if not line:
+                break
+            if line.startswith('Name:'):
+                name = line[5:].strip()
+            elif line.startswith('Version:'):
+                version = line[8:].strip()
+    return name, version
+
+
 class PythonManager(object):
     def __init__(self):
         self.package_envs = []
@@ -81,34 +120,28 @@ class PythonManager(object):
             dists = {}
             packages = {}
             for dist_info in site_packages.glob('*.dist-info'):
-                # Read top_level.txt
-                if not (dist_info / 'top_level.txt').exists():
+                # Read files provided by the package
+                if not (dist_info / 'RECORD').exists():
                     logger.warning(
                         "Missing dist-info file: %s",
-                        dist_info / 'top_level.txt',
+                        dist_info / 'RECORD',
                     )
                     continue
-                with (dist_info / 'top_level.txt').open() as fp:
-                    top_level = fp.read().splitlines()
-                top_level = [line.strip() for line in top_level]
-                top_level = [line for line in top_level if line]
+                top_level = read_record(dist_info / 'RECORD')
 
                 # Read METADATA
-                package_name = package_version = None
-                with (dist_info / 'METADATA').open() as fp:
-                    for line in fp:
-                        line = line.strip()
-                        if not line:
-                            break
-                        if line.startswith('Name:'):
-                            package_name = line[5:].strip()
-                        elif line.startswith('Version:'):
-                            package_version = line[8:].strip()
+                if not (dist_info / 'METADATA').exists():
+                    logger.warning(
+                        "Missing dist-info file: %s",
+                        dist_info / 'METADATA',
+                    )
+                    continue
+                pkg_name, pkg_version = read_metadata(dist_info / 'METADATA')
 
                 # Create Package
-                if not package_name:
+                if not pkg_name:
                     continue
-                package = Package(package_name, package_version)
+                package = Package(pkg_name, pkg_version)
                 for name in top_level:
                     dists[name] = package
 
