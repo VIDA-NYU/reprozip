@@ -439,16 +439,19 @@ def write_configuration(directory, sort_packages, find_inputs_outputs,
             envp = envp[:-1]
         environ = dict(v.split('=', 1) for v in envp)
 
-        run = {'id': "run%d" % len(runs),
-                     'binary': r_name, 'argv': argv,
-                     'workingdir': str(Path(r_workingdir)),
-                     'architecture': platform.machine().lower(),
-                     'distribution': distribution,
-                     'hostname': platform.node(),
-                     'system': [platform.system(), platform.release()],
-                     'environ': environ,
-                     'uid': os.getuid(),
-                     'gid': os.getgid()}
+        run = {
+            'id': "run%d" % len(runs),
+            'binary': r_name,
+            'argv': argv,
+            'workingdir': str(Path(r_workingdir)),
+            'architecture': platform.machine().lower(),
+            'distribution': distribution,
+            'hostname': platform.node(),
+            'system': [platform.system(), platform.release()],
+            'environ': environ,
+            'uid': os.getuid(),
+            'gid': os.getgid(),
+        }
 
         if r_exitcode & 0x0100:
             run['signal'] = r_exitcode & 0xFF
