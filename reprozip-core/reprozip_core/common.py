@@ -623,7 +623,7 @@ version: "{format!s}"
 
         fp.write("runs:\n")
         for i, run in enumerate(runs):
-            fp.write("# Run %d\n" % i)
+            fp.write("  # Run %d\n" % i)
             fp.write(yaml_dumps([run], initial_indent=1))
             fp.write("\n")
 

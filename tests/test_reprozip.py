@@ -3,6 +3,7 @@
 # See file LICENSE for full license details.
 
 import os
+from datetime import datetime
 from pathlib import Path, PurePath, PurePosixPath
 import sqlite3
 import shutil
@@ -15,7 +16,8 @@ from reprozip.packages import python
 from reprozip.tracer import TracedFile, get_files, compile_inputs_outputs
 from reprozip import traceutils
 from reprozip_core.common import FILE_READ, FILE_WRITE, FILE_WDIR, File, \
-    Package, InputOutputFile, create_trace_schema, load_config
+    Package, InputOutputFile, create_trace_schema, load_config, save_config, \
+    PackageEnvironment
 from reprozip_core.utils import UniqueNames, make_dir_writable
 
 from tests.common import make_database
@@ -287,6 +289,109 @@ class TestConfig(unittest.TestCase):
             File(PurePosixPath('/tmp/input.txt')),
             File(PurePosixPath('/usr/lib/locale/locale-archive')),
         ])
+
+    @mock.patch(
+        'reprozip_core.common.isodatetime',
+        lambda: '2020-01-02T03:04:05+03:00',
+    )
+    def test_save_editable(self):
+        def file(path, comment, size=None):
+            f = File(path, size)
+            f.comment = comment
+            return f
+
+        runs = [
+            {
+                'id': 'run0',
+                'binary': '/usr/bin/id',
+                'argv': ['id'],
+                'workingdir': '/home/user',
+                'architecture': 'x86_64',
+                'distribution': ['ubuntu', '20.04'],
+                'hostname': 'vidaserver1',
+                'system': ['Linux', '5.4.0-84-generic'],
+                'environ': {'PATH': '/usr/bin:/bin', 'DISPLAY': ':0'},
+                'uid': 1000,
+                'gid': 1000,
+                'exitcode': 0,
+                'walltime': 0.0138,
+            },
+            {
+                'id': 'run1',
+                'binary': '/bin/echo',
+                'argv': ['echo', 'hello world'],
+                'workingdir': '/home/user',
+                'architecture': 'x86_64',
+                'distribution': ['ubuntu', '20.04'],
+                'hostname': 'vidaserver1',
+                'system': ['Linux', '5.4.0-84-generic'],
+                'environ': {'PATH': '/usr/bin:/bin', 'DISPLAY': ':0'},
+                'uid': 1000,
+                'gid': 1000,
+                'exitcode': 0,
+                'walltime': 0.0138,
+            }
+        ]
+        package_envs = [
+            PackageEnvironment('dpkg', '/', [
+                Package(
+                    'libc6',
+                    '2.31-0ubuntu9.3',
+                    [
+                        file(
+                            '/lib/i386-linux-gnu/ld-2.31.so',
+                            '176.40 KB',
+                            176401,
+                        ),
+                        file(
+                            '/lib/ld-linux.so.2',
+                            'Link to /lib/i386-linux-gnu/ld-2.31.so',
+                        ),
+                    ],
+                    packfiles=True,
+                    size=13563904,
+                    meta={'section': 'libs'},
+                ),
+            ]),
+            PackageEnvironment('python-pip', '/home/user/venv', [
+               Package(
+                   'jupyter-core',
+                   '4.7.0',
+                   [
+                       file('/home/user/venv/lib/python3.8/site-packages/'
+                            + 'jupyter-core/__init__.py', '456 bytes', 456),
+                   ],
+                   packfiles=True,
+                   size=1234,
+               ),
+            ]),
+        ]
+        other_files = [
+            file('/home/user/.profile', '12 bytes', 12),
+            file('/etc/idrc', '34 bytes', 34),
+        ]
+        inputs_outputs = {
+            'user-accounts': InputOutputFile(
+                PurePosixPath('/etc/passwd'), [0], [],
+            ),
+            'user-groups': InputOutputFile(
+                PurePosixPath('/etc/groups'), [1], [0],
+            ),
+        }
+        with tempfile.NamedTemporaryFile('r') as tmp:
+            save_config(
+                Path(tmp.name), runs, package_envs, other_files,
+                '2.0.1', inputs_outputs, canonical=False,
+            )
+            config = tmp.read()
+        with (
+            Path(__file__).parent / 'configs' / 'config-saved-editable.yml'
+        ).open('r') as fp:
+            expected = fp.read()
+        self.assertEqual(
+            expected,
+            config,
+        )
 
 
 class TestNames(unittest.TestCase):

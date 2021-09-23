@@ -235,7 +235,7 @@ def hsize(nbytes):
     nbytes = float(nbytes)
 
     if nbytes < KB:
-        return "{0} bytes".format(nbytes)
+        return "{0} bytes".format(int(nbytes))
     elif nbytes < MB:
         return "{0:.2f} KB".format(nbytes / KB)
     elif nbytes < GB:
