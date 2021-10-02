@@ -96,7 +96,7 @@ def main():
         description="reprounzip is the ReproZip component responsible for "
                     "unpacking and reproducing an experiment previously "
                     "packed with reprozip",
-        epilog="Please report issues to users@reprozip.org")
+        epilog="Please report issues to reprozip@.nyu.edu")
     add_options(parser)
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         dest='verbosity',

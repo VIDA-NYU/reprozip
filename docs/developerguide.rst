@@ -10,7 +10,7 @@ Development happens on `GitHub <https://github.com/ViDA-NYU/reprozip>`__; bug re
 
 Continuous testing is provided by `GitHub Actions <https://github.com/VIDA-NYU/reprozip/actions>`__. Note that ReproZip still tries to support Python 2 as well as Python 3. Test coverage is not very high because there are a lot of operations that are difficult to cover on CI (for instance, Vagrant VMs cannot be used over there).
 
-If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `dev@reprozip.org <https://vgc.poly.edu/mailman/listinfo/reprozip-users>`__.
+If you have any questions or need help with the development of an unpacker or plugin, please use our development mailing-list at `reprozip@.nyu.edu <https://groups.google.com/a/nyu.edu/g/reprozip>`__.
 
 Introduction to ReproZip
 ------------------------
@@ -102,4 +102,4 @@ Since version 0.4.1, `reprounzip` has signals that can be used to hook in plugin
 Final Observations
 ------------------
 
-After reading this page, reading the source code of one of the "official" unpackers is probably the best way of understanding how to write your own. They should be short enough to be easy to grasp. Should you have additional questions, do not hesitate to use our development mailing-list: `dev@reprozip.org`.
+After reading this page, reading the source code of one of the "official" unpackers is probably the best way of understanding how to write your own. They should be short enough to be easy to grasp. Should you have additional questions, do not hesitate to use our mailing-list: `reprozip@.nyu.edu`.
