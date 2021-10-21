@@ -55,8 +55,6 @@ def read_record(path):
             logger.warning("Invalid entry in %s: %r", path, line)
             continue
         top = Path(m.group(1).decode('utf-8', 'surrogateescape')).parts[0]
-        if top.endswith('.dist-info'):
-            continue
         if top == '__pycache__' or top.endswith('.pyc'):
             continue
         top_level.add(top)

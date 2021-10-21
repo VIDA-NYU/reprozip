@@ -682,7 +682,7 @@ class TestPython(unittest.TestCase):
             fp.flush()
             self.assertEqual(
                 python.read_record(Path(fp.name)),
-                {'tee'},
+                {'tee', 'tee-0.0.3.dist-info'},
             )
 
     def test_read_metadata(self):
