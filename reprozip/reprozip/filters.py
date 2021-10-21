@@ -39,10 +39,10 @@ def python(files, input_files, **kwargs):
     for path, fi in files.items():
         # Include .py files instead of .pyc
         if path.suffix == '.pyc':
-            if path.parent.name == b'__pycache__':
+            if path.parent.name == '__pycache__':
                 # Python 3: /dir/__pycache__/mod.cpython-38.pyc -> /dir/mod.py
                 basename = path.name.split('.', 1)[0]
-                pyfile = path.parent.parent / basename + '.py'
+                pyfile = path.parent.parent / (basename + '.py')
             else:
                 # Python2: /dir/mod.pyc -> /dir/moc.py
                 pyfile = path.parent / (path.stem + '.py')
