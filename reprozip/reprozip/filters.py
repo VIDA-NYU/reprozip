@@ -68,6 +68,7 @@ def python(files, input_files, **kwargs):
                     'site-packages' in path.parts
                     and path.suffix == '.pth'
                 )
+                or any(part.endswith('.dist-info') for part in path.parts)
             ):
                 logger.info("Removing input %s", path)
             else:
