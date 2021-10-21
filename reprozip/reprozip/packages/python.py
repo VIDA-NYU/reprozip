@@ -82,7 +82,6 @@ def read_metadata(path):
 class PythonManager(object):
     def __init__(self):
         self.package_envs = []
-        self.unknown_files = set()
 
     def search_for_files(self, files):
         # Find environments
@@ -161,5 +160,4 @@ class PythonManager(object):
                 sorted(packages.values(), key=lambda pkg: pkg.name),
             ))
 
-        self.unknown_files = files
         self.package_envs = environments

@@ -35,8 +35,6 @@ class BaseLinuxPackages(object):
     NAME = None
 
     def __init__(self):
-        # Files that were not part of a package
-        self.unknown_files = set()
         # All the packages identified, with their `files` attribute set
         self._packages = {}
 
@@ -62,9 +60,7 @@ class BaseLinuxPackages(object):
             pkgnames = self._get_packages_for_file(f.path)
 
             # Stores the file
-            if not pkgnames:
-                self.unknown_files.add(f)
-            else:
+            if pkgnames:
                 pkgs = []
                 for pkgname in pkgnames:
                     if pkgname in self._packages:
@@ -77,18 +73,15 @@ class BaseLinuxPackages(object):
                 if len(pkgs) == 1:
                     pkgs[0].add_file(f)
                     nb_pkg_files += 1
-                else:
-                    self.unknown_files.add(f)
 
         # Filter out packages with no files
         self._packages = {pkgname: pkg
                           for pkgname, pkg in self._packages.items()
                           if pkg.files}
 
-        logger.info("%d packages with %d files, and %d other files",
+        logger.info("%d packages with %d files",
                     len(self._packages),
-                    nb_pkg_files,
-                    len(self.unknown_files))
+                    nb_pkg_files)
 
     def _filter(self, f):
         # Special files
@@ -100,7 +93,6 @@ class BaseLinuxPackages(object):
             PurePosixPath('/usr/local') in f.path.parents or
             not any(PurePosixPath(c) in f.path.parents for c in system_dirs)
         ):
-            self.unknown_files.add(f)
             return True
 
         return False
@@ -172,11 +164,6 @@ class DebPackages(BaseLinuxPackages):
                         else:
                             found[path] = pkgname
 
-        # Remaining files are not from packages
-        self.unknown_files.update(
-            f for f in files
-            if f.path in requested and found.get(f.path) is None)
-
         nb_pkg_files = 0
 
         for path, pkgname in found.items():
@@ -190,10 +177,9 @@ class DebPackages(BaseLinuxPackages):
             package.add_file(requested.pop(path))
             nb_pkg_files += 1
 
-        logger.info("%d packages with %d files, and %d other files",
+        logger.info("%d packages with %d files",
                     len(self._packages),
-                    nb_pkg_files,
-                    len(self.unknown_files))
+                    nb_pkg_files)
 
     def _get_packages_for_file(self, filename):
         # This method is not used for dpkg: instead, we query multiple files at

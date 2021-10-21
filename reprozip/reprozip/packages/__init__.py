@@ -26,7 +26,11 @@ def identify_packages(files):
         manager.search_for_files(files)
         logger.debug("Package manager plugin %s took %f seconds",
                      (time.time() - begin))
-        unknown_files.intersection_update(manager.unknown_files)
         package_envs.extend(manager.package_envs)
+
+        # Update unknown files
+        for package_env in manager.package_envs:
+            for package in package_env.packages:
+                unknown_files.difference_update(package.files)
 
     return list(unknown_files), package_envs
