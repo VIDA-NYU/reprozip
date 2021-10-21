@@ -36,6 +36,7 @@ def builtin(input_files, **kwargs):
 
 def python(files, input_files, **kwargs):
     add = []
+    remove = set()
     for path, fi in files.items():
         # Include .py files instead of .pyc
         if path.suffix == '.pyc':
@@ -50,9 +51,13 @@ def python(files, input_files, **kwargs):
                 if pyfile not in files:
                     logger.info("Adding %s", pyfile)
                     add.append(File(pyfile))
+                logger.info("Removing %s", path)
+                remove.add(path)
 
     for fi in add:
         files[fi.path] = fi
+    for path in remove:
+        files.pop(path, None)
 
     for i in range(len(input_files)):
         lst = []
