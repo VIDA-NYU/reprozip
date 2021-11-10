@@ -12,6 +12,7 @@ import sys
 from reprounzip.common import setup_logging
 from reprounzip_qt import __version__
 from reprounzip_qt.usage import record_usage, submit_usage_report
+from reprozip.utils import stderr
 
 
 logger = logging.getLogger('reprounzip_qt')
@@ -21,7 +22,10 @@ def main():
     """Entry point when called on the command-line.
     """
     # Locale
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        stderr.write("Couldn't set locale: %s\n" % e)
 
     parser = argparse.ArgumentParser(
         description="Graphical user interface for reprounzip",

@@ -275,7 +275,10 @@ def main():
     """Entry point when called on the command-line.
     """
     # Locale
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        stderr.write("Couldn't set locale: %s\n" % e)
 
     # http://bugs.python.org/issue13676
     # This prevents reprozip from reading argv and envp arrays from trace

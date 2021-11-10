@@ -29,6 +29,7 @@ from reprounzip.common import setup_logging, \
     submit_usage_report, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
+from reprozip.utils import stderr
 
 
 __version__ = '1.1'
@@ -79,7 +80,10 @@ def main():
     """Entry point when called on the command-line.
     """
     # Locale
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        stderr.write("Couldn't set locale: %s\n" % e)
 
     # Parses command-line
 
