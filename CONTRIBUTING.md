@@ -89,4 +89,4 @@ This CONTRIBUTING.md was adapted from [ProjectPorcupine's](https://github.com/Te
 
 # Contact info
 
-You are welcome to [subscribe to](https://groups.google.com/a/nyu.edu/g/reprozip) or contact our user mailing list [reprozip@.nyu.edu](mailto:reprozip@.nyu.edu) for questions, suggestions and discussions about using ReproZip.
+You are welcome to [subscribe to](https://groups.google.com/a/nyu.edu/g/reprozip) or contact our user mailing list [reprozip@nyu.edu](mailto:reprozip@nyu.edu) for questions, suggestions and discussions about using ReproZip.

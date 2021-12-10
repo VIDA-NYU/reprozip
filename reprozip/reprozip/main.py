@@ -310,7 +310,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="reprozip is the ReproZip component responsible for "
                     "tracing and packing the execution of an experiment",
-        epilog="Please report issues to reprozip@.nyu.edu")
+        epilog="Please report issues to reprozip@nyu.edu")
     add_options(parser)
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         dest='verbosity',
