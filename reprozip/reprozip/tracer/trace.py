@@ -26,7 +26,7 @@ import warnings
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_LINK
+    FILE_READ, FILE_WRITE, FILE_STAT, FILE_LINK
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, \
@@ -47,16 +47,22 @@ class TracedFile(File):
     #                              |      |
     #                read          v      +   write
     # (init) +------------------> ONLY_READ +-------> READ_THEN_WRITTEN
-    #        |                                           ^         +
-    #        |                                           |         |
-    #        +-------> WRITTEN +--+                      +---------+
-    #          write    ^         |                      read, write
+    #        |\                   ^                      ^         +
+    #        | \                  | read                 |         |
+    #        |  \ stat            |                      +---------+
+    #        |  +--------> ONLY_STAT                     read, write
+    #        |              |
+    #        |              | write
+    #        |              v
+    #        +-------> WRITTEN +--+
+    #          write    ^         |
     #                   |         |
     #                   +---------+
     #                   read, write
     READ_THEN_WRITTEN = 0
     ONLY_READ = 1
     WRITTEN = 2
+    ONLY_STAT = 3
 
     what = None
 
@@ -76,24 +82,32 @@ class TracedFile(File):
         File.__init__(self, path, size)
 
     def read(self, run):
-        if self.what is None:
+        if self.what in (None, TracedFile.ONLY_STAT):
             self.what = TracedFile.ONLY_READ
 
         if run is not None:
-            if self.runs[run] is None:
+            if self.runs[run] in (None, TracedFile.ONLY_STAT):
                 self.runs[run] = TracedFile.ONLY_READ
 
     def write(self, run):
-        if self.what is None:
+        if self.what in (None, TracedFile.ONLY_STAT):
             self.what = TracedFile.WRITTEN
         elif self.what == TracedFile.ONLY_READ:
             self.what = TracedFile.READ_THEN_WRITTEN
 
         if run is not None:
-            if self.runs[run] is None:
+            if self.runs[run] in (None, TracedFile.ONLY_STAT):
                 self.runs[run] = TracedFile.WRITTEN
             elif self.runs[run] == TracedFile.ONLY_READ:
                 self.runs[run] = TracedFile.READ_THEN_WRITTEN
+
+    def stat(self, run):
+        if self.what is None:
+            self.what = TracedFile.ONLY_STAT
+
+        if run is not None:
+            if self.runs[run] is None:
+                self.runs[run] = TracedFile.ONLY_STAT
 
 
 def run_filter_plugins(files, input_files):
@@ -176,6 +190,8 @@ def get_files(conn):
             files[f.path] = f
         else:
             f = files[r_name]
+        if r_mode & FILE_STAT:
+            f.stat(run)
         if r_mode & FILE_READ:
             f.read(run)
         if r_mode & FILE_WRITE:
