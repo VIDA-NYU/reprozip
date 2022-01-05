@@ -19,11 +19,14 @@ def main():
     """Entry point when called on the command-line.
     """
     # Locale
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        sys.stderr.write("Couldn't set locale: %s\n" % e)
 
     parser = argparse.ArgumentParser(
         description="Graphical user interface for reprounzip",
-        epilog="Please report issues to users@reprozip.org")
+        epilog="Please report issues to reprozip@nyu.edu")
     parser.add_argument('--version', action='version',
                         version="reprounzip-qt version %s" % __version__)
     parser.add_argument('-v', '--verbose', action='count', default=1,

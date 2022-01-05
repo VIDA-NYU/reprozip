@@ -5,7 +5,7 @@ Troubleshooting
 
 The best way to start solving an issue in ReproZip is probably to look at the log messages. Some messages are not displayed by default when running ReproZip, but you can use the ``--verbose`` (or ``-v``) flag to display them. In addition, all the log messages are stored under ``$HOME/.reprozip/log``.
 
-Please feel free to contact us at users@reprozip.org if you encounter issues while using ReproZip.
+Please feel free to contact us at reprozip@nyu.edu if you encounter issues while using ReproZip.
 
 ------------
 

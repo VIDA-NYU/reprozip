@@ -24,7 +24,7 @@ setup(
     ],
     description="Jupyter Notebook tracing/reproduction using ReproZip",
     author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
-    author_email='dev@reprozip.org',
+    author_email='reprozip@nyu.edu',
     maintainer="Remi Rampin",
     maintainer_email='remi@rampin.org',
     url='https://www.reprozip.org/',

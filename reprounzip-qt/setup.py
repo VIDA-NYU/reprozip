@@ -21,7 +21,7 @@ setup(
     install_requires=['PyYAML', 'qtpy', 'reprounzip>=2.0.0,<3.0.0'],
     description="Graphical user interface for reprounzip, using Qt",
     author="Remi Rampin, Fernando Chirigati, Dennis Shasha, Juliana Freire",
-    author_email='dev@reprozip.org',
+    author_email='reprozip@nyu.edu',
     maintainer="Remi Rampin",
     maintainer_email='remi@rampin.org',
     url='https://www.reprozip.org/',

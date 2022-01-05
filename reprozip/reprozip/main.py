@@ -301,7 +301,10 @@ def main():
     """Entry point when called on the command-line.
     """
     # Locale
-    locale.setlocale(locale.LC_ALL, '')
+    try:
+        locale.setlocale(locale.LC_ALL, '')
+    except locale.Error as e:
+        sys.stderr.write("Couldn't set locale: %s\n" % e)
 
     # Parses command-line
 
@@ -324,7 +327,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="reprozip is the ReproZip component responsible for "
                     "tracing and packing the execution of an experiment",
-        epilog="Please report issues to users@reprozip.org")
+        epilog="Please report issues to reprozip@nyu.edu")
     add_options(parser)
     parser.add_argument('-v', '--verbose', action='count', default=1,
                         dest='verbosity',

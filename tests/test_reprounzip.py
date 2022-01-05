@@ -2,13 +2,16 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+import io
 import os
 import sys
+import tarfile
+import tempfile
 import unittest
 import warnings
 
+from reprozip_core.common import RPZPack
 from reprounzip.signals import Signal
-import reprounzip.unpackers.common
 
 
 class TestSignals(unittest.TestCase):
@@ -111,93 +114,71 @@ class TestArgs(unittest.TestCase):
 
 
 class TestCommon(unittest.TestCase):
-    def test_env(self):
-        """Tests fixing environment variables"""
-        outer_env = {
-            'OUTONLY': 'outvalue',
-            'COMMON': 'commonvalueout',
-            'SHARED': 'sharedvalue',
-            'EMPTY': '',
-        }
-        inner_env = {
-            'INONLY': 'invalue',
-            'COMMON': 'commonvaluein',
-            'SHARED': 'sharedvalue',
-        }
+    def test_rpzpack(self):
+        def write_to_tar(tar, path, data, **kwargs):
+            info = tarfile.TarInfo(path)
+            info.size = len(data)
+            for key, value in kwargs.items():
+                if not hasattr(info, key):
+                    raise AttributeError(key)
+                setattr(info, key, value)
+            tar.addfile(info, io.BytesIO(data))
 
-        class FakeArgs(object):
-            def __init__(self, pass_env, set_env):
-                self.pass_env = pass_env
-                self.set_env = set_env
+        with tempfile.TemporaryDirectory() as tmp:
+            # Create data tar.gz
+            data = os.path.join(tmp, 'DATA.tar.gz')
+            tar = tarfile.open(data, 'w:gz')
+            write_to_tar(
+                tar,
+                'DATA/bin/init',
+                b'#!/bin/sh\necho "Success."\n',
+                mode=0o755,
+            )
 
-        old_environ, os.environ = os.environ, outer_env
-        try:
-            self.assertEqual(
-                reprounzip.unpackers.common.parse_environment_args(
-                    FakeArgs([], [])),
-                ({}, []))
-            self.assertEqual(
-                reprounzip.unpackers.common.fixup_environment(
-                    inner_env,
-                    FakeArgs([], [])),
-                {
-                    'INONLY': 'invalue',
-                    'COMMON': 'commonvaluein',
-                    'SHARED': 'sharedvalue',
-                })
+            # Create rpz
+            rpz = os.path.join(tmp, 'test.rpz')
+            tar = tarfile.open(rpz, 'w:')
+            write_to_tar(
+                tar,
+                'METADATA/version',
+                b'REPROZIP VERSION 2\n',
+            )
+            write_to_tar(
+                tar,
+                'METADATA/trace.sqlite3',
+                b'',
+            )
+            write_to_tar(
+                tar,
+                'METADATA/config.yml',
+                b'{}',
+            )
+            tar.add(
+                data,
+                'DATA.tar.gz',
+            )
 
-            self.assertEqual(
-                reprounzip.unpackers.common.parse_environment_args(
-                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
-                ({'OUTONLY': 'outvalue',
-                  'COMMON': 'commonvalueout',
-                  'EMPTY': ''},
-                 []))
-            self.assertEqual(
-                reprounzip.unpackers.common.fixup_environment(
-                    inner_env,
-                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
-                {
-                    'INONLY': 'invalue',
-                    'OUTONLY': 'outvalue',
-                    'COMMON': 'commonvalueout',
-                    'SHARED': 'sharedvalue',
-                    'EMPTY': '',
-                })
+            # Add directory extension
+            write_to_tar(
+                tar,
+                'EXTENSIONS/foo/one.txt',
+                b'',
+            )
+            write_to_tar(
+                tar,
+                'EXTENSIONS/foo/two.txt',
+                b'',
+            )
 
-            self.assertEqual(
-                reprounzip.unpackers.common.parse_environment_args(
-                    FakeArgs(['OUTONLY'],
-                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
-                ({'OUTONLY': 'outvalue',
-                  'COMMON': '',
-                  'SHARED': 'surprise'},
-                 ['INONLY']))
-            self.assertEqual(
-                reprounzip.unpackers.common.fixup_environment(
-                    inner_env,
-                    FakeArgs(['OUTONLY'],
-                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
-                {
-                    'OUTONLY': 'outvalue',
-                    'COMMON': '',
-                    'SHARED': 'surprise',
-                })
+            # Add single file extension
+            write_to_tar(
+                tar,
+                'EXTENSIONS/bar',
+                b'',
+            )
 
-            self.assertEqual(
-                reprounzip.unpackers.common.parse_environment_args(
-                    FakeArgs(['.*Y$'], [])),
-                ({'OUTONLY': 'outvalue', 'EMPTY': ''}, []))
-            self.assertEqual(
-                reprounzip.unpackers.common.fixup_environment(
-                    inner_env,
-                    FakeArgs(['.*Y$'], [])),
-                {
-                    'INONLY': 'invalue',
-                    'OUTONLY': 'outvalue',
-                    'COMMON': 'commonvaluein',
-                    'SHARED': 'sharedvalue',
-                    'EMPTY': '',
-                })
-        finally:
-            os.environ = old_environ
+            tar.close()
+
+            rpz_obj = RPZPack(rpz)
+            self.assertEqual(rpz_obj.open_config().read(), b'{}')
+            self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})

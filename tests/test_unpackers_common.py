@@ -2,11 +2,13 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+import os
 import sys
 import unittest
 
 from reprounzip.unpackers.common import UsageError, \
-    unique_names, make_unique_name, get_runs
+    unique_names, make_unique_name, get_runs, parse_environment_args, \
+    fixup_environment
 
 
 class TestCommon(unittest.TestCase):
@@ -24,6 +26,97 @@ class TestCommon(unittest.TestCase):
             self.assertTrue(n and isinstance(n, bytes) and
                             n[:12] == b'some_prefix_')
         self.assertEqual(len(set(names)), len(names))
+
+    def test_env(self):
+        """Tests fixing environment variables"""
+        outer_env = {
+            'OUTONLY': 'outvalue',
+            'COMMON': 'commonvalueout',
+            'SHARED': 'sharedvalue',
+            'EMPTY': '',
+        }
+        inner_env = {
+            'INONLY': 'invalue',
+            'COMMON': 'commonvaluein',
+            'SHARED': 'sharedvalue',
+        }
+
+        class FakeArgs(object):
+            def __init__(self, pass_env, set_env):
+                self.pass_env = pass_env
+                self.set_env = set_env
+
+        old_environ, os.environ = os.environ, outer_env
+        try:
+            self.assertEqual(
+                parse_environment_args(
+                    FakeArgs([], [])),
+                ({}, []))
+            self.assertEqual(
+                fixup_environment(
+                    inner_env,
+                    FakeArgs([], [])),
+                {
+                    'INONLY': 'invalue',
+                    'COMMON': 'commonvaluein',
+                    'SHARED': 'sharedvalue',
+                })
+
+            self.assertEqual(
+                parse_environment_args(
+                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
+                ({'OUTONLY': 'outvalue',
+                  'COMMON': 'commonvalueout',
+                  'EMPTY': ''},
+                 []))
+            self.assertEqual(
+                fixup_environment(
+                    inner_env,
+                    FakeArgs(['COMMON', 'INONLY', 'OUTONLY', 'EMPTY'], [])),
+                {
+                    'INONLY': 'invalue',
+                    'OUTONLY': 'outvalue',
+                    'COMMON': 'commonvalueout',
+                    'SHARED': 'sharedvalue',
+                    'EMPTY': '',
+                })
+
+            self.assertEqual(
+                parse_environment_args(
+                    FakeArgs(['OUTONLY'],
+                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
+                ({'OUTONLY': 'outvalue',
+                  'COMMON': '',
+                  'SHARED': 'surprise'},
+                 ['INONLY']))
+            self.assertEqual(
+                fixup_environment(
+                    inner_env,
+                    FakeArgs(['OUTONLY'],
+                             ['SHARED=surprise', 'COMMON=', 'INONLY'])),
+                {
+                    'OUTONLY': 'outvalue',
+                    'COMMON': '',
+                    'SHARED': 'surprise',
+                })
+
+            self.assertEqual(
+                parse_environment_args(
+                    FakeArgs(['.*Y$'], [])),
+                ({'OUTONLY': 'outvalue', 'EMPTY': ''}, []))
+            self.assertEqual(
+                fixup_environment(
+                    inner_env,
+                    FakeArgs(['.*Y$'], [])),
+                {
+                    'INONLY': 'invalue',
+                    'OUTONLY': 'outvalue',
+                    'COMMON': 'commonvaluein',
+                    'SHARED': 'sharedvalue',
+                    'EMPTY': '',
+                })
+        finally:
+            os.environ = old_environ
 
 
 class TestMisc(unittest.TestCase):

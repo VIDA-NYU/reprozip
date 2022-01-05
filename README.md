@@ -98,9 +98,7 @@ Please use the following when citing ReproZip ([BibTeX](CITATION.txt)):
 Contribute
 ----------
 
-Please subscribe to and contact the [users@reprozip.org](https://vgc.poly.edu/mailman/listinfo/reprozip-users) mailing list for questions, suggestions and discussions about using reprozip.
-
-Use the [dev@reprozip.org](https://vgc.poly.edu/mailman/listinfo/reprozip-dev) mailing list for any questions about reprozip source code.
+Please subscribe to and contact the [reprozip@nyu.edu](https://groups.google.com/a/nyu.edu/g/reprozip) mailing list for questions, suggestions and discussions about using reprozip.
 
 Bugs and feature plannings are tracked in the [GitHub issues](https://github.com/VIDA-NYU/reprozip/issues). Feel free to add an issue!
 

@@ -121,6 +121,9 @@ def get_package_info(pack, read_data=False):
                'write_runs': iofile.write_runs}
         for name, iofile in inputs_outputs.items()}
 
+    rpz_pack = RPZPack(pack)
+    information['extensions'] = sorted(rpz_pack.extensions())
+
     # Unpacker compatibility
     unpacker_status = {}
     for name, upk in unpackers.items():
@@ -214,6 +217,12 @@ def _print_package_info(pack, info, verbosity=1):
                 if f['write_runs']:
                     t.append("out")
                 print("    %s (%s): %s" % (name, ' '.join(t), f['path']))
+
+    extensions = info.get('extensions')
+    if extensions:
+        print("\n----- Extensions -----")
+        for name in extensions:
+            print(name)
 
     unpacker_status = info.get('unpacker_status')
     if unpacker_status:
