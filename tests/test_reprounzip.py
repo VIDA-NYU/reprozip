@@ -7,6 +7,7 @@ from __future__ import print_function, unicode_literals
 import io
 import os
 import sys
+import shutil
 import tarfile
 import tempfile
 import unittest
@@ -126,7 +127,8 @@ class TestCommon(unittest.TestCase):
                 setattr(info, key, value)
             tar.addfile(info, io.BytesIO(data))
 
-        with tempfile.TemporaryDirectory() as tmp:
+        tmp = tempfile.mkdtemp()
+        try:
             # Create data tar.gz
             data = os.path.join(tmp, 'DATA.tar.gz')
             tar = tarfile.open(data, 'w:gz')
@@ -182,6 +184,7 @@ class TestCommon(unittest.TestCase):
             tar.close()
 
             rpz_obj = RPZPack(rpz)
-            with rpz_obj.open_config() as fp:
-                self.assertEqual(fp.read(), b'{}')
+            self.assertEqual(rpz_obj.open_config().read(), b'{}')
             self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})
+        finally:
+            shutil.rmtree(tmp)
