@@ -4,10 +4,15 @@
 
 from __future__ import print_function, unicode_literals
 
+import io
+import os
 import sys
+import tarfile
+import tempfile
 import unittest
 import warnings
 
+from reprounzip.common import RPZPack
 from reprounzip.signals import Signal
 
 
@@ -108,3 +113,75 @@ class TestArgs(unittest.TestCase):
             sys.argv = old_argv
         (reprounzip.unpackers.default.chroot_run,
          reprounzip.main.setup_logging) = old_funcs
+
+
+class TestCommon(unittest.TestCase):
+    def test_rpzpack(self):
+        def write_to_tar(tar, path, data, **kwargs):
+            info = tarfile.TarInfo(path)
+            info.size = len(data)
+            for key, value in kwargs.items():
+                if not hasattr(info, key):
+                    raise AttributeError(key)
+                setattr(info, key, value)
+            tar.addfile(info, io.BytesIO(data))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            # Create data tar.gz
+            data = os.path.join(tmp, 'DATA.tar.gz')
+            tar = tarfile.open(data, 'w:gz')
+            write_to_tar(
+                tar,
+                'DATA/bin/init',
+                b'#!/bin/sh\necho "Success."\n',
+                mode=0o755,
+            )
+
+            # Create rpz
+            rpz = os.path.join(tmp, 'test.rpz')
+            tar = tarfile.open(rpz, 'w:')
+            write_to_tar(
+                tar,
+                'METADATA/version',
+                b'REPROZIP VERSION 2\n',
+            )
+            write_to_tar(
+                tar,
+                'METADATA/trace.sqlite3',
+                b'',
+            )
+            write_to_tar(
+                tar,
+                'METADATA/config.yml',
+                b'{}',
+            )
+            tar.add(
+                data,
+                'DATA.tar.gz',
+            )
+
+            # Add directory extension
+            write_to_tar(
+                tar,
+                'EXTENSIONS/foo/one.txt',
+                b'',
+            )
+            write_to_tar(
+                tar,
+                'EXTENSIONS/foo/two.txt',
+                b'',
+            )
+
+            # Add single file extension
+            write_to_tar(
+                tar,
+                'EXTENSIONS/bar',
+                b'',
+            )
+
+            tar.close()
+
+            rpz_obj = RPZPack(rpz)
+            with rpz_obj.open_config() as fp:
+                self.assertEqual(fp.read(), b'{}')
+            self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})
