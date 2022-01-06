@@ -105,9 +105,9 @@ jobs:
         sudo apt-get install -qq $PKGS
         if [ $TEST_MODE = "coverage" ]; then
             pip install 'coverage>=5,<6'
-            pip install -e ./reprozip-core -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
+            pip install -e ./reprozip-core -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter -e ./reprozip-web
         else
-            pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
+            pip install ./reprozip-core ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt ./reprozip-jupyter ./reprozip-web
         fi
     - name: Unit tests
       run: |

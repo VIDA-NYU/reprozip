@@ -23,6 +23,7 @@ Source: input\ssh\*; DestDir: {app}\ssh
 Source: input\reprounzip.bat; DestDir: {app}
 Source: input\reprounzip-qt.bat; DestDir: {app}
 Source: input\reprozip-jupyter.bat; DestDir: {app}
+Source: input\reprozip-web.bat; DestDir: {app}
 Source: input\reprozip.ico; DestDir: {app}
 
 [UninstallDelete]
