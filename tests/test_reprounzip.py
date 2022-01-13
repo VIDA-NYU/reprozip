@@ -9,6 +9,7 @@ import tarfile
 import tempfile
 import unittest
 import warnings
+import zipfile
 
 from reprozip_core.common import RPZPack
 from reprounzip.signals import Signal
@@ -113,71 +114,191 @@ class TestArgs(unittest.TestCase):
          reprounzip.main.setup_logging) = old_funcs
 
 
-class TestCommon(unittest.TestCase):
-    def test_rpzpack(self):
-        def write_to_tar(tar, path, data, **kwargs):
-            info = tarfile.TarInfo(path)
-            info.size = len(data)
-            for key, value in kwargs.items():
-                if not hasattr(info, key):
-                    raise AttributeError(key)
-                setattr(info, key, value)
-            tar.addfile(info, io.BytesIO(data))
+class TarBuilder(object):
+    def __init__(self, filename, mode):
+        self.tar = tarfile.open(filename, mode)
 
+    def write_data(self, path, data, mode=None):
+        info = tarfile.TarInfo(path)
+        info.size = len(data)
+        if mode is not None:
+            info.mode = mode
+        self.tar.addfile(info, io.BytesIO(data))
+
+    def add_file(self, name, arcname):
+        self.tar.add(name, arcname)
+
+    def close(self):
+        self.tar.close()
+        self.tar = None
+
+
+class ZipBuilder(object):
+    def __init__(self, filename):
+        self.zip = zipfile.ZipFile(filename, 'w')
+
+    def write_data(self, path, data, mode=None):
+        self.zip.writestr(zipfile.ZipInfo(filename=path), data)
+
+    def add_file(self, name, arcname):
+        self.zip.write(name, arcname)
+
+    def close(self):
+        self.zip.close()
+        self.zip = None
+
+
+class TestCommon(unittest.TestCase):
+    def test_rpzpack_v1(self):
         with tempfile.TemporaryDirectory() as tmp:
-            # Create data tar.gz
-            data = os.path.join(tmp, 'DATA.tar.gz')
-            tar = tarfile.open(data, 'w:gz')
-            write_to_tar(
-                tar,
+            # Create rpz
+            rpz = os.path.join(tmp, 'test.rpz')
+            arc = TarBuilder(rpz, 'w:gz')
+            arc.write_data(
+                'METADATA/version',
+                b'REPROZIP VERSION 1\n',
+            )
+            arc.write_data(
+                'METADATA/trace.sqlite3',
+                b'',
+            )
+            arc.write_data(
+                'METADATA/config.yml',
+                b'{}',
+            )
+
+            # Add data
+            arc.write_data(
                 'DATA/bin/init',
                 b'#!/bin/sh\necho "Success."\n',
                 mode=0o755,
             )
 
-            # Create rpz
-            rpz = os.path.join(tmp, 'test.rpz')
-            tar = tarfile.open(rpz, 'w:')
-            write_to_tar(
-                tar,
-                'METADATA/version',
-                b'REPROZIP VERSION 2\n',
-            )
-            write_to_tar(
-                tar,
-                'METADATA/trace.sqlite3',
-                b'',
-            )
-            write_to_tar(
-                tar,
-                'METADATA/config.yml',
-                b'{}',
-            )
-            tar.add(
-                data,
-                'DATA.tar.gz',
-            )
-
             # Add directory extension
-            write_to_tar(
-                tar,
+            arc.write_data(
                 'EXTENSIONS/foo/one.txt',
                 b'',
             )
-            write_to_tar(
-                tar,
+            arc.write_data(
                 'EXTENSIONS/foo/two.txt',
                 b'',
             )
 
             # Add single file extension
-            write_to_tar(
-                tar,
+            arc.write_data(
                 'EXTENSIONS/bar',
                 b'',
             )
 
-            tar.close()
+            arc.close()
+
+            rpz_obj = RPZPack(rpz)
+            self.assertEqual(rpz_obj.open_config().read(), b'{}')
+            self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})
+
+    def test_rpzpack_v2_tar(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            # Create data tar.gz
+            data = os.path.join(tmp, 'DATA.tar.gz')
+            arc = TarBuilder(data, 'w:gz')
+            arc.write_data(
+                'DATA/bin/init',
+                b'#!/bin/sh\necho "Success."\n',
+                mode=0o755,
+            )
+            arc.close()
+
+            # Create rpz
+            rpz = os.path.join(tmp, 'test.rpz')
+            arc = TarBuilder(rpz, 'w:')
+            arc.write_data(
+                'METADATA/version',
+                b'REPROZIP VERSION 2\n',
+            )
+            arc.write_data(
+                'METADATA/trace.sqlite3',
+                b'',
+            )
+            arc.write_data(
+                'METADATA/config.yml',
+                b'{}',
+            )
+            arc.add_file(
+                data,
+                'DATA.tar.gz',
+            )
+
+            # Add directory extension
+            arc.write_data(
+                'EXTENSIONS/foo/one.txt',
+                b'',
+            )
+            arc.write_data(
+                'EXTENSIONS/foo/two.txt',
+                b'',
+            )
+
+            # Add single file extension
+            arc.write_data(
+                'EXTENSIONS/bar',
+                b'',
+            )
+
+            arc.close()
+
+            rpz_obj = RPZPack(rpz)
+            self.assertEqual(rpz_obj.open_config().read(), b'{}')
+            self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})
+
+    def test_rpzpack_v2_zip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            # Create data tar.gz
+            data = os.path.join(tmp, 'DATA.tar.gz')
+            arc = TarBuilder(data, 'w:gz')
+            arc.write_data(
+                'DATA/bin/init',
+                b'#!/bin/sh\necho "Success."\n',
+                mode=0o755,
+            )
+            arc.close()
+
+            # Create rpz
+            rpz = os.path.join(tmp, 'test.rpz')
+            arc = ZipBuilder(rpz)
+            arc.write_data(
+                'METADATA/version',
+                b'REPROZIP VERSION 2\n',
+            )
+            arc.write_data(
+                'METADATA/trace.sqlite3',
+                b'',
+            )
+            arc.write_data(
+                'METADATA/config.yml',
+                b'{}',
+            )
+            arc.add_file(
+                data,
+                'DATA.tar.gz',
+            )
+
+            # Add directory extension
+            arc.write_data(
+                'EXTENSIONS/foo/one.txt',
+                b'',
+            )
+            arc.write_data(
+                'EXTENSIONS/foo/two.txt',
+                b'',
+            )
+
+            # Add single file extension
+            arc.write_data(
+                'EXTENSIONS/bar',
+                b'',
+            )
+
+            arc.close()
 
             rpz_obj = RPZPack(rpz)
             self.assertEqual(rpz_obj.open_config().read(), b'{}')
