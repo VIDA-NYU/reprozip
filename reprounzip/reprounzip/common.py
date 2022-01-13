@@ -205,8 +205,20 @@ class RPZPack(object):
         else:
             raise ValueError("File doesn't appear to be an RPZ pack")
 
-        self.data = tarfile.open(fileobj=self.zip.open('DATA.tar.gz'),
-                                 mode='r:*')
+        if sys.version_info < (3, 6):
+            # zip.open() doesn't return a seekable file object before 3.6
+            # Extract to a temporary file instead
+            fd, temporary_data = Path.tempfile(
+                prefix='reprounzip_data_',
+                suffix='.zip',
+            )
+            os.close(fd)
+            self._extract_file('DATA.tar.gz', temporary_data)
+            self.data = tarfile.open(str(temporary_data), mode='r:*')
+            atexit.register(os.remove, temporary_data.path)
+        else:
+            self.data = tarfile.open(fileobj=self.zip.open('DATA.tar.gz'),
+                                     mode='r:*')
         return True
 
     def remove_data_prefix(self, path):
