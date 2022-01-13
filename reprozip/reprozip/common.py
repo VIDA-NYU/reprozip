@@ -35,6 +35,7 @@ import sys
 import tarfile
 import usagestats
 import yaml
+import zipfile
 
 from .utils import iteritems, itervalues, unicode_, stderr, UniqueNames, \
     escape, optional_return_type, isodatetime, hsize, join_root, copyfile
@@ -128,11 +129,27 @@ class Package(object):
 class RPZPack(object):
     """Encapsulates operations on the RPZ pack format.
     """
+    data = zip = tar = None
+
     def __init__(self, pack):
         self.pack = Path(pack)
 
-        self.tar = tarfile.open(str(self.pack), 'r:*')
-        f = self.tar.extractfile('METADATA/version')
+        if self._open_tar():
+            pass
+        elif self._open_zip():
+            pass
+        else:
+            raise ValueError("File doesn't appear to be an RPZ pack")
+
+    def _open_tar(self):
+        try:
+            self.tar = tarfile.open(str(self.pack), 'r:*')
+        except tarfile.TarError:
+            return False
+        try:
+            f = self.tar.extractfile('METADATA/version')
+        except KeyError:
+            raise ValueError("Invalid ReproZip file")
         version = f.read()
         f.close()
         if version.startswith(b'REPROZIP VERSION '):
@@ -148,7 +165,7 @@ class RPZPack(object):
                     "Unknown format version %r (maybe you should upgrade "
                     "reprounzip? I only know versions 1 and 2" % version)
         else:
-            raise ValueError("File doesn't appear to be a RPZ pack")
+            raise ValueError("File doesn't appear to be an RPZ pack")
 
         if self.version == 1:
             self.data = self.tar
@@ -158,6 +175,51 @@ class RPZPack(object):
                 mode='r:*')
         else:
             assert False
+        return True
+
+    def _open_zip(self):
+        try:
+            self.zip = zipfile.ZipFile(str(self.pack))
+        except zipfile.BadZipfile:
+            return False
+        try:
+            f = self.zip.open('METADATA/version')
+        except KeyError:
+            raise ValueError("Invalid ReproZip file")
+        version = f.read()
+        f.close()
+        if version.startswith(b'REPROZIP VERSION '):
+            try:
+                version = int(version[17:].rstrip())
+            except ValueError:
+                version = None
+            if version == 1:
+                raise ValueError("Format version 1 is not accepted for ZIP")
+            elif version == 2:
+                self.version = 2
+                self.data_prefix = PosixPath(b'DATA')
+            else:
+                raise ValueError(
+                    "Unknown format version %r (maybe you should upgrade "
+                    "reprounzip? I only know versions 1 and 2" % version)
+        else:
+            raise ValueError("File doesn't appear to be an RPZ pack")
+
+        if sys.version_info < (3, 6):
+            # zip.open() doesn't return a seekable file object before 3.6
+            # Extract to a temporary file instead
+            fd, temporary_data = Path.tempfile(
+                prefix='reprounzip_data_',
+                suffix='.zip',
+            )
+            os.close(fd)
+            self._extract_file('DATA.tar.gz', temporary_data)
+            self.data = tarfile.open(str(temporary_data), mode='r:*')
+            atexit.register(os.remove, temporary_data.path)
+        else:
+            self.data = tarfile.open(fileobj=self.zip.open('DATA.tar.gz'),
+                                     mode='r:*')
+        return True
 
     def remove_data_prefix(self, path):
         if not isinstance(path, PosixPath):
@@ -170,26 +232,35 @@ class RPZPack(object):
     def open_config(self):
         """Gets the configuration file.
         """
-        return self.tar.extractfile('METADATA/config.yml')
+        if self.tar is not None:
+            return self.tar.extractfile('METADATA/config.yml')
+        else:
+            return self.zip.open('METADATA/config.yml')
 
     def extract_config(self, target):
         """Extracts the config to the specified path.
 
         It is up to the caller to remove that file once done.
         """
-        self._extract_file(self.tar.getmember('METADATA/config.yml'),
-                           target)
+        self._extract_file('METADATA/config.yml', target)
 
-    def _extract_file(self, member, target):
-        member = copy.copy(member)
-        member.name = str(target.components[-1])
-        self.tar.extract(member,
-                         path=str(Path.cwd() / target.parent))
+    def _extract_file(self, name, target):
+        if self.tar is not None:
+            member = copy.copy(self.tar.getmember(name))
+            member.name = str(target.components[-1])
+            self.tar.extract(member, path=str(Path.cwd() / target.parent))
+        else:
+            member = copy.copy(self.zip.getinfo(name))
+            member.filename = str(target.components[-1])
+            self.zip.extract(member, path=str(Path.cwd() / target.parent))
         target.chmod(0o644)
         assert target.is_file()
 
-    def _extract_file_gz(self, member, target):
-        f_in = self.tar.extractfile(member)
+    def _extract_file_gz(self, name, target):
+        if self.tar is not None:
+            f_in = self.tar.extractfile(name)
+        else:
+            f_in = self.zip.open(name)
         f_in_gz = gzip.open(f_in)
         f_out = target.open('wb')
         try:
@@ -203,6 +274,7 @@ class RPZPack(object):
             f_out.close()
             f_in_gz.close()
             f_in.close()
+        target.chmod(0o644)
 
     @contextlib.contextmanager
     def with_config(self):
@@ -220,21 +292,20 @@ class RPZPack(object):
         It is up to the caller to remove that file once done.
         """
         target = Path(target)
-        if self.version == 1:
-            member = self.tar.getmember('METADATA/trace.sqlite3')
-            self._extract_file(member, target)
-        elif self.version == 2:
+        if self.version == 2:
             try:
-                member = self.tar.getmember('METADATA/trace.sqlite3.gz')
+                if self.tar is not None:
+                    self.tar.getmember('METADATA/trace.sqlite3.gz')
+                else:
+                    self.zip.getinfo('METADATA/trace.sqlite3.gz')
             except KeyError:
                 pass
             else:
-                self._extract_file_gz(member, target)
+                self._extract_file_gz('METADATA/trace.sqlite3.gz', target)
                 return
-            member = self.tar.getmember('METADATA/trace.sqlite3')
-            self._extract_file(member, target)
-        else:
+        elif self.version != 2:
             assert False
+        self._extract_file('METADATA/trace.sqlite3', target)
 
     @contextlib.contextmanager
     def with_trace(self):
@@ -282,11 +353,17 @@ class RPZPack(object):
     def copy_data_tar(self, target):
         """Copies the file in which the data lies to the specified destination.
         """
-        if self.version == 1:
-            self.pack.copyfile(target)
-        elif self.version == 2:
+        if self.tar is not None:
+            if self.version == 1:
+                self.pack.copyfile(target)
+            elif self.version == 2:
+                with target.open('wb') as fp:
+                    data = self.tar.extractfile('DATA.tar.gz')
+                    copyfile(data, fp)
+                    data.close()
+        else:
             with target.open('wb') as fp:
-                data = self.tar.extractfile('DATA.tar.gz')
+                data = self.zip.open('DATA.tar.gz')
                 copyfile(data, fp)
                 data.close()
 
@@ -294,20 +371,32 @@ class RPZPack(object):
         """Get a list of extensions present in this pack.
         """
         extensions = set()
-        for m in self.tar.getmembers():
-            if m.name.startswith('EXTENSIONS/'):
-                name = m.name[11:]
-                if '/' in name:
-                    name = name[:name.index('/')]
-                if name:
-                    extensions.add(name)
+        if self.tar is not None:
+            for m in self.tar.getmembers():
+                if m.name.startswith('EXTENSIONS/'):
+                    name = m.name[11:]
+                    if '/' in name:
+                        name = name[:name.index('/')]
+                    if name:
+                        extensions.add(name)
+        else:
+            for m in self.zip.infolist():
+                if m.filename.startswith('EXTENSIONS/'):
+                    name = m.filename[11:]
+                    if '/' in name:
+                        name = name[:name.index('/')]
+                    if name:
+                        extensions.add(name)
         return extensions
 
     def close(self):
         if self.data is not self.tar:
             self.data.close()
-        self.tar.close()
-        self.data = self.tar = None
+        if self.tar is not None:
+            self.tar.close()
+        elif self.zip is not None:
+            self.zip.close()
+        self.data = self.zip = self.tar = None
 
 
 class InvalidConfig(ValueError):
