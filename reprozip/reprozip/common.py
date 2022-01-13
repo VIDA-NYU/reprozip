@@ -205,7 +205,7 @@ class RPZPack(object):
         else:
             raise ValueError("File doesn't appear to be an RPZ pack")
 
-        if sys.version_info < (3, 6):
+        if sys.version_info < (3, 7):
             # zip.open() doesn't return a seekable file object before 3.6
             # Extract to a temporary file instead
             fd, temporary_data = Path.tempfile(
