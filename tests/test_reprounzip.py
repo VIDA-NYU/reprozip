@@ -177,17 +177,17 @@ class TestCommon(unittest.TestCase):
             # Add directory extension
             arc.write_data(
                 'EXTENSIONS/foo/one.txt',
-                b'',
+                b'11',
             )
             arc.write_data(
                 'EXTENSIONS/foo/two.txt',
-                b'',
+                b'22',
             )
 
             # Add single file extension
             arc.write_data(
                 'EXTENSIONS/bar',
-                b'',
+                b'bb',
             )
 
             arc.close()
@@ -195,6 +195,29 @@ class TestCommon(unittest.TestCase):
             rpz_obj = RPZPack(rpz)
             self.assertEqual(rpz_obj.open_config().read(), b'{}')
             self.assertEqual(rpz_obj.extensions(), {'foo', 'bar'})
+
+            # Extract directory extension
+            rpz_obj.extract_extension('foo', os.path.join(tmp, 'e_foo'))
+            self.assertEqual(
+                set(os.listdir(os.path.join(tmp, 'e_foo'))),
+                {'one.txt', 'two.txt'},
+            )
+            with open(os.path.join(tmp, 'e_foo', 'one.txt'), 'br') as fp:
+                self.assertEqual(fp.read(), b'11')
+
+            # Extract single file extension
+            rpz_obj.extract_extension('bar', os.path.join(tmp, 'e_bar'))
+            with open(os.path.join(tmp, 'e_bar'), 'br') as fp:
+                self.assertEqual(fp.read(), b'bb')
+
+            # Extract missing extension
+            self.assertRaises(
+                KeyError,
+                lambda: rpz_obj.extract_extension(
+                    'missing',
+                    os.path.join(tmp, 'e_missing'),
+                ),
+            )
 
     def test_rpzpack_v2_tar(self):
         with tempfile.TemporaryDirectory() as tmp:

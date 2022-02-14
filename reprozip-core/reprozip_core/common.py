@@ -415,6 +415,34 @@ class RPZPack(object):
                         extensions.add(name)
         return extensions
 
+    def extract_extension(self, name, target):
+        """Extracts the config to the specified path.
+
+        It is up to the caller to remove that file once done.
+        """
+        filename = 'EXTENSIONS/' + name
+        dir_prefix = filename + '/'
+        if self.tar is not None:
+            members = []
+            for m in self.tar.getmembers():
+                if m.name.startswith(dir_prefix) or m.name == filename:
+                    m = copy.copy(m)
+                    m.name = os.path.basename(target) + m.name[len(filename):]
+                    members.append(m)
+            if not members:
+                raise KeyError("No such extension in RPZ: %r" % name)
+            self.tar.extractall(os.path.dirname(target), members)
+        else:
+            members = []
+            for m in self.zip.infolist():
+                if m.filename.startswith(dir_prefix) or m.filename == filename:
+                    m = copy.copy(m)
+                    m.filename = os.path.basename(target) + m.filename[len(filename):]
+                    members.append(m)
+            if not members:
+                raise KeyError("No such extension in RPZ: %r" % name)
+            self.zip.extractall(os.path.dirname(target), members)
+
     def close(self):
         if self.data is not self.tar:
             self.data.close()
