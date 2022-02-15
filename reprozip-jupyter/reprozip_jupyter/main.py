@@ -5,6 +5,7 @@
 import argparse
 import sys
 
+from reprozip_core.common import setup_logging
 from . import __version__
 from . import run
 from . import trace
@@ -40,6 +41,7 @@ def main():
     run.setup(parser_run)
 
     args = parser.parse_args()
+    setup_logging('REPROZIP-JUPYTER', args.verbosity)
     if getattr(args, 'func', None) is None:
         parser.print_help(sys.stderr)
         sys.exit(2)
