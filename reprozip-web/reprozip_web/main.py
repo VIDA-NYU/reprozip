@@ -152,6 +152,7 @@ def cmd_combine(args):
         pass
     else:
         combine_tar(tar, args.input_wacz, output_rpz)
+        tar.close()
         return
 
     try:
@@ -160,6 +161,7 @@ def cmd_combine(args):
         pass
     else:
         combine_zip(zip, args.input_wacz, output_rpz)
+        zip.close()
         return
 
     raise ValueError("Input is not a TAR or a ZIP")

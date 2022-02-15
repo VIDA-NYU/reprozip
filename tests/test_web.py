@@ -68,6 +68,7 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
 
     def test_tar_replace(self):
         with self.make_rpz(lambda p: TarBuilder(p, 'w:'), 'web1') as tmp:
@@ -80,6 +81,7 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
 
     def test_tar_replace_unknown(self):
         with self.make_rpz(lambda p: TarBuilder(p, 'w:'), 'webX') as tmp:
@@ -92,6 +94,7 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
 
     def test_zip_add(self):
         with self.make_rpz(lambda p: ZipBuilder(p), None) as tmp:
@@ -104,6 +107,7 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
 
     def test_zip_replace(self):
         with self.make_rpz(lambda p: ZipBuilder(p), 'web1') as tmp:
@@ -116,6 +120,7 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
 
     def test_zip_replace_unknown(self):
         with self.make_rpz(lambda p: ZipBuilder(p), 'webX') as tmp:
@@ -128,3 +133,4 @@ class TestCombine(unittest.TestCase):
             ))
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
+            rpz.close()
