@@ -2,6 +2,8 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
+import contextlib
+import logging
 from pathlib import Path
 import sqlite3
 
@@ -63,3 +65,23 @@ def make_database(insert, path=None):
 
     conn.commit()
     return conn
+
+
+class _RecorderHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        super(_RecorderHandler, self).__init__(level)
+        self.records = []
+
+    def emit(self, record):
+        self.records.append(record)
+
+
+@contextlib.contextmanager
+def capture_logs(*, logger=logging.root, level=logging.NOTSET):
+    recorder = _RecorderHandler()
+    handlers = logger.handlers[:]
+    try:
+        logger.handlers[:] = [recorder]
+        yield recorder.records
+    finally:
+        logger.handlers[:] = handlers

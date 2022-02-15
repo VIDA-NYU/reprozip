@@ -3,12 +3,14 @@
 # See file LICENSE for full license details.
 import argparse
 import contextlib
+import logging
 import os
 import tempfile
 import unittest
 
 from reprozip_core.common import RPZPack
 from reprozip_web.main import cmd_combine
+from tests.common import capture_logs
 from tests.test_reprounzip import TarBuilder, ZipBuilder
 
 
@@ -61,11 +63,13 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: TarBuilder(p, 'w:'), None) as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(logs, [])
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
@@ -74,11 +78,16 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: TarBuilder(p, 'w:'), 'web1') as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(
+                [l.msg for l in logs],
+                ['Replacing existing web extension from input RPZ'],
+            )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
@@ -87,11 +96,16 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: TarBuilder(p, 'w:'), 'webX') as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(
+                [l.msg for l in logs],
+                ['Replacing UNKNOWN web extension version from input RPZ'],
+            )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
@@ -100,11 +114,13 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: ZipBuilder(p), None) as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(logs, [])
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
@@ -113,11 +129,16 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: ZipBuilder(p), 'web1') as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(
+                [l.msg for l in logs],
+                ['Replacing existing web extension from input RPZ'],
+            )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
@@ -126,11 +147,16 @@ class TestCombine(unittest.TestCase):
         with self.make_rpz(lambda p: ZipBuilder(p), 'webX') as tmp:
             with open(os.path.join(tmp, 'test.wacz'), 'w') as fp:
                 fp.write('test\n')
-            cmd_combine(argparse.Namespace(
-                input_rpz=os.path.join(tmp, 'test.rpz'),
-                input_wacz=os.path.join(tmp, 'test.wacz'),
-                output_rpz=None,
-            ))
+            with capture_logs(level=logging.WARNING) as logs:
+                cmd_combine(argparse.Namespace(
+                    input_rpz=os.path.join(tmp, 'test.rpz'),
+                    input_wacz=os.path.join(tmp, 'test.wacz'),
+                    output_rpz=None,
+                ))
+            self.assertEqual(
+                [l.msg for l in logs],
+                ['Replacing UNKNOWN web extension version from input RPZ'],
+            )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
             self.assertEqual(rpz.extensions(), {'web1'})
             rpz.close()
