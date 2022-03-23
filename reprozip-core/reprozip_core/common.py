@@ -437,7 +437,10 @@ class RPZPack(object):
             for m in self.zip.infolist():
                 if m.filename.startswith(dir_prefix) or m.filename == filename:
                     m = copy.copy(m)
-                    m.filename = os.path.basename(target) + m.filename[len(filename):]
+                    m.filename = (
+                        os.path.basename(target)
+                        + m.filename[len(filename):]
+                    )
                     members.append(m)
             if not members:
                 raise KeyError("No such extension in RPZ: %r" % name)
