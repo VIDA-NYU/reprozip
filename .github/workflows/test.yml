@@ -82,10 +82,10 @@ jobs:
       LANG: C
       LC_ALL: C
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 20
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python }}
     - name: Install dependencies
