@@ -6,7 +6,7 @@ Developer's Guide
 General Development Information
 -------------------------------
 
-Development happens on `GitHub <https://github.com/ViDA-NYU/reprozip>`__; bug reports and feature requests are welcome. If you are interested in giving us a hand, please do not hesitate to submit a pull request there.
+Development happens on `GitHub <https://github.com/VIDA-NYU/reprozip>`__; bug reports and feature requests are welcome. If you are interested in giving us a hand, please do not hesitate to submit a pull request there.
 
 Continuous testing is provided by `GitHub Actions <https://github.com/VIDA-NYU/reprozip/actions>`__. Note that ReproZip still tries to support Python 2 as well as Python 3. Test coverage is not very high because there are a lot of operations that are difficult to cover on CI (for instance, Vagrant VMs cannot be used over there).
 
@@ -50,7 +50,7 @@ Structure
 
 An unpacker is a Python module. It can be distributed separately or be a part of a bigger distribution, given that it is declared in that distribution's ``setup.py`` as an `entry_point` to be registered with `pkg_resources` (see `setuptools' advertising behavior section <https://setuptools.readthedocs.io/en/latest/userguide/entry_point.html#advertising-behavior>`__). You should declare a function as `entry_point` ``reprounzip.unpackers``. The name of the entry_point (before ``=``) will be the *reprounzip* subcommand, and the value is a callable that will get called with the :class:`argparse.ArgumentParser` object for that subcommand.
 
-The package :mod:`reprounzip.unpackers` is a namespace package, so you should be able to add your own unpackers there if you want to. Please remember to put the correct code in the ``__init__.py`` file (which you can copy from `here <https://github.com/ViDA-NYU/reprozip/blob/master/reprounzip/reprounzip/unpackers/__init__.py>`__) so that namespace packages work correctly.
+The package :mod:`reprounzip.unpackers` is a namespace package, so you should be able to add your own unpackers there if you want to. Please remember to put the correct code in the ``__init__.py`` file (which you can copy from `here <https://github.com/VIDA-NYU/reprozip/blob/master/reprounzip/reprounzip/unpackers/__init__.py>`__) so that namespace packages work correctly.
 
 The modules :mod:`reprounzip.common`, :mod:`reprounzip.utils`, and :mod:`reprounzip.unpackers.common` contain utilities that you might want to use (make sure to list *reprounzip* as a requirement in your ``setup.py``).
 
@@ -99,7 +99,7 @@ Unpackers unpack the config.yml file to the root of that directory, and keep sta
 Signals
 '''''''
 
-Since version 0.4.1, `reprounzip` has signals that can be used to hook in plugins, although no such plugin has been released at this time. To ensure that these work correctly when using your unpacker, you should emit them when appropriate. The complete list of signals is available in `signal.py <https://github.com/ViDA-NYU/reprozip/blob/master/reprounzip/reprounzip/signals.py>`__.
+Since version 0.4.1, `reprounzip` has signals that can be used to hook in plugins, although no such plugin has been released at this time. To ensure that these work correctly when using your unpacker, you should emit them when appropriate. The complete list of signals is available in `signal.py <https://github.com/VIDA-NYU/reprozip/blob/master/reprounzip/reprounzip/signals.py>`__.
 
 Final Observations
 ------------------
