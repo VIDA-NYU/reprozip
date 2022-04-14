@@ -283,6 +283,10 @@ def directory_run(args):
         if cmdline is None:
             argv = run['argv']
 
+            # If the command is not a path, use the path instead
+            if '/' not in argv[0]:
+                argv = [run['binary']] + argv[1:]
+
             # Rewrites command-line arguments that are absolute filenames
             rewritten = False
             for i in irange(len(argv)):
