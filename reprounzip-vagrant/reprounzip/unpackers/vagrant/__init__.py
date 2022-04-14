@@ -285,6 +285,7 @@ def vagrant_setup_create(args):
             logger.error("Need to install %d packages but couldn't select a "
                          "package installer: %s",
                          len(packages), e)
+            sys.exit(1)
 
     target.mkdir(parents=True)
 

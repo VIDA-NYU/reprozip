@@ -76,6 +76,7 @@ def installpkgs(args):
         installer = select_installer(pack, runs)
     except CantFindInstaller as e:
         logger.error("Couldn't select a package installer: %s", e)
+        sys.exit(1)
 
     if args.summary:
         # Print out a list of packages with their status
