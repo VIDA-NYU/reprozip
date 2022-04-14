@@ -242,7 +242,7 @@ def directory_run(args):
             unicode_(join_root(root,
                                Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
-        cmd += 'LD_LIBRARY_PATH=%s' % ':'.join(
+        cmd += 'LD_LIBRARY_PATH=%s ' % ':'.join(
             shell_escape(unicode_(join_root(root, d)))
             for d in lib_dirs
         )
