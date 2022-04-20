@@ -74,6 +74,7 @@ def installpkgs(args):
         installer = select_installer(pack, runs)
     except CantFindInstaller as e:
         logger.error("Couldn't select a package installer: %s", e)
+        sys.exit(1)
 
     if args.summary:
         # Print out a list of packages with their status
@@ -244,7 +245,7 @@ def directory_run(args):
         cmd = 'cd %s && ' % shell_escape(
             str(join_root(root, Path(run['workingdir']))))
         cmd += '/usr/bin/env -i '
-        cmd += 'LD_LIBRARY_PATH=%s' % ':'.join(
+        cmd += 'LD_LIBRARY_PATH=%s ' % ':'.join(
             shell_escape(str(join_root(root, d)))
             for d in lib_dirs
         )
@@ -284,6 +285,10 @@ def directory_run(args):
         # FIXME : Use exec -a or something if binary != argv[0]
         if cmdline is None:
             argv = run['argv']
+
+            # If the command is not a path, use the path instead
+            if '/' not in argv[0]:
+                argv = [run['binary']] + argv[1:]
 
             # Rewrites command-line arguments that are absolute filenames
             rewritten = False
