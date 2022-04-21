@@ -468,7 +468,7 @@ def pty_spawn(*args, **kwargs):
     return pty.spawn(*args, **kwargs)
 
 
-def interruptible_call(cmd, **kwargs):
+def interruptible_call(cmd, request_tty=False, shell=False):
     assert signal.getsignal(signal.SIGINT) == signal.default_int_handler
     proc = [None]
 
@@ -482,7 +482,7 @@ def interruptible_call(cmd, **kwargs):
     signal.signal(signal.SIGINT, _sigint_handler)
 
     try:
-        if kwargs.pop('request_tty', False):
+        if request_tty:
             try:
                 import pty  # noqa: F401
             except ImportError:
@@ -491,14 +491,14 @@ def interruptible_call(cmd, **kwargs):
                 if hasattr(sys.stdin, 'isatty') and not sys.stdin.isatty():
                     logger.info("We need a tty and we are not attached to "
                                 "one. Opening pty...")
-                    if kwargs.pop('shell', False):
+                    if shell:
                         if not isinstance(cmd, (str, str)):
                             raise TypeError("shell=True but cmd is not a "
                                             "string")
                         cmd = ['/bin/sh', '-c', cmd]
                     res = pty_spawn(cmd)
                     return res >> 8 - (res & 0xFF)
-        proc[0] = subprocess.Popen(cmd, **kwargs)
+        proc[0] = subprocess.Popen(cmd, shell=shell)
         return proc[0].wait()
     finally:
         signal.signal(signal.SIGINT, signal.default_int_handler)
