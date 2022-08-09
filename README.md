@@ -104,15 +104,6 @@ Bugs and feature plannings are tracked in the [GitHub issues](https://github.com
 
 To suggest changes to this source code, feel free to raise a [GitHub pull request](https://github.com/VIDA-NYU/reprozip/pulls).  Any contributions received are assumed to be covered by the [BSD 3-Clause license](LICENSE.txt). We might ask you to sign a _Contributor License Agreement_ before accepting a larger contribution.
 
-Research notice
----------------
-
-Please note that this repository is participating in a study into sustainability of open source projects. Data will be gathered about this repository for approximately the next 12 months, starting from June 2021.
-
-Data collected will include number of contributors, number of PRs, time taken to close/merge these PRs, and issues closed.
-
-For more information, please visit [the informational page](https://sustainable-open-science-and-software.github.io/) or download the [participant information sheet](https://sustainable-open-science-and-software.github.io/assets/PIS_sustainable_software.pdf).
-
 License
 -------
 
