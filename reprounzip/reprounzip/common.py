@@ -309,7 +309,7 @@ class RPZPack(object):
 
     @contextlib.contextmanager
     def with_trace(self):
-        """Context manager that extracts the trace database to a temporary file.
+        """Context manager extracting the trace database to a temporary file.
         """
         fd, tmp = Path.tempfile(prefix='reprounzip_')
         os.close(fd)
