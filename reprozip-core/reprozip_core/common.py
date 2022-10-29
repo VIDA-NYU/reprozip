@@ -334,7 +334,7 @@ class RPZPack(object):
 
     @contextlib.contextmanager
     def with_trace(self):
-        """Context manager that extracts the trace database to a temporary file.
+        """Context manager extracting the trace database to a temporary file.
         """
         fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
         tmp = Path(tmp)
@@ -374,6 +374,13 @@ class RPZPack(object):
 
         The members must come from get_data().
         """
+        # Check for CVE-2007-4559
+        abs_root = root.absolute()
+        for member in members:
+            member_path = (root / member.name).absolute()
+            if Path(os.path.commonprefix([abs_root, member_path])) != abs_root:
+                raise ValueError("Invalid path in data tar")
+
         self.data.extractall(str(root), members)
 
     def copy_data_tar(self, target):
