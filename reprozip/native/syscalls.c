@@ -1121,6 +1121,8 @@ void syscall_build_table(void)
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
             {383, "statx", NULL, syscall_xxx_at, 107},
             {358, "execveat", syscall_xxx_at, syscall_xxx_at, 11},
+            {298, "fchownat", NULL, syscall_xxx_at, 182},
+            {306, "fchmodat", NULL, syscall_xxx_at, 15},
 
             /* Unhandled with path as first argument */
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1147,8 +1149,6 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {306, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {298, "fchownat", NULL, syscall_unhandled_other, 0},
             {133, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
@@ -1211,6 +1211,8 @@ void syscall_build_table(void)
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
             {332, "statx", NULL, syscall_xxx_at, 6},
             {322, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
+            {260, "fchownat", NULL, syscall_xxx_at, 92},
+            {268, "fchmodat", NULL, syscall_xxx_at, 90},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1234,8 +1236,6 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {260, "fchownat", NULL, syscall_unhandled_other, 0},
             { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
@@ -1297,6 +1297,8 @@ void syscall_build_table(void)
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
             {332, "statx", NULL, syscall_xxx_at, 6},
             {545, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
+            {260, "fchownat", NULL, syscall_xxx_at, 92},
+            {268, "fchmodat", NULL, syscall_xxx_at, 90},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1320,8 +1322,6 @@ void syscall_build_table(void)
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {260, "fchownat", NULL, syscall_unhandled_other, 0},
             { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
