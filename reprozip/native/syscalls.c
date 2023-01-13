@@ -658,16 +658,16 @@ static int syscall_execve_out(const char *name, struct Process *process,
  */
 
 static int syscall_fork_in(const char *name, struct Process *process,
-                           unsigned int udata)
+                           unsigned int flags)
 {
-    process->flags |= PROCFLAG_FORKING;
+    process->flags |= PROCFLAG_FORKING | flags;
     return 0;
 }
 
 static int syscall_fork_out(const char *name, struct Process *process,
                             unsigned int udata)
 {
-    process->flags &= ~PROCFLAG_FORKING;
+    process->flags &= ~(PROCFLAG_FORKING | PROCFLAG_CLONE3);
     return 0;
 }
 
@@ -693,8 +693,17 @@ int syscall_fork_event(struct Process *process, unsigned int event)
         /* LCOV_EXCL_STOP */
     }
     else if(event == PTRACE_EVENT_CLONE)
-        is_thread = process->params[0].u & CLONE_THREAD;
-    process->flags &= ~PROCFLAG_FORKING;
+    {
+        if( (process->flags & PROCFLAG_CLONE3) == 0) /* clone */
+            is_thread = process->params[0].u & CLONE_THREAD;
+        else /* clone3 */
+        {
+            void *flag_ptr = process->params[0].p; /* struct clone_args* */
+            uint64_t flags = tracee_getu64(process->tid, flag_ptr);
+            is_thread = flags & CLONE_THREAD;
+        }
+    }
+    process->flags &= ~(PROCFLAG_FORKING | PROCFLAG_CLONE3);
 
     if(logging_level <= 20)
         log_info(new_tid, "process created by %d via %s\n"
@@ -1004,6 +1013,7 @@ void syscall_build_table(void)
             {  2, "fork", syscall_fork_in, syscall_fork_out, 0},
             {190, "vfork", syscall_fork_in, syscall_fork_out, 0},
             {120, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             {102, "socketcall", NULL, syscall_socketcall, 0},
 
@@ -1081,6 +1091,7 @@ void syscall_build_table(void)
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
             { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
@@ -1156,6 +1167,7 @@ void syscall_build_table(void)
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
             { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},

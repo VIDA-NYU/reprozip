@@ -65,6 +65,14 @@ uint64_t tracee_getlong(int mode, pid_t tid, const void *addr)
     }
 }
 
+uint64_t tracee_getu64(pid_t tid, const void *addr)
+{
+    /* Longs are 64 bits */
+    uint64_t val;
+    tracee_read(tid, (void*)&val, addr, sizeof(val));
+    return val;
+}
+
 size_t tracee_getwordsize(int mode)
 {
     if(mode == MODE_I386)
