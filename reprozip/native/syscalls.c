@@ -1099,6 +1099,8 @@ void syscall_build_table(void)
             {120, "clone", syscall_fork_in, syscall_fork_out, 0},
             {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
+            {364, "accept4", NULL, syscall_accept, 0},
+            {362, "connect", NULL, syscall_connect, 0},
             {102, "socketcall", NULL, syscall_socketcall, 0},
             /*{369, "sendto", NULL, syscall_sendto, 0},*/
 
@@ -1110,6 +1112,7 @@ void syscall_build_table(void)
             /* File-creating syscalls, at variants: unhandled if first or third
              * argument is not AT_FDCWD, second is read, fourth is created */
             {302, "renameat", NULL, syscall_filecreating_at, 0},
+            {353, "renameat2", NULL, syscall_filecreating_at, 0},
             {303, "linkat", NULL, syscall_filecreating_at, 0},
             {304, "symlinkat", NULL, syscall_filecreating_at, 1},
 
