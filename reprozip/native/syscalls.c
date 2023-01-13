@@ -641,7 +641,7 @@ int syscall_execve_event(struct Process *process)
 }
 
 static int syscall_execve_out(const char *name, struct Process *process,
-                              unsigned int execve_syscall)
+                              unsigned int udata)
 {
     log_debug(process->tid, "execve() failed");
     if(process->execve_info != NULL)
@@ -999,7 +999,7 @@ void syscall_build_table(void)
 
             { 12, "chdir", NULL, syscall_chdir, 0},
 
-            { 11, "execve", syscall_execve_in, syscall_execve_out, 11},
+            { 11, "execve", syscall_execve_in, syscall_execve_out, 0},
 
             {  2, "fork", syscall_fork_in, syscall_fork_out, 0},
             {190, "vfork", syscall_fork_in, syscall_fork_out, 0},
@@ -1022,8 +1022,11 @@ void syscall_build_table(void)
             {296, "mkdirat", NULL, syscall_xxx_at, 39},
             {295, "openat", syscall_xxx_at, syscall_xxx_at, 5},
             {307, "faccessat", NULL, syscall_xxx_at, 33},
+            {439, "faccessat2", NULL, syscall_xxx_at, 33},
             {305, "readlinkat", NULL, syscall_xxx_at, 85},
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
+            {383, "statx", NULL, syscall_xxx_at, 107},
+            {358, "execveat", syscall_xxx_at, syscall_xxx_at, 11},
 
             /* Unhandled with path as first argument */
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1073,7 +1076,7 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            { 59, "execve", syscall_execve_in, syscall_execve_out, 59},
+            { 59, "execve", syscall_execve_in, syscall_execve_out, 0},
 
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
@@ -1098,8 +1101,11 @@ void syscall_build_table(void)
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {439, "faccessat2", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
+            {332, "statx", NULL, syscall_xxx_at, 6},
+            {322, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1145,8 +1151,7 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            {520, "execve", syscall_execve_in, syscall_execve_out,
-                     __X32_SYSCALL_BIT + 520},
+            {520, "execve", syscall_execve_in, syscall_execve_out},
 
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
@@ -1171,8 +1176,11 @@ void syscall_build_table(void)
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {439, "faccessat2", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
+            {332, "statx", NULL, syscall_xxx_at, 6},
+            {545, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
