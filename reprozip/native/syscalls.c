@@ -150,6 +150,19 @@ static int syscall_fileopening_in(const char *name, struct Process *process,
     return 0;
 }
 
+static const char *mode_to_s(char *buf, unsigned int mode)
+{
+    if(mode & FILE_READ)
+        strcat(buf, "|FILE_READ");
+    if(mode & FILE_WRITE)
+        strcat(buf, "|FILE_WRITE");
+    if(mode & FILE_WDIR)
+        strcat(buf, "|FILE_WDIR");
+    if(mode & FILE_STAT)
+        strcat(buf, "|FILE_STAT");
+    return buf[0]?buf + 1:"0";
+}
+
 static int syscall_fileopening_out(const char *name, struct Process *process,
                                    unsigned int syscall)
 {
@@ -178,16 +191,7 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
     {
         /* Converts mode to string s_mode */
         char mode_buf[42] = "";
-        const char *s_mode;
-        if(mode & FILE_READ)
-            strcat(mode_buf, "|FILE_READ");
-        if(mode & FILE_WRITE)
-            strcat(mode_buf, "|FILE_WRITE");
-        if(mode & FILE_WDIR)
-            strcat(mode_buf, "|FILE_WDIR");
-        if(mode & FILE_STAT)
-            strcat(mode_buf, "|FILE_STAT");
-        s_mode = mode_buf[0]?mode_buf + 1:"0";
+        const char *s_mode = mode_to_s(mode_buf, mode);
 
         if(syscall == SYSCALL_OPENING_OPEN)
             log_debug(process->tid,
@@ -217,6 +221,85 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
     }
 
     free(pathname);
+    return 0;
+}
+
+static int syscall_openat2_in(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) != AT_FDCWD)
+    {
+        char *pathname = tracee_strdup(process->tid, process->params[1].p);
+        log_info(process->tid,
+                 "process used unhandled system call %s(%d, \"%s\")",
+                 name, process->params[0].i, pathname);
+        free(pathname);
+    }
+    else
+    {
+        void *flags_ptr = process->params[2].p; /* struct open_how* */
+        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        if( (mode & FILE_READ) && (mode & FILE_WRITE) )
+        {
+            char *pathname = abs_path_arg(process, 1);
+            if(access(pathname, F_OK) != 0 && errno == ENOENT)
+            {
+                log_debug(process->tid, "Doing RW open, file exists: no");
+                process->flags &= ~PROCFLAG_OPEN_EXIST;
+            }
+            else
+            {
+                log_debug(process->tid, "Doing RW open, file exists: yes");
+                process->flags |= PROCFLAG_OPEN_EXIST;
+            }
+            free(pathname);
+        }
+    }
+    return 0;
+}
+
+static int syscall_openat2_out(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) == AT_FDCWD)
+    {
+        char *pathname = abs_path_arg(process, 1);
+        void *flags_ptr = process->params[2].p; /* struct open_how* */
+        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        if( (process->retvalue.i >= 0) /* Open succeeded */
+         && (mode & FILE_READ) && (mode & FILE_WRITE) ) /* In readwrite mode */
+        {
+            /* But the file doesn't exist */
+            if(!(process->flags & PROCFLAG_OPEN_EXIST))
+                /* Consider this a simple write */
+                mode &= ~FILE_READ;
+        }
+
+        if(logging_level <= 10)
+        {
+            /* Converts mode to string s_mode */
+            char mode_buf[42] = "";
+            const char *s_mode = mode_to_s(mode_buf, mode);
+
+            log_debug(process->tid,
+                      "openat2(AT_FDCWD, \"%s\", mode=%s) = %d (%s)",
+                      pathname,
+                      s_mode,
+                      (int)process->retvalue.i,
+                      (process->retvalue.i >= 0)?"success":"failure");
+        }
+
+        if(process->retvalue.i >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                mode,
+                                path_is_dir(pathname)) != 0)
+                return -1; /* LCOV_EXCL_LINE */
+        }
+
+        free(pathname);
+    }
     return 0;
 }
 
@@ -1029,6 +1112,7 @@ void syscall_build_table(void)
             {304, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {296, "mkdirat", NULL, syscall_xxx_at, 39},
             {295, "openat", syscall_xxx_at, syscall_xxx_at, 5},
             {307, "faccessat", NULL, syscall_xxx_at, 33},
@@ -1118,6 +1202,7 @@ void syscall_build_table(void)
             {266, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
@@ -1203,6 +1288,7 @@ void syscall_build_table(void)
             {266, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
