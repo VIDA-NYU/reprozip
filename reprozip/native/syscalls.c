@@ -1052,11 +1052,20 @@ void syscall_build_table(void)
             {271, "utimes", NULL, syscall_unhandled_path1, 0},
             {277, "mq_open", NULL, syscall_unhandled_path1, 0},
             {278, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
             {306, "fchmodat", NULL, syscall_unhandled_other, 0},
             {298, "fchownat", NULL, syscall_unhandled_other, 0},
+            {133, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             { 26, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -1129,11 +1138,20 @@ void syscall_build_table(void)
             {235, "utimes", NULL, syscall_unhandled_path1, 0},
             {240, "mq_open", NULL, syscall_unhandled_path1, 0},
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {101, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -1205,11 +1223,20 @@ void syscall_build_table(void)
             {235, "utimes", NULL, syscall_unhandled_path1, 0},
             {240, "mq_open", NULL, syscall_unhandled_path1, 0},
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
             {268, "fchmodat", NULL, syscall_unhandled_other, 0},
             {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {521, "ptrace", NULL, syscall_unhandled_other, 0},
