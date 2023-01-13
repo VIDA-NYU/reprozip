@@ -1099,6 +1099,7 @@ void syscall_build_table(void)
             {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             {102, "socketcall", NULL, syscall_socketcall, 0},
+            /*{369, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 38, "rename", NULL, syscall_filecreating, 0},
@@ -1189,6 +1190,7 @@ void syscall_build_table(void)
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
+            /*{ 44, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 82, "rename", NULL, syscall_filecreating, 0},
@@ -1275,6 +1277,7 @@ void syscall_build_table(void)
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
+            /*{ 44, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 82, "rename", NULL, syscall_filecreating, 0},
