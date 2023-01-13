@@ -13,11 +13,13 @@ jobs:
         mode: [tests]
         python:
         - "2.7"
-        - "3.5"
         include:
         - os: ubuntu-latest
           mode: coverage
           python: "3.8"
+        - os: ubuntu-20.04
+          mode: tests
+          python: "3.5"
         - os: ubuntu-latest
           mode: checks
           python: "3.8"
