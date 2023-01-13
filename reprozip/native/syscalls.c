@@ -1069,6 +1069,7 @@ void syscall_build_table(void)
 #else
 #   error Unrecognized architecture!
 #endif
+    /* https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl */
 
     /* i386 */
     {
@@ -1163,6 +1164,8 @@ void syscall_build_table(void)
     }
 
 #ifdef X86_64
+    /* https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl */
+
     /* x64 */
     {
         struct unprocessed_table_entry list[] = {
