@@ -1399,7 +1399,7 @@ int syscall_handle(struct Process *process)
             /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
             /* LCOV_EXCL_STOP */
-        if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
+        if(syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
         {
