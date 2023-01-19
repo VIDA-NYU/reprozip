@@ -60,7 +60,8 @@ struct Process {
 #define PROCFLAG_EXECD      1   /* Process is coming out of execve */
 #define PROCFLAG_FORKING    2   /* Process is spawning another with
                                  * fork/vfork/clone */
-#define PROCFLAG_OPEN_EXIST 4   /* Process is opening a file that exists */
+#define PROCFLAG_CLONE3     4   /* Process is executing clone3 (not clone) */
+#define PROCFLAG_OPEN_EXIST 8   /* Process is opening a file that exists */
 
 /* FIXME : This is only exposed because of execve() workaround */
 extern struct Process **processes;

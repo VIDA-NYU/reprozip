@@ -3,6 +3,7 @@
 
 void *tracee_getptr(int mode, pid_t tid, const void *addr);
 uint64_t tracee_getlong(int mode, pid_t tid, const void *addr);
+uint64_t tracee_getu64(pid_t tid, const void *addr);
 size_t tracee_getwordsize(int mode);
 
 size_t tracee_strlen(pid_t tid, const char *str);
