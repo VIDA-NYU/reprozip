@@ -18,7 +18,7 @@ req = [
     'distro',
     'pyelftools']
 setup(name='reprounzip',
-      version='1.1',
+      version='1.2',
       packages=['reprounzip', 'reprounzip.unpackers',
                 'reprounzip.unpackers.common', 'reprounzip.plugins'],
       entry_points={

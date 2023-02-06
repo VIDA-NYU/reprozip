@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.2 (???)
----------
+1.2 (2023-02-06)
+----------------
 
 Bugfixes:
 * Don't mark symlinks as input files

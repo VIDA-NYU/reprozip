@@ -17,7 +17,7 @@ req = [
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='reprounzip-vistrails',
-      version='1.0.16',
+      version='1.2',
       packages=['reprounzip', 'reprounzip.plugins'],
       entry_points={
           'reprounzip.plugins': [
