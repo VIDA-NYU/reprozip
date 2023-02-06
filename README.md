@@ -2,8 +2,8 @@
 [![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=1.x)](https://codecov.io/github/VIDA-NYU/reprozip?branch=1.x)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=1.x)](https://docs.reprozip.org/en/1.x/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
-[![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.5081097-green.svg)](https://doi.org/10.5281/zenodo.5081097)
+[![paper](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7613579-green.svg)](https://doi.org/10.5281/zenodo.7613579)
 
 ReproZip
 ========
