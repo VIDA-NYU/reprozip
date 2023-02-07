@@ -29,7 +29,7 @@ from reprounzip.common import setup_logging, \
     submit_usage_report, record_usage
 from reprounzip import signals
 from reprounzip.unpackers.common import UsageError
-from reprozip.utils import stderr
+from reprounzip.utils import stderr
 
 
 __version__ = '1.2'
