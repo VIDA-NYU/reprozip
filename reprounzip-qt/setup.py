@@ -11,7 +11,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 setup(name='reprounzip-qt',
-      version='1.2',
+      version='1.2.1',
       packages=['reprounzip_qt', 'reprounzip_qt.gui'],
       package_data={'reprounzip_qt': ['icon.png']},
       entry_points={

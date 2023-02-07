@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.2.1 (2023-02-06)
+------------------
+
+Bugfixes:
+* Fix typo in reprounzip-qt: import from reprounzip, not reprozip
+
 1.2 (2023-02-06)
 ----------------
 
