@@ -26,7 +26,7 @@ import warnings
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip.common import File, InputOutputFile, load_config, save_config, \
-    FILE_READ, FILE_WRITE, FILE_LINK
+    FILE_READ, FILE_WRITE, FILE_LINK, FILE_SOCKET
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip.utils import PY3, izip, iteritems, itervalues, \
@@ -34,6 +34,9 @@ from reprozip.utils import PY3, izip, iteritems, itervalues, \
 
 
 logger = logging.getLogger('reprozip')
+
+
+systemd_sockets = ('/run/systemd/private', '/run/dbus/system_bus_socket')
 
 
 class TracedFile(File):
@@ -145,6 +148,7 @@ def get_files(conn):
         ORDER BY timestamp;
         ''')
     executed = set()
+    systemd_accessed = False
     run = 0
     for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
@@ -178,6 +182,9 @@ def get_files(conn):
             f = files[r_name]
         if r_mode & FILE_READ:
             f.read(run)
+        if r_mode & FILE_SOCKET:
+            if r_name in systemd_sockets:
+                systemd_accessed = True
         if r_mode & FILE_WRITE:
             f.write(run)
             # Mark the parent directory as read
@@ -230,7 +237,7 @@ def get_files(conn):
     inputs = [[path for path in lst if path in files]
               for lst in inputs]
 
-    # Displays a warning for READ_THEN_WRITTEN files
+    # Display a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
         fi
         for fi in itervalues(files)
@@ -244,6 +251,14 @@ def get_files(conn):
         logger.info("Paths:\n%s",
                     ", ".join(unicode_(fi.path)
                               for fi in read_then_written_files))
+
+    # Display a warning for systemd
+    if systemd_accessed:
+        logger.warning(
+            "A connection to systemd was detected. If systemd was asked to "
+            "start a process, it won't be captured by reprozip, because it is "
+            "an independent server. Please see "
+            "https://docs.reprozip.org/s/systemd.html for more information")
 
     files = set(
         fi
