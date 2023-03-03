@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -86,6 +87,14 @@ static const char *print_sockaddr(void *address, socklen_t addrlen)
         char buf[50];
         inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
         snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
+    }
+    else if(family == AF_UNIX)
+    {
+        struct sockaddr_un *address_ = address;
+        char buf[109];
+        strncpy(buf, &address_->sun_path, 108);
+        buf[108] = 0;
+        snprintf(buffer, 512, "unix:%s", buf);
     }
     else
         snprintf(buffer, 512, "<unknown destination, sa_family=%d>", family);
