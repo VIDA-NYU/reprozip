@@ -271,6 +271,12 @@ If the experiment involves running a GUI tool, the graphical interface can be en
 
 which will forward the X connection from the experiment to the X server running on your machine. In this case, make sure you have a running X server.
 
+If the experiment is a server, for example a website, a database management system, etc, you can expose ports from the experiment on your local machines. This is not required for the `directory` and `chroot` unpackers, since they offer no isolation of the network; for the `docker` and `vagrant` unpackers, use the ``--expose-port`` option::
+
+    $ reprounzip docker run --expose-port 8000:80 unpacked-experiment  # Expose TCP port 80 (HTTP) of the experiment at http://localhost:8000/
+    $ reprounzip docker run --expose-port 3000 unpacked-experiment  # Expose TCP port 3000 of the experiment at localhost:3000
+    $ reprounzip docker run --expose-port 5553:53/udp unpacked-experiment  # Expose UDP port 53 of the experiment at localhost:5553
+
 Note that in some situations, you might want to pass specific environment variables to the experiment, for example to set execution limits or parameters (such as OpenMPI information). To that effect, you can use the ``--pass-env VARNAME`` option to pass variables from the current machine, overriding the value from the original packing machine (`VARNAME` can be a regex). You can also set a variable to any value using ``--set-env VARNAME=value``. For example::
 
     $ reprounzip docker run unpacked-experiment --pass-env 'OMPI_.*' --pass-env LANG --set-env DATA_SERVER_ADDRESS=localhost
