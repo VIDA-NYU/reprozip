@@ -9,6 +9,7 @@ invokes the C tracer (_pytracer) to build the SQLite trace file, and the
 generation logic for the config YAML file.
 """
 
+import contextlib
 import distro
 from collections import defaultdict
 from itertools import count
@@ -25,7 +26,7 @@ import warnings
 from reprozip import __version__ as reprozip_version
 from reprozip import _pytracer
 from reprozip_core.common import File, InputOutputFile, \
-    load_config, save_config, FILE_READ, FILE_WRITE, FILE_LINK
+    load_config, save_config, FILE_READ, FILE_WRITE, FILE_LINK, FILE_SOCKET
 from reprozip.tracer.linux_pkgs import magic_dirs, system_dirs, \
     identify_packages
 from reprozip_core.utils import flatten, UniqueNames, normalize_path, \
@@ -33,6 +34,21 @@ from reprozip_core.utils import flatten, UniqueNames, normalize_path, \
 
 
 logger = logging.getLogger('reprozip')
+
+
+systemd_sockets = ('/run/systemd/private', '/run/dbus/system_bus_socket')
+
+
+@contextlib.contextmanager
+def stderr_in_red():
+    if os.isatty(sys.stderr.fileno()):
+        try:
+            print('\x1b[31;20m', file=sys.stderr, end='', flush=True)
+            yield
+        finally:
+            print('\x1b[0m', file=sys.stderr, end='', flush=True)
+    else:
+        yield
 
 
 class TracedFile(object):
@@ -135,6 +151,7 @@ def get_files(conn):
         ORDER BY timestamp;
         ''')
     executed = set()
+    systemd_accessed = False
     run = 0
     for event_type, r_name, r_mode, r_timestamp in rows:
         if event_type == 'exec':
@@ -168,6 +185,9 @@ def get_files(conn):
             f = files[r_name]
         if r_mode & FILE_READ:
             f.read(run)
+        if r_mode & FILE_SOCKET:
+            if r_name in systemd_sockets:
+                systemd_accessed = True
         if r_mode & FILE_WRITE:
             f.write(run)
             # Mark the parent directory as read
@@ -220,20 +240,31 @@ def get_files(conn):
     inputs = [[path for path in lst if path in files]
               for lst in inputs]
 
-    # Displays a warning for READ_THEN_WRITTEN files
+    # Display a warning for READ_THEN_WRITTEN files
     read_then_written_files = [
         fi
         for fi in files.values()
         if fi.what == TracedFile.READ_THEN_WRITTEN and
         not any(PurePosixPath(m) in fi.path.parents for m in magic_dirs)]
     if read_then_written_files:
-        logger.warning(
-            "Some files were read and then written. We will only pack the "
-            "final version of the file; reproducible experiments shouldn't "
-            "change their input files")
+        with stderr_in_red():
+            logger.warning(
+                "Some files were read and then written. We will only pack the "
+                "final version of the file; reproducible experiments "
+                "shouldn't change their input files")
         logger.info("Paths:\n%s",
                     ", ".join(str(fi.path)
                               for fi in read_then_written_files))
+
+    # Display a warning for systemd
+    if systemd_accessed:
+        with stderr_in_red():
+            logger.warning(
+                "A connection to systemd was detected. If systemd was asked "
+                "to start a process, it won't be captured by reprozip, "
+                "because it is an independent server. Please see "
+                "https://docs.reprozip.org/s/systemd.html for more "
+                "information")
 
     files = set(
         fi.to_file()

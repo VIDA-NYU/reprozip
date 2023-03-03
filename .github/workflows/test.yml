@@ -67,13 +67,15 @@ jobs:
         os: [ubuntu-latest]
         mode: [tests]
         python:
-        - "3.6"
         - "3.7"
         - "3.8"
         include:
         - os: ubuntu-latest
           mode: coverage
           python: "3.9"
+        - os: ubuntu-20.04
+          mode: tests
+          python: "3.6"
     runs-on: ${{ matrix.os }}
     env:
       TEST_MODE: ${{ matrix.mode }}
