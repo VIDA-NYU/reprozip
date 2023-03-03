@@ -895,6 +895,21 @@ static int handle_connect(struct Process *process,
         tracee_read(process->tid, address, arg1, addrlen);
         log_info(process->tid, "process connected to %s",
                  print_sockaddr(address, addrlen));
+
+        const short family = ((struct sockaddr*)address)->sa_family;
+        if(family == AF_UNIX)
+        {
+            struct sockaddr_un *address_ = address;
+            char buf[109];
+            strncpy(buf, &address_->sun_path, 108);
+            buf[108] = 0;
+            if(db_add_file_open(process->identifier,
+                                buf,
+                                FILE_SOCKET | FILE_WRITE,
+                                0) != 0)
+                return -1; /* LCOV_EXCL_LINE */
+        }
+
         free(address);
     }
     return 0;

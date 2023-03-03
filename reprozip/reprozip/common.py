@@ -49,6 +49,7 @@ FILE_WRITE = 0x02
 FILE_WDIR = 0x04
 FILE_STAT = 0x08
 FILE_LINK = 0x10
+FILE_SOCKET = 0x20
 
 
 class File(object):
