@@ -11,6 +11,7 @@ generation logic for the config YAML file.
 
 from __future__ import division, print_function, unicode_literals
 
+import contextlib
 import distro
 from collections import defaultdict
 from itertools import count
@@ -37,6 +38,18 @@ logger = logging.getLogger('reprozip')
 
 
 systemd_sockets = ('/run/systemd/private', '/run/dbus/system_bus_socket')
+
+
+@contextlib.contextmanager
+def stderr_in_red():
+    if os.isatty(sys.stderr.fileno()):
+        try:
+            print('\x1b[31;20m', file=sys.stderr, end='', flush=True)
+            yield
+        finally:
+            print('\x1b[0m', file=sys.stderr, end='', flush=True)
+    else:
+        yield
 
 
 class TracedFile(File):
@@ -244,21 +257,24 @@ def get_files(conn):
         if fi.what == TracedFile.READ_THEN_WRITTEN and
         not any(fi.path.lies_under(m) for m in magic_dirs)]
     if read_then_written_files:
-        logger.warning(
-            "Some files were read and then written. We will only pack the "
-            "final version of the file; reproducible experiments shouldn't "
-            "change their input files")
+        with stderr_in_red():
+            logger.warning(
+                "Some files were read and then written. We will only pack the "
+                "final version of the file; reproducible experiments "
+                "shouldn't change their input files")
         logger.info("Paths:\n%s",
                     ", ".join(unicode_(fi.path)
                               for fi in read_then_written_files))
 
     # Display a warning for systemd
     if systemd_accessed:
-        logger.warning(
-            "A connection to systemd was detected. If systemd was asked to "
-            "start a process, it won't be captured by reprozip, because it is "
-            "an independent server. Please see "
-            "https://docs.reprozip.org/s/systemd.html for more information")
+        with stderr_in_red():
+            logger.warning(
+                "A connection to systemd was detected. If systemd was asked "
+                "to start a process, it won't be captured by reprozip, "
+                "because it is an independent server. Please see "
+                "https://docs.reprozip.org/s/systemd.html for more "
+                "information")
 
     files = set(
         fi

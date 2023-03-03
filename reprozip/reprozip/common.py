@@ -737,7 +737,7 @@ def setup_logging(tag, verbosity):
     file_level = logging.INFO
     min_level = min(console_level, file_level)
 
-    # Create formatter, with same format as C extension
+    # Create formatter
     fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
     formatter = LoggingDateFormatter(fmt)
 
