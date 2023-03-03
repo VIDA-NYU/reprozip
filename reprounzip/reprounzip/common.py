@@ -49,6 +49,7 @@ FILE_WRITE = 0x02
 FILE_WDIR = 0x04
 FILE_STAT = 0x08
 FILE_LINK = 0x10
+FILE_SOCKET = 0x20
 
 
 class File(object):
@@ -736,7 +737,7 @@ def setup_logging(tag, verbosity):
     file_level = logging.INFO
     min_level = min(console_level, file_level)
 
-    # Create formatter, with same format as C extension
+    # Create formatter
     fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
     formatter = LoggingDateFormatter(fmt)
 

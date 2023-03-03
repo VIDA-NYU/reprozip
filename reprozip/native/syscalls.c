@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -65,31 +66,6 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
         free(oldpath);
     }
     return pathname;
-}
-
-
-static const char *print_sockaddr(void *address, socklen_t addrlen)
-{
-    static char buffer[512];
-    const short family = ((struct sockaddr*)address)->sa_family;
-    if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
-    {
-        struct sockaddr_in *address_ = address;
-        snprintf(buffer, 512, "%s:%d",
-                inet_ntoa(address_->sin_addr),
-                ntohs(address_->sin_port));
-    }
-    else if(family == AF_INET6
-          && addrlen >= sizeof(struct sockaddr_in6))
-    {
-        struct sockaddr_in6 *address_ = address;
-        char buf[50];
-        inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
-        snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
-    }
-    else
-        snprintf(buffer, 512, "<unknown destination, sa_family=%d>", family);
-    return buffer;
 }
 
 
@@ -861,6 +837,46 @@ int syscall_fork_event(struct Process *process, unsigned int event)
  * Network connections
  */
 
+static int handle_socket(struct Process *process, const char *msg,
+                         void *address, socklen_t addrlen)
+{
+    const short family = ((struct sockaddr*)address)->sa_family;
+    if(family == AF_INET && addrlen >= sizeof(struct sockaddr_in))
+    {
+        struct sockaddr_in *address_ = address;
+        log_info(process->tid, "%s %s:%d", msg,
+                 inet_ntoa(address_->sin_addr),
+                 ntohs(address_->sin_port));
+    }
+    else if(family == AF_INET6
+          && addrlen >= sizeof(struct sockaddr_in6))
+    {
+        struct sockaddr_in6 *address_ = address;
+        char buf[50];
+        inet_ntop(AF_INET6, &address_->sin6_addr, buf, sizeof(buf));
+        log_info(process->tid, "%s [%s]:%d", msg,
+                 buf, ntohs(address_->sin6_port));
+    }
+    else if(family == AF_UNIX)
+    {
+        struct sockaddr_un *address_ = address;
+        char buf[109];
+        strncpy(buf, &address_->sun_path, 108);
+        buf[108] = 0;
+        log_info(process->tid, "%s unix:%s", msg, buf);
+
+        if(db_add_file_open(process->identifier,
+                            buf,
+                            FILE_SOCKET | FILE_WRITE,
+                            0) != 0)
+            return -1; /* LCOV_EXCL_LINE */
+    }
+    else
+        log_info(process->tid, "%s <unknown destination, sa_family=%d>",
+                 msg, family);
+    return 0;
+}
+
 static int handle_accept(struct Process *process,
                          void *arg1, void *arg2)
 {
@@ -870,8 +886,9 @@ static int handle_accept(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_info(process->tid, "process accepted a connection from %s",
-                 print_sockaddr(address, addrlen));
+        if(handle_socket(process, "process accepted a connection from",
+                         address, addrlen) != 0)
+            return -1; /* LCOV_EXCL_LINE */
         free(address);
     }
     return 0;
@@ -884,8 +901,9 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        log_info(process->tid, "process connected to %s",
-                 print_sockaddr(address, addrlen));
+        if(handle_socket(process, "process connected to",
+                         address, addrlen) != 0)
+            return -1; /* LCOV_EXCL_LINE */
         free(address);
     }
     return 0;
