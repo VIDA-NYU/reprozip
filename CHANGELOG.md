@@ -4,8 +4,10 @@ Changelog
 1.2.1 (2023-02-06)
 ------------------
 
+(reprounzip and reprounzip-qt only)
+
 Bugfixes:
-* Fix typo in reprounzip-qt: import from reprounzip, not reprozip
+* Fix typo in reprounzip, reprounzip-qt: import from reprounzip, not reprozip
 
 1.2 (2023-02-06)
 ----------------
