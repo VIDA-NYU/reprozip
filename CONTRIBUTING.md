@@ -30,9 +30,9 @@ Please follow the [GitHub Community Guidelines](https://docs.github.com/en/githu
 7. Commit your changes. From the command line:
  * `git add <FILE-NAMES>`
  * `git commit -m "A descriptive commit message"`
-8. While you were working some other changes might have gone in and break your stuff or vice versa. This can be a *merge conflict* but also conflicting behavior or code. Before you test, merge with master.
+8. While you were working some other changes might have gone in and break your stuff or vice versa. This can be a *merge conflict* but also conflicting behavior or code. Before you test, merge with upstream.
  * `git fetch upstream`
- * `git merge upstream/master`
+ * `git merge upstream/1.x`
 9. Test. Run the program and do something related to your feature/fix.
 10. Push the branch, uploading it to GitHub.
   * `git push origin my-feature-branch-name`
@@ -43,7 +43,7 @@ Please follow the [GitHub Community Guidelines](https://docs.github.com/en/githu
 Depending on the order that Pull Requests get processed, your PR may result in a conflict and become un-mergable.  To correct this, do the following from the command line:
 
 Switch to your branch: `git checkout my-feature-branch-name`
-Pull in the latest upstream changes: `git pull upstream master`
+Pull in the latest upstream changes: `git pull upstream 1.x`
 Find out what files have a conflict: `git status`
 
 Edit the conflicting file(s) and look for a block that looks like this:
