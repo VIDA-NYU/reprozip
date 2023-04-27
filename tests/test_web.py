@@ -85,7 +85,7 @@ class TestCombine(unittest.TestCase):
                     output_rpz=None,
                 ))
             self.assertEqual(
-                [l.msg for l in logs],
+                [log.msg for log in logs],
                 ['Replacing existing web extension from input RPZ'],
             )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
@@ -103,7 +103,7 @@ class TestCombine(unittest.TestCase):
                     output_rpz=None,
                 ))
             self.assertEqual(
-                [l.msg for l in logs],
+                [log.msg for log in logs],
                 ['Replacing UNKNOWN web extension version from input RPZ'],
             )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
@@ -136,7 +136,7 @@ class TestCombine(unittest.TestCase):
                     output_rpz=None,
                 ))
             self.assertEqual(
-                [l.msg for l in logs],
+                [log.msg for log in logs],
                 ['Replacing existing web extension from input RPZ'],
             )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
@@ -154,7 +154,7 @@ class TestCombine(unittest.TestCase):
                     output_rpz=None,
                 ))
             self.assertEqual(
-                [l.msg for l in logs],
+                [log.msg for log in logs],
                 ['Replacing UNKNOWN web extension version from input RPZ'],
             )
             rpz = RPZPack(os.path.join(tmp, 'test.web.rpz'))
