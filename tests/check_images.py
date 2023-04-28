@@ -191,6 +191,7 @@ def check_docker():
                     '/'.join(repository),
                     tag,
                 )
+                error = True
             else:
                 logger.info(
                     "Docker image ok: %s:%s",

@@ -30,7 +30,7 @@ Please follow the [GitHub Community Guidelines](https://docs.github.com/en/githu
 7. Commit your changes. From the command line:
  * `git add <FILE-NAMES>`
  * `git commit -m "A descriptive commit message"`
-8. While you were working some other changes might have gone in and break your stuff or vice versa. This can be a *merge conflict* but also conflicting behavior or code. Before you test, merge with master.
+8. While you were working some other changes might have gone in and break your stuff or vice versa. This can be a *merge conflict* but also conflicting behavior or code. Before you test, merge with upstream.
  * `git fetch upstream`
  * `git merge upstream/master`
 9. Test. Run the program and do something related to your feature/fix.

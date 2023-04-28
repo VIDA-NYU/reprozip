@@ -2,8 +2,8 @@
 [![Coverage Status](https://codecov.io/github/VIDA-NYU/reprozip/coverage.svg?branch=master)](https://codecov.io/github/VIDA-NYU/reprozip?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=master)](https://docs.reprozip.org/en/master/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
-[![status](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI/10.5281%2Fzenodo.5081097-green.svg)](https://doi.org/10.5281/zenodo.5081097)
+[![paper](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7696658-green.svg)](https://doi.org/10.5281/zenodo.7696658)
 
 ReproZip
 ========
@@ -103,15 +103,6 @@ Please subscribe to and contact the [reprozip@nyu.edu](https://groups.google.com
 Bugs and feature plannings are tracked in the [GitHub issues](https://github.com/VIDA-NYU/reprozip/issues). Feel free to add an issue!
 
 To suggest changes to this source code, feel free to raise a [GitHub pull request](https://github.com/VIDA-NYU/reprozip/pulls).  Any contributions received are assumed to be covered by the [BSD 3-Clause license](LICENSE.txt). We might ask you to sign a _Contributor License Agreement_ before accepting a larger contribution.
-
-Research notice
----------------
-
-Please note that this repository is participating in a study into sustainability of open source projects. Data will be gathered about this repository for approximately the next 12 months, starting from June 2021.
-
-Data collected will include number of contributors, number of PRs, time taken to close/merge these PRs, and issues closed.
-
-For more information, please visit [the informational page](https://sustainable-open-science-and-software.github.io/) or download the [participant information sheet](https://sustainable-open-science-and-software.github.io/assets/PIS_sustainable_software.pdf).
 
 License
 -------

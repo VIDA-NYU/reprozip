@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -90,6 +91,21 @@ static void record_connection(struct Process *process, int inbound,
         snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
         db_add_connection(process->identifier, inbound, "INET6", NULL, buffer);
     }
+    else if(family == AF_UNIX)
+    {
+        struct sockaddr_un *address_ = address;
+        char buf[109];
+        strncpy(buf, &address_->sun_path, 108);
+        buf[108] = 0;
+        sprintf(buffer, 512, "unix:%s", buf);
+        db_add_connection(process->identifier, inbound, "UNIX", NULL, buf);
+
+        if(db_add_file_open(process->identifier,
+                            buf,
+                            FILE_SOCKET | FILE_WRITE,
+                            0) != 0)
+            return -1; /* LCOV_EXCL_LINE */
+    }
     else
     {
         char family_str[32];
@@ -161,6 +177,19 @@ static int syscall_fileopening_in(const char *name, struct Process *process,
     return 0;
 }
 
+static const char *mode_to_s(char *buf, unsigned int mode)
+{
+    if(mode & FILE_READ)
+        strcat(buf, "|FILE_READ");
+    if(mode & FILE_WRITE)
+        strcat(buf, "|FILE_WRITE");
+    if(mode & FILE_WDIR)
+        strcat(buf, "|FILE_WDIR");
+    if(mode & FILE_STAT)
+        strcat(buf, "|FILE_STAT");
+    return buf[0]?buf + 1:"0";
+}
+
 static int syscall_fileopening_out(const char *name, struct Process *process,
                                    unsigned int syscall)
 {
@@ -189,16 +218,7 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
     {
         /* Converts mode to string s_mode */
         char mode_buf[42] = "";
-        const char *s_mode;
-        if(mode & FILE_READ)
-            strcat(mode_buf, "|FILE_READ");
-        if(mode & FILE_WRITE)
-            strcat(mode_buf, "|FILE_WRITE");
-        if(mode & FILE_WDIR)
-            strcat(mode_buf, "|FILE_WDIR");
-        if(mode & FILE_STAT)
-            strcat(mode_buf, "|FILE_STAT");
-        s_mode = mode_buf[0]?mode_buf + 1:"0";
+        const char *s_mode = mode_to_s(mode_buf, mode);
 
         if(syscall == SYSCALL_OPENING_OPEN)
             log_debug(process->tid,
@@ -228,6 +248,85 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
     }
 
     free(pathname);
+    return 0;
+}
+
+static int syscall_openat2_in(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) != AT_FDCWD)
+    {
+        char *pathname = tracee_strdup(process->tid, process->params[1].p);
+        log_info(process->tid,
+                 "process used unhandled system call %s(%d, \"%s\")",
+                 name, process->params[0].i, pathname);
+        free(pathname);
+    }
+    else
+    {
+        void *flags_ptr = process->params[2].p; /* struct open_how* */
+        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        if( (mode & FILE_READ) && (mode & FILE_WRITE) )
+        {
+            char *pathname = abs_path_arg(process, 1);
+            if(access(pathname, F_OK) != 0 && errno == ENOENT)
+            {
+                log_debug(process->tid, "Doing RW open, file exists: no");
+                process->flags &= ~PROCFLAG_OPEN_EXIST;
+            }
+            else
+            {
+                log_debug(process->tid, "Doing RW open, file exists: yes");
+                process->flags |= PROCFLAG_OPEN_EXIST;
+            }
+            free(pathname);
+        }
+    }
+    return 0;
+}
+
+static int syscall_openat2_out(const char *name, struct Process *process,
+                              unsigned int udata)
+{
+    if((int32_t)(process->params[0].u & 0xFFFFFFFF) == AT_FDCWD)
+    {
+        char *pathname = abs_path_arg(process, 1);
+        void *flags_ptr = process->params[2].p; /* struct open_how* */
+        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        if( (process->retvalue.i >= 0) /* Open succeeded */
+         && (mode & FILE_READ) && (mode & FILE_WRITE) ) /* In readwrite mode */
+        {
+            /* But the file doesn't exist */
+            if(!(process->flags & PROCFLAG_OPEN_EXIST))
+                /* Consider this a simple write */
+                mode &= ~FILE_READ;
+        }
+
+        if(logging_level <= 10)
+        {
+            /* Converts mode to string s_mode */
+            char mode_buf[42] = "";
+            const char *s_mode = mode_to_s(mode_buf, mode);
+
+            log_debug(process->tid,
+                      "openat2(AT_FDCWD, \"%s\", mode=%s) = %d (%s)",
+                      pathname,
+                      s_mode,
+                      (int)process->retvalue.i,
+                      (process->retvalue.i >= 0)?"success":"failure");
+        }
+
+        if(process->retvalue.i >= 0)
+        {
+            if(db_add_file_open(process->identifier,
+                                pathname,
+                                mode,
+                                path_is_dir(pathname)) != 0)
+                return -1; /* LCOV_EXCL_LINE */
+        }
+
+        free(pathname);
+    }
     return 0;
 }
 
@@ -652,7 +751,7 @@ int syscall_execve_event(struct Process *process)
 }
 
 static int syscall_execve_out(const char *name, struct Process *process,
-                              unsigned int execve_syscall)
+                              unsigned int udata)
 {
     log_debug(process->tid, "execve() failed");
     if(process->execve_info != NULL)
@@ -669,16 +768,16 @@ static int syscall_execve_out(const char *name, struct Process *process,
  */
 
 static int syscall_fork_in(const char *name, struct Process *process,
-                           unsigned int udata)
+                           unsigned int flags)
 {
-    process->flags |= PROCFLAG_FORKING;
+    process->flags |= PROCFLAG_FORKING | flags;
     return 0;
 }
 
 static int syscall_fork_out(const char *name, struct Process *process,
                             unsigned int udata)
 {
-    process->flags &= ~PROCFLAG_FORKING;
+    process->flags &= ~(PROCFLAG_FORKING | PROCFLAG_CLONE3);
     return 0;
 }
 
@@ -704,8 +803,17 @@ int syscall_fork_event(struct Process *process, unsigned int event)
         /* LCOV_EXCL_STOP */
     }
     else if(event == PTRACE_EVENT_CLONE)
-        is_thread = process->params[0].u & CLONE_THREAD;
-    process->flags &= ~PROCFLAG_FORKING;
+    {
+        if( (process->flags & PROCFLAG_CLONE3) == 0) /* clone */
+            is_thread = process->params[0].u & CLONE_THREAD;
+        else /* clone3 */
+        {
+            void *flag_ptr = process->params[0].p; /* struct clone_args* */
+            uint64_t flags = tracee_getu64(process->tid, flag_ptr);
+            is_thread = flags & CLONE_THREAD;
+        }
+    }
+    process->flags &= ~(PROCFLAG_FORKING | PROCFLAG_CLONE3);
 
     if(logging_level <= 20)
         log_info(new_tid, "process created by %d via %s\n"
@@ -985,6 +1093,7 @@ void syscall_build_table(void)
 #else
 #   error Unrecognized architecture!
 #endif
+    /* https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl */
 
     /* i386 */
     {
@@ -1007,13 +1116,17 @@ void syscall_build_table(void)
 
             { 12, "chdir", NULL, syscall_chdir, 0},
 
-            { 11, "execve", syscall_execve_in, syscall_execve_out, 11},
+            { 11, "execve", syscall_execve_in, syscall_execve_out, 0},
 
             {  2, "fork", syscall_fork_in, syscall_fork_out, 0},
             {190, "vfork", syscall_fork_in, syscall_fork_out, 0},
             {120, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
+            {364, "accept4", NULL, syscall_accept, 0},
+            {362, "connect", NULL, syscall_connect, 0},
             {102, "socketcall", NULL, syscall_socketcall, 0},
+            /*{369, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 38, "rename", NULL, syscall_filecreating, 0},
@@ -1023,15 +1136,22 @@ void syscall_build_table(void)
             /* File-creating syscalls, at variants: unhandled if first or third
              * argument is not AT_FDCWD, second is read, fourth is created */
             {302, "renameat", NULL, syscall_filecreating_at, 0},
+            {353, "renameat2", NULL, syscall_filecreating_at, 0},
             {303, "linkat", NULL, syscall_filecreating_at, 0},
             {304, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {296, "mkdirat", NULL, syscall_xxx_at, 39},
             {295, "openat", syscall_xxx_at, syscall_xxx_at, 5},
             {307, "faccessat", NULL, syscall_xxx_at, 33},
+            {439, "faccessat2", NULL, syscall_xxx_at, 33},
             {305, "readlinkat", NULL, syscall_xxx_at, 85},
             {300, "fstatat64", NULL, syscall_xxx_at, 195},
+            {383, "statx", NULL, syscall_xxx_at, 107},
+            {358, "execveat", syscall_xxx_at, syscall_xxx_at, 11},
+            {298, "fchownat", NULL, syscall_xxx_at, 182},
+            {306, "fchmodat", NULL, syscall_xxx_at, 15},
 
             /* Unhandled with path as first argument */
             { 40, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1047,11 +1167,18 @@ void syscall_build_table(void)
             {271, "utimes", NULL, syscall_unhandled_path1, 0},
             {277, "mq_open", NULL, syscall_unhandled_path1, 0},
             {278, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {301, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {306, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {298, "fchownat", NULL, syscall_unhandled_other, 0},
+            {133, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             { 26, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -1064,6 +1191,8 @@ void syscall_build_table(void)
     }
 
 #ifdef X86_64
+    /* https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl */
+
     /* x64 */
     {
         struct unprocessed_table_entry list[] = {
@@ -1081,15 +1210,17 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            { 59, "execve", syscall_execve_in, syscall_execve_out, 59},
+            { 59, "execve", syscall_execve_in, syscall_execve_out, 0},
 
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
             { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
+            /*{ 44, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 82, "rename", NULL, syscall_filecreating, 0},
@@ -1103,11 +1234,17 @@ void syscall_build_table(void)
             {266, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {439, "faccessat2", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
+            {332, "statx", NULL, syscall_xxx_at, 6},
+            {322, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
+            {260, "fchownat", NULL, syscall_xxx_at, 92},
+            {268, "fchmodat", NULL, syscall_xxx_at, 90},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1120,11 +1257,18 @@ void syscall_build_table(void)
             {235, "utimes", NULL, syscall_unhandled_path1, 0},
             {240, "mq_open", NULL, syscall_unhandled_path1, 0},
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {101, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -1153,16 +1297,17 @@ void syscall_build_table(void)
 
             { 80, "chdir", NULL, syscall_chdir, 0},
 
-            {520, "execve", syscall_execve_in, syscall_execve_out,
-                     __X32_SYSCALL_BIT + 520},
+            {520, "execve", syscall_execve_in, syscall_execve_out},
 
             { 57, "fork", syscall_fork_in, syscall_fork_out, 0},
             { 58, "vfork", syscall_fork_in, syscall_fork_out, 0},
             { 56, "clone", syscall_fork_in, syscall_fork_out, 0},
+            {435, "clone3", syscall_fork_in, syscall_fork_out, PROCFLAG_CLONE3},
 
             { 43, "accept", NULL, syscall_accept, 0},
             {288, "accept4", NULL, syscall_accept, 0},
             { 42, "connect", NULL, syscall_connect, 0},
+            /*{ 44, "sendto", NULL, syscall_sendto, 0},*/
 
             /* File-creating syscalls: created path is second argument */
             { 82, "rename", NULL, syscall_filecreating, 0},
@@ -1176,11 +1321,17 @@ void syscall_build_table(void)
             {266, "symlinkat", NULL, syscall_filecreating_at, 1},
 
             /* Half-implemented: *at() variants, when dirfd is AT_FDCWD */
+            {437, "openat2", syscall_openat2_in, syscall_openat2_out, 0},
             {258, "mkdirat", NULL, syscall_xxx_at, 83},
             {257, "openat", syscall_xxx_at, syscall_xxx_at, 2},
             {269, "faccessat", NULL, syscall_xxx_at, 21},
+            {439, "faccessat2", NULL, syscall_xxx_at, 21},
             {267, "readlinkat", NULL, syscall_xxx_at, 89},
             {262, "newfstatat", NULL, syscall_xxx_at, 4},
+            {332, "statx", NULL, syscall_xxx_at, 6},
+            {545, "execveat", syscall_xxx_at, syscall_xxx_at, 59},
+            {260, "fchownat", NULL, syscall_xxx_at, 92},
+            {268, "fchmodat", NULL, syscall_xxx_at, 90},
 
             /* Unhandled with path as first argument */
             { 84, "rmdir", NULL, syscall_unhandled_path1, 0},
@@ -1193,11 +1344,18 @@ void syscall_build_table(void)
             {235, "utimes", NULL, syscall_unhandled_path1, 0},
             {240, "mq_open", NULL, syscall_unhandled_path1, 0},
             {241, "mq_unlink", NULL, syscall_unhandled_path1, 0},
+            {188, "setxattr", NULL, syscall_unhandled_path1, 0},
+            {189, "lsetxattr", NULL, syscall_unhandled_path1, 0},
+            {197, "removexattr", NULL, syscall_unhandled_path1, 0},
+            {198, "lremovexattr", NULL, syscall_unhandled_path1, 0},
+            {191, "getxattr", NULL, syscall_unhandled_path1, 0},
+            {192, "lgetxattr", NULL, syscall_unhandled_path1, 0},
+            {194, "listxattr", NULL, syscall_unhandled_path1, 0},
+            {195, "llistxattr", NULL, syscall_unhandled_path1, 0},
 
             /* Unhandled which use open descriptors */
             {263, "unlinkat", NULL, syscall_unhandled_other, 0},
-            {268, "fchmodat", NULL, syscall_unhandled_other, 0},
-            {260, "fchownat", NULL, syscall_unhandled_other, 0},
+            { 81, "fchdir", NULL, syscall_unhandled_other, 0},
 
             /* Other unhandled */
             {521, "ptrace", NULL, syscall_unhandled_other, 0},
@@ -1265,7 +1423,7 @@ int syscall_handle(struct Process *process)
             /* LCOV_EXCL_START : internal error */
             log_error(process->tid, "INVALID SYSCALL %d", syscall);
             /* LCOV_EXCL_STOP */
-        if(entry == NULL && syscall >= 0 && (size_t)syscall < tbl->length)
+        if(syscall >= 0 && (size_t)syscall < tbl->length)
             entry = &tbl->entries[syscall];
         if(entry != NULL)
         {

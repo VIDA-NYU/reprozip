@@ -77,6 +77,7 @@ FILE_WRITE = 0x02
 FILE_WDIR = 0x04
 FILE_STAT = 0x08
 FILE_LINK = 0x10
+FILE_SOCKET = 0x20
 
 
 class File(object):
@@ -334,7 +335,7 @@ class RPZPack(object):
 
     @contextlib.contextmanager
     def with_trace(self):
-        """Context manager that extracts the trace database to a temporary file.
+        """Context manager extracting the trace database to a temporary file.
         """
         fd, tmp = tempfile.mkstemp(prefix='reprounzip_')
         tmp = Path(tmp)
@@ -374,6 +375,13 @@ class RPZPack(object):
 
         The members must come from get_data().
         """
+        # Check for CVE-2007-4559
+        abs_root = root.absolute()
+        for member in members:
+            member_path = (root / member.name).absolute()
+            if Path(os.path.commonprefix([abs_root, member_path])) != abs_root:
+                raise ValueError("Invalid path in data tar")
+
         self.data.extractall(str(root), members)
 
     def copy_data_tar(self, target):
@@ -437,7 +445,10 @@ class RPZPack(object):
             for m in self.zip.infolist():
                 if m.filename.startswith(dir_prefix) or m.filename == filename:
                     m = copy.copy(m)
-                    m.filename = os.path.basename(target) + m.filename[len(filename):]
+                    m.filename = (
+                        os.path.basename(target)
+                        + m.filename[len(filename):]
+                    )
                     members.append(m)
             if not members:
                 raise KeyError("No such extension in RPZ: %r" % name)
@@ -765,7 +776,7 @@ other_files:
 # If you want to include additional files in the pack, you can list additional
 # patterns of files that will be included
 additional_patterns:
-# Example:
+# Examples:
 #  - /etc/apache2/**  # Everything under apache2/
 #  - /var/log/apache2/*.log  # Log files directly under apache2/
 #  - /var/lib/lxc/*/rootfs/home/**/*.py  # All Python files of all users in
@@ -861,7 +872,7 @@ def setup_logging(tag, verbosity):
     file_level = logging.INFO
     min_level = min(console_level, file_level)
 
-    # Create formatter, with same format as C extension
+    # Create formatter
     fmt = "[%s] %%(asctime)s %%(levelname)s: %%(message)s" % tag
     formatter = LoggingDateFormatter(fmt)
 

@@ -368,7 +368,7 @@ class TestFiles(unittest.TestCase):
         file_stat = Path('/etc/passwd').stat()
         old = Path.is_file, Path.exists, Path.stat
         Path.is_file = Path.exists = lambda s: True
-        Path.stat = lambda s: file_stat
+        Path.stat = lambda s, *, follow_symlinks=True: file_stat
         try:
             files, inputs, outputs = self.do_test([
                 ('proc', 0, None, False),

@@ -11,6 +11,29 @@ Features:
 * Configuration file contains the walltime taken by each run
 * It is now possible to upload or download any file via its full path
 
+1.2.1 (2023-02-06)
+------------------
+
+(reprounzip and reprounzip-qt only)
+
+Bugfixes:
+* Fix typo in reprounzip, reprounzip-qt: import from reprounzip, not reprozip
+
+1.2 (2023-02-06)
+----------------
+
+Bugfixes:
+* Don't mark symlinks as input files
+* Fix reprounzip-vagrant not terminating after it says that it can't install packages
+* Add defense for CVE-2007-4559
+* Fix OrderedSet for Python 3.10+ compatibility
+
+Enhancements:
+* Recognize Ruby gems and apps and gather the whole environment
+* Don't mark Python .pth files as input files
+* Accept ZIP files in addition to TAR for RPZ files (reprozip doesn't currently create ZIP files)
+* Handle more Linux system calls: faccessat2, statx, execveat, clone3, openat2, fchownat, fchmodat, accept4, renameat2
+
 1.1 (2021-07-06)
 ----------------
 
