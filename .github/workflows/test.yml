@@ -58,9 +58,10 @@ jobs:
                 sudo apt-get install -qq $PKGS
                 if [ $TEST_MODE = "coverage" ]; then
                     pip install 'coverage<5'
-                    pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter
+                    # `--config-settings editable_mode=compat` works around https://github.com/pypa/setuptools/issues/3557
+                    pip install -e ./reprozip -e ./reprounzip -e ./reprounzip-docker -e ./reprounzip-vagrant -e ./reprounzip-vistrails -e ./reprounzip-qt -e ./reprozip-jupyter --config-settings editable_mode=compat
                 else
-                    pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt -e ./reprozip-jupyter
+                    pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt ./reprozip-jupyter
                 fi
                 ;;
             checks)
