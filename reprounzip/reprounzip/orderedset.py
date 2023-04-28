@@ -22,9 +22,9 @@
 # THE SOFTWARE.
 
 try:
-    from collections import MutableSet
-except ImportError:
     from collections.abc import MutableSet
+except ImportError:
+    from collections import MutableSet
 
 
 class OrderedSet(MutableSet):
