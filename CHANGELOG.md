@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.x (???)
+---------
+
+Enhancements:
+* Store used UNIX sockets in the trace
+* Display a warning if the process connect to the systemd socket (https://docs.reprozip.org/s/systemd.html)
+* Print trace warnings in red (files read then written, systemd socket)
+
 1.2.1 (2023-02-06)
 ------------------
 
