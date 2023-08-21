@@ -108,12 +108,7 @@ def get_package_info(pack, read_data=False):
             logger.warning("Runs have different distributions")
         information['meta']['distribution'] = distribution
 
-        information['runs'] = [
-            dict((k, run[k])
-                 for k in ['id', 'binary', 'argv', 'environ',
-                           'workingdir', 'signal', 'exitcode']
-                 if k in run)
-            for run in runs]
+        information['runs'] = runs
 
     information['inputs_outputs'] = {
         name: {'path': str(iofile.path),
