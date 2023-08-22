@@ -59,12 +59,12 @@ logger = logging.getLogger('reprounzip.docker')
 # state as expected.
 
 
-def select_image(runs):
+def select_image(metadata):
     """Selects a base image for the experiment, with the correct distribution.
     """
-    distribution, version = runs[0]['distribution']
+    distribution, version = metadata['distribution']
     distribution = distribution.lower()
-    architecture = runs[0]['architecture']
+    architecture = metadata['architecture']
 
     record_usage(docker_select_box='%s;%s;%s' % (distribution, version,
                                                  architecture))
@@ -155,7 +155,7 @@ def docker_setup_create(args):
             else:
                 target_distribution = None
         else:
-            target_distribution, base_image = select_image(runs)
+            target_distribution, base_image = select_image(runs[0])
         logger.info("Using base image %s", base_image)
         logger.debug("Distribution: %s", target_distribution or "unknown")
 

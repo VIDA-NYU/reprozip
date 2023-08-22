@@ -25,8 +25,8 @@ class TestSelection(unittest.TestCase):
 
     def test_docker(self):
         def get(architecture, distribution, version):
-            return select_image([{'architecture': architecture,
-                                  'distribution': (distribution, version)}])
+            return select_image({'architecture': architecture,
+                                 'distribution': (distribution, version)})
 
         self.assertEqual(get('i686', 'Ubuntu', '14.10'),
                          ('ubuntu', 'ubuntu:14.10'))
