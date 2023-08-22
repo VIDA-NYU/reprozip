@@ -3,6 +3,8 @@
 # See file LICENSE for full license details.
 
 import contextlib
+import io
+import json
 import logging
 import os.path
 import shutil
@@ -14,7 +16,10 @@ import zipfile
 logger = logging.getLogger('reprozip_web')
 
 
-def combine_tar(input_tar, wacz_filename, output_filename):
+def combine_tar(
+    input_tar, wacz_filename, output_filename, *,
+    hostname=None, port_number=None,
+):
     if not os.path.isfile(wacz_filename):
         raise ValueError("No such file: %s" % wacz_filename)
 
@@ -71,8 +76,20 @@ def combine_tar(input_tar, wacz_filename, output_filename):
         with open(wacz_filename, 'rb') as wacz:
             output_tar.addfile(member, wacz)
 
+        # Add config
+        if hostname and port_number:
+            config = {'hosts': {hostname: {'port': port_number}}}
+            config = json.dumps(config).encode('utf-8')
+            member = tarfile.TarInfo('EXTENSIONS/web1/config.json')
+            member.size = len(config)
+            member.mtime = time.time()
+            output_tar.addfile(member, io.BytesIO(config))
 
-def combine_zip(input_zip, wacz_filename, output_filename):
+
+def combine_zip(
+    input_zip, wacz_filename, output_filename, *,
+    hostname=None, port_number=None,
+):
     if not os.path.isfile(wacz_filename):
         raise ValueError("No such file: %s" % wacz_filename)
 
@@ -132,14 +149,30 @@ def combine_zip(input_zip, wacz_filename, output_filename):
             with output_zip.open(member, 'w') as dest:
                 shutil.copyfileobj(src, dest)
 
+        # Add config
+        if hostname and port_number:
+            config = {'hosts': {hostname: {'port': port_number}}}
+            config = json.dumps(config).encode('utf-8')
+            mtime = time.localtime()
+            member = zipfile.ZipInfo('EXTENSIONS/web1/config.json', mtime[0:6])
+            member.file_size = len(config)
+            with output_zip.open(member, 'w') as dest:
+                dest.write(config)
 
-def combine(input_rpz, input_wacz, output_rpz):
+
+def combine(
+    input_rpz, input_wacz, output_rpz, *,
+    hostname=None, port_number=None,
+):
     try:
         tar = tarfile.open(input_rpz)
     except tarfile.TarError:
         pass
     else:
-        combine_tar(tar, input_wacz, output_rpz)
+        combine_tar(
+            tar, input_wacz, output_rpz,
+            hostname=hostname, port_number=port_number,
+        )
         tar.close()
         return
 
