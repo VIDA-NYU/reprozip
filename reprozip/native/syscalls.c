@@ -91,7 +91,7 @@ static int record_connection(struct Process *process, int inbound,
         snprintf(buffer, 512, "[%s]:%d", buf, ntohs(address_->sin6_port));
         db_add_connection(process->identifier, inbound, "INET6", NULL, buffer);
     }
-    else if(family == AF_UNIX)
+    else if(family == AF_UNIX && addrlen > sizeof(short))
     {
         struct sockaddr_un *address_ = address;
         char buf[109];
