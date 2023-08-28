@@ -97,7 +97,7 @@ static void record_connection(struct Process *process, int inbound,
         char buf[109];
         strncpy(buf, &address_->sun_path, 108);
         buf[108] = 0;
-        sprintf(buffer, 512, "unix:%s", buf);
+        snprintf(buffer, 512, "unix:%s", buf);
         db_add_connection(process->identifier, inbound, "UNIX", NULL, buf);
 
         if(db_add_file_open(process->identifier,
