@@ -17,6 +17,8 @@ char *get_wd(void);
 
 char *read_line(char *buffer, size_t *size, FILE *fp);
 
+char *a_sprintf(const char *format, ...);
+
 int path_is_dir(const char *pathname);
 
 #endif

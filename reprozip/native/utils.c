@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -136,6 +137,25 @@ char *read_line(char *buffer, size_t *size, FILE *fp)
             buffer[pos++] = c;
         }
     }
+}
+
+char *a_sprintf(const char *format, ...)
+{
+    va_list args;
+    char dummy;
+    int length;
+    char *res = NULL;
+
+    va_start(args, format);
+    length = vsnprintf(&dummy, 1, format, args);
+    va_end(args);
+
+    res = malloc(length + 1);
+    va_start(args, format);
+    vsnprintf(res, length + 1, format, args);
+    va_end(args);
+
+    return res;
 }
 
 int path_is_dir(const char *pathname)
