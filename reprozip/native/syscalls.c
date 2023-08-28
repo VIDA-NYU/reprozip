@@ -69,8 +69,8 @@ static char *abs_path_arg(const struct Process *process, size_t arg)
 }
 
 
-static void record_connection(struct Process *process, int inbound,
-                              void *address, socklen_t addrlen)
+static int record_connection(struct Process *process, int inbound,
+                             void *address, socklen_t addrlen)
 {
     char buffer[512];
     const short family = ((struct sockaddr*)address)->sa_family;
@@ -117,6 +117,7 @@ static void record_connection(struct Process *process, int inbound,
     log_info(process->tid, "process %s %s",
              inbound?"accepted a connection from":"connected to",
              buffer);
+     return 0;
 }
 
 
@@ -896,7 +897,8 @@ static int handle_accept(struct Process *process, void *arg1, void *arg2)
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        record_connection(process, 1, address, addrlen);
+        if(record_connection(process, 1, address, addrlen) != 0)
+            return -1;
         free(address);
     }
     return 0;
@@ -909,7 +911,8 @@ static int handle_connect(struct Process *process,
     {
         void *address = malloc(addrlen);
         tracee_read(process->tid, address, arg1, addrlen);
-        record_connection(process, 0, address, addrlen);
+        if(record_connection(process, 0, address, addrlen) != 0)
+            return -1;
         free(address);
     }
     return 0;
