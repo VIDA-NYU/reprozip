@@ -133,7 +133,11 @@ static int syscall_unhandled_path1(const char *name, struct Process *process,
     if(logging_level <= 30 && process->in_syscall && process->retvalue.i >= 0
      && name != NULL)
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            pathname = a_sprintf("%p", process->params[0].p);
+        }
         log_info(process->tid, "process used unhandled system call %s(\"%s\")",
                  name, pathname);
         free(pathname);
@@ -164,7 +168,13 @@ static int syscall_fileopening_in(const char *name, struct Process *process,
     unsigned int mode = flags2mode(process->params[1].u);
     if( (mode & FILE_READ) && (mode & FILE_WRITE) )
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            /* Assume file existed */
+            log_debug(process->tid, "Doing RW open, assuming file exists");
+            process->flags |= PROCFLAG_OPEN_EXIST;
+        }
         if(access(pathname, F_OK) != 0 && errno == ENOENT)
         {
             log_debug(process->tid, "Doing RW open, file exists: no");
@@ -197,7 +207,11 @@ static int syscall_fileopening_out(const char *name, struct Process *process,
                                    unsigned int syscall)
 {
     unsigned int mode;
-    char *pathname = abs_path_arg(process, 0);
+    char *pathname;
+    if(abs_path_arg(process, 0, &pathname) != 0)
+    {
+        return 0;
+    }
 
     if(syscall == SYSCALL_OPENING_ACCESS)
         mode = FILE_STAT;
@@ -259,7 +273,11 @@ static int syscall_openat2_in(const char *name, struct Process *process,
 {
     if((int32_t)(process->params[0].u & 0xFFFFFFFF) != AT_FDCWD)
     {
-        char *pathname = tracee_strdup(process->tid, process->params[1].p);
+        char *pathname;
+        if(tracee_strdup(process->tid, process->params[1].p, &pathname) != 0)
+        {
+            a_sprintf(pathname, "%p", process->params[1].p);
+        }
         log_info(process->tid,
                  "process used unhandled system call %s(%d, \"%s\")",
                  name, process->params[0].i, pathname);
@@ -267,11 +285,25 @@ static int syscall_openat2_in(const char *name, struct Process *process,
     }
     else
     {
+        unsigned int mode;
         void *flags_ptr = process->params[2].p; /* struct open_how* */
-        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        uint64_t flags;
+        if(tracee_getu64(process->tid, flags_ptr, &flags) != 0)
+        {
+            /* Assume read */
+            mode = FILE_READ;
+        }
+        else
+            mode = flags2mode(flags);
         if( (mode & FILE_READ) && (mode & FILE_WRITE) )
         {
-            char *pathname = abs_path_arg(process, 1);
+            char *pathname;
+            if(abs_path_arg(process, 1, &pathname) != 0)
+            {
+                /* Assume file existed */
+                log_debug(process->tid, "Doing RW open, assuming file exists");
+                process->flags |= PROCFLAG_OPEN_EXIST;
+            }
             if(access(pathname, F_OK) != 0 && errno == ENOENT)
             {
                 log_debug(process->tid, "Doing RW open, file exists: no");
@@ -293,9 +325,21 @@ static int syscall_openat2_out(const char *name, struct Process *process,
 {
     if((int32_t)(process->params[0].u & 0xFFFFFFFF) == AT_FDCWD)
     {
-        char *pathname = abs_path_arg(process, 1);
+        char *pathname;
+        if(abs_path_arg(process, 1, &pathname) != 0)
+        {
+            return 0;
+        }
+        unsigned int mode;
         void *flags_ptr = process->params[2].p; /* struct open_how* */
-        unsigned int mode = flags2mode(tracee_getu64(process->tid, flags_ptr));
+        uint64_t flags;
+        if(tracee_getu64(process->tid, flags_ptr, &flags) != 0)
+        {
+            /* Assume read */
+            mode = FILE_READ;
+        }
+        else
+            mode = flags2mode(flags);
         if( (process->retvalue.i >= 0) /* Open succeeded */
          && (mode & FILE_READ) && (mode & FILE_WRITE) ) /* In readwrite mode */
         {
@@ -343,12 +387,20 @@ static int syscall_filecreating(const char *name, struct Process *process,
 {
     if(process->retvalue.i >= 0)
     {
-        char *written_path = abs_path_arg(process, 1);
+        char *written_path;
+        if(abs_path_arg(process, 1, &written_path) != 0)
+        {
+            return 0;
+        }
         int is_dir = path_is_dir(written_path);
         /* symlink doesn't actually read the source */
         if(!is_symlink)
         {
-            char *read_path = abs_path_arg(process, 0);
+            char *read_path;
+            if(abs_path_arg(process, 0, &read_path) != 0)
+            {
+                return 0;
+            }
             if(db_add_file_open(process->identifier,
                                 read_path,
                                 FILE_READ | FILE_LINK,
@@ -374,12 +426,20 @@ static int syscall_filecreating_at(const char *name, struct Process *process,
         if( (process->params[0].i == AT_FDCWD)
          && (process->params[2].i == AT_FDCWD) )
         {
-            char *written_path = abs_path_arg(process, 3);
+            char *written_path;
+            if(abs_path_arg(process, 3, &written_path) != 0)
+            {
+                return 0;
+            }
             int is_dir = path_is_dir(written_path);
             /* symlink doesn't actually read the source */
             if(!is_symlink)
             {
-                char *read_path = abs_path_arg(process, 1);
+                char *read_path;
+                if(abs_path_arg(process, 1, &read_path) != 0)
+                {
+                    return 0;
+                }
                 if(db_add_file_open(process->identifier,
                                     read_path,
                                     FILE_READ | FILE_LINK,
@@ -410,7 +470,11 @@ static int syscall_filestat(const char *name, struct Process *process,
 {
     if(process->retvalue.i >= 0)
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            return 0;
+        }
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_STAT | (no_deref?FILE_LINK:0),
@@ -431,7 +495,11 @@ static int syscall_readlink(const char *name, struct Process *process,
 {
     if(process->retvalue.i >= 0)
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            return 0;
+        }
         if(db_add_file_open(process->identifier,
                             pathname,
                             FILE_STAT | FILE_LINK,
@@ -452,7 +520,11 @@ static int syscall_mkdir(const char *name, struct Process *process,
 {
     if(process->retvalue.i >= 0)
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            return 0;
+        }
         log_debug(process->tid, "mkdir(\"%s\")", pathname);
         if(db_add_file_open(process->identifier,
                             pathname,
@@ -474,7 +546,11 @@ static int syscall_chdir(const char *name, struct Process *process,
 {
     if(process->retvalue.i >= 0)
     {
-        char *pathname = abs_path_arg(process, 0);
+        char *pathname;
+        if(abs_path_arg(process, 0, &pathname) != 0)
+        {
+            return -1;
+        }
         free(process->threadgroup->wd);
         process->threadgroup->wd = pathname;
         if(db_add_file_open(process->identifier,
@@ -650,11 +726,20 @@ static int syscall_execve_in(const char *name, struct Process *process,
      *            char *const argv[],
      *            char *const envp[]); */
     struct ExecveInfo *execi = malloc(sizeof(struct ExecveInfo));
-    execi->binary = abs_path_arg(process, 0);
-    execi->argv = tracee_strarraydup(process->mode, process->tid,
-                                     process->params[1].p);
-    execi->envp = tracee_strarraydup(process->mode, process->tid,
-                                     process->params[2].p);
+    if(abs_path_arg(process, 0, &execi->binary) != 0)
+    {
+        return -1;
+    }
+    if(tracee_strarraydup(process->mode, process->tid,
+                          process->params[1].p, &execi->argv) != 0)
+    {
+        return -1;
+    }
+    if(tracee_strarraydup(process->mode, process->tid,
+                          process->params[2].p, &execi->envp) != 0)
+    {
+        return -1;
+    }
     if(logging_level <= 10)
     {
         log_debug(process->tid, "execve called:\n  binary=%s\n  argv:",
@@ -812,8 +897,16 @@ int syscall_fork_event(struct Process *process, unsigned int event)
         else /* clone3 */
         {
             void *flag_ptr = process->params[0].p; /* struct clone_args* */
-            uint64_t flags = tracee_getu64(process->tid, flag_ptr);
-            is_thread = flags & CLONE_THREAD;
+            uint64_t flags;
+            if(tracee_getu64(process->tid, flag_ptr, &flags) != 0)
+            {
+                /* Assume not a thread */
+                is_thread = 0;
+            }
+            else
+            {
+                is_thread = flags & CLONE_THREAD;
+            }
         }
     }
     process->flags &= ~(PROCFLAG_FORKING | PROCFLAG_CLONE3);
@@ -894,13 +987,18 @@ int syscall_fork_event(struct Process *process, unsigned int event)
 static int handle_accept(struct Process *process, void *arg1, void *arg2)
 {
     socklen_t addrlen;
-    tracee_read(process->tid, (void*)&addrlen, arg2, sizeof(addrlen));
+    if(tracee_read(process->tid, (void*)&addrlen, arg2, sizeof(addrlen)) != 0)
+    {
+        return 0;
+    }
     if(addrlen >= sizeof(short))
     {
         void *address = malloc(addrlen);
-        tracee_read(process->tid, address, arg1, addrlen);
-        if(record_connection(process, 1, address, addrlen) != 0)
-            return -1;
+        if(tracee_read(process->tid, address, arg1, addrlen) == 0)
+        {
+            if(record_connection(process, 1, address, addrlen) != 0)
+                return -1;
+        }
         free(address);
     }
     return 0;
@@ -912,9 +1010,11 @@ static int handle_connect(struct Process *process,
     if(addrlen >= sizeof(short))
     {
         void *address = malloc(addrlen);
-        tracee_read(process->tid, address, arg1, addrlen);
-        if(record_connection(process, 0, address, addrlen) != 0)
-            return -1;
+        if(tracee_read(process->tid, address, arg1, addrlen) == 0)
+        {
+            if(record_connection(process, 0, address, addrlen) != 0)
+                return -1;
+        }
         free(address);
     }
     return 0;
@@ -931,17 +1031,36 @@ static int syscall_socketcall(const char *name, struct Process *process,
         const size_t wordsize = tracee_getwordsize(process->mode);
         /* Note that void* pointer arithmetic is illegal, hence the uint */
         if(process->params[0].u == SYS_ACCEPT)
-            return handle_accept(process,
-                                 tracee_getptr(process->mode, process->tid,
-                                               (void*)(args + 1*wordsize)),
-                                 tracee_getptr(process->mode, process->tid,
-                                               (void*)(args + 2*wordsize)));
+        {
+            void *arg1, *arg2;
+            if(tracee_getptr(process->mode, process->tid,
+                             (void*)(args + 1*wordsize), &arg1) != 0)
+            {
+                return 0;
+            }
+            if(tracee_getptr(process->mode, process->tid,
+                             (void*)(args + 2*wordsize), &arg2) != 0)
+            {
+                return 0;
+            }
+            return handle_accept(process, arg1, arg2);
+        }
         else if(process->params[0].u == SYS_CONNECT)
-            return handle_connect(process,
-                                  tracee_getptr(process->mode, process->tid,
-                                                (void*)(args + 1*wordsize)),
-                                  tracee_getlong(process->mode, process->tid,
-                                                 (void*)(args + 2*wordsize)));
+        {
+            void *arg1;
+            uint64_t arg2;
+            if(tracee_getptr(process->mode, process->tid,
+                             (void*)(args + 1*wordsize), &arg1) != 0)
+            {
+                return 0;
+            }
+            if(tracee_getlong(process->mode, process->tid,
+                              (void*)(args + 2*wordsize), &arg2) != 0)
+            {
+                return 0;
+            }
+            return handle_connect(process, arg1, arg2);
+        }
     }
     return 0;
 }
@@ -1020,7 +1139,11 @@ static int syscall_xxx_at(const char *name, struct Process *process,
     }
     else if(!process->in_syscall)
     {
-        char *pathname = tracee_strdup(process->tid, process->params[1].p);
+        char *pathname;
+        if(tracee_strdup(process->tid, process->params[1].p, &pathname) != 0)
+        {
+            pathname = a_sprintf("%p", process->params[1].p);
+        }
         log_info(process->tid,
                  "process used unhandled system call %s(%d, \"%s\")",
                  name, process->params[0].i, pathname);
