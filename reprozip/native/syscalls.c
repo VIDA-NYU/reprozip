@@ -56,16 +56,18 @@ struct syscall_table {
 struct syscall_table *syscall_tables = NULL;
 
 
-static char *abs_path_arg(const struct Process *process, size_t arg)
+static int abs_path_arg(const struct Process *process, size_t arg, char **out)
 {
-    char *pathname = tracee_strdup(process->tid, process->params[arg].p);
-    if(pathname[0] != '/')
+    if(tracee_strdup(process->tid, process->params[arg].p, out) != 0) {
+        return -1;
+    }
+    if((*out)[0] != '/')
     {
-        char *oldpath = pathname;
-        pathname = abspath(process->threadgroup->wd, oldpath);
+        char *oldpath = *out;
+        *out = abspath(process->threadgroup->wd, oldpath);
         free(oldpath);
     }
-    return pathname;
+    return 0;
 }
 
 
