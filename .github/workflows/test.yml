@@ -123,3 +123,46 @@ jobs:
         (cd reprozip/native && lcov --directory ../../$OBJDIR -c -o reprozip.lcov)
 
         curl -s -o - https://codecov.io/bash | bash -s - -X gcov
+
+  test-container:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python:
+        - "2.7"
+    runs-on: ${{ matrix.os }}
+    container:
+      image: python:${{ matrix.python }}
+      options: "--privileged"
+    env:
+      TEST_MODE: tests
+      REPROZIP_USAGE_STATS: "off"
+      REPROZIP_PARAMETERS: https://stats.reprozip.org/parameters/travis/
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 20
+    - name: Install Docker client
+      run: |
+        curl -Lo /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-23.0.6.tgz
+        tar -xf /tmp/docker.tgz -C /usr/local/bin --strip-components=1
+        rm /tmp/docker.tgz
+    - name: Install dependencies
+      run: |
+        if [ -z "${XDG_CACHE_HOME-}" ]; then
+            mkdir -p ~/.cache/reprozip
+        else
+            mkdir -p "$XDG_CACHE_HOME/reprozip"
+        fi
+
+        apt-get update -qq
+        apt-get install -qq libc6-dev-i386 gcc-multilib libsqlite3-dev
+        pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt ./reprozip-jupyter
+    - name: Test
+      run: |
+        export LANG=C
+        export LC_ALL=C
+        export REPROZIP_TEST_PYTHON="$(which python) -Wd"
+        export PYTHONUNBUFFERED=1
+        python -Wd tests --run-docker
