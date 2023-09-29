@@ -333,8 +333,12 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
         check_call(sudo + rpuz + ['chroot', 'destroy', 'simplechroot_vt'])
 
     if not (tests / 'vagrant').exists():
-        check_call(['sudo', 'sh', '-c',
-                    'mkdir %(d)s; chmod 777 %(d)s' % {'d': tests / 'vagrant'}])
+        check_call(
+            sudo + [
+                'sh', '-c',
+                'mkdir %(d)s; chmod 777 %(d)s' % {'d': tests / 'vagrant'},
+            ]
+        )
 
     # Unpack Vagrant-chroot
     check_call(rpuz + ['vagrant', 'setup/create', '--memory', '512',
