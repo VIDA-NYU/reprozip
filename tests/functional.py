@@ -179,7 +179,10 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     check_call(rpuz + ['graph', 'graph.dot'])
     check_call(rpuz + ['graph', 'graph2.dot', 'experiment.rpz'])
 
-    sudo = ['sudo', '-E']  # -E to keep REPROZIP_USAGE_STATS
+    if os.getuid() == 0:
+        sudo = []
+    else:
+        sudo = ['sudo', '-E']  # -E to keep REPROZIP_USAGE_STATS
 
     # ########################################
     # 'simple' program: trace, pack, info, unpack
