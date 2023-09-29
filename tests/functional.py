@@ -757,33 +757,44 @@ def functional_tests(raise_warnings, interactive, run_vagrant, run_docker):
     # Test set-uid warning
     #
 
-    # Find a set-uid program
-    executable = '/bin/su'
-    if not os.path.exists(executable) and os.path.exists('/usr/bin/su'):
-        executable = '/usr/bin/su'
-    assert os.stat(executable).st_mode & 0o4000 == 0o4000
-    # Trace
-    # Pass a wrong username to su to make it exit without reading a password
-    _, err = call_output(rpz + ['testrun', executable,
-                                '94627ebfafbf81cd77a17d4ed646a80c94bf4202'],
-                         'err')
-    err = err.split(b'\n')
-    assert any(b'executing set-uid binary!' in line for line in err)
+    if os.getuid() != 0:
+        # Find a set-uid program
+        executable = '/bin/su'
+        if not os.path.exists(executable) and os.path.exists('/usr/bin/su'):
+            executable = '/usr/bin/su'
+        assert os.stat(executable).st_mode & 0o4000 == 0o4000
+        # Trace
+        # Pass a wrong username to su to make it exit without reading a
+        # password
+        _, err = call_output(
+            rpz + [
+                'testrun', executable,
+                '94627ebfafbf81cd77a17d4ed646a80c94bf4202',
+            ],
+            'err',
+        )
+        err = err.split(b'\n')
+        assert any(b'executing set-uid binary!' in line for line in err)
 
     # ########################################
     # Test set-gid warning
     #
 
-    # Find a set-gid program
-    executable = '/usr/bin/crontab'
-    if not os.path.exists(executable) and os.path.exists('/bin/crontab'):
-        executable = '/bin/crontab'
-    assert os.stat(executable).st_mode & 0o2000 == 0o2000
-    # Trace
-    # Pass a wrong username to su to make it exit without reading a password
-    _, err = call_output(rpz + ['testrun', executable, '-l'], 'err')
-    err = err.split(b'\n')
-    assert any(b'executing set-gid binary!' in line for line in err)
+    if os.getuid() != 0:
+        # Find a set-gid program
+        executable = '/usr/bin/crontab'
+        if not os.path.exists(executable) and os.path.exists('/bin/crontab'):
+            executable = '/bin/crontab'
+        assert os.stat(executable).st_mode & 0o2000 == 0o2000
+        # Trace
+        # Pass a wrong username to su to make it exit without reading a
+        # password
+        _, err = call_output(
+            rpz + ['testrun', executable, '-l'],
+            'err',
+        )
+        err = err.split(b'\n')
+        assert any(b'executing set-gid binary!' in line for line in err)
 
     # ########################################
     # Test old packages
