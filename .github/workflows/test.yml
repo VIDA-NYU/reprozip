@@ -158,7 +158,10 @@ jobs:
 
         apt-get update -qq
         apt-get install -qq libc6-dev-i386 gcc-multilib libsqlite3-dev
-        pip install ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt ./reprozip-jupyter
+        cat > pip.constraints.txt <<'EOF'
+        pyelftools<0.30
+        EOF
+        pip install -c pip.constraints.txt ./reprozip ./reprounzip ./reprounzip-docker ./reprounzip-vagrant ./reprounzip-vistrails ./reprounzip-qt ./reprozip-jupyter
     - name: Test
       run: |
         export LANG=C
