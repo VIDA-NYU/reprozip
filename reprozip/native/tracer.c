@@ -617,13 +617,14 @@ static void sigint_handler(int signo)
     (void)signo;
     if(now - last_int < 2)
     {
-        log_error(0, "cleaning up on SIGINT");
+        log_error(0, "Got 2 SIGINT, aborting ReproZip");
         cleanup();
         restore_signals();
         exit(128 + 2);
     }
     else
-        log_error(0, "Got SIGINT, press twice to abort...");
+        log_error(0, "Got SIGINT...");
+        log_error(0, "If you want to abort ReproZip, press Ctrl-C twice (no trace will be generated)");
     last_int = now;
 }
 
