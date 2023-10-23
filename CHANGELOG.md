@@ -8,6 +8,8 @@ Enhancements:
 * Store used UNIX sockets in the trace
 * Display a warning if the process connect to the systemd socket (https://docs.reprozip.org/s/systemd.html)
 * Print trace warnings in red (files read then written, systemd socket)
+* Improve message on interrupt, making clearer what happens if pressing twice
+* Change "(d)elete" option to "(o)verwrite" in prompt when a trace exists
 
 1.2.1 (2023-02-06)
 ------------------
