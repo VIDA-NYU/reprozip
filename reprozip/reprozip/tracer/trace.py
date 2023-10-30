@@ -273,8 +273,7 @@ def get_files(conn):
                 "A connection to systemd was detected. If systemd was asked "
                 "to start a process, it won't be captured by reprozip, "
                 "because it is an independent server. Please see "
-                "https://docs.reprozip.org/s/systemd.html for more "
-                "information")
+                "https://docs.reprozip.org/s/systemd for more information")
 
     files = set(
         fi
