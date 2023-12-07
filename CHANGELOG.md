@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.x (???)
----------
+1.3 (2023-12-07)
+----------------
+
+(reprozip and reprounzip only)
 
 Enhancements:
 * Store used UNIX sockets in the trace

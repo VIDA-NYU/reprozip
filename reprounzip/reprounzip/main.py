@@ -32,7 +32,7 @@ from reprounzip.unpackers.common import UsageError
 from reprounzip.utils import stderr
 
 
-__version__ = '1.2.1'
+__version__ = '1.3'
 
 
 logger = logging.getLogger('reprounzip')
