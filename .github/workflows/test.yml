@@ -69,6 +69,7 @@ jobs:
         python:
         - "3.7"
         - "3.11"
+        - "3.12"
         include:
         - os: ubuntu-latest
           mode: coverage
