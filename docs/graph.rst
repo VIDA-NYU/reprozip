@@ -3,8 +3,6 @@
 Visualizing the Provenance Graph
 ********************************
 
-..  note:: If you are using a Python version older than 2.7.3, this feature will not be available due to `Python bug 57885 <https://github.com/python/cpython/issues/57885>`__ related to sqlite3.
-
 To generate a *provenance graph* related to the experiment execution, the ``reprounzip graph`` command should be used::
 
     $ reprounzip graph graphfile.dot mypackfile.rpz

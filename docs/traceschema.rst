@@ -55,7 +55,7 @@ The *mode* attribute is a binary OR of the following values (accessible from ``r
 ``executed_files``
 ''''''''''''''''''
 
-This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <https://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however, *workingdir*, *argv* (command-line arguments) and *envp* (environment variables) are added. *argv* is a list of arguments separated by null bytes (``0x00``) [#nullbytes]_, and *envp* is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes [#nullbytes]_. Note that, again, failed executions (execve returns) are not logged.
+This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <https://linux.die.net/man/2/execve>`__ calls. There is no mode here (file is opened for reading by the call) and they are never directories; however, *workingdir*, *argv* (command-line arguments) and *envp* (environment variables) are added. *argv* is a list of arguments separated by null bytes (``0x00``), and *envp* is a list of ``VAR=value`` pairs separated by null (``0x00``) bytes. Note that, again, failed executions (execve returns) are not logged.
 
 ::
 
@@ -69,5 +69,3 @@ This is a variant of ``opened_files`` for file executions, i.e. `execve(2) <http
         envp TEXT NOT NULL,
         workingdir TEXT NOT NULL
         );
-
-..  [#nullbytes] Note that Python's sqlite3 lib is affected by `bug 13676 <https://bugs.python.org/issue13676>`__ up to Python 2.7.3, which prevents it from reading text or blob fields with embedded null bytes.
