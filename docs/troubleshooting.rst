@@ -20,10 +20,16 @@ Please feel free to contact us at reprozip@nyu.edu if you encounter issues while
 ..  _systemd:
 
 :Issue: **"None of my files are packed when tracing a daemon."**
-:Diagnosis: If you are starting the daemon via the `service` tool, it might be calling `init` over a client/server connection. In this situation, ReproZip will successfully pack the client, but anything the server (`init`) does will not be captured.
-:Solution: You can still trace the binary or a non-systemd `init` script directly. For example, instead of::
+:Diagnosis: If you are starting the daemon via the `service` or `systemctl` tool, it might be calling `init` over a client/server connection. For example, this is the case if you are using SystemD. In this situation, ReproZip will successfully pack the client, but anything the server (`init`) does will not be captured, leaving out this entire daemon.
+:Solution: You can still trace the binary or a non-systemd `init` script directly.
+
+           For example, instead of::
 
                $ reprozip trace service mysql start
+
+           or::
+
+               $ reprozip trace systemctl start mysql
 
            you can trace the binary::
 

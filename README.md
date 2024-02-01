@@ -3,7 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/reprozip/badge/?version=master)](https://docs.reprozip.org/en/master/)
 [![Matrix](https://img.shields.io/badge/chat-matrix.org-blue.svg)](https://riot.im/app/#/room/#reprozip:matrix.org)
 [![paper](https://img.shields.io/badge/JOSS-10.21105%2Fjoss.00107-green.svg)](http://joss.theoj.org/papers/b578b171263c73f64dfb9d040ca80fe0)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7696658-green.svg)](https://doi.org/10.5281/zenodo.7696658)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.10291844-green.svg)](https://doi.org/10.5281/zenodo.10291844)
 
 ReproZip
 ========

@@ -2,15 +2,6 @@
 # This file is part of ReproZip which is released under the Revised BSD License
 # See file LICENSE for full license details.
 
-"""Entry point for the reprounzip utility.
-
-This contains :func:`~reprounzip.reprounzip.main`, which is the entry point
-declared to setuptools. It is also callable directly.
-
-It dispatchs to plugins registered through pkg_resources as entry point
-``reprounzip.unpackers``.
-"""
-
 import argparse
 import distro
 import json

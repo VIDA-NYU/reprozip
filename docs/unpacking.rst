@@ -222,7 +222,7 @@ Using an Unpacker
 
 Once you have chosen (and installed) an unpacker for your machine, you can use it to setup and run a packed experiment. An unpacker creates an **experiment directory** in which the working files are placed; these can be either the full filesystem (for *directory* or *chroot* unpackers) or other content (e.g.: a handle on a virtual machine for the *vagrant* unpacker); for the *chroot* unpacker, it might have mount points. To make sure that you free all resources and that you do not damage your environment, you should **always use the destroy command** to delete the experiment directory, not just merely delete it manually. See more information about this command below.
 
-All the following commands need to state which unpacker is being used (i.e., ``reprounzip directory`` for the `directory` unpacker, ``reprounzip chroot`` for the `chroot` unpacker, ``reprounzip vagrant`` for the `vagrant` unpacker, and ``reprounzip docker`` for the `docker` unpacker). For the purpose of this documentation, we will use the `vagrant` unpacker; to use a different one, just replace ``vagrant`` in the following with the unpacker of your interest.
+All the following commands need to state which unpacker is being used (i.e., ``reprounzip directory`` for the `directory` unpacker, ``reprounzip chroot`` for the `chroot` unpacker, ``reprounzip vagrant`` for the `vagrant` unpacker, and ``reprounzip docker`` for the `docker` unpacker). For the purpose of this documentation, we will use the `docker` unpacker; to use a different one, just replace ``docker`` in the following with the unpacker of your interest.
 
 ..  seealso:: :ref:`unpacked-format` provides further detailed information on unpackers.
 
@@ -233,7 +233,7 @@ Setting Up an Experiment Directory
 
 To create the directory where the execution will take place, the ``setup`` command should be used::
 
-    $ reprounzip vagrant setup <bundle> <path>
+    $ reprounzip docker setup <bundle> <path>
 
 where `<path>` is the directory where the experiment will be unpacked, i.e., the experiment directory.
 
@@ -246,34 +246,40 @@ Reproducing the Experiment
 
 After creating the directory, the experiment can be reproduced by issuing the ``run`` command::
 
-    $ reprounzip vagrant run <path>
+    $ reprounzip docker run <path>
 
 which will execute the experiment inside the experiment directory. Users may also change the command line of the experiment by using ``--cmdline``::
 
-    $ reprounzip vagrant run <path> --cmdline <new-command-line>
+    $ reprounzip docker run <path> --cmdline <new-command-line>
 
 where `<new-command-line>` is the modified command line. This is particularly useful to reproduce and test the experiment under different input parameter values. Using ``--cmdline`` without an argument only prints the original command line.
 
 If the bundle contains multiple `runs` (separate commands that were packed together), all the runs are reproduced. You can also provide the id of the run or runs to be used::
 
-    $ reprounzip vagrant run <path> <run-id>
-    $ reprounzip vagrant run <path> <run-id> --cmdline <new-command-line>
+    $ reprounzip docker run <path> <run-id>
+    $ reprounzip docker run <path> <run-id> --cmdline <new-command-line>
 
 For example::
 
-    $ reprounzip vagrant run unpacked-experiment 0-1,3  # First, second, and fourth runs
-    $ reprounzip vagrant run unpacked-experiment 2-  # Third run and up
-    $ reprounzip vagrant run unpacked-experiment compile,test  # Runs named 'compile' and 'test', in this order
+    $ reprounzip docker run unpacked-experiment 0-1,3  # First, second, and fourth runs
+    $ reprounzip docker run unpacked-experiment 2-  # Third run and up
+    $ reprounzip docker run unpacked-experiment compile,test  # Runs named 'compile' and 'test', in this order
 
 If the experiment involves running a GUI tool, the graphical interface can be enable by using ``--enable-x11``::
 
-    $ reprounzip vagrant run <path> --enable-x11
+    $ reprounzip docker run <path> --enable-x11
 
 which will forward the X connection from the experiment to the X server running on your machine. In this case, make sure you have a running X server.
 
+If the experiment is a server, for example a website, a database management system, etc, you can expose ports from the experiment on your local machines. This is not required for the `directory` and `chroot` unpackers, since they offer no isolation of the network; for the `docker` and `vagrant` unpackers, use the ``--expose-port`` option::
+
+    $ reprounzip docker run --expose-port 8000:80 unpacked-experiment  # Expose TCP port 80 (HTTP) of the experiment at http://localhost:8000/
+    $ reprounzip docker run --expose-port 3000 unpacked-experiment  # Expose TCP port 3000 of the experiment at localhost:3000
+    $ reprounzip docker run --expose-port 5553:53/udp unpacked-experiment  # Expose UDP port 53 of the experiment at localhost:5553
+
 Note that in some situations, you might want to pass specific environment variables to the experiment, for example to set execution limits or parameters (such as OpenMPI information). To that effect, you can use the ``--pass-env VARNAME`` option to pass variables from the current machine, overriding the value from the original packing machine (`VARNAME` can be a regex). You can also set a variable to any value using ``--set-env VARNAME=value``. For example::
 
-    $ reprounzip vagrant run unpacked-experiment --pass-env 'OMPI_.*' --pass-env LANG --set-env DATA_SERVER_ADDRESS=localhost
+    $ reprounzip docker run unpacked-experiment --pass-env 'OMPI_.*' --pass-env LANG --set-env DATA_SERVER_ADDRESS=localhost
 
 ..  versionadded:: 1.0.3
     The ``--pass-env`` and ``-set-env`` options.
@@ -283,7 +289,7 @@ Removing the Experiment Directory
 
 The ``destroy`` command will unmount mounted paths, destroy virtual machines, free container images, and delete the experiment directory::
 
-    $ reprounzip vagrant destroy <path>
+    $ reprounzip docker destroy <path>
 
 Make sure you always use this command instead of simply deleting the directory manually.
 
@@ -308,11 +314,11 @@ First, you can list these files using the ``showfiles`` command::
 
 To replace an input file with your own, `reprounzip`, you can use the ``upload`` command::
 
-    $ reprounzip vagrant upload <path> <input-path>:<input-id>
+    $ reprounzip docker upload <path> <input-path>:<input-id>
 
 where `<input-path>` is the new file's path and `<input-id>` is the input file to be replaced (from ``showfiles``). This command overwrites the original path in the environment with the file you provided from your system. To restore the original input file, the same command, but in the following format, should be used::
 
-    $ reprounzip vagrant upload <path> :<input-id>
+    $ reprounzip docker upload <path> :<input-id>
 
 Running the ``showfiles`` command shows what the input files are currently set to::
 
@@ -327,15 +333,15 @@ In this example, the input `program_config` has not been changed (the one bundle
 
 After running the experiment, all the generated output files will be located under the experiment directory. To copy an output file from this directory to another desired location, use the ``download`` command::
 
-    $ reprounzip vagrant download <path> <output-id>:<output-path>
+    $ reprounzip docker download <path> <output-id>:<output-path>
 
 where `<output-id>` is the output file to be copied (from ``showfiles``) and `<output-path>` is the desired destination of the file. If an empty destination is specified, the file will be printed to stdout::
 
-    $ reprounzip vagrant download <path> <output-id>:
+    $ reprounzip docker download <path> <output-id>:
 
 You can also omit the colon ``:`` altogether to download the file to the current directory under its original name::
 
-    $ reprounzip vagrant download <path> <output-id>
+    $ reprounzip docker download <path> <output-id>
 
 or even use ``--all`` to download every output file to the current directory under their original names.
 

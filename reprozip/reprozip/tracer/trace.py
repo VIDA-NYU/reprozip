@@ -263,8 +263,7 @@ def get_files(conn):
                 "A connection to systemd was detected. If systemd was asked "
                 "to start a process, it won't be captured by reprozip, "
                 "because it is an independent server. Please see "
-                "https://docs.reprozip.org/s/systemd.html for more "
-                "information")
+                "https://docs.reprozip.org/s/systemd for more information")
 
     files = set(
         fi.to_file()
@@ -352,9 +351,10 @@ def trace(binary, argv, directory, append, verbosity='unset'):
         if append is None:
             r = tty_prompt(
                 "Trace directory %s exists\n"
-                "(a)ppend run to the trace, (d)elete it or (s)top? [a/d/s] " %
+                "(a)ppend run to the trace, (o)verwrite it, "
+                "or (s)top? [a/o/s] " %
                 directory,
-                'aAdDsS')
+                'aAdDoOsS')
             if r is None:
                 logger.critical(
                     "Trace directory %s exists\n"
@@ -363,7 +363,7 @@ def trace(binary, argv, directory, append, verbosity='unset'):
                 sys.exit(125)
             elif r in 'sS':
                 sys.exit(125)
-            elif r in 'dD':
+            elif r in 'oOdD':  # keep accepting 'd' for delete
                 shutil.rmtree(directory)
                 directory.mkdir()
             logger.warning(
