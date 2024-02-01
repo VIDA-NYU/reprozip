@@ -14,10 +14,10 @@ from __future__ import division, print_function, unicode_literals
 import contextlib
 import distro
 from collections import defaultdict
+from importlib_metadata import entry_points
 from itertools import count
 import logging
 import os
-from pkg_resources import iter_entry_points
 import platform
 from rpaths import Path
 import sqlite3
@@ -113,7 +113,7 @@ class TracedFile(File):
 
 
 def run_filter_plugins(files, input_files):
-    for entry_point in iter_entry_points('reprozip.filters'):
+    for entry_point in entry_points().select(group='reprozip.filters'):
         func = entry_point.load()
         name = entry_point.name
 
