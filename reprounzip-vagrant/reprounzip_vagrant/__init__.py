@@ -12,9 +12,9 @@ See http://www.vagrantup.com/
 """
 
 import argparse
-from distutils.version import LooseVersion
 import logging
 import os
+import packaging.version
 import paramiko
 from pathlib import Path, PurePosixPath
 import re
@@ -802,7 +802,7 @@ def check_vagrant_version():
         sys.exit(1)
     out = out.decode('ascii').strip().lower().split()
     if out[0] == 'vagrant':
-        if LooseVersion(out[1]) < LooseVersion('1.1'):
+        if packaging.version.parse(out[1]) < packaging.version.parse('1.1'):
             logger.error("Vagrant >=1.1 is required; detected version: %s",
                          out[1])
             sys.exit(1)
@@ -824,7 +824,7 @@ def test_has_vagrant(pack, **kwargs):
                            "work properly")
     out = out.decode('ascii').strip().lower().split()
     if out[0] == 'vagrant':
-        if LooseVersion(out[1]) >= LooseVersion('1.1'):
+        if packaging.version.parse(out[1]) >= packaging.version.parse('1.1'):
             return COMPAT_OK
         else:
             return COMPAT_NO, ("Vagrant >=1.1 is required; detected version: "

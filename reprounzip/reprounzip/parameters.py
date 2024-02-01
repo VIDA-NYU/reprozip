@@ -13,10 +13,10 @@ downloaded from the web (busybox), and the name of Vagrant boxes and Docker
 images for various operating systems.
 """
 
-from distutils.version import LooseVersion
 import json
 import logging
 import os
+import packaging.version
 
 from reprozip_core.common import get_reprozip_ca_certificate
 from reprozip_core.utils import download_file
@@ -68,8 +68,12 @@ def update_parameters():
             except OSError:
                 pass
         else:
-            ver = LooseVersion(parameters.get('version', '1.0'))
-            if LooseVersion('1.1') <= ver < LooseVersion('3.0'):
+            ver = parameters.get('version', '1.0')
+            if (
+                packaging.version.parse('1.1')
+                <= packaging.version.parse(ver)
+                < packaging.version.parse('3.0')
+            ):
                 return
             else:
                 logger.info("parameters.json has incompatible version %s, "

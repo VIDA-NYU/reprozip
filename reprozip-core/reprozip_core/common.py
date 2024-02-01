@@ -48,13 +48,13 @@ import atexit
 import contextlib
 import copy
 from datetime import datetime
-from distutils.version import LooseVersion
 import functools
 import gzip
 import json
 import logging
 import logging.handlers
 import os
+import packaging.version
 from pathlib import Path, PurePosixPath
 import pkg_resources
 import shutil
@@ -612,13 +612,17 @@ def load_config(filename, canonical):
     # Turn bytes values into Python 3 str values
     _bytes_to_surrogates(config)
 
-    ver = LooseVersion(config['version'])
+    ver = config['version']
 
     keys_ = set(config)
     if 'version' not in keys_:
         raise InvalidConfig("Missing version")
     # Accepts versions from 0.2 to 1.1 inclusive
-    elif not LooseVersion('0.2') <= ver < LooseVersion('1.2'):
+    elif not (
+        packaging.version.parse('0.2')
+        <= packaging.version.parse(ver)
+        < packaging.version.parse('1.2')
+    ):
         pkgname = (__package__ or __name__).split('.', 1)[0]
         raise InvalidConfig("Loading configuration file in unknown format %s; "
                             "this probably means that you should upgrade "

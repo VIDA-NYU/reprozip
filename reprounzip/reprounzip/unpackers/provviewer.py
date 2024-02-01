@@ -12,7 +12,7 @@ See schema: https://git.io/provviewer-xsd
 
 import argparse
 import logging
-from distutils.version import LooseVersion
+import packaging.version
 from pathlib import Path
 import sqlite3
 import sys
@@ -44,7 +44,10 @@ def generate(target, configfile, database):
 
     config = load_config(configfile, canonical=False)
 
-    has_thread_flag = config.format_version >= LooseVersion('0.7')
+    has_thread_flag = (
+        packaging.version.parse(config.format_version)
+        >= packaging.version.parse('0.7')
+    )
 
     assert database.is_file()
     conn = sqlite3.connect(str(database))  # connect() only accepts str

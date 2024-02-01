@@ -19,6 +19,7 @@ setup(
     },
     install_requires=[
         'reprounzip>=2.0.0,<3.0.0',
+        'packaging',
         'paramiko',
     ],
     description="Allows the ReproZip unpacker to create virtual machines",

@@ -15,10 +15,10 @@ See http://www.graphviz.org/
 """
 
 import argparse
-from distutils.version import LooseVersion
 import heapq
 import json
 import logging
+import packaging.version
 from pathlib import Path, PurePosixPath
 import re
 import sqlite3
@@ -479,8 +479,14 @@ def generate(target, configfile, database, all_forks=False, graph_format='dot',
     inputs_outputs = config.inputs_outputs
     inputs_outputs_map = dict((f.path, n)
                               for n, f in config.inputs_outputs.items())
-    has_thread_flag = config.format_version >= LooseVersion('0.7')
-    has_exit_timestamp = config.format_version >= LooseVersion('1.1')
+    has_thread_flag = (
+        packaging.version.parse(config.format_version)
+        >= packaging.version.parse('0.7')
+    )
+    has_exit_timestamp = (
+        packaging.version.parse(config.format_version)
+        >= packaging.version.parse('1.1')
+    )
 
     runs, files, edges = read_events(database, all_forks,
                                      has_thread_flag,
