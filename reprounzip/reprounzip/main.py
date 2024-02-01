@@ -7,14 +7,14 @@
 This contains :func:`~reprounzip.reprounzip.main`, which is the entry point
 declared to setuptools. It is also callable directly.
 
-It dispatchs to plugins registered through pkg_resources as entry point
+It dispatchs to plugins registered through importlib.metadata as entry point
 ``reprounzip.unpackers``.
 """
 
 import argparse
+from importlib_metadata import entry_points
 import locale
 import logging
-from pkg_resources import iter_entry_points
 import sys
 import traceback
 
@@ -35,7 +35,7 @@ unpackers = {}
 
 
 def get_plugins(entry_point_name):
-    for entry_point in iter_entry_points(entry_point_name):
+    for entry_point in entry_points().select(group=entry_point_name):
         try:
             func = entry_point.load()
         except Exception:

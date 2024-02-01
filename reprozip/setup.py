@@ -39,6 +39,7 @@ pytracer = Extension(
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
+    'importlib-metadata',
     'PyYAML',
     'usagestats>=1.0.1',
     'requests',

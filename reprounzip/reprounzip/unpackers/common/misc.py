@@ -8,11 +8,11 @@
 import copy
 import functools
 import logging
+import importlib_resources
 import itertools
 import os
 from pathlib import Path, PurePosixPath
 import pickle
-import pkg_resources
 import random
 import re
 import shutil
@@ -131,10 +131,9 @@ def busybox_url(arch):
 def rpzsudo_binary(arch):
     """Gets the rpzsudo file given the architecture.
     """
-    return pkg_resources.resource_stream(
-        __name__.split('.', 1)[0],
-        'rpzsudo-%s' % arch,
-    )
+    files = importlib_resources.files(__name__.split('.', 1)[0])
+    ref = files.joinpath('rpzsudo-%s' % arch)
+    return ref.open('rb')
 
 
 def rpztar_url(arch):

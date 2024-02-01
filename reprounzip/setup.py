@@ -9,6 +9,8 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with io.open('README.rst', encoding='utf-8') as fp:
     description = fp.read()
 req = [
+    'importlib-metadata',
+    'importlib-resources',
     'packaging',
     'PyYAML',
     'usagestats>=1.0.1',

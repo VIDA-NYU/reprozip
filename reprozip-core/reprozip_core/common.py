@@ -50,13 +50,13 @@ import copy
 from datetime import datetime
 import functools
 import gzip
+import importlib_resources
 import json
 import logging
 import logging.handlers
 import os
 import packaging.version
 from pathlib import Path, PurePosixPath
-import pkg_resources
 import shutil
 import sys
 import tarfile
@@ -1001,7 +1001,5 @@ def submit_usage_report(**kwargs):
 def get_reprozip_ca_certificate():
     """Gets the ReproZip CA certificate filename.
     """
-    return Path(pkg_resources.resource_filename(
-        __name__.split('.', 1)[0],
-        'reprozip-ca.crt',
-    ))
+    files = importlib_resources.files(__name__.split('.', 1)[0])
+    return files.joinpath('reprozip-ca.crt')
