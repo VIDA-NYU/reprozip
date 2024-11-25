@@ -861,7 +861,7 @@ static int handle_socket(struct Process *process, const char *msg,
     {
         struct sockaddr_un *address_ = address;
         char buf[109];
-        strncpy(buf, &address_->sun_path, 108);
+        strncpy(buf, address_->sun_path, 108);
         buf[108] = 0;
         log_info(process->tid, "%s unix:%s", msg, buf);
 
