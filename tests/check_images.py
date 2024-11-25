@@ -20,7 +20,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _vagrant_req(method, url, json):
+def _vagrant_req(method, url, *, json=False, stream=False):
     headers = {'User-Agent': 'reprozip testsuite'}
     if json:
         headers['Accept'] = 'application/json'
@@ -30,6 +30,7 @@ def _vagrant_req(method, url, json):
             url,
             headers=headers,
             allow_redirects=True,
+            stream=stream,
         )
         if res.status_code == 429:
             logger.info("(got 429, sleeping)")
@@ -57,7 +58,7 @@ def check_vagrant():
         metadata = _vagrant_req(
             'GET',
             url,
-            True,
+            json=True,
         )
         if metadata.status_code != 200:
             logger.error(
@@ -83,9 +84,9 @@ def check_vagrant():
         for provider in max_version['providers']:
             url = provider['url']
             res = _vagrant_req(
-                'HEAD',
+                'GET',  # HEAD no longer works
                 url,
-                False,
+                stream=True,
             )
             # Status should be 200
             if res.status_code != 200:
@@ -110,6 +111,7 @@ def check_vagrant():
                 error = True
             else:
                 logger.info("Vagrant box ok: %s (%s)", box, provider['name'])
+            res.close()
 
     if error:
         raise AssertionError("Missing Vagrant boxes")
