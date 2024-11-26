@@ -20,7 +20,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _vagrant_req(method, url, *, json=False, stream=False):
+def _vagrant_req(method, url, json=False):
     headers = {'User-Agent': 'reprozip testsuite'}
     if json:
         headers['Accept'] = 'application/json'
@@ -30,7 +30,6 @@ def _vagrant_req(method, url, *, json=False, stream=False):
             url,
             headers=headers,
             allow_redirects=True,
-            stream=stream,
         )
         if res.status_code == 429:
             logger.info("(got 429, sleeping)")
@@ -84,12 +83,20 @@ def check_vagrant():
         for provider in max_version['providers']:
             url = provider['url']
             res = _vagrant_req(
-                'GET',  # HEAD no longer works
+                'HEAD',
                 url,
-                stream=True,
             )
+            # Special case: Vagrant disallow HEAD, but let's assume the box is
+            # up if we got redirected to it
+            if (
+                res.status_code == 501
+                and res.history
+                and res.url.startswith('https://app.vagrantup.com/')
+                and res.url.endswith('.box')
+            ):
+                pass
             # Status should be 200
-            if res.status_code != 200:
+            elif res.status_code != 200:
                 logger.error(
                     "Got %d getting Vagrant box %s: %s",
                     res.status_code, box, url,
