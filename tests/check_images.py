@@ -20,7 +20,7 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _vagrant_req(method, url, json):
+def _vagrant_req(method, url, json=False):
     headers = {'User-Agent': 'reprozip testsuite'}
     if json:
         headers['Accept'] = 'application/json'
@@ -52,12 +52,14 @@ def check_vagrant():
 
     # Check that they exist
     for box in boxes:
+        logger.info("Checking Vagrant box %s...", box)
+
         # Get metadata
         url = 'https://vagrantcloud.com/' + box
         metadata = _vagrant_req(
             'GET',
             url,
-            True,
+            json=True,
         )
         if metadata.status_code != 200:
             logger.error(
@@ -85,10 +87,18 @@ def check_vagrant():
             res = _vagrant_req(
                 'HEAD',
                 url,
-                False,
             )
+            # Special case: Vagrant disallow HEAD, but let's assume the box is
+            # up if we got redirected to it
+            if (
+                res.status_code == 501
+                and res.history
+                and res.url.startswith('https://app.vagrantup.com/')
+                and res.url.endswith('.box')
+            ):
+                pass
             # Status should be 200
-            if res.status_code != 200:
+            elif res.status_code != 200:
                 logger.error(
                     "Got %d getting Vagrant box %s: %s",
                     res.status_code, box, url,
@@ -110,6 +120,7 @@ def check_vagrant():
                 error = True
             else:
                 logger.info("Vagrant box ok: %s (%s)", box, provider['name'])
+            res.close()
 
     if error:
         raise AssertionError("Missing Vagrant boxes")
@@ -177,6 +188,7 @@ def check_docker():
 
     # Check that each repository has the required tags
     for repository, tags in iteritems(repositories):
+        logger.info("Checking Docker repository %s...", '/'.join(repository))
         try:
             actual_tags = list_docker_tags(repository)
         except requests.HTTPError as e:
