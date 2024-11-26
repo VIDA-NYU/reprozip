@@ -52,6 +52,8 @@ def check_vagrant():
 
     # Check that they exist
     for box in boxes:
+        logger.info("Checking Vagrant box %s...", box)
+
         # Get metadata
         url = 'https://vagrantcloud.com/' + box
         metadata = _vagrant_req(
@@ -186,6 +188,7 @@ def check_docker():
 
     # Check that each repository has the required tags
     for repository, tags in iteritems(repositories):
+        logger.info("Checking Docker repository %s...", '/'.join(repository))
         try:
             actual_tags = list_docker_tags(repository)
         except requests.HTTPError as e:
