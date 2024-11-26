@@ -17,9 +17,6 @@ jobs:
         - os: ubuntu-latest
           mode: coverage
           python: "3.8"
-        - os: ubuntu-20.04
-          mode: tests
-          python: "3.5"
         - os: ubuntu-latest
           mode: checks
           python: "3.8"
@@ -128,12 +125,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python:
-        - "2.7"
-    runs-on: ${{ matrix.os }}
+        image:
+          - python:2.7
+        install-python:
+          - false
+        python-cmd:
+          - python
+        include:
+          - image: ubuntu:20.04
+            install-python: true
+            python-cmd: python3
+    runs-on: ubuntu-latest
     container:
-      image: python:${{ matrix.python }}
+      image: ${{ matrix.image }}
       options: "--privileged"
     env:
       TEST_MODE: tests
@@ -145,9 +149,15 @@ jobs:
         fetch-depth: 20
     - name: Install Docker client
       run: |
+        apt-get update
+        apt-get install -yy curl
         curl -Lo /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-23.0.6.tgz
         tar -xf /tmp/docker.tgz -C /usr/local/bin --strip-components=1
         rm /tmp/docker.tgz
+    - name: Install Python
+      if: matrix.install-python == true
+      run: |
+        apt-get install -yy python3 python3-pip
     - name: Install dependencies
       run: |
         if [ -z "${XDG_CACHE_HOME-}" ]; then
@@ -166,6 +176,6 @@ jobs:
       run: |
         export LANG=C
         export LC_ALL=C
-        export REPROZIP_TEST_PYTHON="$(which python) -Wd"
+        export REPROZIP_TEST_PYTHON="$(which ${{ matrix.python-cmd }}) -Wd"
         export PYTHONUNBUFFERED=1
-        python -Wd tests --run-docker
+        ${{ matrix.python-cmd }} -Wd tests --run-docker
