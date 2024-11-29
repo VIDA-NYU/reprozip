@@ -233,6 +233,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
     size_t length = 0;
     size_t previous_path_size = 4096;
     char *previous_path = malloc(previous_path_size);
+    previous_path[0] = 0;
 
     const char *const fmt = "/proc/%d/maps";
     int len = snprintf(&dummy, 1, fmt, tid);
