@@ -231,7 +231,9 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
     char dummy;
     char *line = NULL;
     size_t length = 0;
-    char previous_path[4096] = "";
+    size_t previous_path_size = 4096;
+    char *previous_path = malloc(previous_path_size);
+    previous_path[0] = 0;
 
     const char *const fmt = "/proc/%d/maps";
     int len = snprintf(&dummy, 1, fmt, tid);
@@ -301,7 +303,7 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
         if(inode > 0)
         {
             if(strcmp(pathname, binary) != 0
-             && strncmp(pathname, previous_path, 4096) != 0)
+             && strcmp(pathname, previous_path) != 0)
             {
 #ifdef DEBUG_PROC_PARSER
                 log_info(tid, "    adding to database");
@@ -309,11 +311,22 @@ int trace_add_files_from_proc(unsigned int process, pid_t tid,
                 if(db_add_file_open(process, pathname,
                                     FILE_READ, path_is_dir(pathname)) != 0)
                     return -1;
-                strncpy(previous_path, pathname, 4096);
+                {
+                    size_t needed_size = strlen(pathname) + 1;
+                    if(needed_size > previous_path_size) {
+                        while(needed_size > previous_path_size) {
+                            previous_path_size *= 2;
+                        }
+                        free(previous_path);
+                        previous_path = malloc(previous_path_size);
+                    }
+                }
+                strcpy(previous_path, pathname);
             }
         }
     }
     fclose(fp);
+    free(previous_path);
     return 0;
 }
 
