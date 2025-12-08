@@ -42,7 +42,7 @@ req = [
     'requests',
     'distro']
 setup(name='reprozip',
-      version='1.3',
+      version='1.3.1',
       ext_modules=[pytracer],
       packages=['reprozip', 'reprozip.tracer'],
       entry_points={

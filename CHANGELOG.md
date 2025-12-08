@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.3.1 (2025-12-08)
+------------------
+
+(reprozip only)
+
+Bugfixes:
+* Fix build on GCC 14
+* Remove fixed-size buffer for reaading paths from `/proc`
+
 1.3 (2023-12-07)
 ----------------
 
