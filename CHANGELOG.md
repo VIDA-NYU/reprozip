@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.3.2 (2026-01-18)
+------------------
+
+(reprozip and reprounzip only)
+
+Enhancement:
+* Don't depend on deprecated Python `pkg_resources` package. Might fix installation errors on some systems, mainly done for downstream packagers
+
+
 1.3.1 (2025-12-08)
 ------------------
 
