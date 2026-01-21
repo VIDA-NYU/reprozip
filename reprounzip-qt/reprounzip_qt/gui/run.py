@@ -6,6 +6,7 @@ from __future__ import division, print_function, unicode_literals
 
 from qtpy import QtCore, QtWidgets
 import yaml
+import os
 
 import reprounzip_qt.reprounzip_interface as reprounzip
 from reprounzip_qt.gui.common import ROOT, ResizableStack, handle_error, \
@@ -134,6 +135,47 @@ class VagrantOptions(RunOptions):
             options['args'].append('--expose-port=%s:%s/%s' %
                                    (host, container, proto))
         record_usage(vagrant_run_port_fwd=bool(ports))
+
+        return options
+
+
+class DataJournalismOptions(RunOptions):
+    def __init__(self):
+        super(DataJournalismOptions, self).__init__()
+
+        self.rpz = QtWidgets.QLineEdit("")
+        self.add_row("RPZ package:", self.rpz)
+
+        self.mode = QtWidgets.QButtonGroup()
+        self.record_button = QtWidgets.QRadioButton("record")
+        self.mode.addButton(self.record_button)
+        self.playback_button = QtWidgets.QRadioButton("playback")
+        self.mode.addButton(self.playback_button)
+        row = QtWidgets.QHBoxLayout()
+        row.addWidget(self.record_button)
+        row.addWidget(self.playback_button)
+        row.addStretch(1)
+        self.add_row_layout("Mode:", row)
+
+        self.port = QtWidgets.QLineEdit('')
+        self.add_row("Webapp port:", self.port)
+
+    def set_rpz(self, directory):
+        self.directory = directory
+        self.rpz.setText(directory + ".rpz")
+
+    def options(self):
+        options = super(DataJournalismOptions, self).options()
+        if self.record_button.isChecked():
+            options['args'].append('record')
+        elif self.playback_button.isChecked():
+            options['args'].append('playback')
+        else:
+            return
+        options['args'].append(self.rpz.text())
+        options['args'].append(os.path.abspath(self.directory))
+        options['args'].append('--port={}'.format(self.port.text()))
+        options['args'].append('--skip-setup')
 
         return options
 
@@ -315,6 +357,14 @@ class RunTab(QtWidgets.QWidget):
                                                         enabled=False)
         layout.addWidget(self.run_jupyter_notebook, 7, 1, 1, 2)
 
+        layout.addWidget(QtWidgets.QLabel("Data Journalism"),
+                         8, 0)
+        self.data_journalism = QtWidgets.QCheckBox("Data journalism app",
+                                                   checked=False,
+                                                   enabled=False)
+        layout.addWidget(self.data_journalism, 8, 1, 1, 1)
+        self.data_journalism.stateChanged.connect(self._toggle_data_journalism_options)
+
         group = QtWidgets.QGroupBox(title="Unpacker options")
         group_layout = QtWidgets.QVBoxLayout()
         self.unpacker_options = ResizableStack()
@@ -322,8 +372,8 @@ class RunTab(QtWidgets.QWidget):
         scroll.setWidget(self.unpacker_options)
         group_layout.addWidget(scroll)
         group.setLayout(group_layout)
-        layout.addWidget(group, 8, 0, 1, 3)
-        layout.setRowStretch(8, 1)
+        layout.addWidget(group, 9, 0, 1, 3)
+        layout.setRowStretch(9, 1)
 
         for i, (name, WidgetClass) in enumerate(self.UNPACKERS):
             widget = WidgetClass()
@@ -331,6 +381,8 @@ class RunTab(QtWidgets.QWidget):
 
         self.unpacker_options.addWidget(
             QtWidgets.QLabel("Select a directory to display options..."))
+        self.data_journalism_options = DataJournalismOptions()
+        self.unpacker_options.addWidget(self.data_journalism_options)
         self.unpacker_options.setCurrentIndex(len(self.UNPACKERS))
 
         buttons = QtWidgets.QHBoxLayout()
@@ -342,7 +394,7 @@ class RunTab(QtWidgets.QWidget):
                                                     "experiment")
         self.destroy_widget.clicked.connect(self._destroy)
         buttons.addWidget(self.destroy_widget)
-        layout.addLayout(buttons, 9, 0, 1, 3)
+        layout.addLayout(buttons, 10, 0, 1, 3)
 
         self.setLayout(layout)
 
@@ -389,6 +441,12 @@ class RunTab(QtWidgets.QWidget):
                     reprounzip.is_jupyter(self.directory)):
                 self.run_jupyter_notebook.setEnabled(True)
                 self.run_jupyter_notebook.setChecked(True)
+
+            if (unpacker == 'docker' and
+                    reprounzip.dj_unpacker_installed()):
+                self.data_journalism.setEnabled(True)
+                self.data_journalism_options.set_rpz(self.directory)
+
         else:
             self.run_widget.setEnabled(False)
             self.destroy_widget.setEnabled(False)
@@ -401,6 +459,7 @@ class RunTab(QtWidgets.QWidget):
         options = self.unpacker_options.currentWidget().options()
         if options is None:
             return
+
         runs = sorted(i.row() for i in self.runs_widget.selectedIndexes())
         if not runs:
             error_msg(self, "No run selected", 'warning')
@@ -411,6 +470,7 @@ class RunTab(QtWidgets.QWidget):
             unpacker=self.unpacker,
             root=ROOT.INDEX_TO_OPTION[self.root.currentIndex()],
             jupyter=self.run_jupyter_notebook.isChecked(),
+            data_journalism=self.data_journalism.isChecked(),
             **options))
 
     def _destroy(self):
@@ -449,3 +509,10 @@ class RunTab(QtWidgets.QWidget):
 
     def replaceable(self):
         return not self.unpacker
+
+    def _toggle_data_journalism_options(self, checked):
+        if checked:
+            self._docker_options_index = self.unpacker_options.currentIndex()
+            self.unpacker_options.setCurrentIndex(len(self.unpacker_options) - 1)
+        elif self._docker_options_index:
+            self.unpacker_options.setCurrentIndex(self._docker_options_index)
