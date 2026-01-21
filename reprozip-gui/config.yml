@@ -1,0 +1,1354 @@
+inputs_outputs:
+- name: arg0
+  path: /home/fchirigati/digitRecognition/generateClassifier.py
+  read_by_runs: [0]
+  written_by_runs: []
+- name: arg1
+  path: /home/fchirigati/digitRecognition/performRecognition.py
+  read_by_runs: [1]
+  written_by_runs: []
+- name: photo.jpg
+  path: /home/fchirigati/digitRecognition/photo.jpg
+  read_by_runs: [1]
+  written_by_runs: []
+- name: handwrittenDigits.jpg
+  path: /home/fchirigati/digitRecognition/output.jpg
+  read_by_runs: []
+  written_by_runs: [1]
+- name: mnist-original.mat
+  path: /home/fchirigati/scikit_learn_data/mldata/mnist-original.mat
+  read_by_runs: [0]
+  written_by_runs: []
+- name: digits_cls.pkl
+  path: /home/fchirigati/digitRecognition/digits_cls.pkl
+  read_by_runs: [1]
+  written_by_runs: [0]
+other_files: [/etc/alternatives/libblas.so.3, /etc/alternatives/liblapack.so.3, /etc/ld.so.cache,
+  /etc/localtime, /home/fchirigati/digitRecognition, /home/fchirigati/digitRecognition/generateClassifier.py,
+  /home/fchirigati/digitRecognition/performRecognition.py, /home/fchirigati/digitRecognition/photo.jpg,
+  /home/fchirigati/scikit_learn_data, /home/fchirigati/scikit_learn_data/mldata, /home/fchirigati/scikit_learn_data/mldata/mnist-original.mat,
+  /lib64/ld-linux-x86-64.so.2, /run/shm, /usr/lib/libblas.so.3, /usr/lib/liblapack.so.3,
+  /usr/lib/locale/locale-archive, /usr/lib/pymodules/python2.7, /usr/lib/pymodules/python2.7/.path,
+  /usr/lib/python2.7/Queue.pyc, /usr/lib/python2.7/StringIO.pyc, /usr/lib/python2.7/UserDict.pyc,
+  /usr/lib/python2.7/__future__.pyc, /usr/lib/python2.7/_abcoll.pyc, /usr/lib/python2.7/_sysconfigdata.pyc,
+  /usr/lib/python2.7/_weakrefset.pyc, /usr/lib/python2.7/abc.pyc, /usr/lib/python2.7/atexit.pyc,
+  /usr/lib/python2.7/base64.pyc, /usr/lib/python2.7/bisect.pyc, /usr/lib/python2.7/codecs.pyc,
+  /usr/lib/python2.7/collections.pyc, /usr/lib/python2.7/contextlib.pyc, /usr/lib/python2.7/copy.pyc,
+  /usr/lib/python2.7/copy_reg.pyc, /usr/lib/python2.7/csv.pyc, /usr/lib/python2.7/ctypes/__init__.pyc,
+  /usr/lib/python2.7/ctypes/_endian.pyc, /usr/lib/python2.7/difflib.pyc, /usr/lib/python2.7/dis.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/__config__.pyc, /usr/lib/python2.7/dist-packages/scipy/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/fftpack/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/fftpack/basic.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/fftpack/fftpack_version.pyc, /usr/lib/python2.7/dist-packages/scipy/fftpack/helper.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/fftpack/pseudo_diffs.pyc, /usr/lib/python2.7/dist-packages/scipy/fftpack/realtransforms.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/integrate/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/integrate/_ode.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/integrate/odepack.pyc, /usr/lib/python2.7/dist-packages/scipy/integrate/quadpack.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/integrate/quadrature.pyc, /usr/lib/python2.7/dist-packages/scipy/interpolate/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/interpolate/fitpack.pyc, /usr/lib/python2.7/dist-packages/scipy/interpolate/fitpack2.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/interpolate/interpolate.pyc, /usr/lib/python2.7/dist-packages/scipy/interpolate/ndgriddata.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/interpolate/polyint.pyc, /usr/lib/python2.7/dist-packages/scipy/interpolate/rbf.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/io/_fortran.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/_fortran_format_parser.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/hb.pyc, /usr/lib/python2.7/dist-packages/scipy/io/idl.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/matlab/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/io/matlab/byteordercodes.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio.pyc, /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio4.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio5.pyc, /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio5_params.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/matlab/miobase.pyc, /usr/lib/python2.7/dist-packages/scipy/io/mmio.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/io/netcdf.pyc, /usr/lib/python2.7/dist-packages/scipy/lib/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/lib/_util.pyc, /usr/lib/python2.7/dist-packages/scipy/lib/decorator.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/lib/six.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/_decomp_polar.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/_decomp_qz.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/_expm_frechet.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/_matfuncs_sqrtm.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/_solvers.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/basic.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/blas.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_cholesky.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_lu.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_qr.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_schur.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_svd.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/flinalg.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/lapack.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/linalg_version.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/matfuncs.pyc, /usr/lib/python2.7/dist-packages/scipy/linalg/misc.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/linalg/special_matrices.pyc, /usr/lib/python2.7/dist-packages/scipy/misc/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/misc/common.pyc, /usr/lib/python2.7/dist-packages/scipy/misc/doccer.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/misc/pilutil.pyc, /usr/lib/python2.7/dist-packages/scipy/ndimage/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/ndimage/_ni_support.pyc, /usr/lib/python2.7/dist-packages/scipy/ndimage/filters.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/ndimage/fourier.pyc, /usr/lib/python2.7/dist-packages/scipy/ndimage/interpolation.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/ndimage/io.pyc, /usr/lib/python2.7/dist-packages/scipy/ndimage/measurements.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/ndimage/morphology.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/_basinhopping.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/_minimize.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/_root.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion_dogleg.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion_ncg.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/anneal.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/cobyla.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/lbfgsb.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/linesearch.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/minpack.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/nnls.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/nonlin.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/optimize.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/slsqp.pyc, /usr/lib/python2.7/dist-packages/scipy/optimize/tnc.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/optimize/zeros.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/_arraytools.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/_peak_finding.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/bsplines.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/cont2discrete.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/dltisys.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/filter_design.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/fir_filter_design.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/ltisys.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/signaltools.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/spectral.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/waveforms.pyc, /usr/lib/python2.7/dist-packages/scipy/signal/wavelets.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/signal/windows.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/base.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/bsr.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/compressed.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/construct.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/coo.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/csc.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_components.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_laplacian.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_validation.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/csr.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/data.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/dia.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/dok.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/extract.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/lil.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/_expm_multiply.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/_onenormest.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/linsolve.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/_umfpack.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/umfpack.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack/arpack.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/lobpcg/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/lobpcg/lobpcg.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/interface.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/iterative.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lgmres.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lsmr.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lsqr.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/minres.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/utils.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/matfuncs.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/bsr.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/coo.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csc.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csgraph.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csr.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/dia.pyc, /usr/lib/python2.7/dist-packages/scipy/sparse/sputils.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/spatial/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/spatial/_plotutils.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/spatial/distance.pyc, /usr/lib/python2.7/dist-packages/scipy/spatial/kdtree.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/special/__init__.pyc, /usr/lib/python2.7/dist-packages/scipy/special/basic.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/special/lambertw.pyc, /usr/lib/python2.7/dist-packages/scipy/special/orthogonal.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/special/spfun_stats.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/__init__.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/_binned_statistic.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/_support.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/_tukeylambda_stats.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/contingency.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/distributions.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/kde.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/morestats.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/mstats.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/mstats_basic.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/mstats_extras.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/stats/rv.pyc, /usr/lib/python2.7/dist-packages/scipy/stats/stats.pyc,
+  /usr/lib/python2.7/dist-packages/scipy/version.pyc, /usr/lib/python2.7/distutils/__init__.pyc,
+  /usr/lib/python2.7/distutils/version.pyc, /usr/lib/python2.7/encodings/__init__.pyc,
+  /usr/lib/python2.7/encodings/aliases.pyc, /usr/lib/python2.7/encodings/ascii.pyc,
+  /usr/lib/python2.7/encodings/hex_codec.pyc, /usr/lib/python2.7/encodings/utf_8.pyc,
+  /usr/lib/python2.7/fnmatch.pyc, /usr/lib/python2.7/functools.pyc, /usr/lib/python2.7/genericpath.pyc,
+  /usr/lib/python2.7/gzip.pyc, /usr/lib/python2.7/hashlib.pyc, /usr/lib/python2.7/heapq.pyc,
+  /usr/lib/python2.7/httplib.pyc, /usr/lib/python2.7/inspect.pyc, /usr/lib/python2.7/io.pyc,
+  /usr/lib/python2.7/json/__init__.pyc, /usr/lib/python2.7/json/decoder.pyc, /usr/lib/python2.7/json/encoder.pyc,
+  /usr/lib/python2.7/json/scanner.pyc, /usr/lib/python2.7/keyword.pyc, /usr/lib/python2.7/linecache.pyc,
+  /usr/lib/python2.7/locale.pyc, /usr/lib/python2.7/logging/__init__.pyc, /usr/lib/python2.7/mimetools.pyc,
+  /usr/lib/python2.7/multiprocessing/__init__.pyc, /usr/lib/python2.7/multiprocessing/dummy/__init__.pyc,
+  /usr/lib/python2.7/multiprocessing/dummy/connection.pyc, /usr/lib/python2.7/multiprocessing/forking.pyc,
+  /usr/lib/python2.7/multiprocessing/pool.pyc, /usr/lib/python2.7/multiprocessing/process.pyc,
+  /usr/lib/python2.7/multiprocessing/synchronize.pyc, /usr/lib/python2.7/multiprocessing/util.pyc,
+  /usr/lib/python2.7/new.pyc, /usr/lib/python2.7/numbers.pyc, /usr/lib/python2.7/opcode.pyc,
+  /usr/lib/python2.7/os.pyc, /usr/lib/python2.7/pickle.pyc, /usr/lib/python2.7/pkgutil.pyc,
+  /usr/lib/python2.7/plat-x86_64-linux-gnu/_sysconfigdata_nd.pyc, /usr/lib/python2.7/posixpath.pyc,
+  /usr/lib/python2.7/pprint.pyc, /usr/lib/python2.7/random.pyc, /usr/lib/python2.7/re.pyc,
+  /usr/lib/python2.7/rfc822.pyc, /usr/lib/python2.7/shutil.pyc, /usr/lib/python2.7/site.pyc,
+  /usr/lib/python2.7/sitecustomize.pyc, /usr/lib/python2.7/socket.pyc, /usr/lib/python2.7/sre_compile.pyc,
+  /usr/lib/python2.7/sre_constants.pyc, /usr/lib/python2.7/sre_parse.pyc, /usr/lib/python2.7/ssl.pyc,
+  /usr/lib/python2.7/stat.pyc, /usr/lib/python2.7/string.pyc, /usr/lib/python2.7/struct.pyc,
+  /usr/lib/python2.7/subprocess.pyc, /usr/lib/python2.7/sysconfig.pyc, /usr/lib/python2.7/tarfile.pyc,
+  /usr/lib/python2.7/tempfile.pyc, /usr/lib/python2.7/textwrap.pyc, /usr/lib/python2.7/threading.pyc,
+  /usr/lib/python2.7/token.pyc, /usr/lib/python2.7/tokenize.pyc, /usr/lib/python2.7/traceback.pyc,
+  /usr/lib/python2.7/types.pyc, /usr/lib/python2.7/unittest/__init__.pyc, /usr/lib/python2.7/unittest/case.pyc,
+  /usr/lib/python2.7/unittest/loader.pyc, /usr/lib/python2.7/unittest/main.pyc, /usr/lib/python2.7/unittest/result.pyc,
+  /usr/lib/python2.7/unittest/runner.pyc, /usr/lib/python2.7/unittest/signals.pyc,
+  /usr/lib/python2.7/unittest/suite.pyc, /usr/lib/python2.7/unittest/util.pyc, /usr/lib/python2.7/urllib.pyc,
+  /usr/lib/python2.7/urllib2.pyc, /usr/lib/python2.7/urlparse.pyc, /usr/lib/python2.7/warnings.pyc,
+  /usr/lib/python2.7/weakref.pyc, /usr/lib/python2.7/zipfile.pyc, /usr/local/lib,
+  /usr/local/lib/libopencv_calib3d.so.3.0, /usr/local/lib/libopencv_calib3d.so.3.0.0,
+  /usr/local/lib/libopencv_core.so.3.0, /usr/local/lib/libopencv_core.so.3.0.0, /usr/local/lib/libopencv_features2d.so.3.0,
+  /usr/local/lib/libopencv_features2d.so.3.0.0, /usr/local/lib/libopencv_flann.so.3.0,
+  /usr/local/lib/libopencv_flann.so.3.0.0, /usr/local/lib/libopencv_highgui.so.3.0,
+  /usr/local/lib/libopencv_highgui.so.3.0.0, /usr/local/lib/libopencv_imgcodecs.so.3.0,
+  /usr/local/lib/libopencv_imgcodecs.so.3.0.0, /usr/local/lib/libopencv_imgproc.so.3.0,
+  /usr/local/lib/libopencv_imgproc.so.3.0.0, /usr/local/lib/libopencv_ml.so.3.0, /usr/local/lib/libopencv_ml.so.3.0.0,
+  /usr/local/lib/libopencv_objdetect.so.3.0, /usr/local/lib/libopencv_objdetect.so.3.0.0,
+  /usr/local/lib/libopencv_photo.so.3.0, /usr/local/lib/libopencv_photo.so.3.0.0,
+  /usr/local/lib/libopencv_shape.so.3.0, /usr/local/lib/libopencv_shape.so.3.0.0,
+  /usr/local/lib/libopencv_stitching.so.3.0, /usr/local/lib/libopencv_stitching.so.3.0.0,
+  /usr/local/lib/libopencv_video.so.3.0, /usr/local/lib/libopencv_video.so.3.0.0,
+  /usr/local/lib/libopencv_videoio.so.3.0, /usr/local/lib/libopencv_videoio.so.3.0.0,
+  /usr/local/lib/python2.7/dist-packages, /usr/local/lib/python2.7/dist-packages/PIL,
+  /usr/local/lib/python2.7/dist-packages/PIL/Image.py, /usr/local/lib/python2.7/dist-packages/PIL/Image.pyc,
+  /usr/local/lib/python2.7/dist-packages/PIL/ImageFilter.py, /usr/local/lib/python2.7/dist-packages/PIL/ImageFilter.pyc,
+  /usr/local/lib/python2.7/dist-packages/PIL/ImageMode.py, /usr/local/lib/python2.7/dist-packages/PIL/ImageMode.pyc,
+  /usr/local/lib/python2.7/dist-packages/PIL/__init__.py, /usr/local/lib/python2.7/dist-packages/PIL/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/PIL/_binary.py, /usr/local/lib/python2.7/dist-packages/PIL/_binary.pyc,
+  /usr/local/lib/python2.7/dist-packages/PIL/_imaging.so, /usr/local/lib/python2.7/dist-packages/PIL/_util.py,
+  /usr/local/lib/python2.7/dist-packages/PIL/_util.pyc, /usr/local/lib/python2.7/dist-packages/cffi,
+  /usr/local/lib/python2.7/dist-packages/cffi/__init__.py, /usr/local/lib/python2.7/dist-packages/cffi/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/cffi/api.py, /usr/local/lib/python2.7/dist-packages/cffi/api.pyc,
+  /usr/local/lib/python2.7/dist-packages/cffi/ffiplatform.py, /usr/local/lib/python2.7/dist-packages/cffi/ffiplatform.pyc,
+  /usr/local/lib/python2.7/dist-packages/cffi/lock.py, /usr/local/lib/python2.7/dist-packages/cffi/lock.pyc,
+  /usr/local/lib/python2.7/dist-packages/cv2.so, /usr/local/lib/python2.7/dist-packages/matplotlib-1.4.3-py2.7-nspkg.pth,
+  /usr/local/lib/python2.7/dist-packages/ndg_httpsclient-0.4.0-py2.7-nspkg.pth, /usr/local/lib/python2.7/dist-packages/nose,
+  /usr/local/lib/python2.7/dist-packages/nose/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy,
+  /usr/local/lib/python2.7/dist-packages/numpy/__config__.py, /usr/local/lib/python2.7/dist-packages/numpy/__config__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/_import_tools.py, /usr/local/lib/python2.7/dist-packages/numpy/_import_tools.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/add_newdocs.py, /usr/local/lib/python2.7/dist-packages/numpy/add_newdocs.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/compat, /usr/local/lib/python2.7/dist-packages/numpy/compat/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/compat/__init__.pyc, /usr/local/lib/python2.7/dist-packages/numpy/compat/_inspect.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/compat/_inspect.pyc, /usr/local/lib/python2.7/dist-packages/numpy/compat/py3k.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/compat/py3k.pyc, /usr/local/lib/python2.7/dist-packages/numpy/core,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/core/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/_internal.py, /usr/local/lib/python2.7/dist-packages/numpy/core/_internal.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/_methods.py, /usr/local/lib/python2.7/dist-packages/numpy/core/_methods.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/arrayprint.py, /usr/local/lib/python2.7/dist-packages/numpy/core/arrayprint.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/defchararray.py, /usr/local/lib/python2.7/dist-packages/numpy/core/defchararray.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/fromnumeric.py, /usr/local/lib/python2.7/dist-packages/numpy/core/fromnumeric.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/function_base.py, /usr/local/lib/python2.7/dist-packages/numpy/core/function_base.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/getlimits.py, /usr/local/lib/python2.7/dist-packages/numpy/core/getlimits.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/info.py, /usr/local/lib/python2.7/dist-packages/numpy/core/info.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/machar.py, /usr/local/lib/python2.7/dist-packages/numpy/core/machar.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/memmap.py, /usr/local/lib/python2.7/dist-packages/numpy/core/memmap.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/multiarray.so, /usr/local/lib/python2.7/dist-packages/numpy/core/numeric.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/numeric.pyc, /usr/local/lib/python2.7/dist-packages/numpy/core/numerictypes.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/numerictypes.pyc, /usr/local/lib/python2.7/dist-packages/numpy/core/records.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/records.pyc, /usr/local/lib/python2.7/dist-packages/numpy/core/scalarmath.so,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/shape_base.py, /usr/local/lib/python2.7/dist-packages/numpy/core/shape_base.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/core/umath.so, /usr/local/lib/python2.7/dist-packages/numpy/ctypeslib.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/ctypeslib.pyc, /usr/local/lib/python2.7/dist-packages/numpy/dual.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/dual.pyc, /usr/local/lib/python2.7/dist-packages/numpy/fft,
+  /usr/local/lib/python2.7/dist-packages/numpy/fft/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/fft/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/fft/fftpack.py, /usr/local/lib/python2.7/dist-packages/numpy/fft/fftpack.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/fft/fftpack_lite.so, /usr/local/lib/python2.7/dist-packages/numpy/fft/helper.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/fft/helper.pyc, /usr/local/lib/python2.7/dist-packages/numpy/fft/info.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/fft/info.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/lib/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/_compiled_base.so, /usr/local/lib/python2.7/dist-packages/numpy/lib/_datasource.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/_datasource.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/_iotools.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/_iotools.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/_version.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/_version.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/arraypad.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/arraypad.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/arraysetops.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/arraysetops.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/arrayterator.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/arrayterator.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/financial.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/financial.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/format.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/format.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/function_base.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/function_base.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/index_tricks.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/index_tricks.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/info.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/info.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/nanfunctions.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/nanfunctions.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/npyio.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/npyio.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/polynomial.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/polynomial.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/scimath.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/scimath.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/shape_base.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/shape_base.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/stride_tricks.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/stride_tricks.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/twodim_base.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/twodim_base.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/type_check.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/type_check.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/ufunclike.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/ufunclike.pyc, /usr/local/lib/python2.7/dist-packages/numpy/lib/utils.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/lib/utils.pyc, /usr/local/lib/python2.7/dist-packages/numpy/linalg,
+  /usr/local/lib/python2.7/dist-packages/numpy/linalg/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/linalg/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/linalg/_umath_linalg.so, /usr/local/lib/python2.7/dist-packages/numpy/linalg/info.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/linalg/info.pyc, /usr/local/lib/python2.7/dist-packages/numpy/linalg/lapack_lite.so,
+  /usr/local/lib/python2.7/dist-packages/numpy/linalg/linalg.py, /usr/local/lib/python2.7/dist-packages/numpy/linalg/linalg.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/ma, /usr/local/lib/python2.7/dist-packages/numpy/ma/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/ma/__init__.pyc, /usr/local/lib/python2.7/dist-packages/numpy/ma/core.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/ma/core.pyc, /usr/local/lib/python2.7/dist-packages/numpy/ma/extras.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/ma/extras.pyc, /usr/local/lib/python2.7/dist-packages/numpy/matrixlib,
+  /usr/local/lib/python2.7/dist-packages/numpy/matrixlib/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/matrixlib/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/matrixlib/defmatrix.py, /usr/local/lib/python2.7/dist-packages/numpy/matrixlib/defmatrix.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/__init__.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/_polybase.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/_polybase.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/chebyshev.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/chebyshev.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/hermite.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/hermite.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/hermite_e.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/hermite_e.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/laguerre.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/laguerre.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/legendre.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/legendre.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/polynomial.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/polynomial.pyc, /usr/local/lib/python2.7/dist-packages/numpy/polynomial/polyutils.py,
+  /usr/local/lib/python2.7/dist-packages/numpy/polynomial/polyutils.pyc, /usr/local/lib/python2.7/dist-packages/numpy/random,
+  /usr/local/lib/python2.7/dist-packages/numpy/random/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/random/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/random/info.py, /usr/local/lib/python2.7/dist-packages/numpy/random/info.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/random/mtrand.so, /usr/local/lib/python2.7/dist-packages/numpy/testing,
+  /usr/local/lib/python2.7/dist-packages/numpy/testing/__init__.py, /usr/local/lib/python2.7/dist-packages/numpy/testing/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/testing/decorators.py, /usr/local/lib/python2.7/dist-packages/numpy/testing/decorators.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/testing/nosetester.py, /usr/local/lib/python2.7/dist-packages/numpy/testing/nosetester.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/testing/utils.py, /usr/local/lib/python2.7/dist-packages/numpy/testing/utils.pyc,
+  /usr/local/lib/python2.7/dist-packages/numpy/version.py, /usr/local/lib/python2.7/dist-packages/numpy/version.pyc,
+  /usr/local/lib/python2.7/dist-packages/reprounzip-0.7.2-py3.4-nspkg.pth, /usr/local/lib/python2.7/dist-packages/reprounzip_docker-0.6.3-py3.4-nspkg.pth,
+  /usr/local/lib/python2.7/dist-packages/reprounzip_vagrant-0.6.3-py3.4-nspkg.pth,
+  /usr/local/lib/python2.7/dist-packages/six.py, /usr/local/lib/python2.7/dist-packages/six.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage, /usr/local/lib/python2.7/dist-packages/skimage/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/_shared,
+  /usr/local/lib/python2.7/dist-packages/skimage/_shared/__init__.py, /usr/local/lib/python2.7/dist-packages/skimage/_shared/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/_shared/_warnings.py, /usr/local/lib/python2.7/dist-packages/skimage/_shared/_warnings.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/_shared/geometry.so, /usr/local/lib/python2.7/dist-packages/skimage/_shared/utils.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/_shared/utils.pyc, /usr/local/lib/python2.7/dist-packages/skimage/color,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/__init__.py, /usr/local/lib/python2.7/dist-packages/skimage/color/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/adapt_rgb.py, /usr/local/lib/python2.7/dist-packages/skimage/color/adapt_rgb.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/colorconv.py, /usr/local/lib/python2.7/dist-packages/skimage/color/colorconv.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/colorlabel.py, /usr/local/lib/python2.7/dist-packages/skimage/color/colorlabel.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/delta_e.py, /usr/local/lib/python2.7/dist-packages/skimage/color/delta_e.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/color/rgb_colors.py, /usr/local/lib/python2.7/dist-packages/skimage/color/rgb_colors.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/data/orb_descriptor_positions.txt,
+  /usr/local/lib/python2.7/dist-packages/skimage/draw, /usr/local/lib/python2.7/dist-packages/skimage/draw/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/draw/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/draw/_draw.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/draw/draw.py, /usr/local/lib/python2.7/dist-packages/skimage/draw/draw.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/draw/draw3d.py, /usr/local/lib/python2.7/dist-packages/skimage/draw/draw3d.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/exposure, /usr/local/lib/python2.7/dist-packages/skimage/exposure/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/exposure/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/exposure/_adapthist.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/exposure/_adapthist.pyc, /usr/local/lib/python2.7/dist-packages/skimage/exposure/exposure.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/exposure/exposure.pyc, /usr/local/lib/python2.7/dist-packages/skimage/feature,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/__init__.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/_canny.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/_canny.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/_daisy.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/_daisy.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/_hessian_det_appx.so, /usr/local/lib/python2.7/dist-packages/skimage/feature/_hog.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/_hog.pyc, /usr/local/lib/python2.7/dist-packages/skimage/feature/_texture.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/blob.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/blob.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/brief.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/brief.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/brief_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/feature/censure.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/censure.pyc, /usr/local/lib/python2.7/dist-packages/skimage/feature/censure_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/corner.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/corner.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/corner_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/feature/match.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/match.pyc, /usr/local/lib/python2.7/dist-packages/skimage/feature/orb.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/orb.pyc, /usr/local/lib/python2.7/dist-packages/skimage/feature/orb_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/peak.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/peak.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/register_translation.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/register_translation.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/template.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/template.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/texture.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/texture.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/feature/util.py, /usr/local/lib/python2.7/dist-packages/skimage/feature/util.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters, /usr/local/lib/python2.7/dist-packages/skimage/filters/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/_gabor.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/_gabor.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/_gaussian.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/_gaussian.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/_rank_order.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/_rank_order.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/edges.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/edges.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/lpi_filter.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/lpi_filter.pyc, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/__init__.py, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/_percentile.py, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/_percentile.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/bilateral.py, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/bilateral.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/bilateral_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/core_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/generic.py, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/generic.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/generic_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/filters/rank/percentile_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/filters/thresholding.py, /usr/local/lib/python2.7/dist-packages/skimage/filters/thresholding.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure, /usr/local/lib/python2.7/dist-packages/skimage/measure/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/measure/_ccomp.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_find_contours.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/_find_contours.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_find_contours_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/measure/_label.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_label.pyc, /usr/local/lib/python2.7/dist-packages/skimage/measure/_marching_cubes.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_marching_cubes.pyc, /usr/local/lib/python2.7/dist-packages/skimage/measure/_marching_cubes_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_moments.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/_moments.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_moments_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/measure/_pnpoly.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_polygon.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/_polygon.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_regionprops.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/_regionprops.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_structural_similarity.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/_structural_similarity.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/block.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/block.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/fit.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/fit.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/measure/profile.py, /usr/local/lib/python2.7/dist-packages/skimage/measure/profile.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology, /usr/local/lib/python2.7/dist-packages/skimage/morphology/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/morphology/_convex_hull.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/_skeletonize.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/_skeletonize.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/_skeletonize_cy.so, /usr/local/lib/python2.7/dist-packages/skimage/morphology/_watershed.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/binary.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/binary.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/convex_hull.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/convex_hull.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/grey.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/grey.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/greyreconstruct.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/greyreconstruct.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/misc.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/misc.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/selem.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/selem.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/morphology/watershed.py, /usr/local/lib/python2.7/dist-packages/skimage/morphology/watershed.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration, /usr/local/lib/python2.7/dist-packages/skimage/restoration/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/restoration/_denoise.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/_denoise.pyc, /usr/local/lib/python2.7/dist-packages/skimage/restoration/_denoise_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/_nl_means_denoising.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/_unwrap_1d.so, /usr/local/lib/python2.7/dist-packages/skimage/restoration/_unwrap_2d.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/_unwrap_3d.so, /usr/local/lib/python2.7/dist-packages/skimage/restoration/deconvolution.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/deconvolution.pyc, /usr/local/lib/python2.7/dist-packages/skimage/restoration/non_local_means.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/non_local_means.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/uft.py, /usr/local/lib/python2.7/dist-packages/skimage/restoration/uft.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/restoration/unwrap.py, /usr/local/lib/python2.7/dist-packages/skimage/restoration/unwrap.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform, /usr/local/lib/python2.7/dist-packages/skimage/transform/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/transform/_geometric.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/_geometric.pyc, /usr/local/lib/python2.7/dist-packages/skimage/transform/_hough_transform.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/_radon_transform.so, /usr/local/lib/python2.7/dist-packages/skimage/transform/_warps.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/_warps.pyc, /usr/local/lib/python2.7/dist-packages/skimage/transform/_warps_cy.so,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/finite_radon_transform.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/finite_radon_transform.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/hough_transform.py, /usr/local/lib/python2.7/dist-packages/skimage/transform/hough_transform.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/integral.py, /usr/local/lib/python2.7/dist-packages/skimage/transform/integral.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/pyramids.py, /usr/local/lib/python2.7/dist-packages/skimage/transform/pyramids.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/transform/radon_transform.py, /usr/local/lib/python2.7/dist-packages/skimage/transform/radon_transform.pyc,
+  /usr/local/lib/python2.7/dist-packages/skimage/util, /usr/local/lib/python2.7/dist-packages/skimage/util/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/__init__.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/_regular_grid.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/_regular_grid.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/arraypad.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/arraypad.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/dtype.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/dtype.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/noise.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/noise.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/shape.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/shape.pyc, /usr/local/lib/python2.7/dist-packages/skimage/util/unique.py,
+  /usr/local/lib/python2.7/dist-packages/skimage/util/unique.pyc, /usr/local/lib/python2.7/dist-packages/sklearn,
+  /usr/local/lib/python2.7/dist-packages/sklearn/__check_build, /usr/local/lib/python2.7/dist-packages/sklearn/__check_build/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/__check_build/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/__check_build/_check_build.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/__init__.py, /usr/local/lib/python2.7/dist-packages/sklearn/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/base.py, /usr/local/lib/python2.7/dist-packages/sklearn/base.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.py, /usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/_svmlight_format.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/base.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/base.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/california_housing.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/california_housing.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/covtype.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/covtype.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/lfw.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/lfw.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/mlcomp.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/mlcomp.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/mldata.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/mldata.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/olivetti_faces.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/olivetti_faces.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/samples_generator.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/samples_generator.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/species_distributions.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/species_distributions.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/svmlight_format.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/svmlight_format.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/datasets/twenty_newsgroups.py, /usr/local/lib/python2.7/dist-packages/sklearn/datasets/twenty_newsgroups.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals, /usr/local/lib/python2.7/dist-packages/sklearn/externals/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/__init__.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/_compat.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/_compat.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/_multiprocessing_helpers.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/_multiprocessing_helpers.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/disk.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/disk.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/format_stack.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/format_stack.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/func_inspect.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/func_inspect.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/hashing.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/hashing.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/logger.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/logger.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/memory.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/memory.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/my_exceptions.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/my_exceptions.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/numpy_pickle.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/numpy_pickle.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/parallel.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/parallel.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/pool.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/joblib/pool.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/externals/six.py, /usr/local/lib/python2.7/dist-packages/sklearn/externals/six.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction, /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/_hashing.so, /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/dict_vectorizer.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/dict_vectorizer.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/hashing.py, /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/hashing.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/image.py, /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/image.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/stop_words.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/stop_words.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/text.py, /usr/local/lib/python2.7/dist-packages/sklearn/feature_extraction/text.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection, /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/base.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/base.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/from_model.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/from_model.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/rfe.py, /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/rfe.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/univariate_selection.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/univariate_selection.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/variance_threshold.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/feature_selection/variance_threshold.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/grid_search.py, /usr/local/lib/python2.7/dist-packages/sklearn/grid_search.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/base.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/base.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/bayes.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/bayes.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/cd_fast.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/coordinate_descent.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/coordinate_descent.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/least_angle.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/least_angle.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/logistic.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/logistic.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/omp.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/omp.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/passive_aggressive.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/passive_aggressive.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/perceptron.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/perceptron.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/randomized_l1.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/randomized_l1.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/ransac.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/ransac.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/ridge.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/ridge.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/sgd_fast.so, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/stochastic_gradient.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/stochastic_gradient.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/theil_sen.py, /usr/local/lib/python2.7/dist-packages/sklearn/linear_model/theil_sen.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/base.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/base.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/classification.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/classification.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/__init__.py, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/bicluster.py, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/bicluster.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/expected_mutual_info_fast.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/supervised.py, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/supervised.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/unsupervised.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/cluster/unsupervised.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/pairwise.py, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/pairwise.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/pairwise_fast.so, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/ranking.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/ranking.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/regression.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/regression.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/metrics/scorer.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/metrics/scorer.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing,
+  /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/__init__.py, /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/__init__.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/data.py, /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/data.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/imputation.py, /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/imputation.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/label.py, /usr/local/lib/python2.7/dist-packages/sklearn/preprocessing/label.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm, /usr/local/lib/python2.7/dist-packages/sklearn/svm/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/svm/base.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm/base.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/svm/bounds.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm/bounds.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/svm/classes.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm/classes.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/svm/liblinear.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/svm/libsvm.so, /usr/local/lib/python2.7/dist-packages/sklearn/svm/libsvm_sparse.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils, /usr/local/lib/python2.7/dist-packages/sklearn/utils/__init__.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/__init__.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/_logistic_sigmoid.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/_random.so, /usr/local/lib/python2.7/dist-packages/sklearn/utils/_scipy_sparse_lsqr_backport.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/_scipy_sparse_lsqr_backport.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/arrayfuncs.so, /usr/local/lib/python2.7/dist-packages/sklearn/utils/class_weight.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/class_weight.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/extmath.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/extmath.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/fixes.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/fixes.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/lgamma.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/linear_assignment_.py, /usr/local/lib/python2.7/dist-packages/sklearn/utils/linear_assignment_.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/metaestimators.py, /usr/local/lib/python2.7/dist-packages/sklearn/utils/metaestimators.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/multiclass.py, /usr/local/lib/python2.7/dist-packages/sklearn/utils/multiclass.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/murmurhash.so, /usr/local/lib/python2.7/dist-packages/sklearn/utils/optimize.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/optimize.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/random.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/random.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/seq_dataset.so,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/sparsefuncs.py, /usr/local/lib/python2.7/dist-packages/sklearn/utils/sparsefuncs.pyc,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/sparsefuncs_fast.so, /usr/local/lib/python2.7/dist-packages/sklearn/utils/stats.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/stats.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/validation.py,
+  /usr/local/lib/python2.7/dist-packages/sklearn/utils/validation.pyc, /usr/local/lib/python2.7/dist-packages/sklearn/utils/weight_vector.so]
+pack_id: ca94d8c4-d432-4ee3-8299-dd18eb358401
+packages:
+- files: [/usr/lib/x86_64-linux-gnu/libamd.so.2.3.1]
+  name: libamd2.3.1
+  packfiles: true
+  size: 79872
+  version: 1:4.2.1-3ubuntu1
+- files: [/usr/lib/atlas-base/atlas/libblas.so.3, /usr/lib/atlas-base/atlas/libblas.so.3.0,
+    /usr/lib/atlas-base/atlas/liblapack.so.3, /usr/lib/atlas-base/atlas/liblapack.so.3.0]
+  name: libatlas3-base
+  packfiles: true
+  size: 14614528
+  version: 3.10.1-4
+- files: [/usr/lib/x86_64-linux-gnu/libaudio.so.2, /usr/lib/x86_64-linux-gnu/libaudio.so.2.4]
+  name: libaudio2
+  packfiles: true
+  size: 175104
+  version: 1.9.4-1
+- files: [/lib, /lib/x86_64-linux-gnu]
+  name: libaudit1
+  packfiles: true
+  size: 147456
+  version: 1:2.3.2-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libavcodec.so.54, /usr/lib/x86_64-linux-gnu/libavcodec.so.54.35.0]
+  name: libavcodec54
+  packfiles: true
+  size: 6276096
+  version: 6:9.18-0ubuntu0.14.04.1
+- files: [/usr/lib/x86_64-linux-gnu/libavformat.so.54, /usr/lib/x86_64-linux-gnu/libavformat.so.54.20.4]
+  name: libavformat54
+  packfiles: true
+  size: 1307648
+  version: 6:9.18-0ubuntu0.14.04.1
+- files: [/usr/lib/x86_64-linux-gnu/libavutil.so.52, /usr/lib/x86_64-linux-gnu/libavutil.so.52.3.0]
+  name: libavutil52
+  packfiles: true
+  size: 253952
+  version: 6:9.18-0ubuntu0.14.04.1
+- files: [/lib/x86_64-linux-gnu/libbz2.so.1.0, /lib/x86_64-linux-gnu/libbz2.so.1.0.4]
+  name: libbz2-1.0
+  packfiles: true
+  size: 115712
+  version: 1.0.6-5
+- files: [/lib/x86_64-linux-gnu/ld-2.19.so, /lib/x86_64-linux-gnu/libc-2.19.so, /lib/x86_64-linux-gnu/libc.so.6,
+    /lib/x86_64-linux-gnu/libdl-2.19.so, /lib/x86_64-linux-gnu/libdl.so.2, /lib/x86_64-linux-gnu/libm-2.19.so,
+    /lib/x86_64-linux-gnu/libm.so.6, /lib/x86_64-linux-gnu/libpthread-2.19.so, /lib/x86_64-linux-gnu/libpthread.so.0,
+    /lib/x86_64-linux-gnu/librt-2.19.so, /lib/x86_64-linux-gnu/librt.so.1, /lib/x86_64-linux-gnu/libutil-2.19.so,
+    /lib/x86_64-linux-gnu/libutil.so.1]
+  name: libc6
+  packfiles: true
+  size: 10744832
+  version: 2.19-0ubuntu6.6
+- files: [/usr/lib/x86_64-linux-gnu/libcamd.so.2.3.1]
+  name: libcamd2.3.1
+  packfiles: true
+  size: 80896
+  version: 1:4.2.1-3ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libccolamd.so.2.8.0]
+  name: libccolamd2.8.0
+  packfiles: true
+  size: 80896
+  version: 1:4.2.1-3ubuntu1
+- files: [/lib/x86_64-linux-gnu/libcgmanager.so.0, /lib/x86_64-linux-gnu/libcgmanager.so.0.0.0]
+  name: libcgmanager0
+  packfiles: true
+  size: 148480
+  version: 0.24-0ubuntu7.3
+- files: [/usr/lib/x86_64-linux-gnu/libcholmod.so.2.1.2]
+  name: libcholmod2.1.2
+  packfiles: true
+  size: 904192
+  version: 1:4.2.1-3ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libcolamd.so.2.8.0]
+  name: libcolamd2.8.0
+  packfiles: true
+  size: 68608
+  version: 1:4.2.1-3ubuntu1
+- files: [/lib/x86_64-linux-gnu/libdbus-1.so.3, /lib/x86_64-linux-gnu/libdbus-1.so.3.7.6]
+  name: libdbus-1-3
+  packfiles: true
+  size: 388096
+  version: 1.6.18-0ubuntu4.3
+- files: [/usr/lib/x86_64-linux-gnu/libdc1394.so.22, /usr/lib/x86_64-linux-gnu/libdc1394.so.22.1.8]
+  name: libdc1394-22
+  packfiles: true
+  size: 251904
+  version: 2.2.1-2ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libdrm.so.2, /usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0]
+  name: libdrm2
+  packfiles: true
+  size: 108544
+  version: 2.4.60-2~ubuntu14.04.1
+- files: [/lib/x86_64-linux-gnu/libexpat.so.1, /lib/x86_64-linux-gnu/libexpat.so.1.6.0]
+  name: libexpat1
+  packfiles: true
+  size: 399360
+  version: 2.1.0-4ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libffi.so.6, /usr/lib/x86_64-linux-gnu/libffi.so.6.0.1]
+  name: libffi6
+  packfiles: true
+  size: 71680
+  version: 3.1~rc1+r3.0.13-12
+- files: [/usr/lib/x86_64-linux-gnu/libfontconfig.so.1, /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.8.0]
+  name: libfontconfig1
+  packfiles: true
+  size: 509952
+  version: 2.11.0-0ubuntu4.1
+- files: [/usr/lib/x86_64-linux-gnu/libfreetype.so.6, /usr/lib/x86_64-linux-gnu/libfreetype.so.6.11.1]
+  name: libfreetype6
+  packfiles: true
+  size: 916480
+  version: 2.5.2-1ubuntu2.4
+- files: [/usr, /usr/lib, /usr/lib/x86_64-linux-gnu]
+  name: libgail18
+  packfiles: true
+  size: 594944
+  version: 2.24.23-0ubuntu1.2
+- files: [/lib/x86_64-linux-gnu/libgcc_s.so.1]
+  name: libgcc1
+  packfiles: true
+  size: 132096
+  version: 1:4.9.1-0ubuntu1
+- files: [/lib/x86_64-linux-gnu/libgcrypt.so.11, /lib/x86_64-linux-gnu/libgcrypt.so.11.8.2]
+  name: libgcrypt11
+  packfiles: true
+  size: 601088
+  version: 1.5.3-2ubuntu4.2
+- files: [/usr/lib/x86_64-linux-gnu/libgfortran.so.3, /usr/lib/x86_64-linux-gnu/libgfortran.so.3.0.0]
+  name: libgfortran3
+  packfiles: true
+  size: 1229824
+  version: 4.8.2-19ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/mesa/libGL.so.1, /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1.2.0]
+  name: libgl1-mesa-glx-lts-utopic
+  packfiles: true
+  size: 696320
+  version: 10.3.2-0ubuntu1~trusty2
+- files: [/usr/lib/x86_64-linux-gnu/libglapi.so.0, /usr/lib/x86_64-linux-gnu/libglapi.so.0.0.0]
+  name: libglapi-mesa-lts-utopic
+  packfiles: true
+  size: 259072
+  version: 10.3.2-0ubuntu1~trusty2
+- files: [/lib/x86_64-linux-gnu/libglib-2.0.so.0, /lib/x86_64-linux-gnu/libglib-2.0.so.0.4002.0,
+    /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0, /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.4002.0,
+    /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0, /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.4002.0]
+  name: libglib2.0-0
+  packfiles: true
+  size: 4714496
+  version: 2.40.2-0ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libgnutls.so.26, /usr/lib/x86_64-linux-gnu/libgnutls.so.26.22.6]
+  name: libgnutls26
+  packfiles: true
+  size: 1097728
+  version: 2.12.23-12ubuntu2.2
+- files: [/lib/x86_64-linux-gnu/libgpg-error.so.0, /lib/x86_64-linux-gnu/libgpg-error.so.0.10.0]
+  name: libgpg-error0
+  packfiles: true
+  size: 94208
+  version: 1.12-0.2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libgsm.so.1, /usr/lib/x86_64-linux-gnu/libgsm.so.1.0.12]
+  name: libgsm1
+  packfiles: true
+  size: 97280
+  version: 1.0.13-4
+- files: [/usr/lib/x86_64-linux-gnu/libgstapp-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstapp-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgstaudio-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstaudio-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgstinterfaces-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstinterfaces-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgstpbutils-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstpbutils-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgstriff-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstriff-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgsttag-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgsttag-0.10.so.0.25.0,
+    /usr/lib/x86_64-linux-gnu/libgstvideo-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstvideo-0.10.so.0.25.0]
+  name: libgstreamer-plugins-base0.10-0
+  packfiles: true
+  size: 1474560
+  version: 0.10.36-1.1ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libgstbase-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstbase-0.10.so.0.30.0,
+    /usr/lib/x86_64-linux-gnu/libgstreamer-0.10.so.0, /usr/lib/x86_64-linux-gnu/libgstreamer-0.10.so.0.30.0]
+  name: libgstreamer0.10-0
+  packfiles: true
+  size: 2666496
+  version: 0.10.36-1.2ubuntu3
+- files: [/usr/lib/x86_64-linux-gnu/libICE.so.6, /usr/lib/x86_64-linux-gnu/libICE.so.6.3.0]
+  name: libice6
+  packfiles: true
+  size: 150528
+  version: 2:1.0.8-2
+- files: [/usr/lib/x86_64-linux-gnu/libHalf.so.6, /usr/lib/x86_64-linux-gnu/libHalf.so.6.0.0,
+    /usr/lib/x86_64-linux-gnu/libIex.so.6, /usr/lib/x86_64-linux-gnu/libIex.so.6.0.0,
+    /usr/lib/x86_64-linux-gnu/libIlmThread.so.6, /usr/lib/x86_64-linux-gnu/libIlmThread.so.6.0.0]
+  name: libilmbase6
+  packfiles: true
+  size: 488448
+  version: 1.0.1-6ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libjasper.so.1, /usr/lib/x86_64-linux-gnu/libjasper.so.1.0.0]
+  name: libjasper1
+  packfiles: true
+  size: 364544
+  version: 1.900.1-14ubuntu3.2
+- files: [/usr/lib/x86_64-linux-gnu/libjbig.so.0]
+  name: libjbig0
+  packfiles: true
+  size: 95232
+  version: 2.0-2ubuntu4.1
+- files: [/usr/lib/x86_64-linux-gnu/libjpeg.so.8, /usr/lib/x86_64-linux-gnu/libjpeg.so.8.0.2]
+  name: libjpeg-turbo8
+  packfiles: true
+  size: 338944
+  version: 1.3.0-0ubuntu2
+- files: [/lib/x86_64-linux-gnu/liblzma.so.5, /lib/x86_64-linux-gnu/liblzma.so.5.0.0]
+  name: liblzma5
+  packfiles: true
+  size: 312320
+  version: 5.1.1alpha+20120614-2ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libmp3lame.so.0, /usr/lib/x86_64-linux-gnu/libmp3lame.so.0.0.0]
+  name: libmp3lame0
+  packfiles: true
+  size: 432128
+  version: 3.99.5+repack1-3ubuntu1
+- files: [/lib/x86_64-linux-gnu/libnih-dbus.so.1, /lib/x86_64-linux-gnu/libnih-dbus.so.1.0.0]
+  name: libnih-dbus1
+  packfiles: true
+  size: 71680
+  version: 1.0.3-4ubuntu25
+- files: [/lib/x86_64-linux-gnu/libnih.so.1, /lib/x86_64-linux-gnu/libnih.so.1.0.0]
+  name: libnih1
+  packfiles: true
+  size: 151552
+  version: 1.0.3-4ubuntu25
+- files: [/usr/lib/x86_64-linux-gnu/libogg.so.0, /usr/lib/x86_64-linux-gnu/libogg.so.0.8.1]
+  name: libogg0
+  packfiles: true
+  size: 77824
+  version: 1.3.1-1ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libIlmImf.so.6, /usr/lib/x86_64-linux-gnu/libIlmImf.so.6.0.0]
+  name: libopenexr6
+  packfiles: true
+  size: 763904
+  version: 1.6.1-7ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libopenjpeg-2.1.3.0.so, /usr/lib/x86_64-linux-gnu/libopenjpeg.so.2]
+  name: libopenjpeg2
+  packfiles: true
+  size: 198656
+  version: 1.3+dfsg-4.7ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libopus.so.0, /usr/lib/x86_64-linux-gnu/libopus.so.0.5.0]
+  name: libopus0
+  packfiles: true
+  size: 332800
+  version: 1.1-0ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/liborc-0.4.so.0, /usr/lib/x86_64-linux-gnu/liborc-0.4.so.0.18.0]
+  name: liborc-0.4-0
+  packfiles: true
+  size: 608256
+  version: 1:0.4.18-1ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/pkcs11/gnome-keyring-pkcs11.so, /usr/share/p11-kit/modules/gnome-keyring.module]
+  name: libp11-kit-gnome-keyring
+  packfiles: true
+  size: 387072
+  version: 3.10.1-1ubuntu4.2
+- files: [/usr/lib/x86_64-linux-gnu/libp11-kit.so.0, /usr/lib/x86_64-linux-gnu/libp11-kit.so.0.0.0]
+  name: libp11-kit0
+  packfiles: true
+  size: 324608
+  version: 0.20.2-2ubuntu2
+- files: [/lib/x86_64-linux-gnu/libpcre.so.3, /lib/x86_64-linux-gnu/libpcre.so.3.13.1]
+  name: libpcre3
+  packfiles: true
+  size: 474112
+  version: 1:8.31-2ubuntu2
+- files: [/lib/x86_64-linux-gnu/libpng12.so.0, /lib/x86_64-linux-gnu/libpng12.so.0.50.0]
+  name: libpng12-0
+  packfiles: true
+  size: 312320
+  version: 1.2.50-1ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0]
+  name: libpython2.7
+  packfiles: true
+  size: 3576832
+  version: 2.7.6-8
+- files: [/etc/python2.7/sitecustomize.py, /usr/lib/python2.7/StringIO.py, /usr/lib/python2.7/UserDict.py,
+    /usr/lib/python2.7/__future__.py, /usr/lib/python2.7/_abcoll.py, /usr/lib/python2.7/_sysconfigdata.py,
+    /usr/lib/python2.7/_weakrefset.py, /usr/lib/python2.7/abc.py, /usr/lib/python2.7/atexit.py,
+    /usr/lib/python2.7/base64.py, /usr/lib/python2.7/bisect.py, /usr/lib/python2.7/codecs.py,
+    /usr/lib/python2.7/collections.py, /usr/lib/python2.7/copy.py, /usr/lib/python2.7/copy_reg.py,
+    /usr/lib/python2.7/dis.py, /usr/lib/python2.7/encodings, /usr/lib/python2.7/encodings/__init__.py,
+    /usr/lib/python2.7/encodings/aliases.py, /usr/lib/python2.7/encodings/ascii.py,
+    /usr/lib/python2.7/encodings/hex_codec.py, /usr/lib/python2.7/encodings/utf_16.py,
+    /usr/lib/python2.7/encodings/utf_32.py, /usr/lib/python2.7/encodings/utf_8.py,
+    /usr/lib/python2.7/fnmatch.py, /usr/lib/python2.7/functools.py, /usr/lib/python2.7/genericpath.py,
+    /usr/lib/python2.7/hashlib.py, /usr/lib/python2.7/heapq.py, /usr/lib/python2.7/inspect.py,
+    /usr/lib/python2.7/io.py, /usr/lib/python2.7/keyword.py, /usr/lib/python2.7/lib-dynload,
+    /usr/lib/python2.7/linecache.py, /usr/lib/python2.7/logging, /usr/lib/python2.7/logging/__init__.py,
+    /usr/lib/python2.7/opcode.py, /usr/lib/python2.7/os.py, /usr/lib/python2.7/pickle.py,
+    /usr/lib/python2.7/pkgutil.py, /usr/lib/python2.7/plat-x86_64-linux-gnu, /usr/lib/python2.7/plat-x86_64-linux-gnu/_sysconfigdata_nd.py,
+    /usr/lib/python2.7/posixpath.py, /usr/lib/python2.7/random.py, /usr/lib/python2.7/re.py,
+    /usr/lib/python2.7/repr.py, /usr/lib/python2.7/shutil.py, /usr/lib/python2.7/site.py,
+    /usr/lib/python2.7/sitecustomize.py, /usr/lib/python2.7/socket.py, /usr/lib/python2.7/sre_compile.py,
+    /usr/lib/python2.7/sre_constants.py, /usr/lib/python2.7/sre_parse.py, /usr/lib/python2.7/ssl.py,
+    /usr/lib/python2.7/stat.py, /usr/lib/python2.7/string.py, /usr/lib/python2.7/struct.py,
+    /usr/lib/python2.7/subprocess.py, /usr/lib/python2.7/sysconfig.py, /usr/lib/python2.7/tempfile.py,
+    /usr/lib/python2.7/textwrap.py, /usr/lib/python2.7/token.py, /usr/lib/python2.7/tokenize.py,
+    /usr/lib/python2.7/traceback.py, /usr/lib/python2.7/types.py, /usr/lib/python2.7/warnings.py,
+    /usr/lib/python2.7/weakref.py]
+  name: libpython2.7-minimal
+  packfiles: true
+  size: 2556928
+  version: 2.7.6-8
+- files: [/usr/lib/python2.7/Queue.py, /usr/lib/python2.7/contextlib.py, /usr/lib/python2.7/csv.py,
+    /usr/lib/python2.7/ctypes, /usr/lib/python2.7/ctypes/__init__.py, /usr/lib/python2.7/ctypes/_endian.py,
+    /usr/lib/python2.7/difflib.py, /usr/lib/python2.7/distutils, /usr/lib/python2.7/distutils/__init__.py,
+    /usr/lib/python2.7/distutils/version.py, /usr/lib/python2.7/gzip.py, /usr/lib/python2.7/httplib.py,
+    /usr/lib/python2.7/json, /usr/lib/python2.7/json/__init__.py, /usr/lib/python2.7/json/decoder.py,
+    /usr/lib/python2.7/json/encoder.py, /usr/lib/python2.7/json/scanner.py, /usr/lib/python2.7/lib-dynload/_csv.x86_64-linux-gnu.so,
+    /usr/lib/python2.7/lib-dynload/_ctypes.x86_64-linux-gnu.so, /usr/lib/python2.7/lib-dynload/_hashlib.x86_64-linux-gnu.so,
+    /usr/lib/python2.7/lib-dynload/_json.x86_64-linux-gnu.so, /usr/lib/python2.7/lib-dynload/_multiprocessing.x86_64-linux-gnu.so,
+    /usr/lib/python2.7/lib-dynload/_ssl.x86_64-linux-gnu.so, /usr/lib/python2.7/lib-dynload/datetime.x86_64-linux-gnu.so,
+    /usr/lib/python2.7/lib-dynload/future_builtins.x86_64-linux-gnu.so, /usr/lib/python2.7/lib-dynload/mmap.x86_64-linux-gnu.so,
+    /usr/lib/python2.7/lib-tk, /usr/lib/python2.7/lib-tk/FixTk.py, /usr/lib/python2.7/locale.py,
+    /usr/lib/python2.7/mimetools.py, /usr/lib/python2.7/multiprocessing, /usr/lib/python2.7/multiprocessing/__init__.py,
+    /usr/lib/python2.7/multiprocessing/dummy, /usr/lib/python2.7/multiprocessing/dummy/__init__.py,
+    /usr/lib/python2.7/multiprocessing/dummy/connection.py, /usr/lib/python2.7/multiprocessing/forking.py,
+    /usr/lib/python2.7/multiprocessing/pool.py, /usr/lib/python2.7/multiprocessing/process.py,
+    /usr/lib/python2.7/multiprocessing/synchronize.py, /usr/lib/python2.7/multiprocessing/util.py,
+    /usr/lib/python2.7/new.py, /usr/lib/python2.7/numbers.py, /usr/lib/python2.7/pprint.py,
+    /usr/lib/python2.7/pydoc.py, /usr/lib/python2.7/rfc822.py, /usr/lib/python2.7/tarfile.py,
+    /usr/lib/python2.7/threading.py, /usr/lib/python2.7/unittest, /usr/lib/python2.7/unittest/__init__.py,
+    /usr/lib/python2.7/unittest/case.py, /usr/lib/python2.7/unittest/loader.py, /usr/lib/python2.7/unittest/main.py,
+    /usr/lib/python2.7/unittest/result.py, /usr/lib/python2.7/unittest/runner.py,
+    /usr/lib/python2.7/unittest/signals.py, /usr/lib/python2.7/unittest/suite.py,
+    /usr/lib/python2.7/unittest/util.py, /usr/lib/python2.7/urllib.py, /usr/lib/python2.7/urllib2.py,
+    /usr/lib/python2.7/urlparse.py, /usr/lib/python2.7/zipfile.py]
+  name: libpython2.7-stdlib
+  packfiles: true
+  size: 8693760
+  version: 2.7.6-8
+- files: [/usr/lib/x86_64-linux-gnu/libQtOpenGL.so.4, /usr/lib/x86_64-linux-gnu/libQtOpenGL.so.4.8.6]
+  name: libqt4-opengl
+  packfiles: true
+  size: 1257472
+  version: 4:4.8.5+git192-g085f851+dfsg-2ubuntu4
+- files: [/usr/lib/x86_64-linux-gnu/libQtTest.so.4, /usr/lib/x86_64-linux-gnu/libQtTest.so.4.8.6]
+  name: libqt4-test
+  packfiles: true
+  size: 309248
+  version: 4:4.8.5+git192-g085f851+dfsg-2ubuntu4
+- files: [/usr/lib/x86_64-linux-gnu/libQtCore.so.4, /usr/lib/x86_64-linux-gnu/libQtCore.so.4.8.6]
+  name: libqtcore4
+  packfiles: true
+  size: 5174272
+  version: 4:4.8.5+git192-g085f851+dfsg-2ubuntu4
+- files: [/usr/lib/x86_64-linux-gnu/libQtGui.so.4, /usr/lib/x86_64-linux-gnu/libQtGui.so.4.8.6]
+  name: libqtgui4
+  packfiles: true
+  size: 13018112
+  version: 4:4.8.5+git192-g085f851+dfsg-2ubuntu4
+- files: [/usr/lib/x86_64-linux-gnu/libquadmath.so.0, /usr/lib/x86_64-linux-gnu/libquadmath.so.0.0.0]
+  name: libquadmath0
+  packfiles: true
+  size: 276480
+  version: 4.8.2-19ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libraw1394.so.11, /usr/lib/x86_64-linux-gnu/libraw1394.so.11.1.0]
+  name: libraw1394-11
+  packfiles: true
+  size: 108544
+  version: 2.1.0-1ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/librtmp.so.0]
+  name: librtmp0
+  packfiles: true
+  size: 146432
+  version: 2.4+20121230.gitdf6c518-1
+- files: [/usr/lib/x86_64-linux-gnu/libschroedinger-1.0.so.0, /usr/lib/x86_64-linux-gnu/libschroedinger-1.0.so.0.11.0]
+  name: libschroedinger-1.0-0
+  packfiles: true
+  size: 902144
+  version: 1.0.11-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libSM.so.6, /usr/lib/x86_64-linux-gnu/libSM.so.6.0.1]
+  name: libsm6
+  packfiles: true
+  size: 82944
+  version: 2:1.2.1-2
+- files: [/usr/lib/x86_64-linux-gnu/libspeex.so.1, /usr/lib/x86_64-linux-gnu/libspeex.so.1.5.0]
+  name: libspeex1
+  packfiles: true
+  size: 141312
+  version: 1.2~rc1.1-1ubuntu1
+- files: [/lib/x86_64-linux-gnu/libcrypto.so.1.0.0, /lib/x86_64-linux-gnu/libssl.so.1.0.0]
+  name: libssl1.0.0
+  packfiles: true
+  size: 3005440
+  version: 1.0.1f-1ubuntu2.11
+- files: [/usr/lib/x86_64-linux-gnu/libstdc++.so.6, /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19]
+  name: libstdc++6
+  packfiles: true
+  size: 1240064
+  version: 4.8.2-19ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libswscale.so.2, /usr/lib/x86_64-linux-gnu/libswscale.so.2.1.1]
+  name: libswscale2
+  packfiles: true
+  size: 406528
+  version: 6:9.18-0ubuntu0.14.04.1
+- files: [/usr/lib/x86_64-linux-gnu/libtasn1.so.6, /usr/lib/x86_64-linux-gnu/libtasn1.so.6.2.0]
+  name: libtasn1-6
+  packfiles: true
+  size: 133120
+  version: 3.4-3ubuntu0.2
+- files: [/usr/lib/libtbb.so.2, /usr/lib/libtbbmalloc.so.2]
+  name: libtbb2
+  packfiles: true
+  size: 351232
+  version: 4.2~20130725-1.1ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libtheoradec.so.1, /usr/lib/x86_64-linux-gnu/libtheoradec.so.1.1.4,
+    /usr/lib/x86_64-linux-gnu/libtheoraenc.so.1, /usr/lib/x86_64-linux-gnu/libtheoraenc.so.1.1.2]
+  name: libtheora0
+  packfiles: true
+  size: 728064
+  version: 1.1.1+dfsg.1-3.2
+- files: [/usr/lib/x86_64-linux-gnu/libtiff.so.5, /usr/lib/x86_64-linux-gnu/libtiff.so.5.2.0]
+  name: libtiff5
+  packfiles: true
+  size: 590848
+  version: 4.0.3-7ubuntu0.3
+- files: [/lib/x86_64-linux-gnu/libudev.so.1, /lib/x86_64-linux-gnu/libudev.so.1.3.5]
+  name: libudev1
+  packfiles: true
+  size: 135168
+  version: 204-5ubuntu20.11
+- files: [/usr/lib/x86_64-linux-gnu/libumfpack.so.5.6.2]
+  name: libumfpack5.6.2
+  packfiles: true
+  size: 707584
+  version: 1:4.2.1-3ubuntu1
+- files: [/lib/x86_64-linux-gnu/libusb-1.0.so.0, /lib/x86_64-linux-gnu/libusb-1.0.so.0.1.0]
+  name: libusb-1.0-0
+  packfiles: true
+  size: 140288
+  version: 2:1.0.17-1ubuntu2
+- files: [/lib/x86_64-linux-gnu/libuuid.so.1, /lib/x86_64-linux-gnu/libuuid.so.1.3.0]
+  name: libuuid1
+  packfiles: true
+  size: 111616
+  version: 2.20.1-5.1ubuntu20.4
+- files: [/usr/lib/x86_64-linux-gnu/libv4l1.so.0, /usr/lib/x86_64-linux-gnu/libv4l1.so.0.0.0,
+    /usr/lib/x86_64-linux-gnu/libv4l2.so.0, /usr/lib/x86_64-linux-gnu/libv4l2.so.0.0.0]
+  name: libv4l-0
+  packfiles: true
+  size: 199680
+  version: 1.0.1-1
+- files: [/usr/lib/x86_64-linux-gnu/libv4lconvert.so.0, /usr/lib/x86_64-linux-gnu/libv4lconvert.so.0.0.0]
+  name: libv4lconvert0
+  packfiles: true
+  size: 272384
+  version: 1.0.1-1
+- files: [/usr/lib/x86_64-linux-gnu/libva.so.1, /usr/lib/x86_64-linux-gnu/libva.so.1.3500.0]
+  name: libva1
+  packfiles: true
+  size: 154624
+  version: 1.3.0-2
+- files: [/usr/lib/x86_64-linux-gnu/libvorbis.so.0, /usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.5]
+  name: libvorbis0a
+  packfiles: true
+  size: 236544
+  version: 1.3.2-1.3ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libvorbisenc.so.2, /usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.8]
+  name: libvorbisenc2
+  packfiles: true
+  size: 2982912
+  version: 1.3.2-1.3ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libvpx.so.1, /usr/lib/x86_64-linux-gnu/libvpx.so.1.3.0]
+  name: libvpx1
+  packfiles: true
+  size: 1753088
+  version: 1.3.0-2
+- files: [/usr/lib/x86_64-linux-gnu/libX11.so.6, /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0]
+  name: libx11-6
+  packfiles: true
+  size: 1545216
+  version: 2:1.6.2-1ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libX11-xcb.so.1, /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0]
+  name: libx11-xcb1
+  packfiles: true
+  size: 240640
+  version: 2:1.6.2-1ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/libx264.so.142]
+  name: libx264-142
+  packfiles: true
+  size: 2223104
+  version: 2:0.142.2389+git956c8d8-2
+- files: [/usr/lib/x86_64-linux-gnu/libXau.so.6, /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0]
+  name: libxau6
+  packfiles: true
+  size: 51200
+  version: 1:1.0.8-1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb-dri2.so.0, /usr/lib/x86_64-linux-gnu/libxcb-dri2.so.0.0.0]
+  name: libxcb-dri2-0
+  packfiles: true
+  size: 62464
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0, /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0]
+  name: libxcb-dri3-0
+  packfiles: true
+  size: 52224
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb-glx.so.0, /usr/lib/x86_64-linux-gnu/libxcb-glx.so.0.0.0]
+  name: libxcb-glx0
+  packfiles: true
+  size: 154624
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb-present.so.0, /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0]
+  name: libxcb-present0
+  packfiles: true
+  size: 52224
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb-sync.so.1, /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0]
+  name: libxcb-sync1
+  packfiles: true
+  size: 66560
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libxcb.so.1, /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0]
+  name: libxcb1
+  packfiles: true
+  size: 185344
+  version: 1.10-2ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libXdamage.so.1, /usr/lib/x86_64-linux-gnu/libXdamage.so.1.1.0]
+  name: libxdamage1
+  packfiles: true
+  size: 47104
+  version: 1:1.1.4-1ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libXdmcp.so.6, /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0]
+  name: libxdmcp6
+  packfiles: true
+  size: 72704
+  version: 1:1.1.1-1
+- files: [/usr/lib/x86_64-linux-gnu/libXext.so.6, /usr/lib/x86_64-linux-gnu/libXext.so.6.4.0]
+  name: libxext6
+  packfiles: true
+  size: 123904
+  version: 2:1.3.2-1ubuntu0.0.14.04.1
+- files: [/usr/lib/x86_64-linux-gnu/libXfixes.so.3, /usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0]
+  name: libxfixes3
+  packfiles: true
+  size: 63488
+  version: 1:5.0.1-1ubuntu1.1
+- files: [/usr/lib/x86_64-linux-gnu/libXi.so.6, /usr/lib/x86_64-linux-gnu/libXi.so.6.1.0]
+  name: libxi6
+  packfiles: true
+  size: 109568
+  version: 2:1.7.1.901-1ubuntu1.1
+- files: [/usr/lib/x86_64-linux-gnu/libxml2.so.2, /usr/lib/x86_64-linux-gnu/libxml2.so.2.9.1]
+  name: libxml2
+  packfiles: true
+  size: 1843200
+  version: 2.9.1+dfsg1-3ubuntu4.4
+- files: [/usr/lib/x86_64-linux-gnu/libXrender.so.1, /usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0]
+  name: libxrender1
+  packfiles: true
+  size: 80896
+  version: 1:0.9.8-1build0.14.04.1
+- files: [/usr/lib/x86_64-linux-gnu/libxshmfence.so.1, /usr/lib/x86_64-linux-gnu/libxshmfence.so.1.0.0]
+  name: libxshmfence1
+  packfiles: true
+  size: 41984
+  version: 1.1-2
+- files: [/usr/lib/x86_64-linux-gnu/libXt.so.6, /usr/lib/x86_64-linux-gnu/libXt.so.6.0.0]
+  name: libxt6
+  packfiles: true
+  size: 468992
+  version: 1:1.1.4-1
+- files: [/usr/lib/x86_64-linux-gnu/libxvidcore.so.4, /usr/lib/x86_64-linux-gnu/libxvidcore.so.4.3]
+  name: libxvidcore4
+  packfiles: true
+  size: 913408
+  version: 2:1.3.2-9ubuntu1
+- files: [/usr/lib/x86_64-linux-gnu/libXxf86vm.so.1, /usr/lib/x86_64-linux-gnu/libXxf86vm.so.1.0.0]
+  name: libxxf86vm1
+  packfiles: true
+  size: 59392
+  version: 1:1.1.3-1
+- files: [/usr/bin]
+  name: os-prober
+  packfiles: true
+  size: 146432
+  version: 1.63ubuntu1
+- files: [/usr/share/p11-kit, /usr/share/p11-kit/modules, /usr/share/p11-kit/modules/p11-kit-trust.module]
+  name: p11-kit
+  packfiles: true
+  size: 266240
+  version: 0.20.2-2ubuntu2
+- files: [/usr/lib/x86_64-linux-gnu/pkcs11/p11-kit-trust.so]
+  name: p11-kit-modules
+  packfiles: true
+  size: 262144
+  version: 0.20.2-2ubuntu2
+- files: [/usr/lib/python2.7/dist-packages/gtk-2.0, /usr/lib/python2.7/dist-packages/gtk-2.0-pysupport-compat.pth,
+    /usr/lib/python2.7/dist-packages/pygtk.pth]
+  name: python-gobject-2
+  packfiles: true
+  size: 933888
+  version: 2.28.6-12build1
+- files: [/usr/lib/python2.7/dist-packages/PILcompat, /usr/lib/python2.7/dist-packages/PILcompat.pth]
+  name: python-imaging
+  packfiles: true
+  size: 50176
+  version: 2.3.0-1ubuntu3
+- files: [/usr/bin/python]
+  name: python-minimal
+  packfiles: true
+  size: 171008
+  version: 2.7.5-5ubuntu3
+- files: [/usr/lib/python2.7/dist-packages/scipy, /usr/lib/python2.7/dist-packages/scipy/__config__.py,
+    /usr/lib/python2.7/dist-packages/scipy/__init__.py, /usr/lib/python2.7/dist-packages/scipy/fftpack,
+    /usr/lib/python2.7/dist-packages/scipy/fftpack/__init__.py, /usr/lib/python2.7/dist-packages/scipy/fftpack/_fftpack.so,
+    /usr/lib/python2.7/dist-packages/scipy/fftpack/basic.py, /usr/lib/python2.7/dist-packages/scipy/fftpack/convolve.so,
+    /usr/lib/python2.7/dist-packages/scipy/fftpack/fftpack_version.py, /usr/lib/python2.7/dist-packages/scipy/fftpack/helper.py,
+    /usr/lib/python2.7/dist-packages/scipy/fftpack/pseudo_diffs.py, /usr/lib/python2.7/dist-packages/scipy/fftpack/realtransforms.py,
+    /usr/lib/python2.7/dist-packages/scipy/integrate, /usr/lib/python2.7/dist-packages/scipy/integrate/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/integrate/_dop.so, /usr/lib/python2.7/dist-packages/scipy/integrate/_ode.py,
+    /usr/lib/python2.7/dist-packages/scipy/integrate/_odepack.so, /usr/lib/python2.7/dist-packages/scipy/integrate/_quadpack.so,
+    /usr/lib/python2.7/dist-packages/scipy/integrate/lsoda.so, /usr/lib/python2.7/dist-packages/scipy/integrate/odepack.py,
+    /usr/lib/python2.7/dist-packages/scipy/integrate/quadpack.py, /usr/lib/python2.7/dist-packages/scipy/integrate/quadrature.py,
+    /usr/lib/python2.7/dist-packages/scipy/integrate/vode.so, /usr/lib/python2.7/dist-packages/scipy/interpolate,
+    /usr/lib/python2.7/dist-packages/scipy/interpolate/__init__.py, /usr/lib/python2.7/dist-packages/scipy/interpolate/_fitpack.so,
+    /usr/lib/python2.7/dist-packages/scipy/interpolate/dfitpack.so, /usr/lib/python2.7/dist-packages/scipy/interpolate/fitpack.py,
+    /usr/lib/python2.7/dist-packages/scipy/interpolate/fitpack2.py, /usr/lib/python2.7/dist-packages/scipy/interpolate/interpnd.so,
+    /usr/lib/python2.7/dist-packages/scipy/interpolate/interpolate.py, /usr/lib/python2.7/dist-packages/scipy/interpolate/ndgriddata.py,
+    /usr/lib/python2.7/dist-packages/scipy/interpolate/polyint.py, /usr/lib/python2.7/dist-packages/scipy/interpolate/rbf.py,
+    /usr/lib/python2.7/dist-packages/scipy/io, /usr/lib/python2.7/dist-packages/scipy/io/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/_fortran.py, /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing,
+    /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/__init__.py, /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/_fortran_format_parser.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/harwell_boeing/hb.py, /usr/lib/python2.7/dist-packages/scipy/io/idl.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab, /usr/lib/python2.7/dist-packages/scipy/io/matlab/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab/byteordercodes.py, /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio4.py, /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio5.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio5_params.py, /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio5_utils.so,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab/mio_utils.so, /usr/lib/python2.7/dist-packages/scipy/io/matlab/miobase.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/matlab/streams.so, /usr/lib/python2.7/dist-packages/scipy/io/mmio.py,
+    /usr/lib/python2.7/dist-packages/scipy/io/netcdf.py, /usr/lib/python2.7/dist-packages/scipy/lib,
+    /usr/lib/python2.7/dist-packages/scipy/lib/__init__.py, /usr/lib/python2.7/dist-packages/scipy/lib/_util.py,
+    /usr/lib/python2.7/dist-packages/scipy/lib/six.py, /usr/lib/python2.7/dist-packages/scipy/linalg,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/__init__.py, /usr/lib/python2.7/dist-packages/scipy/linalg/_decomp_polar.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/_decomp_qz.py, /usr/lib/python2.7/dist-packages/scipy/linalg/_expm_frechet.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/_fblas.so, /usr/lib/python2.7/dist-packages/scipy/linalg/_flapack.so,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/_flinalg.so, /usr/lib/python2.7/dist-packages/scipy/linalg/_matfuncs_sqrtm.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/_solvers.py, /usr/lib/python2.7/dist-packages/scipy/linalg/basic.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/blas.py, /usr/lib/python2.7/dist-packages/scipy/linalg/calc_lwork.so,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/decomp.py, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_cholesky.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_lu.py, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_qr.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_schur.py, /usr/lib/python2.7/dist-packages/scipy/linalg/decomp_svd.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/flinalg.py, /usr/lib/python2.7/dist-packages/scipy/linalg/lapack.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/linalg_version.py, /usr/lib/python2.7/dist-packages/scipy/linalg/matfuncs.py,
+    /usr/lib/python2.7/dist-packages/scipy/linalg/misc.py, /usr/lib/python2.7/dist-packages/scipy/linalg/special_matrices.py,
+    /usr/lib/python2.7/dist-packages/scipy/misc, /usr/lib/python2.7/dist-packages/scipy/misc/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/misc/common.py, /usr/lib/python2.7/dist-packages/scipy/misc/doccer.py,
+    /usr/lib/python2.7/dist-packages/scipy/misc/pilutil.py, /usr/lib/python2.7/dist-packages/scipy/ndimage,
+    /usr/lib/python2.7/dist-packages/scipy/ndimage/__init__.py, /usr/lib/python2.7/dist-packages/scipy/ndimage/_nd_image.so,
+    /usr/lib/python2.7/dist-packages/scipy/ndimage/_ni_label.so, /usr/lib/python2.7/dist-packages/scipy/ndimage/_ni_support.py,
+    /usr/lib/python2.7/dist-packages/scipy/ndimage/filters.py, /usr/lib/python2.7/dist-packages/scipy/ndimage/fourier.py,
+    /usr/lib/python2.7/dist-packages/scipy/ndimage/interpolation.py, /usr/lib/python2.7/dist-packages/scipy/ndimage/io.py,
+    /usr/lib/python2.7/dist-packages/scipy/ndimage/measurements.py, /usr/lib/python2.7/dist-packages/scipy/ndimage/morphology.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize, /usr/lib/python2.7/dist-packages/scipy/optimize/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_basinhopping.py, /usr/lib/python2.7/dist-packages/scipy/optimize/_cobyla.so,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_lbfgsb.so, /usr/lib/python2.7/dist-packages/scipy/optimize/_minimize.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_minpack.so, /usr/lib/python2.7/dist-packages/scipy/optimize/_nnls.so,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_root.py, /usr/lib/python2.7/dist-packages/scipy/optimize/_slsqp.so,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion.py, /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion_dogleg.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/_trustregion_ncg.py, /usr/lib/python2.7/dist-packages/scipy/optimize/_zeros.so,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/anneal.py, /usr/lib/python2.7/dist-packages/scipy/optimize/cobyla.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/lbfgsb.py, /usr/lib/python2.7/dist-packages/scipy/optimize/linesearch.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/minpack.py, /usr/lib/python2.7/dist-packages/scipy/optimize/minpack2.so,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/moduleTNC.so, /usr/lib/python2.7/dist-packages/scipy/optimize/nnls.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/nonlin.py, /usr/lib/python2.7/dist-packages/scipy/optimize/optimize.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/slsqp.py, /usr/lib/python2.7/dist-packages/scipy/optimize/tnc.py,
+    /usr/lib/python2.7/dist-packages/scipy/optimize/zeros.py, /usr/lib/python2.7/dist-packages/scipy/signal,
+    /usr/lib/python2.7/dist-packages/scipy/signal/__init__.py, /usr/lib/python2.7/dist-packages/scipy/signal/_arraytools.py,
+    /usr/lib/python2.7/dist-packages/scipy/signal/_peak_finding.py, /usr/lib/python2.7/dist-packages/scipy/signal/_spectral.so,
+    /usr/lib/python2.7/dist-packages/scipy/signal/bsplines.py, /usr/lib/python2.7/dist-packages/scipy/signal/cont2discrete.py,
+    /usr/lib/python2.7/dist-packages/scipy/signal/dltisys.py, /usr/lib/python2.7/dist-packages/scipy/signal/filter_design.py,
+    /usr/lib/python2.7/dist-packages/scipy/signal/fir_filter_design.py, /usr/lib/python2.7/dist-packages/scipy/signal/ltisys.py,
+    /usr/lib/python2.7/dist-packages/scipy/signal/signaltools.py, /usr/lib/python2.7/dist-packages/scipy/signal/sigtools.so,
+    /usr/lib/python2.7/dist-packages/scipy/signal/spectral.py, /usr/lib/python2.7/dist-packages/scipy/signal/spline.so,
+    /usr/lib/python2.7/dist-packages/scipy/signal/waveforms.py, /usr/lib/python2.7/dist-packages/scipy/signal/wavelets.py,
+    /usr/lib/python2.7/dist-packages/scipy/signal/windows.py, /usr/lib/python2.7/dist-packages/scipy/sparse,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/__init__.py, /usr/lib/python2.7/dist-packages/scipy/sparse/base.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/bsr.py, /usr/lib/python2.7/dist-packages/scipy/sparse/compressed.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/construct.py, /usr/lib/python2.7/dist-packages/scipy/sparse/coo.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csc.py, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/__init__.py, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_components.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_laplacian.py, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_min_spanning_tree.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_shortest_path.so, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_tools.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_traversal.so, /usr/lib/python2.7/dist-packages/scipy/sparse/csgraph/_validation.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/csr.py, /usr/lib/python2.7/dist-packages/scipy/sparse/data.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/dia.py, /usr/lib/python2.7/dist-packages/scipy/sparse/dok.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/extract.py, /usr/lib/python2.7/dist-packages/scipy/sparse/lil.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/_expm_multiply.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/_onenormest.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/_superlu.so, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/linsolve.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/__umfpack.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/_umfpack.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/dsolve/umfpack/umfpack.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack/_arpack.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/arpack/arpack.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/lobpcg,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/lobpcg/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/eigen/lobpcg/lobpcg.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/interface.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/_iterative.so, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/iterative.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lgmres.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lsmr.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/lsqr.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/minres.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/isolve/utils.py, /usr/lib/python2.7/dist-packages/scipy/sparse/linalg/matfuncs.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_bsr.so, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_coo.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_csc.so, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_csgraph.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_csr.so, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/_dia.so,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/bsr.py, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/coo.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csc.py, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csgraph.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/csr.py, /usr/lib/python2.7/dist-packages/scipy/sparse/sparsetools/dia.py,
+    /usr/lib/python2.7/dist-packages/scipy/sparse/sputils.py, /usr/lib/python2.7/dist-packages/scipy/spatial,
+    /usr/lib/python2.7/dist-packages/scipy/spatial/__init__.py, /usr/lib/python2.7/dist-packages/scipy/spatial/_distance_wrap.so,
+    /usr/lib/python2.7/dist-packages/scipy/spatial/_plotutils.py, /usr/lib/python2.7/dist-packages/scipy/spatial/ckdtree.so,
+    /usr/lib/python2.7/dist-packages/scipy/spatial/distance.py, /usr/lib/python2.7/dist-packages/scipy/spatial/kdtree.py,
+    /usr/lib/python2.7/dist-packages/scipy/spatial/qhull.so, /usr/lib/python2.7/dist-packages/scipy/special,
+    /usr/lib/python2.7/dist-packages/scipy/special/__init__.py, /usr/lib/python2.7/dist-packages/scipy/special/_ufuncs.so,
+    /usr/lib/python2.7/dist-packages/scipy/special/_ufuncs_cxx.so, /usr/lib/python2.7/dist-packages/scipy/special/basic.py,
+    /usr/lib/python2.7/dist-packages/scipy/special/lambertw.py, /usr/lib/python2.7/dist-packages/scipy/special/orthogonal.py,
+    /usr/lib/python2.7/dist-packages/scipy/special/specfun.so, /usr/lib/python2.7/dist-packages/scipy/special/spfun_stats.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats, /usr/lib/python2.7/dist-packages/scipy/stats/__init__.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/_binned_statistic.py, /usr/lib/python2.7/dist-packages/scipy/stats/_rank.so,
+    /usr/lib/python2.7/dist-packages/scipy/stats/_support.py, /usr/lib/python2.7/dist-packages/scipy/stats/_tukeylambda_stats.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/contingency.py, /usr/lib/python2.7/dist-packages/scipy/stats/distributions.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/futil.so, /usr/lib/python2.7/dist-packages/scipy/stats/kde.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/morestats.py, /usr/lib/python2.7/dist-packages/scipy/stats/mstats.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/mstats_basic.py, /usr/lib/python2.7/dist-packages/scipy/stats/mstats_extras.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/mvn.so, /usr/lib/python2.7/dist-packages/scipy/stats/rv.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/statlib.so, /usr/lib/python2.7/dist-packages/scipy/stats/stats.py,
+    /usr/lib/python2.7/dist-packages/scipy/stats/vonmises_cython.so, /usr/lib/python2.7/dist-packages/scipy/version.py]
+  name: python-scipy
+  packfiles: true
+  size: 32351232
+  version: 0.13.3-1build1
+- files: [/usr/lib/python2.7/dist-packages/setuptools.pth]
+  name: python-setuptools
+  packfiles: true
+  size: 830464
+  version: 3.3-1ubuntu1
+- files: [/usr/lib/python2.7/dist-packages/six.py]
+  name: python-six
+  packfiles: true
+  size: 63488
+  version: 1.5.2-1
+- files: [/usr/lib/python2.7/dist-packages/python-support.pth]
+  name: python-support
+  packfiles: true
+  size: 158720
+  version: 1.0.15
+- files: [/usr/lib/python2.7, /usr/lib/python2.7/dist-packages]
+  name: python-tdb
+  packfiles: true
+  size: 79872
+  version: 1.2.12-1
+- files: [/usr/lib/python2.7/dist-packages/ubuntu-sso-client, /usr/lib/python2.7/dist-packages/ubuntu-sso-client.pth]
+  name: python-ubuntu-sso-client
+  packfiles: true
+  size: 369664
+  version: 13.10-0ubuntu6
+- files: [/usr/lib/python2.7/dist-packages/zope.interface-4.0.5-nspkg.pth, /usr/lib/python2.7/dist-packages/zope/__init__.py]
+  name: python-zope.interface
+  packfiles: true
+  size: 662528
+  version: 4.0.5-1ubuntu4
+- files: [/usr/bin/python2.7]
+  name: python2.7-minimal
+  packfiles: true
+  size: 3481600
+  version: 2.7.6-8
+- files: [/etc/udev/udev.conf]
+  name: udev
+  packfiles: true
+  size: 5271552
+  version: 204-5ubuntu20.11
+- files: [/lib/x86_64-linux-gnu/libz.so.1, /lib/x86_64-linux-gnu/libz.so.1.2.8]
+  name: zlib1g
+  packfiles: true
+  size: 175104
+  version: 1:1.2.8.dfsg-1ubuntu1
+runs:
+- architecture: x86_64
+  argv: [python, generateClassifier.py]
+  binary: /usr/bin/python
+  distribution: [Ubuntu, '14.04']
+  environ: {CLUTTER_IM_MODULE: xim, COLORTERM: gnome-terminal, COMPIZ_BIN_PATH: /usr/bin/,
+    COMPIZ_CONFIG_PROFILE: ubuntu, DBUS_SESSION_BUS_ADDRESS: 'unix:abstract=/tmp/dbus-sx9LCOtVsB',
+    DEFAULTS_PATH: /usr/share/gconf/ubuntu.default.path, DESKTOP_SESSION: ubuntu,
+    DISPLAY: ':0', GDMSESSION: ubuntu, GDM_LANG: en_US, GNOME_DESKTOP_SESSION_ID: this-is-deprecated,
+    GNOME_KEYRING_CONTROL: /run/user/1000/keyring-epWeFx, GNOME_KEYRING_PID: '1432',
+    GPG_AGENT_INFO: '/run/user/1000/keyring-epWeFx/gpg:0:1', GTK_IM_MODULE: ibus,
+    GTK_MODULES: 'overlay-scrollbar:unity-gtk-module', HOME: /home/fchirigati, IM_CONFIG_PHASE: '1',
+    INSTANCE: '', JOB: dbus, LANG: en_US.UTF-8, LANGUAGE: en_US, LESSCLOSE: /usr/bin/lesspipe
+      %s %s, LESSOPEN: '| /usr/bin/lesspipe %s', LOGNAME: fchirigati, LS_COLORS: 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lz=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:',
+    MANDATORY_PATH: /usr/share/gconf/ubuntu.mandatory.path, OLDPWD: /home/fchirigati,
+    PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games',
+    PWD: /home/fchirigati/digitRecognition, QT4_IM_MODULE: xim, QT_IM_MODULE: ibus,
+    QT_QPA_PLATFORMTHEME: appmenu-qt5, SELINUX_INIT: 'YES', SESSION: ubuntu, SESSIONTYPE: gnome-session,
+    SESSION_MANAGER: 'local/fchirigati-ubuntu:@/tmp/.ICE-unix/1490,unix/fchirigati-ubuntu:/tmp/.ICE-unix/1490',
+    SHELL: /bin/bash, SHLVL: '1', SSH_AUTH_SOCK: /run/user/1000/keyring-epWeFx/ssh,
+    TERM: xterm, TEXTDOMAIN: im-config, TEXTDOMAINDIR: /usr/share/locale/, UPSTART_SESSION: 'unix:abstract=/com/ubuntu/upstart-session/1000/1251',
+    USER: fchirigati, VTE_VERSION: '3409', WINDOWID: '58720267', XAUTHORITY: /home/fchirigati/.Xauthority,
+    XDG_CONFIG_DIRS: '/etc/xdg/xdg-ubuntu:/usr/share/upstart/xdg:/etc/xdg', XDG_CURRENT_DESKTOP: Unity,
+    XDG_DATA_DIRS: '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/',
+    XDG_GREETER_DATA_DIR: /var/lib/lightdm-data/fchirigati, XDG_MENU_PREFIX: gnome-,
+    XDG_RUNTIME_DIR: /run/user/1000, XDG_SEAT: seat0, XDG_SEAT_PATH: /org/freedesktop/DisplayManager/Seat0,
+    XDG_SESSION_ID: c1, XDG_SESSION_PATH: /org/freedesktop/DisplayManager/Session0,
+    XDG_VTNR: '7', XMODIFIERS: '@im=ibus', _: /usr/local/bin/reprozip}
+  exitcode: 0
+  gid: 1000
+  hostname: fchirigati-ubuntu
+  id: run 0
+  system: [Linux, 3.16.0-30-generic]
+  uid: 1000
+  workingdir: /home/fchirigati/digitRecognition
+- architecture: x86_64
+  argv: [python, performRecognition.py]
+  binary: /usr/bin/python
+  distribution: [Ubuntu, '14.04']
+  environ: {CLUTTER_IM_MODULE: xim, COLORTERM: gnome-terminal, COMPIZ_BIN_PATH: /usr/bin/,
+    COMPIZ_CONFIG_PROFILE: ubuntu, DBUS_SESSION_BUS_ADDRESS: 'unix:abstract=/tmp/dbus-sx9LCOtVsB',
+    DEFAULTS_PATH: /usr/share/gconf/ubuntu.default.path, DESKTOP_SESSION: ubuntu,
+    DISPLAY: ':0', GDMSESSION: ubuntu, GDM_LANG: en_US, GNOME_DESKTOP_SESSION_ID: this-is-deprecated,
+    GNOME_KEYRING_CONTROL: /run/user/1000/keyring-epWeFx, GNOME_KEYRING_PID: '1432',
+    GPG_AGENT_INFO: '/run/user/1000/keyring-epWeFx/gpg:0:1', GTK_IM_MODULE: ibus,
+    GTK_MODULES: 'overlay-scrollbar:unity-gtk-module', HOME: /home/fchirigati, IM_CONFIG_PHASE: '1',
+    INSTANCE: '', JOB: dbus, LANG: en_US.UTF-8, LANGUAGE: en_US, LESSCLOSE: /usr/bin/lesspipe
+      %s %s, LESSOPEN: '| /usr/bin/lesspipe %s', LOGNAME: fchirigati, LS_COLORS: 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lz=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:',
+    MANDATORY_PATH: /usr/share/gconf/ubuntu.mandatory.path, OLDPWD: /home/fchirigati,
+    PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games',
+    PWD: /home/fchirigati/digitRecognition, QT4_IM_MODULE: xim, QT_IM_MODULE: ibus,
+    QT_QPA_PLATFORMTHEME: appmenu-qt5, SELINUX_INIT: 'YES', SESSION: ubuntu, SESSIONTYPE: gnome-session,
+    SESSION_MANAGER: 'local/fchirigati-ubuntu:@/tmp/.ICE-unix/1490,unix/fchirigati-ubuntu:/tmp/.ICE-unix/1490',
+    SHELL: /bin/bash, SHLVL: '1', SSH_AUTH_SOCK: /run/user/1000/keyring-epWeFx/ssh,
+    TERM: xterm, TEXTDOMAIN: im-config, TEXTDOMAINDIR: /usr/share/locale/, UPSTART_SESSION: 'unix:abstract=/com/ubuntu/upstart-session/1000/1251',
+    USER: fchirigati, VTE_VERSION: '3409', WINDOWID: '58720267', XAUTHORITY: /home/fchirigati/.Xauthority,
+    XDG_CONFIG_DIRS: '/etc/xdg/xdg-ubuntu:/usr/share/upstart/xdg:/etc/xdg', XDG_CURRENT_DESKTOP: Unity,
+    XDG_DATA_DIRS: '/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/',
+    XDG_GREETER_DATA_DIR: /var/lib/lightdm-data/fchirigati, XDG_MENU_PREFIX: gnome-,
+    XDG_RUNTIME_DIR: /run/user/1000, XDG_SEAT: seat0, XDG_SEAT_PATH: /org/freedesktop/DisplayManager/Seat0,
+    XDG_SESSION_ID: c1, XDG_SESSION_PATH: /org/freedesktop/DisplayManager/Session0,
+    XDG_VTNR: '7', XMODIFIERS: '@im=ibus', _: /usr/local/bin/reprozip}
+  exitcode: 0
+  gid: 1000
+  hostname: fchirigati-ubuntu
+  id: prediciton
+  system: [Linux, 3.16.0-30-generic]
+  uid: 1000
+  workingdir: /home/fchirigati/digitRecognition
+version: '0.8'
