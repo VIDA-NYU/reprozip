@@ -5,8 +5,6 @@
 """Utility functions dealing with package managers.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import distro
 import logging
 import subprocess

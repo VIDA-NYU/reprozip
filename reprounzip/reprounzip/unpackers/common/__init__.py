@@ -8,8 +8,6 @@ This contains functions related to shell scripts, package managers, and the
 pack files.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 from reprounzip.utils import join_root
 from reprounzip.unpackers.common.misc import UsageError, \
     COMPAT_OK, COMPAT_NO, COMPAT_MAYBE, \

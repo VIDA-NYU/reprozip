@@ -10,8 +10,6 @@ This exports the trace data into a format suitable for the Prov Viewer tool
 See schema: https://git.io/provviewer-xsd
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 import logging
 from distutils.version import LooseVersion

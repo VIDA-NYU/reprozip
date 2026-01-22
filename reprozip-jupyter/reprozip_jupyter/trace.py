@@ -5,8 +5,6 @@
 """Trace a notebook to generate accompanying RPZ pack.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 from jupyter_client.launcher import launch_kernel
 from jupyter_client.manager import KernelManager
