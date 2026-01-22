@@ -13,8 +13,6 @@ to this software (more utilities).
 
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import codecs
 import contextlib
 from datetime import datetime

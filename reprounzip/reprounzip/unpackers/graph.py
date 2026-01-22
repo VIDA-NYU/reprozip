@@ -14,8 +14,6 @@ using the dot utility.
 See http://www.graphviz.org/
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 from distutils.version import LooseVersion
 import heapq

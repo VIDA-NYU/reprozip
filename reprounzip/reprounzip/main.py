@@ -11,8 +11,6 @@ It dispatchs to plugins registered through importlib.metadata as entry point
 ``reprounzip.unpackers``.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 if __name__ == '__main__':  # noqa
     from reprounzip.main import main
     main()

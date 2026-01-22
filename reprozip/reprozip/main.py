@@ -10,8 +10,6 @@ setuptools. It is also callable directly.
 It dispatchs to other routines, or handles the testrun command.
 """
 
-from __future__ import division, print_function, unicode_literals
-
 if __name__ == '__main__':  # noqa
     from reprozip.main import main
     main()

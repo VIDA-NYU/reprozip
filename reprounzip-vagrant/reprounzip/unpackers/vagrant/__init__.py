@@ -11,8 +11,6 @@ Vagrant (``vagrant up``).
 See http://www.vagrantup.com/
 """
 
-from __future__ import division, print_function, unicode_literals
-
 import argparse
 from distutils.version import LooseVersion
 import logging
