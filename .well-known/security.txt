@@ -1,0 +1,34 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+# Canonical URL, i.e. this file
+Canonical: https://www.reprozip.org/.well-known/security.txt
+
+# Contact information for Remi Rampin
+Contact: mailto:remi.rampin@nyu.edu
+
+# OpenPGP key and its fingerprint
+Encryption: https://remram.fr/remram.pub.asc
+Encryption: openpgp4fpr:50D446A5977CFBF9EB6BA704748B9B05850C4075
+
+# Languages I can understand
+Preferred-Languages: en, fr
+
+# Expiration date of this document
+Expires: 2036-02-03T00:00:00Z
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEiwAhVp7Y/mGVYFVfmXq9DUFgHm8FAmmCxQgACgkQmXq9DUFg
+Hm8uVQ//Uy+2iEsRQA7UqWo0Akk+xpGjRpNbth3IpuJ2aWRK90usXOflr3fCNX1J
+ksUrkQLGBplKTTdUVJVEbHnZnUh5tfZYheAaVX0pyZF5vdNaykwlwhrOORKRt5f/
+OolaJbRqTHIEIljxwnijtuu3GZxLdsHLn/tAeRRd62QyJfrlaFJR8MaiRTguCfKm
+aPibEi4GXrA5vACrNSrEvxClGVIVwh40OSYPlDMWuEk9kuhUrPf9qF/pmHlM1ppO
+C2ZqXd71WCzpiQCUCUKTMXFHSI15a7ZY9khob9oazJmYR0oqXZIqUUbWIofoc6fn
+41O0EQ/nG5DlnsGH9a/+ggNqSyTAGtee7tzt8f8Nm/Kfkk/YX56VswJeivsvRytP
+/w9crA+76XfIEYvUKqq+merLSov/dEFu9aK1uLJlNHQhK1HfX7jBRaA0XmhENAYR
+RS8wGsG0kPbcR8UCLJljspqJnH3+qXlar+zebAItB7dx75GY/SyhUMN9VZzLfSvR
+dzHw/E4+8WHGzqqY4lhb3cKocGPapjxfIejx8i93Fz/RlJQqeI3RtYvMsIx7Lm6r
+P9KT+RfJTjzQ3HAlybe+usNPkgkA5I9pJ8zYv+5qXg/RGM3jKFznFIJWcYEiqI+U
+dO7sRZKIs0LwQRvC2hCgdzj3n7auHSx0ImaHGbJS+wbEaeysHqY=
+=HP2F
+-----END PGP SIGNATURE-----
